@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
-import { useMockDashboard, useMockCasas } from "@/hooks/useMockData";
+import { getDashboardMetrics, getDashboardChartData, getDashboardDailySummary, getHouses, type DashboardMetrics } from "@/lib/api";
 import { Target, TrendingUp, TrendingDown, BarChart3, Calendar } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function DashboardPageContent() {
-  const { getMetrics, getChartData, getDailySummary, loading } = useMockDashboard();
-  const { casas } = useMockCasas();
+  const [casas, setCasas] = useState<{ id: number; name: string }[]>([]);
+  const [loading, setLoading] = useState(false);
   
   const [filters, setFilters] = useState({
     house_id: undefined as number | undefined,
@@ -22,15 +22,41 @@ function DashboardPageContent() {
     endDate: ""
   });
 
-  const [metrics, setMetrics] = useState(() => getMetrics());
-  const [chartData, setChartData] = useState(() => getChartData());
-  const [dailyData, setDailyData] = useState(() => getDailySummary());
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    totalApostas: 0,
+    apostasGanhas: 0,
+    apostasPerdidas: 0,
+    apostasPendentes: 0,
+    apostasCanceladas: 0,
+    totalInvestido: 0,
+    totalRetorno: 0,
+    lucroTotal: 0,
+    roi: 0,
+    taxaAcerto: 0
+  });
+  const [chartData, setChartData] = useState<{ date: string; value: number }[]>([]);
+  const [dailyData, setDailyData] = useState<{ date: string; apostas: number; lucro: number }[]>([]);
 
   useEffect(() => {
-    const newMetrics = getMetrics(filters);
-    setMetrics(newMetrics);
-    setChartData(getChartData());
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [m, c, d] = await Promise.all([
+          getDashboardMetrics({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined }),
+          getDashboardChartData({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined }),
+          getDashboardDailySummary({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined })
+        ]);
+        setMetrics(m);
+        setChartData(c);
+        setDailyData(d.map((x: any) => ({ date: x.date, apostas: x.totalApostas ?? x.apostas ?? 0, lucro: x.lucroDia ?? x.lucro ?? 0 })));
+      } finally { setLoading(false); }
+    };
+    load();
   }, [filters]);
+
+  useEffect(() => {
+    getHouses().then((h) => setCasas(h as any)).catch(() => setCasas([]));
+  }, []);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -245,16 +271,7 @@ function DashboardPageContent() {
                   {metrics.roi.toFixed(2)}%
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Stake Médio:</span>
-                <span className="font-medium">
-                  R$ {metrics.totalApostas > 0 ? (metrics.totalInvestido / metrics.totalApostas).toFixed(2) : '0.00'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Odd Média:</span>
-                <span className="font-medium">2.10</span>
-              </div>
+              {/* Stake médio e odd média devem vir do backend quando disponíveis */}
             </div>
           </CardContent>
         </Card>

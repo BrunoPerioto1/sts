@@ -8,35 +8,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { useMockCasas, useMockTransactions, Casa } from "@/hooks/useMockData";
+import { 
+  createHouseApi,
+  updateHouseApi,
+  deleteHouseApi,
+  getAllTransactions,
+  createTransactionApi,
+  getAllHousesBalance,
+  getHouseHistory,
+  type HouseTransaction,
+  type HouseBalance
+} from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Edit2, Trash2, Plus, Building2, DollarSign, TrendingUp, TrendingDown, Search, Eye, History } from "lucide-react";
 
 // Dados mockados para detalhes da casa
-interface HouseBalance {
-  house_id: number;
-  house_name: string;
-  total_bets: number;
-  total_stake: number;
-  total_bet_profit: number;
-  total_transactions: number;
-  house_balance: number;
-  real_house_balance: number;
-  pending_bets: number;
-  won_bets: number;
-  lost_bets: number;
-}
-
-interface HouseTransaction {
-  id: number;
-  house_id: number;
-  transaction_type: "DEPOSIT" | "WITHDRAWAL" | "ADJUSTMENT";
-  value: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
 interface HouseMovement {
   id: number;
   profit: string;
@@ -50,211 +36,23 @@ interface HouseMovement {
   result_id?: number;
 }
 
-// Dados mockados
-const mockHouseBalances: { [key: number]: HouseBalance } = {
-  1: {
-    house_id: 1,
-    house_name: "Bet365",
-    total_bets: 15,
-    total_stake: 750.50,
-    total_bet_profit: 120.75,
-    total_transactions: 8,
-    house_balance: 250.00,
-    real_house_balance: 250.00,
-    pending_bets: 2,
-    won_bets: 8,
-    lost_bets: 5
-  },
-  2: {
-    house_id: 2,
-    house_name: "Betano",
-    total_bets: 22,
-    total_stake: 1100.00,
-    total_bet_profit: 89.30,
-    total_transactions: 12,
-    house_balance: 180.50,
-    real_house_balance: 180.50,
-    pending_bets: 1,
-    won_bets: 12,
-    lost_bets: 9
-  },
-  3: {
-    house_id: 3,
-    house_name: "Novibet",
-    total_bets: 8,
-    total_stake: 400.00,
-    total_bet_profit: -50.00,
-    total_transactions: 5,
-    house_balance: 75.25,
-    real_house_balance: 75.25,
-    pending_bets: 0,
-    won_bets: 3,
-    lost_bets: 5
-  }
-};
-
-const mockHouseTransactions: { [key: number]: HouseTransaction[] } = {
-  1: [
-    {
-      id: 1,
-      house_id: 1,
-      transaction_type: "DEPOSIT",
-      value: "500.00",
-      description: "Depósito inicial",
-      created_at: "2025-09-02T10:30:00.000Z",
-      updated_at: "2025-09-02T10:30:00.000Z"
-    },
-    {
-      id: 2,
-      house_id: 1,
-      transaction_type: "WITHDRAWAL",
-      value: "-200.00",
-      description: "Saque parcial",
-      created_at: "2025-09-01T15:45:00.000Z",
-      updated_at: "2025-09-01T15:45:00.000Z"
-    },
-    {
-      id: 3,
-      house_id: 1,
-      transaction_type: "DEPOSIT",
-      value: "100.00",
-      description: "Recarga",
-      created_at: "2025-08-30T12:20:00.000Z",
-      updated_at: "2025-08-30T12:20:00.000Z"
-    }
-  ],
-  2: [
-    {
-      id: 4,
-      house_id: 2,
-      transaction_type: "DEPOSIT",
-      value: "800.00",
-      description: "Depósito inicial",
-      created_at: "2025-09-01T09:15:00.000Z",
-      updated_at: "2025-09-01T09:15:00.000Z"
-    },
-    {
-      id: 5,
-      house_id: 2,
-      transaction_type: "WITHDRAWAL",
-      value: "-150.00",
-      description: "Saque de lucros",
-      created_at: "2025-08-29T16:30:00.000Z",
-      updated_at: "2025-08-29T16:30:00.000Z"
-    }
-  ],
-  3: [
-    {
-      id: 6,
-      house_id: 3,
-      transaction_type: "DEPOSIT",
-      value: "300.00",
-      description: "Depósito inicial",
-      created_at: "2025-08-28T14:00:00.000Z",
-      updated_at: "2025-08-28T14:00:00.000Z"
-    },
-    {
-      id: 7,
-      house_id: 3,
-      transaction_type: "ADJUSTMENT",
-      value: "-25.00",
-      description: "Ajuste de saldo",
-      created_at: "2025-08-25T11:10:00.000Z",
-      updated_at: "2025-08-25T11:10:00.000Z"
-    }
-  ]
-};
-
-// Histórico completo de movimentações (transações + apostas)
-const mockHouseMovements: { [key: number]: HouseMovement[] } = {
-  1: [
-    {
-      id: 3,
-      profit: "500.00",
-      created_at: "2025-09-02T07:30:00.000Z",
-      movement_type: "DEPOSIT"
-    },
-    {
-      id: 2,
-      profit: "-200.00",
-      created_at: "2025-09-01T12:45:00.000Z",
-      movement_type: "WITHDRAWAL"
-    },
-    {
-      id: 1,
-      profit: "100.00",
-      created_at: "2025-08-30T09:20:00.000Z",
-      movement_type: "DEPOSIT"
-    },
-    {
-      id: 4,
-      game: "Aliassime x Rublev",
-      stake: "25.00",
-      odd: "3.50",
-      market: "o4.5 sets",
-      sport: "Tênis",
-      profit: "62.50",
-      created_at: "2025-09-01T16:31:59.525Z",
-      result_id: 1,
-      movement_type: "BET"
-    },
-    {
-      id: 5,
-      game: "Dupla Série B",
-      stake: "32.80",
-      odd: "3.00",
-      market: "o1.5 nos jogos de Chapecoense e Cuiabá",
-      sport: "Futebol",
-      profit: "-32.80",
-      created_at: "2025-09-01T16:31:59.521Z",
-      result_id: 2,
-      movement_type: "BET"
-    }
-  ],
-  2: [
-    {
-      id: 6,
-      profit: "800.00",
-      created_at: "2025-09-01T09:15:00.000Z",
-      movement_type: "DEPOSIT"
-    },
-    {
-      id: 7,
-      profit: "-150.00",
-      created_at: "2025-08-29T16:30:00.000Z",
-      movement_type: "WITHDRAWAL"
-    }
-  ],
-  3: [
-    {
-      id: 8,
-      profit: "300.00",
-      created_at: "2025-08-28T14:00:00.000Z",
-      movement_type: "DEPOSIT"
-    },
-    {
-      id: 9,
-      profit: "-25.00",
-      created_at: "2025-08-25T11:10:00.000Z",
-      movement_type: "WITHDRAWAL"
-    }
-  ]
-};
+// Removido: todos os mocks substituídos por chamadas reais
 
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function CasasPageContent() {
-  const { casas, createCasa, updateCasa, deleteCasa } = useMockCasas();
-  const { transactions, createTransaction } = useMockTransactions();
+  const [houseBalances, setHouseBalances] = useState<HouseBalance[]>([]);
+  const [transactions, setTransactions] = useState<HouseTransaction[]>([]);
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const [selectedCasa, setSelectedCasa] = useState<Casa | null>(null);
+  const [selectedCasa, setSelectedCasa] = useState<HouseBalance | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [editingCasa, setEditingCasa] = useState<Casa | null>(null);
+  const [editingCasa, setEditingCasa] = useState<HouseBalance | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedHouseBalance, setSelectedHouseBalance] = useState<HouseBalance | null>(null);
   const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseMovement[]>([]);
@@ -271,7 +69,7 @@ function CasasPageContent() {
     descricao: ""
   });
 
-  const handleCreateCasa = () => {
+  const handleCreateCasa = async () => {
     if (!formData.name.trim()) {
       toast({
         title: "Erro",
@@ -281,10 +79,14 @@ function CasasPageContent() {
       return;
     }
 
-    createCasa({
-      name: formData.name,
-      active: formData.active
-    });
+    try {
+      setLoading(true);
+      await createHouseApi({ name: formData.name, active: formData.active });
+      await refresh(); // Recarrega casas e saldos
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao criar casa", variant: "destructive" });
+      return;
+    } finally { setLoading(false); }
 
     setFormData({ name: "", active: true });
     setIsCreateModalOpen(false);
@@ -295,22 +97,25 @@ function CasasPageContent() {
     });
   };
 
-  const handleEditCasa = (casa: Casa) => {
+  const handleEditCasa = (casa: HouseBalance) => {
     setEditingCasa(casa);
     setFormData({
-      name: casa.name,
-      active: casa.active
+      name: casa.house_name,
+      active: true // Assumimos que casas com apostas estão ativas
     });
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateCasa = () => {
+  const handleUpdateCasa = async () => {
     if (!editingCasa) return;
-
-    updateCasa(editingCasa.id, {
-      name: formData.name,
-      active: formData.active
-    });
+    try {
+      setLoading(true);
+      await updateHouseApi(editingCasa.house_id, { name: formData.name, active: formData.active });
+      await refresh(); // Recarrega casas e saldos
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao atualizar casa", variant: "destructive" });
+      return;
+    } finally { setLoading(false); }
 
     setIsEditModalOpen(false);
     setEditingCasa(null);
@@ -321,15 +126,19 @@ function CasasPageContent() {
     });
   };
 
-  const handleDeleteCasa = (id: number) => {
-    deleteCasa(id);
+  const handleDeleteCasa = async (id: number) => {
+    try {
+      setLoading(true);
+      await deleteHouseApi(id);
+      await refresh(); // Recarrega casas e saldos
+    } finally { setLoading(false); }
     toast({
       title: "Sucesso",
       description: "Casa excluída com sucesso!"
     });
   };
 
-  const handleCreateTransaction = () => {
+  const handleCreateTransaction = async () => {
     if (!transactionForm.house_id || !transactionForm.valor || !transactionForm.descricao) {
       toast({
         title: "Erro", 
@@ -340,22 +149,20 @@ function CasasPageContent() {
     }
 
     const valor = Number(transactionForm.valor);
-    if (transactionForm.transaction_type_id === "2" && valor > 0) {
-      // Para saques, o valor deve ser negativo
-      createTransaction({
+    try {
+      setLoading(true);
+      const payload = {
         house_id: Number(transactionForm.house_id),
         transaction_type_id: Number(transactionForm.transaction_type_id),
-        valor: -valor,
+        valor: transactionForm.transaction_type_id === "2" ? -Math.abs(valor) : valor,
         descricao: transactionForm.descricao
-      });
-    } else {
-      createTransaction({
-        house_id: Number(transactionForm.house_id),
-        transaction_type_id: Number(transactionForm.transaction_type_id),
-        valor: transactionForm.transaction_type_id === "3" ? valor : Math.abs(valor), // ajustes podem ser positivos ou negativos
-        descricao: transactionForm.descricao
-      });
-    }
+      };
+      await createTransactionApi(payload);
+      await refresh(); // Recarrega transações e saldos
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao criar transação", variant: "destructive" });
+      return;
+    } finally { setLoading(false); }
 
     setTransactionForm({
       house_id: "",
@@ -371,39 +178,36 @@ function CasasPageContent() {
     });
   };
 
-  const getCasaTransactions = (houseId: number) => {
-    return transactions.filter(t => t.house_id === houseId);
+
+
+  const handleViewBalance = async (casa: HouseBalance) => {
+    try {
+      setLoading(true);
+      setSelectedHouseBalance(casa);
+      setIsBalanceModalOpen(true);
+    } finally { setLoading(false); }
   };
 
-  const calculateCasaBalance = (casa: Casa) => {
-    const casaTransactions = getCasaTransactions(casa.id);
-    const balance = casaTransactions.reduce((acc, t) => acc + t.valor, 0);
-    return balance;
-  };
-
-  const handleViewBalance = (casa: Casa) => {
-    const balance = mockHouseBalances[casa.id] || {
-      house_id: casa.id,
-      house_name: casa.name,
-      total_bets: 0,
-      total_stake: 0,
-      total_bet_profit: 0,
-      total_transactions: 0,
-      house_balance: calculateCasaBalance(casa),
-      real_house_balance: calculateCasaBalance(casa),
-      pending_bets: 0,
-      won_bets: 0,
-      lost_bets: 0
-    };
-    setSelectedHouseBalance(balance);
-    setIsBalanceModalOpen(true);
-  };
-
-  const handleViewHistory = (casa: Casa) => {
-    const houseMovements = mockHouseMovements[casa.id] || [];
-    setSelectedHouseMovements(houseMovements);
+  const handleViewHistory = async (casa: HouseBalance) => {
+    try {
+      setLoading(true);
+      const history = await getHouseHistory(casa.house_id);
+      const mapped: HouseMovement[] = history.map((h: any) => ({
+        id: h.id,
+        profit: String(h.profit ?? 0),
+        created_at: h.created_at,
+        movement_type: h.movement_type,
+        game: h.game,
+        stake: h.stake,
+        odd: h.odd,
+        market: h.market,
+        sport: h.sport,
+        result_id: h.result_id
+      }));
+      setSelectedHouseMovements(mapped);
     setSelectedCasa(casa);
     setIsHistoryModalOpen(true);
+    } finally { setLoading(false); }
   };
 
   const getMovementTypeColor = (type: string) => {
@@ -425,9 +229,20 @@ function CasasPageContent() {
   };
 
   // Filtrar casas baseado no termo de pesquisa
-  const filteredCasas = casas.filter(casa => 
-    casa.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCasas = houseBalances.filter(casa => casa.house_name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const refresh = async () => {
+    try {
+      setLoading(true);
+      const [t, b] = await Promise.all([getAllTransactions(), getAllHousesBalance()]);
+      setTransactions(t as any);
+      setHouseBalances(b as any);
+    } finally { setLoading(false); }
+  };
+
+  // initial
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useState(() => { refresh(); return undefined; });
 
   return (
     <div className="space-y-6">
@@ -461,8 +276,8 @@ function CasasPageContent() {
                     onChange={(e) => setTransactionForm(prev => ({ ...prev, house_id: e.target.value }))}
                   >
                     <option value="">Selecione a casa</option>
-                    {casas.map(casa => (
-                      <option key={casa.id} value={casa.id}>{casa.name}</option>
+                    {houseBalances.map(casa => (
+                      <option key={casa.house_id} value={casa.house_id}>{casa.house_name}</option>
                     ))}
                   </select>
                 </div>
@@ -561,8 +376,8 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Casas</p>
-                <p className="text-2xl font-bold">{casas.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Casas com Apostas</p>
+                <p className="text-2xl font-bold">{houseBalances.length}</p>
               </div>
               <Building2 className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -573,8 +388,8 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Casas Ativas</p>
-                <p className="text-2xl font-bold">{casas.filter(c => c.active).length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total de Apostas</p>
+                <p className="text-2xl font-bold">{houseBalances.reduce((acc, balance) => acc + balance.total_bets, 0)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-success" />
             </div>
@@ -587,7 +402,7 @@ function CasasPageContent() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
                 <p className="text-2xl font-bold">
-                  R$ {casas.reduce((acc, casa) => acc + calculateCasaBalance(casa), 0).toFixed(2)}
+                  R$ {Number(houseBalances.reduce((acc, balance) => acc + balance.house_balance, 0)).toFixed(2)}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-primary" />
@@ -599,8 +414,10 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Transações</p>
-                <p className="text-2xl font-bold">{transactions.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Lucro Total</p>
+                <p className={`text-2xl font-bold ${houseBalances.reduce((acc, balance) => acc + balance.total_bet_profit, 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  R$ {Number(houseBalances.reduce((acc, balance) => acc + balance.total_bet_profit, 0)).toFixed(2)}
+                </p>
               </div>
               <TrendingDown className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -635,37 +452,32 @@ function CasasPageContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Saldo Calculado</TableHead>
-                    <TableHead>Total Apostas</TableHead>
-                    <TableHead>Depósitos</TableHead>
-                    <TableHead>Saques</TableHead>
+                    <TableHead>Total de Apostas</TableHead>
+                    <TableHead>Total Investido</TableHead>
+                    <TableHead>Lucro das Apostas</TableHead>
+                    <TableHead>Transações</TableHead>
+                    <TableHead>Saldo Atual</TableHead>
                     <TableHead className="w-24">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCasas.map((casa) => {
-                    const saldoCalculado = calculateCasaBalance(casa);
-                    const casaTransactions = getCasaTransactions(casa.id);
-                    const depositos = casaTransactions.filter(t => t.transaction_type_id === 1).reduce((acc, t) => acc + t.valor, 0);
-                    const saques = Math.abs(casaTransactions.filter(t => t.transaction_type_id === 2).reduce((acc, t) => acc + t.valor, 0));
-                    
                     return (
-                      <TableRow key={casa.id}>
-                        <TableCell className="font-medium">{casa.name}</TableCell>
+                      <TableRow key={casa.house_id}>
+                        <TableCell className="font-medium">{casa.house_name}</TableCell>
+                        <TableCell>{casa.total_bets}</TableCell>
+                        <TableCell>R$ {Number(casa.total_stake).toFixed(2)}</TableCell>
                         <TableCell>
-                          <Badge variant={casa.active ? "default" : "secondary"}>
-                            {casa.active ? "Ativa" : "Inativa"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className={saldoCalculado >= 0 ? "text-success" : "text-destructive"}>
-                            R$ {saldoCalculado.toFixed(2)}
+                          <span className={Number(casa.total_bet_profit) >= 0 ? "text-success" : "text-destructive"}>
+                            R$ {Number(casa.total_bet_profit).toFixed(2)}
                           </span>
                         </TableCell>
-                        <TableCell>{casa.total_bets}</TableCell>
-                        <TableCell>R$ {depositos.toFixed(2)}</TableCell>
-                        <TableCell>R$ {saques.toFixed(2)}</TableCell>
+                        <TableCell>R$ {Number(casa.total_transactions).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span className={Number(casa.house_balance) >= 0 ? "text-success" : "text-destructive"}>
+                            R$ {Number(casa.house_balance).toFixed(2)}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button
@@ -695,7 +507,7 @@ function CasasPageContent() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteCasa(casa.id)}
+                              onClick={() => handleDeleteCasa(casa.house_id)}
                               title="Excluir"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -744,17 +556,17 @@ function CasasPageContent() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className={transaction.valor >= 0 ? "text-success" : "text-destructive"}>
-                          R$ {transaction.valor.toFixed(2)}
+                        <span className={Number(transaction.valor ?? 0) >= 0 ? "text-success" : "text-destructive"}>
+                          R$ {Number(transaction.valor ?? 0).toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell>{transaction.descricao}</TableCell>
                       <TableCell>
-                        {new Date(transaction.created_at).toLocaleDateString('pt-BR')} {' '}
-                        {new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
+                        {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString('pt-BR') : "-"} {' '}
+                        {transaction.created_at ? new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
-                        })}
+                        }) : ""}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -822,7 +634,7 @@ function CasasPageContent() {
                   <CardContent className="p-4">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Total Investido</p>
-                      <p className="text-xl font-bold">R$ {selectedHouseBalance.total_stake.toFixed(2)}</p>
+                      <p className="text-xl font-bold">R$ {Number(selectedHouseBalance.total_stake ?? 0).toFixed(2)}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -830,8 +642,8 @@ function CasasPageContent() {
                   <CardContent className="p-4">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Lucro</p>
-                      <p className={`text-xl font-bold ${selectedHouseBalance.total_bet_profit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                        R$ {selectedHouseBalance.total_bet_profit.toFixed(2)}
+                      <p className={`text-xl font-bold ${Number(selectedHouseBalance.total_bet_profit ?? 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        R$ {Number(selectedHouseBalance.total_bet_profit ?? 0).toFixed(2)}
                       </p>
                     </div>
                   </CardContent>
@@ -840,7 +652,7 @@ function CasasPageContent() {
                   <CardContent className="p-4">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Saldo Atual</p>
-                      <p className="text-xl font-bold text-primary">R$ {selectedHouseBalance.house_balance.toFixed(2)}</p>
+                      <p className="text-xl font-bold text-primary">R$ {Number(selectedHouseBalance.house_balance ?? 0).toFixed(2)}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -899,7 +711,7 @@ function CasasPageContent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Histórico de Transações - {selectedCasa?.name}
+              Histórico de Transações - {selectedCasa?.house_name}
             </DialogTitle>
           </DialogHeader>
           

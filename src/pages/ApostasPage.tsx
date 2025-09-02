@@ -8,7 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useMockApostas, useMockCasas, Aposta } from "@/hooks/useMockData";
+import { 
+  getBets,
+  createBet,
+  updateBetApi,
+  deleteBetApi,
+  deleteMultipleBetsApi,
+  finalizeMultipleBetsApi,
+  getHouses,
+  type Bet,
+  type House
+} from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Edit2, Trash2, Plus, Search, CheckSquare, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,8 +26,9 @@ import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function ApostasPageContent() {
-  const { apostas, createAposta, updateAposta, deleteAposta, deleteMultiple, finalizeMultiple } = useMockApostas();
-  const { casas } = useMockCasas();
+  const [apostas, setApostas] = useState<Bet[]>([]);
+  const [casas, setCasas] = useState<House[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const [selectedBets, setSelectedBets] = useState<number[]>([]);
@@ -25,7 +36,7 @@ function ApostasPageContent() {
   const [statusFilter, setStatusFilter] = useState("");
   const [houseFilter, setHouseFilter] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingAposta, setEditingAposta] = useState<Aposta | null>(null);
+  const [editingAposta, setEditingAposta] = useState<Bet | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Form states
@@ -57,14 +68,19 @@ function ApostasPageContent() {
   };
 
   const filteredApostas = apostas.filter(aposta => {
+    const casaNome = (aposta.casa_nome || "").toLowerCase();
+    const game = (aposta.game || "").toLowerCase();
+    const market = (aposta.market || "").toLowerCase();
     const matchesSearch = 
-      aposta.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      aposta.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      aposta.casa_nome.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = !statusFilter || statusFilter === "all" || aposta.result_id.toString() === statusFilter;
-    const matchesHouse = !houseFilter || houseFilter === "all" || aposta.house_id.toString() === houseFilter;
-    
+      game.includes(searchTerm.toLowerCase()) ||
+      market.includes(searchTerm.toLowerCase()) ||
+      casaNome.includes(searchTerm.toLowerCase());
+
+    const resultIdStr = String(aposta.result_id ?? "");
+    const houseIdStr = String(aposta.house_id ?? "");
+    const matchesStatus = !statusFilter || statusFilter === "all" || resultIdStr === statusFilter;
+    const matchesHouse = !houseFilter || houseFilter === "all" || houseIdStr === houseFilter;
+
     return matchesSearch && matchesStatus && matchesHouse;
   });
 
@@ -80,7 +96,7 @@ function ApostasPageContent() {
     setSelectedBets(selectedBets.length === filteredApostas.length ? [] : filteredApostas.map(a => a.id));
   };
 
-  const handleCreateAposta = () => {
+  const handleCreateAposta = async () => {
     if (!formData.game || !formData.market || !formData.stake || !formData.odd || !formData.house_id) {
       toast({
         title: "Erro",
@@ -90,17 +106,24 @@ function ApostasPageContent() {
       return;
     }
 
-    const casa = casas.find(c => c.id === Number(formData.house_id));
-    
-    createAposta({
-      game: formData.game,
-      sport: formData.sport,
-      market: formData.market,
-      stake: Number(formData.stake),
-      odd: Number(formData.odd),
-      house_id: Number(formData.house_id),
-      casa_nome: casa?.name || ""
-    });
+    try {
+      setLoading(true);
+      const created = await createBet({
+        game: formData.game,
+        sport: formData.sport,
+        market: formData.market,
+        stake: Number(formData.stake),
+        odd: Number(formData.odd),
+        house_id: Number(formData.house_id),
+        bet_time: new Date().toISOString()
+      });
+      setApostas(prev => [created, ...prev]);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao criar aposta", variant: "destructive" });
+      return;
+    } finally {
+      setLoading(false);
+    }
 
     setFormData({
       game: "",
@@ -118,7 +141,7 @@ function ApostasPageContent() {
     });
   };
 
-  const handleEditAposta = (aposta: Aposta) => {
+  const handleEditAposta = (aposta: Bet) => {
     setEditingAposta(aposta);
     setFormData({
       game: aposta.game,
@@ -131,20 +154,26 @@ function ApostasPageContent() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateAposta = () => {
+  const handleUpdateAposta = async () => {
     if (!editingAposta) return;
 
-    const casa = casas.find(c => c.id === Number(formData.house_id));
-    
-    updateAposta(editingAposta.id, {
-      game: formData.game,
-      sport: formData.sport,
-      market: formData.market,
-      stake: Number(formData.stake),
-      odd: Number(formData.odd),
-      house_id: Number(formData.house_id),
-      casa_nome: casa?.name || ""
-    });
+    try {
+      setLoading(true);
+      const updated = await updateBetApi(editingAposta.id, {
+        game: formData.game,
+        sport: formData.sport,
+        market: formData.market,
+        stake: Number(formData.stake),
+        odd: Number(formData.odd),
+        house_id: Number(formData.house_id)
+      });
+      setApostas(prev => prev.map(a => a.id === editingAposta.id ? { ...a, ...updated } : a));
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao atualizar aposta", variant: "destructive" });
+      return;
+    } finally {
+      setLoading(false);
+    }
 
     setIsEditModalOpen(false);
     setEditingAposta(null);
@@ -155,10 +184,18 @@ function ApostasPageContent() {
     });
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
-    
-    deleteMultiple(selectedBets);
+    try {
+      setLoading(true);
+      await deleteMultipleBetsApi(selectedBets);
+      setApostas(prev => prev.filter(a => !selectedBets.includes(a.id)));
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao excluir apostas", variant: "destructive" });
+      return;
+    } finally {
+      setLoading(false);
+    }
     setSelectedBets([]);
     
     toast({
@@ -167,10 +204,20 @@ function ApostasPageContent() {
     });
   };
 
-  const handleBulkStatusChange = (resultId: number) => {
+  const handleBulkStatusChange = async (resultId: number) => {
     if (selectedBets.length === 0) return;
-    
-    finalizeMultiple(selectedBets, resultId);
+    try {
+      setLoading(true);
+      await finalizeMultipleBetsApi(selectedBets, resultId);
+      // Recarregar apostas para refletir cálculo de lucro
+      const data = await getBets();
+      setApostas(data);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao atualizar status", variant: "destructive" });
+      return;
+    } finally {
+      setLoading(false);
+    }
     setSelectedBets([]);
     
     toast({
@@ -179,20 +226,45 @@ function ApostasPageContent() {
     });
   };
 
-  const handleStatusChange = (id: number, resultId: number) => {
-    finalizeMultiple([id], resultId);
+  const handleStatusChange = async (id: number, resultId: number) => {
+    try {
+      setLoading(true);
+      await finalizeMultipleBetsApi([id], resultId);
+      const data = await getBets();
+      setApostas(data);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao alterar status", variant: "destructive" });
+      return;
+    } finally {
+      setLoading(false);
+    }
     toast({
       title: "Status atualizado",
       description: "Status da aposta alterado"
     });
   };
 
+  const refresh = async () => {
+    try {
+      setLoading(true);
+      const [bets, houses] = await Promise.all([getBets(), getHouses()]);
+      setApostas(bets);
+      setCasas(houses);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // initial load
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useState(() => { refresh(); return undefined; });
+
   return (
     <div className="space-y-6">
       {/* Header com ações */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={refresh} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </Button>
@@ -420,8 +492,8 @@ function ApostasPageContent() {
                   <TableCell className="font-medium">{aposta.game}</TableCell>
                   <TableCell>{aposta.sport}</TableCell>
                   <TableCell>{aposta.market}</TableCell>
-                  <TableCell>R$ {aposta.stake.toFixed(2)}</TableCell>
-                  <TableCell>{aposta.odd.toFixed(2)}</TableCell>
+                  <TableCell>R$ {Number(aposta.stake ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>{Number(aposta.odd ?? 0).toFixed(2)}</TableCell>
                   <TableCell>{aposta.casa_nome}</TableCell>
                   <TableCell>
                     <Select
@@ -442,14 +514,14 @@ function ApostasPageContent() {
                   <TableCell>
                     <span className={cn(
                       "font-medium",
-                      aposta.lucro_calculado > 0 ? "text-success" : 
-                      aposta.lucro_calculado < 0 ? "text-destructive" : "text-muted-foreground"
+                      Number(aposta.lucro_calculado ?? 0) > 0 ? "text-success" : 
+                      Number(aposta.lucro_calculado ?? 0) < 0 ? "text-destructive" : "text-muted-foreground"
                     )}>
-                      R$ {aposta.lucro_calculado.toFixed(2)}
+                      R$ {Number(aposta.lucro_calculado ?? 0).toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell>
-                    {new Date(aposta.bet_time).toLocaleDateString('pt-BR')}
+                    {aposta.bet_time ? new Date(aposta.bet_time).toLocaleDateString('pt-BR') : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -463,7 +535,13 @@ function ApostasPageContent() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteAposta(aposta.id)}
+                        onClick={async () => {
+                          try {
+                            setLoading(true);
+                            await deleteBetApi(aposta.id);
+                            setApostas(prev => prev.filter(a => a.id !== aposta.id));
+                          } finally { setLoading(false); }
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
