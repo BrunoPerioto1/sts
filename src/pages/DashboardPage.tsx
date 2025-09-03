@@ -23,13 +23,28 @@ function DashboardPageContent() {
   });
 
   const [metrics, setMetrics] = useState(() => getMetrics());
-  const [chartData, setChartData] = useState(() => getChartData());
+  const [chartData, setChartData] = useState(() => {
+    const metrics = getMetrics();
+    return [
+      {
+        category: "Casas de Aposta",
+        receitas: metrics.totalRetorno,
+        despesas: metrics.totalInvestido
+      }
+    ];
+  });
   const [dailyData, setDailyData] = useState(() => getDailySummary());
 
   useEffect(() => {
     const newMetrics = getMetrics(filters);
     setMetrics(newMetrics);
-    setChartData(getChartData());
+    setChartData([
+      {
+        category: "Casas de Aposta",
+        receitas: newMetrics.totalRetorno,
+        despesas: newMetrics.totalInvestido
+      }
+    ]);
   }, [filters]);
 
   const handleFilterChange = (key: string, value: any) => {
