@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ChartData {
-  date: string;
-  value: number;
+  category: string;
+  receitas: number;
+  despesas: number;
 }
 
 interface PerformanceChartProps {
@@ -19,10 +20,10 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
+            <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis 
-                dataKey="date" 
+                dataKey="category" 
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
               />
@@ -37,17 +38,22 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
                 }}
-                formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Lucro/Prejuízo']}
+                formatter={(value: number, name: string) => [
+                  `R$ ${value.toFixed(2)}`, 
+                  name === 'receitas' ? 'Receitas' : 'Despesas'
+                ]}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="hsl(var(--chart-blue))" 
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--chart-blue))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'hsl(var(--chart-blue))', strokeWidth: 2 }}
+              <Bar 
+                dataKey="receitas" 
+                fill="hsl(var(--chart-orange))"
+                radius={[2, 2, 0, 0]}
               />
-            </LineChart>
+              <Bar 
+                dataKey="despesas" 
+                fill="hsl(var(--chart-blue))"
+                radius={[2, 2, 0, 0]}
+              />
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

@@ -43,6 +43,7 @@ All colors MUST be HSL.
     --chart-green: 142 76% 36%;
     --chart-red: 0 84% 60%;
     --chart-blue: 221 83% 45%;
+    --chart-orange: 25 95% 53%;
 
     --radius: 0.5rem;
 
@@ -93,6 +94,7 @@ All colors MUST be HSL.
     --chart-green: 142 76% 36%;
     --chart-red: 0 84% 60%;
     --chart-blue: 221 83% 45%;
+    --chart-orange: 25 95% 53%;
 
     /* Sidebar mantém-se escura */
     --sidebar-background: 240 10% 3.9%;

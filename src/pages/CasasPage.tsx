@@ -8,19 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  createHouseApi,
-  updateHouseApi,
-  deleteHouseApi,
-  getAllTransactions,
-  createTransactionApi,
-  getAllHousesBalance,
-  getHouseHistory,
-  type HouseTransaction,
-  type HouseBalance
-} from "@/lib/api";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMockCasas, useMockTransactions, Casa } from "@/hooks/useMockData";
 import { useToast } from "@/hooks/use-toast";
-import { Edit2, Trash2, Plus, Building2, DollarSign, TrendingUp, TrendingDown, Search, Eye, History } from "lucide-react";
+import { Edit2, Trash2, Plus, Building2, DollarSign, TrendingUp, TrendingDown, Search, Eye, History, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Dados mockados para detalhes da casa
 interface HouseMovement {
@@ -54,8 +48,11 @@ function CasasPageContent() {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [editingCasa, setEditingCasa] = useState<HouseBalance | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [selectedHouseBalance, setSelectedHouseBalance] = useState<HouseBalance | null>(null);
-  const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseMovement[]>([]);
+  const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseTransaction[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -138,8 +135,9 @@ function CasasPageContent() {
     });
   };
 
-  const handleCreateTransaction = async () => {
-    if (!transactionForm.house_id || !transactionForm.valor || !transactionForm.descricao) {
+  const handleCreateTransaction = () => {
+    if (!transactionForm.house_id || !transactionForm.valor) {
+
       toast({
         title: "Erro", 
         description: "Preencha todos os campos obrigatórios",
@@ -149,20 +147,23 @@ function CasasPageContent() {
     }
 
     const valor = Number(transactionForm.valor);
-    try {
-      setLoading(true);
-      const payload = {
-        house_id: Number(transactionForm.house_id),
-        transaction_type_id: Number(transactionForm.transaction_type_id),
-        valor: transactionForm.transaction_type_id === "2" ? -Math.abs(valor) : valor,
-        descricao: transactionForm.descricao
-      };
-      await createTransactionApi(payload);
-      await refresh(); // Recarrega transações e saldos
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message || "Falha ao criar transação", variant: "destructive" });
-      return;
-    } finally { setLoading(false); }
+
+    if (transactionForm.transaction_type_id === "2" && valor > 0) {
+      // Para saques, o valor deve ser negativo
+        createTransaction({
+          house_id: Number(transactionForm.house_id),
+          transaction_type_id: Number(transactionForm.transaction_type_id),
+          valor: -valor,
+          descricao: transactionForm.descricao || `Saque de R$ ${valor.toFixed(2)}`
+        });
+    } else {
+        createTransaction({
+          house_id: Number(transactionForm.house_id),
+          transaction_type_id: Number(transactionForm.transaction_type_id),
+          valor: transactionForm.transaction_type_id === "3" ? valor : Math.abs(valor), // ajustes podem ser positivos ou negativos
+          descricao: transactionForm.descricao || `${transactionForm.transaction_type_id === "1" ? "Depósito" : transactionForm.transaction_type_id === "2" ? "Saque" : "Ajuste"} de R$ ${valor.toFixed(2)}`
+        });
+    }
 
     setTransactionForm({
       house_id: "",
@@ -188,23 +189,10 @@ function CasasPageContent() {
     } finally { setLoading(false); }
   };
 
-  const handleViewHistory = async (casa: HouseBalance) => {
-    try {
-      setLoading(true);
-      const history = await getHouseHistory(casa.house_id);
-      const mapped: HouseMovement[] = history.map((h: any) => ({
-        id: h.id,
-        profit: String(h.profit ?? 0),
-        created_at: h.created_at,
-        movement_type: h.movement_type,
-        game: h.game,
-        stake: h.stake,
-        odd: h.odd,
-        market: h.market,
-        sport: h.sport,
-        result_id: h.result_id
-      }));
-      setSelectedHouseMovements(mapped);
+
+  const handleViewHistory = (casa: Casa) => {
+    const houseTransactions = mockHouseTransactions[casa.id] || [];
+    setSelectedHouseMovements(houseTransactions);
     setSelectedCasa(casa);
     setIsHistoryModalOpen(true);
     } finally { setLoading(false); }
@@ -305,15 +293,6 @@ function CasasPageContent() {
                     onChange={(e) => setTransactionForm(prev => ({ ...prev, valor: e.target.value }))}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Descrição *</Label>
-                  <Input
-                    placeholder="Descrição da transação"
-                    value={transactionForm.descricao}
-                    onChange={(e) => setTransactionForm(prev => ({ ...prev, descricao: e.target.value }))}
-                  />
-                </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
@@ -322,47 +301,6 @@ function CasasPageContent() {
                 </Button>
                 <Button onClick={handleCreateTransaction}>
                   Criar Transação
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Casa
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Casa</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Nome *</Label>
-                  <Input
-                    placeholder="Ex: Bet365"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label>Ativa</Label>
-                  <Switch
-                    checked={formData.active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateCasa}>
-                  Criar Casa
                 </Button>
               </div>
             </DialogContent>
@@ -376,33 +314,10 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Casas com Apostas</p>
-                <p className="text-2xl font-bold">{houseBalances.length}</p>
-              </div>
-              <Building2 className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Apostas</p>
-                <p className="text-2xl font-bold">{houseBalances.reduce((acc, balance) => acc + balance.total_bets, 0)}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-success" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
                 <p className="text-2xl font-bold">
-                  R$ {Number(houseBalances.reduce((acc, balance) => acc + balance.house_balance, 0)).toFixed(2)}
+                  R$ {casas.reduce((acc, casa) => acc + calculateCasaBalance(casa), 0).toFixed(2)}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-primary" />
@@ -414,12 +329,39 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Lucro Total</p>
-                <p className={`text-2xl font-bold ${houseBalances.reduce((acc, balance) => acc + balance.total_bet_profit, 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  R$ {Number(houseBalances.reduce((acc, balance) => acc + balance.total_bet_profit, 0)).toFixed(2)}
-                </p>
+
+             
+                <p className="text-sm font-medium text-muted-foreground">Total Investido</p>
+                <p className="text-2xl font-bold">R$ 2.250,50</p>
+
               </div>
-              <TrendingDown className="h-8 w-8 text-muted-foreground" />
+              <TrendingUp className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+
+                <p className="text-sm font-medium text-muted-foreground">Total de Lucro</p>
+                <p className="text-2xl font-bold text-success">R$ 160,05</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+
+                <p className="text-sm font-medium text-muted-foreground">Total de Bets</p>
+                <p className="text-2xl font-bold">45</p>
+              </div>
+              <Building2 className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -496,22 +438,7 @@ function CasasPageContent() {
                             >
                               <History className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditCasa(casa)}
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteCasa(casa.house_id)}
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+
                           </div>
                         </TableCell>
                       </TableRow>
@@ -526,7 +453,77 @@ function CasasPageContent() {
         <TabsContent value="transacoes">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Transações</CardTitle>
+              <div className="flex items-center justify-between gap-4">
+                <CardTitle>Histórico de Transações</CardTitle>
+                <div className="flex gap-2">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar casa..."
+                      value={transactionSearchTerm}
+                      onChange={(e) => setTransactionSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[200px] justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "dd/MM/yyyy") : "Data inicial"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[200px] justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "dd/MM/yyyy") : "Data final"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {(startDate || endDate) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setStartDate(undefined);
+                        setEndDate(undefined);
+                      }}
+                    >
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -535,12 +532,21 @@ function CasasPageContent() {
                     <TableHead>Casa</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Descrição</TableHead>
                     <TableHead>Data</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions
+                    .filter(transaction => {
+                      const matchesSearch = transactionSearchTerm === "" || 
+                        transaction.casa_nome.toLowerCase().includes(transactionSearchTerm.toLowerCase());
+                      
+                      const transactionDate = new Date(transaction.created_at);
+                      const matchesDateRange = (!startDate || transactionDate >= startDate) && 
+                                             (!endDate || transactionDate <= endDate);
+                      
+                      return matchesSearch && matchesDateRange;
+                    })
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .map((transaction) => (
                     <TableRow key={transaction.id}>
@@ -560,7 +566,6 @@ function CasasPageContent() {
                           R$ {Number(transaction.valor ?? 0).toFixed(2)}
                         </span>
                       </TableCell>
-                      <TableCell>{transaction.descricao}</TableCell>
                       <TableCell>
                         {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString('pt-BR') : "-"} {' '}
                         {transaction.created_at ? new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
@@ -728,58 +733,36 @@ function CasasPageContent() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Descrição</TableHead>
-                    <TableHead>Detalhes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {selectedHouseMovements
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                    .map((movement) => (
-                    <TableRow key={movement.id}>
+                    .map((transaction) => (
+                    <TableRow key={transaction.id}>
                       <TableCell>
-                        {new Date(movement.created_at).toLocaleDateString('pt-BR')} {' '}
-                        {new Date(movement.created_at).toLocaleTimeString('pt-BR', { 
+                        {new Date(transaction.created_at).toLocaleDateString('pt-BR')} {' '}
+                        {new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
                         })}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getMovementTypeColor(movement.movement_type)}>
-                          {getMovementTypeName(movement.movement_type)}
+                        <Badge variant={
+                          transaction.transaction_type === "DEPOSIT" ? "default" :
+                          transaction.transaction_type === "WITHDRAWAL" ? "destructive" : "secondary"
+                        }>
+                          {transaction.transaction_type === "DEPOSIT" ? "Depósito" :
+                           transaction.transaction_type === "WITHDRAWAL" ? "Saque" : "Ajuste"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className={parseFloat(movement.profit) >= 0 ? "text-success" : "text-destructive"}>
-                          R$ {parseFloat(movement.profit).toFixed(2)}
+                        <span className={parseFloat(transaction.value) >= 0 ? "text-success" : "text-destructive"}>
+                          R$ {parseFloat(transaction.value).toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        {movement.movement_type === "BET" ? (
-                          <div className="space-y-1">
-                            <div className="font-medium">{movement.game}</div>
-                            <div className="text-sm text-muted-foreground">{movement.market}</div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            {movement.movement_type === "DEPOSIT" ? "Depósito inicial" : "Saque parcial"}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {movement.movement_type === "BET" ? (
-                          <div className="text-sm space-y-1">
-                            <div><span className="font-medium">Esporte:</span> {movement.sport}</div>
-                            <div><span className="font-medium">Stake:</span> R$ {movement.stake}</div>
-                            <div><span className="font-medium">Odd:</span> {movement.odd}</div>
-                            <div>
-                              <Badge variant={movement.result_id === 1 ? "default" : "destructive"}>
-                                {movement.result_id === 1 ? "Ganhou" : "Perdeu"}
-                              </Badge>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        {transaction.description}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -13,8 +13,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function DashboardPageContent() {
+
   const [casas, setCasas] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
   
   const [filters, setFilters] = useState({
     house_id: undefined as number | undefined,
@@ -157,59 +159,59 @@ function DashboardPageContent() {
         />
       </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de barras - Investido x Retorno x Lucro */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Resumo Financeiro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PerformanceChart data={chartData} />
-          </CardContent>
-        </Card>
-
-        {/* Gráfico de linha - Evolução diária */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução Diária (Últimos 30 dias)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
-                  formatter={(value: number, name: string) => [
-                    name === 'lucro' ? `R$ ${value.toFixed(2)}` : value,
-                    name === 'lucro' ? 'Lucro' : 'Apostas'
-                  ]}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="apostas" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  name="apostas"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="lucro" 
-                  stroke="hsl(var(--chart-green))" 
-                  strokeWidth={2}
-                  name="lucro"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Gráfico de evolução diária expandido */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução Diária (Últimos 30 dias)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="date" 
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+                labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                formatter={(value: number, name: string) => [
+                  name === 'lucro' ? `R$ ${value.toFixed(2)}` : value,
+                  name === 'lucro' ? 'Lucro' : 'Apostas'
+                ]}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="apostas" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={3}
+                name="apostas"
+                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="lucro" 
+                stroke="hsl(var(--chart-green))" 
+                strokeWidth={3}
+                name="lucro"
+                dot={{ fill: 'hsl(var(--chart-green))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: 'hsl(var(--chart-green))', strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Cards de resumo adicional */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

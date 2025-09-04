@@ -229,9 +229,11 @@ const Index = () => {
 
   // Chart data
   const chartData = [
-    { date: "Investido", value: totalInvestido },
-    { date: "Retorno", value: totalRetorno },
-    { date: "Lucro", value: lucroTotal },
+    {
+      category: "Resumo Financeiro",
+      receitas: totalRetorno,
+      despesas: totalInvestido
+    }
   ];
 
   const renderContent = () => {
