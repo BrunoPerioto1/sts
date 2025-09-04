@@ -330,7 +330,7 @@ function CasasPageContent() {
   };
 
   const handleCreateTransaction = () => {
-    if (!transactionForm.house_id || !transactionForm.valor || !transactionForm.descricao) {
+    if (!transactionForm.house_id || !transactionForm.valor) {
       toast({
         title: "Erro", 
         description: "Preencha todos os campos obrigatórios",
@@ -342,19 +342,19 @@ function CasasPageContent() {
     const valor = Number(transactionForm.valor);
     if (transactionForm.transaction_type_id === "2" && valor > 0) {
       // Para saques, o valor deve ser negativo
-      createTransaction({
-        house_id: Number(transactionForm.house_id),
-        transaction_type_id: Number(transactionForm.transaction_type_id),
-        valor: -valor,
-        descricao: transactionForm.descricao
-      });
+        createTransaction({
+          house_id: Number(transactionForm.house_id),
+          transaction_type_id: Number(transactionForm.transaction_type_id),
+          valor: -valor,
+          descricao: transactionForm.descricao || `Saque de R$ ${valor.toFixed(2)}`
+        });
     } else {
-      createTransaction({
-        house_id: Number(transactionForm.house_id),
-        transaction_type_id: Number(transactionForm.transaction_type_id),
-        valor: transactionForm.transaction_type_id === "3" ? valor : Math.abs(valor), // ajustes podem ser positivos ou negativos
-        descricao: transactionForm.descricao
-      });
+        createTransaction({
+          house_id: Number(transactionForm.house_id),
+          transaction_type_id: Number(transactionForm.transaction_type_id),
+          valor: transactionForm.transaction_type_id === "3" ? valor : Math.abs(valor), // ajustes podem ser positivos ou negativos
+          descricao: transactionForm.descricao || `${transactionForm.transaction_type_id === "1" ? "Depósito" : transactionForm.transaction_type_id === "2" ? "Saque" : "Ajuste"} de R$ ${valor.toFixed(2)}`
+        });
     }
 
     setTransactionForm({
@@ -490,15 +490,6 @@ function CasasPageContent() {
                     onChange={(e) => setTransactionForm(prev => ({ ...prev, valor: e.target.value }))}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Descrição *</Label>
-                  <Input
-                    placeholder="Descrição da transação"
-                    value={transactionForm.descricao}
-                    onChange={(e) => setTransactionForm(prev => ({ ...prev, descricao: e.target.value }))}
-                  />
-                </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
@@ -511,76 +502,11 @@ function CasasPageContent() {
               </div>
             </DialogContent>
           </Dialog>
-
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Casa
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Casa</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Nome *</Label>
-                  <Input
-                    placeholder="Ex: Bet365"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label>Ativa</Label>
-                  <Switch
-                    checked={formData.active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateCasa}>
-                  Criar Casa
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Casas</p>
-                <p className="text-2xl font-bold">{casas.length}</p>
-              </div>
-              <Building2 className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Casas Ativas</p>
-                <p className="text-2xl font-bold">{casas.filter(c => c.active).length}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-success" />
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -599,10 +525,34 @@ function CasasPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Transações</p>
-                <p className="text-2xl font-bold">{transactions.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Investido</p>
+                <p className="text-2xl font-bold">R$ 2.250,50</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-muted-foreground" />
+              <TrendingUp className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Lucro</p>
+                <p className="text-2xl font-bold text-success">R$ 160,05</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Bets</p>
+                <p className="text-2xl font-bold">45</p>
+              </div>
+              <Building2 className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -683,22 +633,6 @@ function CasasPageContent() {
                               title="Ver Transações"
                             >
                               <History className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditCasa(casa)}
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteCasa(casa.id)}
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
