@@ -8,9 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMockCasas, useMockTransactions, Casa } from "@/hooks/useMockData";
 import { useToast } from "@/hooks/use-toast";
-import { Edit2, Trash2, Plus, Building2, DollarSign, TrendingUp, TrendingDown, Search, Eye, History } from "lucide-react";
+import { Edit2, Trash2, Plus, Building2, DollarSign, TrendingUp, TrendingDown, Search, Eye, History, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Dados mockados para detalhes da casa
 interface HouseBalance {
@@ -257,7 +261,8 @@ function CasasPageContent() {
   const [editingCasa, setEditingCasa] = useState<Casa | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [selectedHouseBalance, setSelectedHouseBalance] = useState<HouseBalance | null>(null);
   const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseTransaction[]>([]);
 
@@ -662,12 +667,63 @@ function CasasPageContent() {
                       className="pl-10"
                     />
                   </div>
-                  <Input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-48"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[200px] justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "dd/MM/yyyy") : "Data inicial"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[200px] justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "dd/MM/yyyy") : "Data final"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {(startDate || endDate) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setStartDate(undefined);
+                        setEndDate(undefined);
+                      }}
+                    >
+                      Limpar
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -686,9 +742,12 @@ function CasasPageContent() {
                     .filter(transaction => {
                       const matchesSearch = transactionSearchTerm === "" || 
                         transaction.casa_nome.toLowerCase().includes(transactionSearchTerm.toLowerCase());
-                      const matchesDate = dateFilter === "" || 
-                        new Date(transaction.created_at).toISOString().split('T')[0] === dateFilter;
-                      return matchesSearch && matchesDate;
+                      
+                      const transactionDate = new Date(transaction.created_at);
+                      const matchesDateRange = (!startDate || transactionDate >= startDate) && 
+                                             (!endDate || transactionDate <= endDate);
+                      
+                      return matchesSearch && matchesDateRange;
                     })
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .map((transaction) => (
