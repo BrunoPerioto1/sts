@@ -22,7 +22,7 @@ export interface CreateBetDto {
 
 export async function createBet(bet: CreateBetDto) {
   try {
-    const response = await api.bets.post('/bets', bet);
+    const response = await api.bets.post('', bet);
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);
@@ -43,7 +43,7 @@ export interface UpdateApostaDto {
 
 export async function updateBet(id: number, bet: UpdateApostaDto) {
   try {
-    const response = await api.bets.put(`/bets/${id}`, bet);
+    const response = await api.bets.put(`/${id}`, bet);
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);
@@ -52,15 +52,16 @@ export async function updateBet(id: number, bet: UpdateApostaDto) {
 export interface BetItem {
   id: number;
   game: string;
-  stake: number;
-  odd: number;
+  stake: string | number;
+  odd: string | number;
   houseId: number;
   market: string;
   sport: string;
-  profit: number | null;
-  betTime: Date;
+  profit: string | number | null;
+  betTime: string | Date;
   resultId: number;
   resultName: string;
+  houseName?: string;
 }
 
 export interface BetFilterDto {
@@ -100,7 +101,7 @@ export interface FinalizarMultiplasDto {
 // Finalizar aposta individual: /bets/finalize/{id}
 export async function finalizeBet(id: number, data: FinalizarApostaDto) {
   try {
-    const response = await api.bets.put(`/bets/finalize/${id}`, data);
+    const response = await api.bets.put(`/finalize/${id}`, data);
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);
@@ -110,7 +111,7 @@ export async function finalizeBet(id: number, data: FinalizarApostaDto) {
 // Finalizar múltiplas apostas: /bets/finalize-multiple
 export async function finalizeMultipleBets(data: FinalizarMultiplasDto) {
   try {
-    const response = await api.bets.put('/bets/finalize-multiple', data);
+    const response = await api.bets.put('/finalize-multiple', data);
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);
@@ -120,7 +121,7 @@ export async function finalizeMultipleBets(data: FinalizarMultiplasDto) {
 // Deletar aposta individual: /bets/{id}
 export async function deleteBet(id: number) {
   try {
-    const response = await api.bets.delete(`/bets/${id}`);
+    const response = await api.bets.delete(`/${id}`);
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);
@@ -130,7 +131,7 @@ export async function deleteBet(id: number) {
 // Deletar múltiplas apostas: /bets/delete-multiple
 export async function deleteMultipleBets(betIds: number[]) {
   try {
-    const response = await api.bets.delete('/bets/delete-multiple', { data: { betIds } });
+    const response = await api.bets.delete('/delete-multiple', { data: { betIds } });
     return response.data;
   } catch (e: any) {
     throw new Error(`${e?.message || e}`);

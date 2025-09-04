@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import {
   type BetItem,
   ResultIdEnum,
 } from "@/api/routes/get-bets";
-import { getAllHouses, type FindAllHousesDTO } from "@/api/routes/get-houses";
+import { getAllHouses, type HouseDto } from "@/api/routes/get-houses";
 import { useToast } from "@/hooks/use-toast";
 import { Edit2, Trash2, Plus, Search, CheckSquare, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 
 function ApostasPageContent() {
   const [apostas, setApostas] = useState<BetItem[]>([]);
-  const [casas, setCasas] = useState<{ id: number; name: string }[]>([]);
+  const [casas, setCasas] = useState<HouseDto[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -240,17 +240,18 @@ function ApostasPageContent() {
       setLoading(true);
       const [bets, houseRows] = await Promise.all([fetchBets(), getAllHouses()]);
       setApostas(bets);
-      setCasas((houseRows || []).map((h: FindAllHousesDTO) => ({ id: h.houseId, name: h.houseName })));
+      setCasas(houseRows || []);
     } finally {
       setLoading(false);
     }
   };
 
   // initial load
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useState(() => { refresh(); return undefined; });
+  useEffect(() => {
+    refresh();
+  }, []);
 
-  const casasMap = new Map(casas.map(c => [c.id, c.name] as const));
+  const casasMap = new Map(casas.map(c => [c.houseId, c.houseName] as const));
 
   return (
     <div className="space-y-6">
@@ -348,8 +349,8 @@ function ApostasPageContent() {
                   </SelectTrigger>
                   <SelectContent>
                     {casas.map(casa => (
-                      <SelectItem key={casa.id} value={casa.id.toString()}>
-                        {casa.name}
+                      <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
+                        {casa.houseName || 'Casa sem nome'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -428,8 +429,8 @@ function ApostasPageContent() {
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
                   {casas.map(casa => (
-                    <SelectItem key={casa.id} value={casa.id.toString()}>
-                      {casa.name}
+                    <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
+                      {casa.houseName || 'Casa sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -487,7 +488,7 @@ function ApostasPageContent() {
                   <TableCell>{aposta.market}</TableCell>
                   <TableCell>R$ {Number(aposta.stake ?? 0).toFixed(2)}</TableCell>
                   <TableCell>{Number(aposta.odd ?? 0).toFixed(2)}</TableCell>
-                  <TableCell>{casasMap.get(aposta.houseId) || `#${aposta.houseId}`}</TableCell>
+                  <TableCell>{aposta.houseName || casasMap.get(aposta.houseId) || `#${aposta.houseId}`}</TableCell>
                   <TableCell>
                     <Select
                       value={String(aposta.resultId)}
@@ -586,8 +587,8 @@ function ApostasPageContent() {
                 </SelectTrigger>
                 <SelectContent>
                   {casas.map(casa => (
-                    <SelectItem key={casa.id} value={casa.id.toString()}>
-                      {casa.name}
+                    <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
+                      {casa.houseName || 'Casa sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>

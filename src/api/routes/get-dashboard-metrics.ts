@@ -7,18 +7,18 @@ export interface DashboardQueryParams {
 }
 
 export interface DashboardMetrics {
-  totalBets: number;
-  wonBets: number;
-  lostBets: number;
-  pendingBets: number;
-  canceledBets: number;
-  totalStaked: number;
-  totalReturn: number;
-  averageStake: number;
-  averageOdd: number;
-  totalProfit: number;
-  roi: number;
-  hitRate: number;
+  totalBets: string | number;
+  wonBets: string | number;
+  lostBets: string | number;
+  pendingBets: string | number;
+  canceledBets: string | number;
+  totalStaked: string | number;
+  totalReturn: string | number;
+  averageStake: string | number;
+  averageOdd: string | number;
+  totalProfit: string | number;
+  roi: string | number;
+  hitRate: string | number;
 }
 
 export async function getDashboardMetrics(params: DashboardQueryParams) {

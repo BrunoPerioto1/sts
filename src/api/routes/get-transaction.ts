@@ -17,7 +17,7 @@ export interface TransactionDto {
 
 export async function getTransactions(params: TransactionFilterParams) {
   const response = await apiClient().transactions.get<TransactionDto[]>(
-    "/transactions",
+    "",
     { params }
   );
   return response.data;

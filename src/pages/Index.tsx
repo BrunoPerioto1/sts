@@ -197,8 +197,8 @@ const Index = () => {
   const chartData = [
     {
       category: "Resumo Financeiro",
-      receitas: totalReturn,
-      despesas: totalStaked
+      receitas: Number(totalReturn || 0),
+      despesas: Number(totalStaked || 0)
     }
   ];
 
@@ -227,21 +227,21 @@ const Index = () => {
                   />
                   <MetricCard
                     title="Lucros"
-                    value={`${totalProfit >= 0 ? '+' : ''}R$ ${totalProfit.toFixed(2)}`}
-                    icon={totalProfit >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
-                    trend={totalProfit >= 0 ? "positive" : "negative"}
+                    value={`${Number(totalProfit || 0) >= 0 ? '+' : ''}R$ ${Number(totalProfit || 0).toFixed(2)}`}
+                    icon={Number(totalProfit || 0) >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+                    trend={Number(totalProfit || 0) >= 0 ? "positive" : "negative"}
                   />
                   <MetricCard
                     title="ROI"
-                    value={`${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`}
+                    value={`${Number(roi || 0) >= 0 ? '+' : ''}${Number(roi || 0).toFixed(2)}%`}
                     icon={<BarChart3 className="h-6 w-6" />}
-                    trend={roi >= 0 ? "positive" : "negative"}
+                    trend={Number(roi || 0) >= 0 ? "positive" : "negative"}
                   />
                   <MetricCard
                     title="Taxa de Acerto"
-                    value={`${hitRate.toFixed(1)}%`}
+                    value={`${Number(hitRate || 0).toFixed(1)}%`}
                     icon={<Target className="h-6 w-6" />}
-                    trend={hitRate >= 50 ? "positive" : "negative"}
+                    trend={Number(hitRate || 0) >= 50 ? "positive" : "negative"}
                   />
                 </div>
               </>

@@ -10,27 +10,27 @@ export type FindByIdDto = HouseDto;
 export type FindAllHousesDTO = HouseDto;
 
 export interface HouseMetricsDto {
-  totalInvested: number;
-  currentBalance: number;
-  totalProfit: number;
-  totalBets: number;
-  totalHousesUsed: number;
+  totalInvested: string | number;
+  currentBalance: string | number;
+  totalProfit: string | number;
+  totalBets: string | number;
+  totalHousesUsed: string | number;
 }
 
 export interface HouseBalanceDto {
   houseId: number;
   houseName: string;
-  totalBets: number;
-  totalStake: number;
-  totalBetProfit: number;
-  totalDeposit: number;
-  totalWithdrawal: number;
-  totalTransactions: number;
-  realHouseBalance: number;
-  houseBalance: number;
-  pendingBets: number;
-  wonBets: number;
-  lostBets: number;
+  totalBets: string | number;
+  totalStake: string | number;
+  totalBetProfit: string | number;
+  totalDeposit: string | number;
+  totalWithdrawal: string | number;
+  totalTransactions: string | number;
+  realHouseBalance: string | number;
+  houseBalance: string | number;
+  pendingBets: string | number;
+  wonBets: string | number;
+  lostBets: string | number;
 }
 
 export interface HouseBalanceFilter {

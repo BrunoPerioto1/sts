@@ -99,7 +99,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {apostas.reduce((acc, a) => acc + a.stake, 0).toFixed(2)}
+              R$ {apostas.reduce((acc, a) => acc + Number(a.stake || 0), 0).toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -111,7 +111,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {casas.reduce((acc, c) => acc + c.saldo, 0).toFixed(2)}
+              R$ {casas.reduce((acc, c) => acc + Number(c.saldo || 0), 0).toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -143,7 +143,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <div className="text-2xl font-bold text-primary">
-                        R$ {casa.saldo.toFixed(2)}
+                        R$ {Number(casa.saldo || 0).toFixed(2)}
                       </div>
                       <p className="text-sm text-muted-foreground">Lucro/Prejuízo</p>
                       <div className="text-xs text-muted-foreground">
@@ -182,13 +182,13 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
                         </div>
                         <div className="text-right space-y-1">
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm">R$ {aposta.stake.toFixed(2)}</span>
+                            <span className="text-sm">R$ {Number(aposta.stake || 0).toFixed(2)}</span>
                             <Badge className={getStatusColor(aposta.resultId)}>
                               {aposta.resultId === 1 ? 'Ganha' : aposta.resultId === 2 ? 'Perdida' : aposta.resultId === 9 ? 'Pendente' : aposta.resultId === 3 ? 'Cancelada' : 'N/A'}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Odd: {aposta.odd.toFixed(2)}
+                            Odd: {Number(aposta.odd || 0).toFixed(2)}
                           </p>
                         </div>
                       </div>

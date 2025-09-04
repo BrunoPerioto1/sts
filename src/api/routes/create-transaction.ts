@@ -12,7 +12,7 @@ export async function createTransaction({
   value
 }: CreateTransactionParams) {
   try {
-    return await api.transactions.post('/transaction', {
+    return await api.transactions.post('', {
       houseId,
       transactionTypeId,
       value

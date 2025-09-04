@@ -8,8 +8,8 @@ export interface DashboardQueryParams {
 
 export interface DailySummaryPoint {
   date: string;
-  totalBets: number;
-  profitDay: number;
+  totalBets: string | number;
+  profitDay: string | number;
 }
 
 export async function getDashboardDailySummary(params: DashboardQueryParams) {

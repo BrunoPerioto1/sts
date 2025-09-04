@@ -158,7 +158,7 @@ export function MovimentacaoModal({
           <DialogTitle className="flex items-center justify-between">
             <span>Histórico de Movimentação - {casaNome}</span>
             <div className="text-lg font-bold text-primary">
-              Saldo: R$ {saldoAtual.toFixed(2)}
+              Saldo: R$ {Number(saldoAtual || 0).toFixed(2)}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -266,14 +266,14 @@ export function MovimentacaoModal({
                       <TableCell className="w-24 text-right">
                         <span className={cn(
                           "font-medium whitespace-nowrap",
-                          mov.valor > 0 ? "text-success" : "text-destructive"
+                          Number(mov.valor || 0) > 0 ? "text-success" : "text-destructive"
                         )}>
-                          {mov.valor > 0 ? '+' : ''}R$ {mov.valor.toFixed(2)}
+                          {Number(mov.valor || 0) > 0 ? '+' : ''}R$ {Number(mov.valor || 0).toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell className="w-24 text-right">
                         <span className="font-medium whitespace-nowrap">
-                          R$ {mov.saldoAtual.toFixed(2)}
+                          R$ {Number(mov.saldoAtual || 0).toFixed(2)}
                         </span>
                       </TableCell>
                     </TableRow>

@@ -166,10 +166,10 @@ export function ApostasList({
                       <p className="text-sm font-medium">{aposta.market}</p>
                     </TableCell>
                     <TableCell>
-                      <p className="font-medium">{aposta.odd.toFixed(2)}</p>
+                      <p className="font-medium">{Number(aposta.odd || 0).toFixed(2)}</p>
                     </TableCell>
                     <TableCell>
-                      <p className="font-medium">R$ {aposta.stake.toFixed(2)}</p>
+                      <p className="font-medium">R$ {Number(aposta.stake || 0).toFixed(2)}</p>
                     </TableCell>
                     <TableCell>
                       <p className="text-sm font-medium">{aposta.houseId ? `#${aposta.houseId}` : "-"}</p>

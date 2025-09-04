@@ -121,8 +121,8 @@ function DashboardPageContent() {
                 <SelectContent>
                   <SelectItem value="all">Todas as casas</SelectItem>
                   {casas.map(casa => (
-                    <SelectItem key={casa.houseId} value={casa.houseId.toString()}>
-                      {casa.houseName}
+                    <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
+                      {casa.houseName || 'Casa sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>
