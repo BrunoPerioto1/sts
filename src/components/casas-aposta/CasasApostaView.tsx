@@ -4,21 +4,10 @@ import { Button } from "@/components/ui/button";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 import { Building2, DollarSign, TrendingUp, Plus, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-
-interface Aposta {
-  id: number;
-  evento: string;
-  odd: number;
-  valor: number;
-  status: string;
-  data: string;
-  hora: string;
-  casa: string;
-}
+import { apiFetch, type Bet } from "@/lib/api";
 
 interface CasasApostaViewProps {
-  apostas: Aposta[];
+  apostas: Bet[];
 }
 
 type CasaSaldo = { 
@@ -44,15 +33,15 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
       setError(null);
       try {
         // Filtra apenas casas que têm apostas ativas ou finalizadas
-        const casasComApostas = new Set(apostas.map(a => a.casa));
+        const casasComApostas = new Set(apostas.map(a => a.casa_nome || `Casa ${a.house_id}`));
                  const casasFiltradas = Array.from(casasComApostas).map(casaNome => {
-           const apostasCasa = apostas.filter(a => a.casa === casaNome);
+           const apostasCasa = apostas.filter(a => (a.casa_nome || `Casa ${a.house_id}`) === casaNome);
            const totalInvestido = apostasCasa
-             .filter(a => a.status !== "pendente" && a.status !== "cancelada")
-             .reduce((acc, a) => acc + a.valor, 0);
+             .filter(a => a.result_id !== 9 && a.result_id !== 10) // 9 = pendente, 10 = cancelada
+             .reduce((acc, a) => acc + a.stake, 0);
            const totalRetorno = apostasCasa
-             .filter(a => a.status === "ganha")
-             .reduce((acc, a) => acc + (a.valor * a.odd), 0);
+             .filter(a => a.result_id === 1) // 1 = ganha
+             .reduce((acc, a) => acc + (a.stake * a.odd), 0);
            const saldoCalculado = totalRetorno - totalInvestido;
           
           return {
@@ -60,9 +49,9 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
             nome: casaNome,
             saldo: saldoCalculado,
             totalApostas: apostasCasa.length,
-            apostasGanhas: apostasCasa.filter(a => a.status === "ganha").length,
-            apostasPerdidas: apostasCasa.filter(a => a.status === "perdida").length,
-            apostasPendentes: apostasCasa.filter(a => a.status === "pendente").length,
+            apostasGanhas: apostasCasa.filter(a => a.result_id === 1).length, // 1 = ganha
+            apostasPerdidas: apostasCasa.filter(a => a.result_id === 2).length, // 2 = perdida
+            apostasPendentes: apostasCasa.filter(a => a.result_id === 9).length, // 9 = pendente
           };
         });
         
@@ -77,17 +66,19 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
   }, [apostas]);
 
   const getApostasPorCasa = (casa: string) => {
-    return apostas.filter(aposta => aposta.casa === casa);
+    return apostas.filter(aposta => (aposta.casa_nome || `Casa ${aposta.house_id}`) === casa);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ganha':
+  const getStatusColor = (resultId: number) => {
+    switch (resultId) {
+      case 1: // ganha
         return 'bg-success text-success-foreground';
-      case 'perdida':
+      case 2: // perdida
         return 'bg-destructive text-destructive-foreground';
-      case 'pendente':
+      case 9: // pendente
         return 'bg-secondary text-secondary-foreground';
+      case 10: // cancelada
+        return 'bg-muted text-muted-foreground';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -119,7 +110,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {apostas.reduce((acc, a) => acc + a.valor, 0).toFixed(2)}
+              R$ {apostas.reduce((acc, a) => acc + a.stake, 0).toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -195,16 +186,16 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
                         className="flex items-center justify-between p-3 rounded-lg border"
                       >
                         <div>
-                          <p className="font-medium">{aposta.evento}</p>
+                          <p className="font-medium">{aposta.game}</p>
                           <p className="text-sm text-muted-foreground">
-                            {aposta.data} às {aposta.hora}
+                            {aposta.bet_time ? new Date(aposta.bet_time).toLocaleDateString() : 'N/A'} às {aposta.bet_time ? new Date(aposta.bet_time).toLocaleTimeString() : 'N/A'}
                           </p>
                         </div>
                         <div className="text-right space-y-1">
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm">R$ {aposta.valor.toFixed(2)}</span>
-                            <Badge className={getStatusColor(aposta.status)}>
-                              {aposta.status}
+                            <span className="text-sm">R$ {aposta.stake.toFixed(2)}</span>
+                            <Badge className={getStatusColor(aposta.result_id || 9)}>
+                              {aposta.result_id === 1 ? 'Ganha' : aposta.result_id === 2 ? 'Perdida' : aposta.result_id === 9 ? 'Pendente' : aposta.result_id === 10 ? 'Cancelada' : 'N/A'}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">

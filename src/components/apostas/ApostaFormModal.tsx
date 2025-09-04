@@ -3,28 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { ApostaForm } from "./ApostaForm";
 import { Plus } from "lucide-react";
-
-interface Aposta {
-  id: number;
-  evento: string;
-  mercado: string;
-  odd: number;
-  valor: number;
-  status: string;
-  data: string;
-  hora: string;
-  casa: string;
-  observacoes?: string;
-}
+import { type Bet } from "@/lib/api";
 
 interface ApostaFormModalProps {
-  onApostaAdded: (aposta: Aposta) => void;
+  onApostaAdded: (aposta: Bet) => void;
 }
 
 export function ApostaFormModal({ onApostaAdded }: ApostaFormModalProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleApostaAdded = (aposta: Aposta) => {
+  const handleApostaAdded = (aposta: Bet) => {
     onApostaAdded(aposta);
     setIsOpen(false);
   };

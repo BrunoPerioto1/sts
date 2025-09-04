@@ -11,7 +11,7 @@ import { CasasApostaView } from "@/components/casas-aposta/CasasApostaView";
 import { Target, TrendingUp, TrendingDown, BarChart3, Trash2, CheckSquare, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, finalizeBetApi, finalizeMultipleBetsApi, deleteMultipleBetsApi } from "@/lib/api";
 
 interface Aposta {
   id: number;
@@ -158,13 +158,11 @@ const Index = () => {
       cancelada: results.find(r => r.code === "ANULADA")?.id ?? 4,
     };
     try {
-      await apiFetch(`/bets/finalize/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ resultId: statusToResultId[newStatus] ?? 9 }),
-      });
-      setApostas(apostas.map(aposta => 
-        aposta.id === id ? { ...aposta, status: newStatus } : aposta
-      ));
+      await finalizeBetApi(id, statusToResultId[newStatus] ?? 9);
+      // Recarregar apostas para obter o profit calculado pelo backend
+      const data = await apiFetch<any[]>("/bets");
+      const normalized = data.map(normalizeFromBackend) as Aposta[];
+      setApostas(normalized);
       toast({ title: "Status atualizado", description: `Status alterado para ${newStatus}` });
     } catch (e: any) {
       toast({ title: "Erro ao atualizar status", description: e.message, variant: "destructive" });
@@ -186,10 +184,7 @@ const Index = () => {
   const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
     try {
-      await apiFetch(`/bets/delete-multiple`, {
-        method: "DELETE",
-        body: JSON.stringify({ apostaIds: selectedBets }),
-      });
+      await deleteMultipleBetsApi(selectedBets);
       setApostas(apostas.filter(aposta => !selectedBets.includes(aposta.id)));
       setSelectedBets([]);
       toast({ title: "Sucesso", description: `${selectedBets.length} aposta(s) excluída(s)` });
@@ -207,15 +202,11 @@ const Index = () => {
       cancelada: results.find(r => r.code === "ANULADA")?.id ?? 4,
     };
     try {
-      await apiFetch(`/bets/finalize-multiple`, {
-        method: "PUT",
-        body: JSON.stringify({ apostaIds: selectedBets, resultId: statusToResultId[newStatus] ?? 9 }),
-      });
-      setApostas(apostas.map(aposta => 
-        selectedBets.includes(aposta.id) 
-          ? { ...aposta, status: newStatus }
-          : aposta
-      ));
+      await finalizeMultipleBetsApi(selectedBets, statusToResultId[newStatus] ?? 9);
+      // Recarregar apostas para obter o profit calculado pelo backend
+      const data = await apiFetch<any[]>("/bets");
+      const normalized = data.map(normalizeFromBackend) as Aposta[];
+      setApostas(normalized);
       setSelectedBets([]);
       toast({ title: "Status atualizado", description: `${selectedBets.length} aposta(s) alterada(s)` });
     } catch (e: any) {
@@ -223,30 +214,16 @@ const Index = () => {
     }
   };
 
-  // Calculate metrics - use backend data when available, fallback to frontend calculation
+  // Use only backend data - no frontend calculations
   const metrics = dashboardMetrics || {
-    totalApostas: apostas.length,
-    apostasGanhas: apostas.filter(a => a.status === "ganha").length,
-    totalInvestido: apostas
-      .filter(a => a.status !== "pendente" && a.status !== "cancelada")
-      .reduce((acc, aposta) => acc + aposta.valor, 0),
-    totalRetorno: apostas
-      .filter(a => a.status === "ganha")
-      .reduce((acc, aposta) => acc + (aposta.valor * aposta.odd), 0),
+    totalApostas: 0,
+    apostasGanhas: 0,
+    totalInvestido: 0,
+    totalRetorno: 0,
     lucroTotal: 0,
     roi: 0,
     taxaAcerto: 0
   };
-
-  // Calculate fallback values if no backend data
-  if (!dashboardMetrics) {
-    const apostasPerformance = apostas.filter(a => a.status !== "pendente" && a.status !== "cancelada");
-    const apostasGanhas = apostas.filter(a => a.status === "ganha").length;
-    
-    metrics.lucroTotal = metrics.totalRetorno - metrics.totalInvestido;
-    metrics.roi = metrics.totalInvestido > 0 ? ((metrics.lucroTotal / metrics.totalInvestido) * 100) : 0;
-    metrics.taxaAcerto = apostasPerformance.length > 0 ? ((apostasGanhas / apostasPerformance.length) * 100) : 0;
-  }
 
   const { totalApostas, apostasGanhas, totalInvestido, totalRetorno, lucroTotal, roi, taxaAcerto } = metrics;
 

@@ -20,6 +20,7 @@ interface Aposta {
   hora: string;
   casa: string;
   observacoes?: string;
+  lucro_calculado?: number;
 }
 
 interface ApostasListProps {
@@ -58,37 +59,17 @@ export function ApostasList({
     }
   };
 
-  const calculateRealReturn = (aposta: Aposta) => {
-    switch (aposta.status) {
-      case "ganha":
-        // Lucro = (stake × odd) - stake = stake × (odd - 1)
-        const lucro = (aposta.valor * aposta.odd) - aposta.valor;
-        return lucro >= 0 ? `+${lucro.toFixed(2)}` : lucro.toFixed(2);
-      case "perdida":
-        // Stake negativo quando perde
-        return `-${aposta.valor.toFixed(2)}`;
-      case "pendente":
-        return "0.00";
-      case "cancelada":
-        return "0.00";
-      default:
-        return "0.00";
-    }
+  // Use lucro_calculado from backend instead of calculating
+  const getRealReturn = (aposta: Aposta) => {
+    const lucro = Number(aposta.lucro_calculado || 0);
+    return lucro >= 0 ? `+${lucro.toFixed(2)}` : lucro.toFixed(2);
   };
 
-  const getReturnColor = (status: string) => {
-    switch (status) {
-      case "ganha":
-        return "text-success";
-      case "perdida":
-        return "text-destructive";
-      case "pendente":
-        return "text-muted-foreground";
-      case "cancelada":
-        return "text-muted-foreground";
-      default:
-        return "text-muted-foreground";
-    }
+  const getReturnColor = (aposta: Aposta) => {
+    const lucro = Number(aposta.lucro_calculado || 0);
+    if (lucro > 0) return "text-success";
+    if (lucro < 0) return "text-destructive";
+    return "text-muted-foreground";
   };
 
   const filteredApostas = apostas.filter(aposta =>
@@ -222,8 +203,8 @@ export function ApostasList({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className={cn("font-medium", getReturnColor(aposta.status))}>
-                      {aposta.status === "ganha" || aposta.status === "perdida" || aposta.status === "pendente" || aposta.status === "cancelada" ? "R$ " : ""}{calculateRealReturn(aposta)}
+                    <p className={cn("font-medium", getReturnColor(aposta))}>
+                      R$ {getRealReturn(aposta)}
                     </p>
                   </TableCell>
                   <TableCell>
