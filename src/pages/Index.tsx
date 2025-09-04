@@ -5,67 +5,36 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { ApostasList } from "@/components/apostas/ApostasList";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
-import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
 import { CasasApostaView } from "@/components/casas-aposta/CasasApostaView";
 import { Target, TrendingUp, TrendingDown, BarChart3, Trash2, CheckSquare, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiFetch, finalizeBetApi, finalizeMultipleBetsApi, deleteMultipleBetsApi } from "@/lib/api";
-
-interface Aposta {
-  id: number;
-  evento: string;
-  mercado: string;
-  odd: number;
-  valor: number;
-  status: string;
-  data: string;
-  hora: string;
-  casa: string;
-  observacoes?: string;
-}
+import { getBets, createBet, updateBet, deleteBet, finalizeBet, finalizeMultipleBets, deleteMultipleBets, getBetResultTypes, type BetItem } from "@/api/routes/get-bets";
+import { getDashboardMetrics, type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
+import { getDashboardDailySummary, type DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("apostas");
   const [selectedBets, setSelectedBets] = useState<number[]>([]);
-  const [editingAposta, setEditingAposta] = useState<Aposta | null>(null);
+  const [editingAposta, setEditingAposta] = useState<BetItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [apostas, setApostas] = useState<Aposta[]>([]);
+  const [apostas, setApostas] = useState<BetItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Array<{ id: number; code: string; name: string }>>([]);
-  const [dashboardMetrics, setDashboardMetrics] = useState<any>(null);
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dateRange, setDateRange] = useState<{ startDate: string | null; endDate: string | null }>({ startDate: null, endDate: null });
 
-  const normalizeFromBackend = (a: any): Aposta => ({
-    id: a.id,
-    evento: a.game ?? "",
-    mercado: a.market ?? "",
-    odd: Number(a.odd ?? 0),
-    valor: Number(a.stake ?? 0),
-    status: (() => {
-      const rid = Number(a.result_id ?? a.resultId ?? 9);
-      if (rid === 1) return "ganha";
-      if (rid === 2) return "perdida";
-      if (rid === 9) return "pendente";
-      return "cancelada";
-    })(),
-    data: a.bet_time ? String(a.bet_time).split(" ")[0] : "",
-    hora: a.bet_time ? String(a.bet_time).split(" ")[1] ?? "" : "",
-    casa: a.casa_nome ?? a.house ?? "",
-    observacoes: a.observacoes ?? a.notes,
-  });
 
   useEffect(() => {
     const loadBets = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await apiFetch<any[]>("/bets");
-        const normalized = data.map(normalizeFromBackend) as Aposta[];
-        setApostas(normalized);
+        const data = await getBets();
+        setApostas(data || []);
       } catch (e: any) {
         setError(e.message || "Falha ao carregar apostas");
       } finally {
@@ -74,9 +43,8 @@ const Index = () => {
     };
     const loadResults = async () => {
       try {
-        const res = await apiFetch<any[]>("/results");
-        const norm = res.map((r: any) => ({ id: Number(r.id), code: String(r.code), name: String(r.name) }));
-        setResults(norm);
+        const res = await getBetResultTypes();
+        setResults((res || []).map(r => ({ id: r.id, code: r.name.toUpperCase().replace(/\s+/g, '_'), name: r.name })));
       } catch {
         // fallback padrão alinhado ao enum
         setResults([
@@ -100,17 +68,12 @@ const Index = () => {
   const loadDashboardMetrics = async (startDate?: string | null, endDate?: string | null) => {
     setDashboardLoading(true);
     try {
-      let url = '/dashboard/metrics';
-      const params = new URLSearchParams();
+      const params = {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      };
       
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-      
-      const metrics = await apiFetch<any>(url);
+      const metrics = await getDashboardMetrics(params);
       setDashboardMetrics(metrics);
     } catch (e: any) {
       console.error('Erro ao carregar métricas do dashboard:', e.message);
@@ -124,7 +87,7 @@ const Index = () => {
     loadDashboardMetrics(startDate, endDate);
   };
 
-  const handleApostaAdded = (novaAposta: Aposta) => {
+  const handleApostaAdded = (novaAposta: BetItem) => {
     setApostas([novaAposta, ...apostas]);
   };
 
@@ -132,19 +95,19 @@ const Index = () => {
 
   const handleDeleteAposta = async (id: number) => {
     try {
-      await apiFetch<void>(`/bets/${id}`, { method: "DELETE" });
+      await deleteBet(id);
       setApostas(apostas.filter(aposta => aposta.id !== id));
     } catch (e: any) {
       toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
     }
   };
 
-  const handleEditAposta = (aposta: Aposta) => {
+  const handleEditAposta = (aposta: BetItem) => {
     setEditingAposta(aposta);
     setIsEditModalOpen(true);
   };
 
-  const handleApostaUpdated = (updatedAposta: Aposta) => {
+  const handleApostaUpdated = (updatedAposta: BetItem) => {
     setApostas(apostas.map(aposta => 
       aposta.id === updatedAposta.id ? updatedAposta : aposta
     ));
@@ -158,11 +121,10 @@ const Index = () => {
       cancelada: results.find(r => r.code === "ANULADA")?.id ?? 4,
     };
     try {
-      await finalizeBetApi(id, statusToResultId[newStatus] ?? 9);
+      await finalizeBet(id, { resultId: statusToResultId[newStatus] ?? 9 });
       // Recarregar apostas para obter o profit calculado pelo backend
-      const data = await apiFetch<any[]>("/bets");
-      const normalized = data.map(normalizeFromBackend) as Aposta[];
-      setApostas(normalized);
+      const data = await getBets();
+      setApostas(data || []);
       toast({ title: "Status atualizado", description: `Status alterado para ${newStatus}` });
     } catch (e: any) {
       toast({ title: "Erro ao atualizar status", description: e.message, variant: "destructive" });
@@ -184,7 +146,7 @@ const Index = () => {
   const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
     try {
-      await deleteMultipleBetsApi(selectedBets);
+      await deleteMultipleBets(selectedBets);
       setApostas(apostas.filter(aposta => !selectedBets.includes(aposta.id)));
       setSelectedBets([]);
       toast({ title: "Sucesso", description: `${selectedBets.length} aposta(s) excluída(s)` });
@@ -202,11 +164,10 @@ const Index = () => {
       cancelada: results.find(r => r.code === "ANULADA")?.id ?? 4,
     };
     try {
-      await finalizeMultipleBetsApi(selectedBets, statusToResultId[newStatus] ?? 9);
+      await finalizeMultipleBets({ betIds: selectedBets, resultId: statusToResultId[newStatus] ?? 9 });
       // Recarregar apostas para obter o profit calculado pelo backend
-      const data = await apiFetch<any[]>("/bets");
-      const normalized = data.map(normalizeFromBackend) as Aposta[];
-      setApostas(normalized);
+      const data = await getBets();
+      setApostas(data || []);
       setSelectedBets([]);
       toast({ title: "Status atualizado", description: `${selectedBets.length} aposta(s) alterada(s)` });
     } catch (e: any) {
@@ -216,23 +177,28 @@ const Index = () => {
 
   // Use only backend data - no frontend calculations
   const metrics = dashboardMetrics || {
-    totalApostas: 0,
-    apostasGanhas: 0,
-    totalInvestido: 0,
-    totalRetorno: 0,
-    lucroTotal: 0,
+    totalBets: 0,
+    wonBets: 0,
+    lostBets: 0,
+    pendingBets: 0,
+    canceledBets: 0,
+    totalStaked: 0,
+    totalReturn: 0,
+    averageStake: 0,
+    averageOdd: 0,
+    totalProfit: 0,
     roi: 0,
-    taxaAcerto: 0
+    hitRate: 0
   };
 
-  const { totalApostas, apostasGanhas, totalInvestido, totalRetorno, lucroTotal, roi, taxaAcerto } = metrics;
+  const { totalBets, wonBets, totalStaked, totalReturn, totalProfit, roi, hitRate } = metrics;
 
   // Chart data
   const chartData = [
     {
       category: "Resumo Financeiro",
-      receitas: totalRetorno,
-      despesas: totalInvestido
+      receitas: totalReturn,
+      despesas: totalStaked
     }
   ];
 
@@ -255,15 +221,15 @@ const Index = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <MetricCard
                     title="Apostas"
-                    value={totalApostas}
+                    value={totalBets}
                     icon={<Target className="h-6 w-6" />}
                     trend="neutral"
                   />
                   <MetricCard
                     title="Lucros"
-                    value={`${lucroTotal >= 0 ? '+' : ''}R$ ${lucroTotal.toFixed(2)}`}
-                    icon={lucroTotal >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
-                    trend={lucroTotal >= 0 ? "positive" : "negative"}
+                    value={`${totalProfit >= 0 ? '+' : ''}R$ ${totalProfit.toFixed(2)}`}
+                    icon={totalProfit >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+                    trend={totalProfit >= 0 ? "positive" : "negative"}
                   />
                   <MetricCard
                     title="ROI"
@@ -273,12 +239,11 @@ const Index = () => {
                   />
                   <MetricCard
                     title="Taxa de Acerto"
-                    value={`${taxaAcerto.toFixed(1)}%`}
+                    value={`${hitRate.toFixed(1)}%`}
                     icon={<Target className="h-6 w-6" />}
-                    trend={taxaAcerto >= 50 ? "positive" : "negative"}
+                    trend={hitRate >= 50 ? "positive" : "negative"}
                   />
                 </div>
-                <PerformanceChart data={chartData} />
               </>
             )}
           </div>
@@ -297,9 +262,8 @@ const Index = () => {
                       setIsLoading(true);
                       setError(null);
                       try {
-                        const data = await apiFetch<any[]>("/bets");
-                        const normalized = data.map(normalizeFromBackend) as Aposta[];
-                        setApostas(normalized);
+                        const data = await getBets();
+                        setApostas(data || []);
                       } catch (e: any) {
                         setError(e.message || "Falha ao carregar apostas");
                       } finally {

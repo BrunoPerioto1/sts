@@ -2,21 +2,20 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
-import { getDashboardMetrics, getDashboardChartData, getDashboardDailySummary, getHouses, type DashboardMetrics } from "@/lib/api";
-import { Target, TrendingUp, TrendingDown, BarChart3, Calendar } from "lucide-react";
+import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
+import { Target, TrendingUp, TrendingDown, BarChart3, Calendar, RefreshCw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { MainLayout } from "@/components/layout/MainLayout";
+import { getDashboardMetrics as fetchDashboardMetrics, type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
+import { getDashboardDailySummary, type DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
+import { getAllHouses, type HouseDto } from "@/api/routes/get-houses";
 
 function DashboardPageContent() {
-
-  const [casas, setCasas] = useState<{ id: number; name: string }[]>([]);
+  const [casas, setCasas] = useState<HouseDto[]>([]);
   const [loading, setLoading] = useState(false);
-
   
   const [filters, setFilters] = useState({
     house_id: undefined as number | undefined,
@@ -25,43 +24,69 @@ function DashboardPageContent() {
   });
 
   const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalApostas: 0,
-    apostasGanhas: 0,
-    apostasPerdidas: 0,
-    apostasPendentes: 0,
-    apostasCanceladas: 0,
-    totalInvestido: 0,
-    totalRetorno: 0,
-    lucroTotal: 0,
+    totalBets: 0,
+    wonBets: 0,
+    lostBets: 0,
+    pendingBets: 0,
+    canceledBets: 0,
+    totalStaked: 0,
+    totalReturn: 0,
+    averageStake: 0,
+    averageOdd: 0,
+    totalProfit: 0,
     roi: 0,
-    taxaAcerto: 0
+    hitRate: 0
   });
-  const [chartData, setChartData] = useState<{ date: string; value: number }[]>([]);
-  const [dailyData, setDailyData] = useState<{ date: string; apostas: number; lucro: number }[]>([]);
+  const [dailyData, setDailyData] = useState<DailySummaryPoint[]>([]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        house_id: filters.house_id,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+      };
+      const [metricsData, dailyData] = await Promise.all([
+        fetchDashboardMetrics(params),
+        getDashboardDailySummary(params)
+      ]);
+      setMetrics(metricsData);
+      setDailyData(dailyData || []);
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    } finally { 
+      setLoading(false); 
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [m, c, d] = await Promise.all([
-          getDashboardMetrics({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined }),
-          getDashboardChartData({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined }),
-          getDashboardDailySummary({ ...filters, startDate: filters.startDate || undefined, endDate: filters.endDate || undefined })
-        ]);
-        setMetrics(m);
-        setChartData(c);
-        setDailyData(d.map((x: any) => ({ date: x.date, apostas: x.totalApostas ?? x.apostas ?? 0, lucro: x.lucroDia ?? x.lucro ?? 0 })));
-      } finally { setLoading(false); }
-    };
-    load();
+    loadDashboardData();
   }, [filters]);
 
   useEffect(() => {
-    getHouses().then((h) => setCasas(h as any)).catch(() => setCasas([]));
+    const loadHouses = async () => {
+      try {
+        const houses = await getAllHouses();
+        setCasas(houses || []);
+      } catch (error) {
+        console.error('Erro ao carregar casas:', error);
+        setCasas([]);
+      }
+    };
+    loadHouses();
   }, []);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
+    setFilters(prev => ({
+      ...prev,
+      startDate: startDate || "",
+      endDate: endDate || ""
+    }));
   };
 
   const clearFilters = () => {
@@ -83,7 +108,7 @@ function DashboardPageContent() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Casa de Aposta</Label>
               <Select 
@@ -96,8 +121,8 @@ function DashboardPageContent() {
                 <SelectContent>
                   <SelectItem value="all">Todas as casas</SelectItem>
                   {casas.map(casa => (
-                    <SelectItem key={casa.id} value={casa.id.toString()}>
-                      {casa.name}
+                    <SelectItem key={casa.houseId} value={casa.houseId.toString()}>
+                      {casa.houseName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -105,26 +130,25 @@ function DashboardPageContent() {
             </div>
             
             <div className="space-y-2">
-              <Label>Data Inicial</Label>
-              <Input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              <Label>Período</Label>
+              <DateRangeFilter 
+                onDateRangeChange={handleDateRangeChange}
+                className="border rounded-md p-3"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Data Final</Label>
-              <Input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              />
-            </div>
-            
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button variant="outline" onClick={clearFilters}>
                 Limpar Filtros
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={loadDashboardData}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Atualizar
               </Button>
             </div>
           </div>
@@ -135,15 +159,15 @@ function DashboardPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total de Apostas"
-          value={metrics.totalApostas}
+          value={metrics.totalBets}
           icon={<Target className="h-6 w-6" />}
           trend="neutral"
         />
         <MetricCard
           title="Lucro Total"
-          value={`${metrics.lucroTotal >= 0 ? '+' : ''}R$ ${metrics.lucroTotal.toFixed(2)}`}
-          icon={metrics.lucroTotal >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
-          trend={metrics.lucroTotal >= 0 ? "positive" : "negative"}
+          value={`${metrics.totalProfit >= 0 ? '+' : ''}R$ ${metrics.totalProfit.toFixed(2)}`}
+          icon={metrics.totalProfit >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+          trend={metrics.totalProfit >= 0 ? "positive" : "negative"}
         />
         <MetricCard
           title="ROI"
@@ -153,9 +177,9 @@ function DashboardPageContent() {
         />
         <MetricCard
           title="Taxa de Acerto"
-          value={`${metrics.taxaAcerto.toFixed(1)}%`}
+          value={`${metrics.hitRate.toFixed(1)}%`}
           icon={<Target className="h-6 w-6" />}
-          trend={metrics.taxaAcerto >= 50 ? "positive" : "negative"}
+          trend={metrics.hitRate >= 50 ? "positive" : "negative"}
         />
       </div>
 
@@ -186,13 +210,13 @@ function DashboardPageContent() {
                 }}
                 labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
                 formatter={(value: number, name: string) => [
-                  name === 'lucro' ? `R$ ${value.toFixed(2)}` : value,
-                  name === 'lucro' ? 'Lucro' : 'Apostas'
+                  name === 'profitDay' ? `R$ ${value.toFixed(2)}` : value,
+                  name === 'profitDay' ? 'Lucro' : 'Apostas'
                 ]}
               />
               <Line 
                 type="monotone" 
-                dataKey="apostas" 
+                dataKey="totalBets" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={3}
                 name="apostas"
@@ -201,7 +225,7 @@ function DashboardPageContent() {
               />
               <Line 
                 type="monotone" 
-                dataKey="lucro" 
+                dataKey="profitDay" 
                 stroke="hsl(var(--chart-green))" 
                 strokeWidth={3}
                 name="lucro"
@@ -223,15 +247,15 @@ function DashboardPageContent() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Ganhas:</span>
-                <span className="font-medium text-success">{metrics.apostasGanhas}</span>
+                <span className="font-medium text-success">{metrics.wonBets}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Total:</span>
-                <span className="font-medium">{metrics.totalApostas}</span>
+                <span className="font-medium">{metrics.totalBets}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Taxa:</span>
-                <span className="font-medium">{metrics.taxaAcerto.toFixed(1)}%</span>
+                <span className="font-medium">{metrics.hitRate.toFixed(1)}%</span>
               </div>
             </div>
           </CardContent>
@@ -245,16 +269,16 @@ function DashboardPageContent() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Investido:</span>
-                <span className="font-medium">R$ {metrics.totalInvestido.toFixed(2)}</span>
+                <span className="font-medium">R$ {metrics.totalStaked.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Retorno:</span>
-                <span className="font-medium">R$ {metrics.totalRetorno.toFixed(2)}</span>
+                <span className="font-medium">R$ {metrics.totalReturn.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Lucro:</span>
-                <span className={`font-medium ${metrics.lucroTotal >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  R$ {metrics.lucroTotal.toFixed(2)}
+                <span className={`text-sm text-muted-foreground`}>Lucro:</span>
+                <span className={`font-medium ${metrics.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  R$ {metrics.totalProfit.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -273,7 +297,6 @@ function DashboardPageContent() {
                   {metrics.roi.toFixed(2)}%
                 </span>
               </div>
-              {/* Stake médio e odd média devem vir do backend quando disponíveis */}
             </div>
           </CardContent>
         </Card>

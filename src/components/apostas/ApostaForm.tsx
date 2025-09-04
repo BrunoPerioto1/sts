@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiFetch, type Bet } from "@/lib/api";
+import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
+import { getAllHouses } from "@/api/routes/get-houses";
 
 interface ApostaFormProps {
-  onApostaAdded: (aposta: Bet) => void;
-  initialData?: Bet;
+  onApostaAdded: (aposta: BetItem) => void;
+  initialData?: BetItem;
   isEditing?: boolean;
 }
 
@@ -17,42 +18,40 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
   const { toast } = useToast();
   const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
   const [formData, setFormData] = useState({
-    evento: initialData?.evento || "",
-    mercado: initialData?.mercado || "",
+    game: initialData?.game || "",
+    market: initialData?.market || "",
     odd: initialData?.odd?.toString() || "",
-    valor: initialData?.valor?.toString() || "",
-    casa: initialData?.casa || "",
-    casaId: undefined as number | undefined,
-    esporte: initialData?.esporte || "futebol",
-    status: initialData?.status || "pendente"
+    stake: initialData?.stake?.toString() || "",
+    houseId: (initialData as any)?.houseId ?? initialData?.houseId ?? undefined as number | undefined,
+    sport: initialData?.sport || "futebol",
+    status: "pendente"
   });
   const selectedHouseName = useMemo(() => {
-    const found = houses.find(h => h.id === formData.casaId);
-    return found?.name || formData.casa || "";
-  }, [houses, formData.casaId, formData.casa]);
+    const found = houses.find(h => h.id === formData.houseId);
+    return found?.name || "";
+  }, [houses, formData.houseId]);
 
   useEffect(() => {
     const loadHouses = async () => {
       try {
-        const data = await apiFetch<any[]>("/house");
-        const normalized = data.map((h: any) => ({ id: Number(h.id), name: h.name })) as { id: number; name: string }[];
+        const data = await getAllHouses();
+        const normalized = data.map((h: any) => ({ id: Number(h.houseId ?? h.id), name: h.houseName ?? h.name })) as { id: number; name: string }[];
         setHouses(normalized);
-        // se veio initialData.casa, tenta selecionar correspondente
-        if (initialData?.casa) {
-          const match = normalized.find(h => h.name === initialData.casa);
-          if (match) setFormData(prev => ({ ...prev, casaId: match.id }));
+        if ((initialData as any)?.houseId) {
+          const match = normalized.find(h => h.id === (initialData as any).houseId);
+          if (match) setFormData(prev => ({ ...prev, houseId: match.id }));
         }
       } catch (e) {
         // silencioso
       }
     };
     loadHouses();
-  }, [initialData?.casa]);
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.evento || !formData.mercado || !formData.odd || !formData.valor || (!formData.casa && !formData.casaId)) {
+    if (!formData.game || !formData.market || !formData.odd || !formData.stake || !formData.houseId) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -63,73 +62,41 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
 
     try {
       if (isEditing && initialData?.id) {
-        // PUT /bets/:id
         const payload: any = {
-          game: formData.evento,
-          market: formData.mercado,
+          game: formData.game,
+          market: formData.market,
           odd: parseFloat(formData.odd),
-          stake: parseFloat(formData.valor),
-          sport: formData.esporte,
+          stake: parseFloat(formData.stake),
+          sport: formData.sport,
+          houseId: formData.houseId,
         };
-        if (formData.casaId) payload.house_id = formData.casaId;
-        await apiFetch(`/bets/${initialData.id}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-        const updated = {
-          id: initialData.id,
-          evento: formData.evento,
-          mercado: formData.mercado,
-          odd: parseFloat(formData.odd),
-          valor: parseFloat(formData.valor),
-          status: initialData.status ?? "pendente",
-          data: initialData.data ?? new Date().toLocaleDateString('pt-BR'),
-          hora: initialData.hora ?? new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          casa: selectedHouseName,
-        };
+        const updated = await updateBetRoute(initialData.id, payload);
         onApostaAdded(updated);
       } else {
-        // POST /bets
         const payload = {
-          game: formData.evento,
-          stake: parseFloat(formData.valor),
+          game: formData.game,
+          stake: parseFloat(formData.stake),
           odd: parseFloat(formData.odd),
-          house_id: formData.casaId,
-          market: formData.mercado,
-          sport: formData.esporte,
+          houseId: formData.houseId,
+          market: formData.market,
+          sport: formData.sport,
         };
-        const result = await apiFetch<{ id: number }>(`/bets`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        const apostaData = {
-          id: result.id,
-          evento: formData.evento,
-          mercado: formData.mercado,
-          odd: parseFloat(formData.odd),
-          valor: parseFloat(formData.valor),
-          status: "pendente",
-          data: new Date().toLocaleDateString('pt-BR'),
-          hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          casa: selectedHouseName,
-        };
-        onApostaAdded(apostaData);
+        const created = await createBetRoute(payload);
+        onApostaAdded(created);
       }
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
       return;
     }
     
-    // Reset form only if not editing
     if (!isEditing) {
       setFormData({
-        evento: "",
-        mercado: "",
+        game: "",
+        market: "",
         odd: "",
-        valor: "",
-        casa: "",
-        casaId: undefined,
-        esporte: "futebol",
+        stake: "",
+        houseId: undefined,
+        sport: "futebol",
         status: "pendente"
       });
     }
@@ -153,8 +120,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
               <Input
                 id="mercado"
                 placeholder="Ex: Vitória do Palmeiras"
-                value={formData.mercado}
-                onChange={(e) => setFormData({ ...formData, mercado: e.target.value })}
+                value={formData.market}
+                onChange={(e) => setFormData({ ...formData, market: e.target.value })}
               />
             </div>
 
@@ -163,8 +130,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
               <Input
                 id="evento"
                 placeholder="Ex: Palmeiras vs Flamengo"
-                value={formData.evento}
-                onChange={(e) => setFormData({ ...formData, evento: e.target.value })}
+                value={formData.game}
+                onChange={(e) => setFormData({ ...formData, game: e.target.value })}
               />
             </div>
 
@@ -187,14 +154,14 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
                 type="number"
                 step="0.01"
                 placeholder="Ex: 100.00"
-                value={formData.valor}
-                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                value={formData.stake}
+                onChange={(e) => setFormData({ ...formData, stake: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-                              <Label htmlFor="casa">Casa de Aposta *</Label>
-              <Select value={formData.casaId?.toString()} onValueChange={(value) => setFormData({ ...formData, casaId: Number(value) })}>
+              <Label htmlFor="casa">Casa de Aposta *</Label>
+              <Select value={formData.houseId?.toString()} onValueChange={(value) => setFormData({ ...formData, houseId: Number(value) })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a casa" />
                 </SelectTrigger>
@@ -211,8 +178,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
               <Input
                 id="esporte"
                 placeholder="Ex: futebol"
-                value={formData.esporte}
-                onChange={(e) => setFormData({ ...formData, esporte: e.target.value })}
+                value={formData.sport}
+                onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
               />
             </div>
 

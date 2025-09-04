@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { apiFetch } from "@/lib/api";
+import { createTransaction } from "@/api/routes/create-transaction";
+import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
+import { getTransactionTypes, type TransactionTypeDto, TransactionTypeEnum } from "@/api/routes/get-type-trasaction";
 
 interface Movimentacao {
   id: number;
-  tipo: "deposito" | "saque" | "aposta" | "premio";
+  tipo: "deposito" | "saque";
   valor: number;
   data: string;
   hora: string;
@@ -25,17 +27,15 @@ interface MovimentacaoModalProps {
   onClose: () => void;
   casaNome: string;
   saldoAtual: number;
-  onNovaMovimentacao?: (movimentacao: Omit<Movimentacao, "id" | "saldoAnterior" | "saldoAtual">) => void;
+  houseId: number;
 }
-
-// Carrega histórico real
 
 export function MovimentacaoModal({ 
   isOpen, 
   onClose, 
   casaNome, 
   saldoAtual,
-  onNovaMovimentacao 
+  houseId,
 }: MovimentacaoModalProps) {
   const [showForm, setShowForm] = useState(false);
   const [novaMovimentacao, setNovaMovimentacao] = useState({
@@ -46,7 +46,23 @@ export function MovimentacaoModal({
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [houseId, setHouseId] = useState<number | null>(null);
+  const [types, setTypes] = useState<TransactionTypeDto[]>([]);
+
+  const typeIdByKey = useMemo(() => {
+    const map: Record<string, number> = {};
+    types.forEach(t => { map[t.name.toUpperCase()] = t.id; });
+    return map;
+  }, [types]);
+
+  const mapTypeIdToUi = (typeId: number): Movimentacao["tipo"] => {
+    if (typeId === TransactionTypeEnum.DEPOSIT) return "deposito";
+    if (typeId === TransactionTypeEnum.WITHDRAWAL) return "saque";
+    return "deposito";
+  };
+
+  const mapUiToTypeId = (ui: Movimentacao["tipo"]): number => {
+    return ui === "deposito" ? TransactionTypeEnum.DEPOSIT : TransactionTypeEnum.WITHDRAWAL;
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -54,21 +70,24 @@ export function MovimentacaoModal({
       setIsLoading(true);
       setError(null);
       try {
-        // Tenta resolver casa pelo nome e buscar transações
-        const resolved = await apiFetch<any>(`/house/resolve?texto=${encodeURIComponent(casaNome)}`);
-        const resolvedId = Number(resolved?.id ?? resolved?.houseId ?? 0);
-        setHouseId(resolvedId || null);
-        const txs = await apiFetch<any[]>(`/house/${resolvedId}/transactions`);
-        const normalized = txs.map((t: any, idx: number) => ({
-          id: Number(t.id ?? idx + 1),
-          tipo: (t.tipo ?? t.type ?? "deposito") as Movimentacao["tipo"],
-          valor: Number(t.valor ?? t.amount ?? 0),
-          data: t.data ?? t.date ?? "",
-          hora: t.hora ?? t.time ?? "",
-          descricao: t.descricao ?? t.description ?? "",
-          saldoAnterior: Number(t.saldoAnterior ?? t.previousBalance ?? 0),
-          saldoAtual: Number(t.saldoAtual ?? t.balance ?? 0),
-        })) as Movimentacao[];
+        const [txTypes, txs] = await Promise.all([
+          getTransactionTypes(),
+          getTransactions({ houseId }),
+        ]);
+        setTypes(txTypes || []);
+        const normalized = (txs || []).map((t: TransactionDto) => {
+          const date = new Date(t.createdAt);
+          return {
+            id: t.id,
+            tipo: mapTypeIdToUi(t.transactionType),
+            valor: Number(t.value ?? 0),
+            data: isNaN(date.getTime()) ? "" : date.toLocaleDateString("pt-BR"),
+            hora: isNaN(date.getTime()) ? "" : date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            descricao: `${t.houseName} - ${t.id}`,
+            saldoAnterior: 0,
+            saldoAtual: 0,
+          } as Movimentacao;
+        });
         setMovimentacoes(normalized);
       } catch (e: any) {
         setError(e.message || "Falha ao carregar movimentações");
@@ -77,15 +96,13 @@ export function MovimentacaoModal({
       }
     };
     load();
-  }, [isOpen, casaNome]);
+  }, [isOpen, houseId]);
 
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
       case "deposito":
-      case "premio":
         return <ArrowDownLeft className="h-4 w-4 text-success" />;
       case "saque":
-      case "aposta":
         return <ArrowUpRight className="h-4 w-4 text-destructive" />;
       default:
         return null;
@@ -98,10 +115,6 @@ export function MovimentacaoModal({
         return "bg-blue-100 text-blue-800";
       case "saque":
         return "bg-red-100 text-red-800";
-      case "aposta":
-        return "bg-orange-100 text-orange-800";
-      case "premio":
-        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -109,30 +122,27 @@ export function MovimentacaoModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!houseId || !novaMovimentacao.valor || !novaMovimentacao.descricao) return;
-    const tipoBackend = novaMovimentacao.tipo === "deposito" ? "DEPOSIT" : "WITHDRAWAL";
+    if (!houseId || !novaMovimentacao.valor) return;
     try {
-      await apiFetch(`/house/transaction`, {
-        method: "POST",
-        body: JSON.stringify({
-          casa_id: houseId,
-          tipo: tipoBackend,
-          valor: parseFloat(novaMovimentacao.valor),
-          descricao: novaMovimentacao.descricao,
-        }),
+      await createTransaction({
+        houseId,
+        transactionTypeId: mapUiToTypeId(novaMovimentacao.tipo),
+        value: parseFloat(novaMovimentacao.valor),
       });
-      // reload
-      const txs = await apiFetch<any[]>(`/house/${houseId}/transactions`);
-      const normalized = txs.map((t: any, idx: number) => ({
-        id: Number(t.id ?? idx + 1),
-        tipo: (t.tipo ?? t.type ?? "deposito") as Movimentacao["tipo"],
-        valor: Number(t.valor ?? t.amount ?? 0),
-        data: t.data ?? t.date ?? "",
-        hora: t.hora ?? t.time ?? "",
-        descricao: t.descricao ?? t.description ?? "",
-        saldoAnterior: Number(t.saldoAnterior ?? t.previousBalance ?? 0),
-        saldoAtual: Number(t.saldoAtual ?? t.balance ?? 0),
-      })) as Movimentacao[];
+      const txs = await getTransactions({ houseId });
+      const normalized = (txs || []).map((t: TransactionDto) => {
+        const date = new Date(t.createdAt);
+        return {
+          id: t.id,
+          tipo: mapTypeIdToUi(t.transactionType),
+          valor: Number(t.value ?? 0),
+          data: isNaN(date.getTime()) ? "" : date.toLocaleDateString("pt-BR"),
+          hora: isNaN(date.getTime()) ? "" : date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+          descricao: `${t.houseName} - ${t.id}`,
+          saldoAnterior: 0,
+          saldoAtual: 0,
+        } as Movimentacao;
+      });
       setMovimentacoes(normalized);
       setNovaMovimentacao({ tipo: "deposito", valor: "", descricao: "" });
       setShowForm(false);
@@ -200,6 +210,7 @@ export function MovimentacaoModal({
                     placeholder="Descrição da movimentação"
                     value={novaMovimentacao.descricao}
                     onChange={(e) => setNovaMovimentacao(prev => ({ ...prev, descricao: e.target.value }))}
+                    disabled
                   />
                 </div>
               </div>

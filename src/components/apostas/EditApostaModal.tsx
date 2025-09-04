@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ApostaForm } from "./ApostaForm";
-import { type Bet } from "@/lib/api";
+import { type BetItem } from "@/api/routes/get-bets";
 
 interface EditApostaModalProps {
-  aposta: Bet | null;
+  aposta: BetItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onApostaUpdated: (aposta: Bet) => void;
+  onApostaUpdated: (aposta: BetItem) => void;
 }
 
 export function EditApostaModal({ aposta, isOpen, onClose, onApostaUpdated }: EditApostaModalProps) {
-  const handleApostaUpdated = (updatedAposta: Bet) => {
+  const handleApostaUpdated = (updatedAposta: BetItem) => {
     onApostaUpdated(updatedAposta);
     onClose();
   };

@@ -9,16 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
-  getBets,
-  createBet,
-  updateBetApi,
-  deleteBetApi,
-  deleteMultipleBetsApi,
-  finalizeMultipleBetsApi,
-  getHouses,
-  type Bet,
-  type House
-} from "@/lib/api";
+  getBets as fetchBets,
+  createBet as createBetRoute,
+  updateBet as updateBetRoute,
+  deleteBet as deleteBetRoute,
+  deleteMultipleBets as deleteMultipleBetsRoute,
+  finalizeMultipleBets as finalizeMultipleBetsRoute,
+  type BetItem,
+  ResultIdEnum,
+} from "@/api/routes/get-bets";
+import { getAllHouses, type FindAllHousesDTO } from "@/api/routes/get-houses";
 import { useToast } from "@/hooks/use-toast";
 import { Edit2, Trash2, Plus, Search, CheckSquare, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function ApostasPageContent() {
-  const [apostas, setApostas] = useState<Bet[]>([]);
-  const [casas, setCasas] = useState<House[]>([]);
+  const [apostas, setApostas] = useState<BetItem[]>([]);
+  const [casas, setCasas] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -36,7 +36,7 @@ function ApostasPageContent() {
   const [statusFilter, setStatusFilter] = useState("");
   const [houseFilter, setHouseFilter] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingAposta, setEditingAposta] = useState<Bet | null>(null);
+  const [editingAposta, setEditingAposta] = useState<BetItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Form states
@@ -46,38 +46,30 @@ function ApostasPageContent() {
     market: "",
     stake: "",
     odd: "",
-    house_id: ""
+    houseId: ""
   });
 
   const getStatusColor = (resultId: number) => {
     switch (resultId) {
-      case 1: return "bg-success text-success-foreground";
-      case 2: return "bg-destructive text-destructive-foreground";
-      case 9: return "bg-secondary text-secondary-foreground";
+      case ResultIdEnum.WON: return "bg-success text-success-foreground";
+      case ResultIdEnum.LOST: return "bg-destructive text-destructive-foreground";
+      case ResultIdEnum.PENDING: return "bg-secondary text-secondary-foreground";
+      case ResultIdEnum.CANCELED: return "bg-muted text-muted-foreground";
       default: return "bg-muted text-muted-foreground";
     }
   };
 
-  const getStatusText = (resultId: number) => {
-    switch (resultId) {
-      case 1: return "GANHA";
-      case 2: return "PERDIDA";  
-      case 9: return "PENDENTE";
-      default: return "CANCELADA";
-    }
-  };
-
   const filteredApostas = apostas.filter(aposta => {
-    const casaNome = (aposta.casa_nome || "").toLowerCase();
     const game = (aposta.game || "").toLowerCase();
     const market = (aposta.market || "").toLowerCase();
+    const house = String(aposta.houseId || "");
     const matchesSearch = 
       game.includes(searchTerm.toLowerCase()) ||
       market.includes(searchTerm.toLowerCase()) ||
-      casaNome.includes(searchTerm.toLowerCase());
+      house.includes(searchTerm.toLowerCase());
 
-    const resultIdStr = String(aposta.result_id ?? "");
-    const houseIdStr = String(aposta.house_id ?? "");
+    const resultIdStr = String(aposta.resultId ?? "");
+    const houseIdStr = String(aposta.houseId ?? "");
     const matchesStatus = !statusFilter || statusFilter === "all" || resultIdStr === statusFilter;
     const matchesHouse = !houseFilter || houseFilter === "all" || houseIdStr === houseFilter;
 
@@ -97,7 +89,7 @@ function ApostasPageContent() {
   };
 
   const handleCreateAposta = async () => {
-    if (!formData.game || !formData.market || !formData.stake || !formData.odd || !formData.house_id) {
+    if (!formData.game || !formData.market || !formData.stake || !formData.odd || !formData.houseId) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -108,14 +100,14 @@ function ApostasPageContent() {
 
     try {
       setLoading(true);
-      const created = await createBet({
+      const created = await createBetRoute({
         game: formData.game,
         sport: formData.sport,
         market: formData.market,
         stake: Number(formData.stake),
         odd: Number(formData.odd),
-        house_id: Number(formData.house_id),
-        bet_time: new Date().toISOString()
+        houseId: Number(formData.houseId),
+        betTime: new Date().toISOString()
       });
       setApostas(prev => [created, ...prev]);
     } catch (e: any) {
@@ -131,7 +123,7 @@ function ApostasPageContent() {
       market: "",
       stake: "",
       odd: "",
-      house_id: ""
+      houseId: ""
     });
     setIsCreateModalOpen(false);
     
@@ -141,7 +133,7 @@ function ApostasPageContent() {
     });
   };
 
-  const handleEditAposta = (aposta: Bet) => {
+  const handleEditAposta = (aposta: BetItem) => {
     setEditingAposta(aposta);
     setFormData({
       game: aposta.game,
@@ -149,7 +141,7 @@ function ApostasPageContent() {
       market: aposta.market,
       stake: aposta.stake.toString(),
       odd: aposta.odd.toString(),
-      house_id: aposta.house_id.toString()
+      houseId: aposta.houseId.toString()
     });
     setIsEditModalOpen(true);
   };
@@ -159,13 +151,13 @@ function ApostasPageContent() {
 
     try {
       setLoading(true);
-      const updated = await updateBetApi(editingAposta.id, {
+      const updated = await updateBetRoute(editingAposta.id, {
         game: formData.game,
         sport: formData.sport,
         market: formData.market,
         stake: Number(formData.stake),
         odd: Number(formData.odd),
-        house_id: Number(formData.house_id)
+        houseId: Number(formData.houseId)
       });
       setApostas(prev => prev.map(a => a.id === editingAposta.id ? { ...a, ...updated } : a));
     } catch (e: any) {
@@ -188,7 +180,7 @@ function ApostasPageContent() {
     if (selectedBets.length === 0) return;
     try {
       setLoading(true);
-      await deleteMultipleBetsApi(selectedBets);
+      await deleteMultipleBetsRoute(selectedBets);
       setApostas(prev => prev.filter(a => !selectedBets.includes(a.id)));
     } catch (e: any) {
       toast({ title: "Erro", description: e.message || "Falha ao excluir apostas", variant: "destructive" });
@@ -208,9 +200,8 @@ function ApostasPageContent() {
     if (selectedBets.length === 0) return;
     try {
       setLoading(true);
-      await finalizeMultipleBetsApi(selectedBets, resultId);
-      // Recarregar apostas para refletir cálculo de lucro
-      const data = await getBets();
+      await finalizeMultipleBetsRoute({ betIds: selectedBets, resultId });
+      const data = await fetchBets();
       setApostas(data);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message || "Falha ao atualizar status", variant: "destructive" });
@@ -229,8 +220,8 @@ function ApostasPageContent() {
   const handleStatusChange = async (id: number, resultId: number) => {
     try {
       setLoading(true);
-      await finalizeMultipleBetsApi([id], resultId);
-      const data = await getBets();
+      await finalizeMultipleBetsRoute({ betIds: [id], resultId });
+      const data = await fetchBets();
       setApostas(data);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message || "Falha ao alterar status", variant: "destructive" });
@@ -247,9 +238,9 @@ function ApostasPageContent() {
   const refresh = async () => {
     try {
       setLoading(true);
-      const [bets, houses] = await Promise.all([getBets(), getHouses()]);
+      const [bets, houseRows] = await Promise.all([fetchBets(), getAllHouses()]);
       setApostas(bets);
-      setCasas(houses);
+      setCasas((houseRows || []).map((h: FindAllHousesDTO) => ({ id: h.houseId, name: h.houseName })));
     } finally {
       setLoading(false);
     }
@@ -258,6 +249,8 @@ function ApostasPageContent() {
   // initial load
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useState(() => { refresh(); return undefined; });
+
+  const casasMap = new Map(casas.map(c => [c.id, c.name] as const));
 
   return (
     <div className="space-y-6">
@@ -287,10 +280,10 @@ function ApostasPageContent() {
                       <SelectValue placeholder="Alterar Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="9">Pendente</SelectItem>
-                      <SelectItem value="1">Ganha</SelectItem>
-                      <SelectItem value="2">Perdida</SelectItem>
-                      <SelectItem value="4">Cancelada</SelectItem>
+                      <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
+                      <SelectItem value={String(ResultIdEnum.WON)}>Ganha</SelectItem>
+                      <SelectItem value={String(ResultIdEnum.LOST)}>Perdida</SelectItem>
+                      <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
                   
@@ -349,7 +342,7 @@ function ApostasPageContent() {
               
               <div className="space-y-2">
                 <Label>Casa *</Label>
-                <Select value={formData.house_id} onValueChange={(value) => setFormData(prev => ({ ...prev, house_id: value }))}>
+                <Select value={formData.houseId} onValueChange={(value) => setFormData(prev => ({ ...prev, houseId: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a casa" />
                   </SelectTrigger>
@@ -421,10 +414,10 @@ function ApostasPageContent() {
               </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="9">Pendente</SelectItem>
-                  <SelectItem value="1">Ganha</SelectItem>
-                  <SelectItem value="2">Perdida</SelectItem>
-                  <SelectItem value="4">Cancelada</SelectItem>
+                  <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
+                  <SelectItem value={String(ResultIdEnum.WON)}>Ganha</SelectItem>
+                  <SelectItem value={String(ResultIdEnum.LOST)}>Perdida</SelectItem>
+                  <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                 </SelectContent>
             </Select>
             
@@ -494,34 +487,34 @@ function ApostasPageContent() {
                   <TableCell>{aposta.market}</TableCell>
                   <TableCell>R$ {Number(aposta.stake ?? 0).toFixed(2)}</TableCell>
                   <TableCell>{Number(aposta.odd ?? 0).toFixed(2)}</TableCell>
-                  <TableCell>{aposta.casa_nome}</TableCell>
+                  <TableCell>{casasMap.get(aposta.houseId) || `#${aposta.houseId}`}</TableCell>
                   <TableCell>
                     <Select
-                      value={aposta.result_id.toString()}
+                      value={String(aposta.resultId)}
                       onValueChange={(value) => handleStatusChange(aposta.id, Number(value))}
                     >
                       <SelectTrigger className="w-28 h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="9">Pendente</SelectItem>
-                        <SelectItem value="1">Ganha</SelectItem>
-                        <SelectItem value="2">Perdida</SelectItem>  
-                        <SelectItem value="4">Cancelada</SelectItem>
+                        <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
+                        <SelectItem value={String(ResultIdEnum.WON)}>Ganha</SelectItem>
+                        <SelectItem value={String(ResultIdEnum.LOST)}>Perdida</SelectItem>  
+                        <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
                   <TableCell>
                     <span className={cn(
                       "font-medium",
-                      Number(aposta.lucro_calculado ?? 0) > 0 ? "text-success" : 
-                      Number(aposta.lucro_calculado ?? 0) < 0 ? "text-destructive" : "text-muted-foreground"
+                      Number(aposta.profit ?? 0) > 0 ? "text-success" : 
+                      Number(aposta.profit ?? 0) < 0 ? "text-destructive" : "text-muted-foreground"
                     )}>
-                      R$ {Number(aposta.lucro_calculado ?? 0).toFixed(2)}
+                      R$ {Number(aposta.profit ?? 0).toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell>
-                    {aposta.bet_time ? new Date(aposta.bet_time).toLocaleDateString('pt-BR') : "-"}
+                    {aposta.betTime ? new Date(aposta.betTime).toLocaleDateString('pt-BR') : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -538,7 +531,7 @@ function ApostasPageContent() {
                         onClick={async () => {
                           try {
                             setLoading(true);
-                            await deleteBetApi(aposta.id);
+                            await deleteBetRoute(aposta.id);
                             setApostas(prev => prev.filter(a => a.id !== aposta.id));
                           } finally { setLoading(false); }
                         }}
@@ -587,7 +580,7 @@ function ApostasPageContent() {
             
             <div className="space-y-2">
               <Label>Casa *</Label>
-              <Select value={formData.house_id} onValueChange={(value) => setFormData(prev => ({ ...prev, house_id: value }))}>
+              <Select value={formData.houseId} onValueChange={(value) => setFormData(prev => ({ ...prev, houseId: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

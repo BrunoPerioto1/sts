@@ -14,8 +14,8 @@ export function DateRangeFilter({ onDateRangeChange, className }: DateRangeFilte
   const [endDate, setEndDate] = useState<string>("");
 
   const handleApplyFilter = () => {
-    const start = startDate || null;
-    const end = endDate || null;
+    const start = startDate ? new Date(startDate).toISOString() : null;
+    const end = endDate ? new Date(endDate).toISOString() : null;
     onDateRangeChange(start, end);
   };
 

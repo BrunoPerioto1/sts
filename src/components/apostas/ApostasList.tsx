@@ -8,24 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Edit2, Trash2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-
-interface Aposta {
-  id: number;
-  evento: string;
-  mercado: string;
-  odd: number;
-  valor: number;
-  status: string;
-  data: string;
-  hora: string;
-  casa: string;
-  observacoes?: string;
-  lucro_calculado?: number;
-}
+import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 
 interface ApostasListProps {
-  apostas: Aposta[];
-  onEdit?: (aposta: Aposta) => void;
+  apostas: BetItem[];
+  onEdit?: (aposta: BetItem) => void;
   onDelete?: (id: number) => void;
   onStatusChange?: (id: number, newStatus: string) => void;
   selectedBets?: number[];
@@ -59,25 +46,49 @@ export function ApostasList({
     }
   };
 
-  // Use lucro_calculado from backend instead of calculating
-  const getRealReturn = (aposta: Aposta) => {
-    const lucro = Number(aposta.lucro_calculado || 0);
+  const mapResultToStatus = (aposta: BetItem): string => {
+    if (aposta.resultName) {
+      const rn = aposta.resultName.toLowerCase();
+      if (rn.includes("won") || rn.includes("ganh")) return "ganha";
+      if (rn.includes("lost") || rn.includes("perdid")) return "perdida";
+      if (rn.includes("cancel")) return "cancelada";
+    }
+    switch (aposta.resultId) {
+      case ResultIdEnum.WON:
+        return "ganha";
+      case ResultIdEnum.LOST:
+        return "perdida";
+      case ResultIdEnum.CANCELED:
+        return "cancelada";
+      default:
+        return "pendente";
+    }
+  };
+
+  const getRealReturn = (aposta: BetItem) => {
+    const lucro = Number(aposta.profit || 0);
     return lucro >= 0 ? `+${lucro.toFixed(2)}` : lucro.toFixed(2);
   };
 
-  const getReturnColor = (aposta: Aposta) => {
-    const lucro = Number(aposta.lucro_calculado || 0);
+  const getReturnColor = (aposta: BetItem) => {
+    const lucro = Number(aposta.profit || 0);
     if (lucro > 0) return "text-success";
     if (lucro < 0) return "text-destructive";
     return "text-muted-foreground";
   };
 
   const filteredApostas = apostas.filter(aposta =>
-    aposta.evento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    aposta.mercado.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    aposta.casa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    aposta.status.toLowerCase().includes(searchTerm.toLowerCase())
+    aposta.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    aposta.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (aposta.resultName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatDate = (value: Date | string | undefined) => {
+    if (!value) return "";
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return "";
+    return `${d.toLocaleDateString('pt-BR')}\n${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
 
   return (
     <Card>
@@ -120,117 +131,111 @@ export function ApostasList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredApostas.map((aposta) => (
-                <TableRow key={aposta.id} className={cn(
-                  "border-r-4",
-                  aposta.status === "ganha" && "border-r-success/60",
-                  aposta.status === "perdida" && "border-r-destructive/60", 
-                  aposta.status === "cancelada" && "border-r-muted-foreground/50",
-                  aposta.status === "pendente" && "border-r-primary/60"
-                )}>
-                  {showCheckboxes && onSelectBet && (
+              {filteredApostas.map((aposta) => {
+                const status = mapResultToStatus(aposta);
+                const dateStr = formatDate(aposta.betTime);
+                return (
+                  <TableRow key={aposta.id} className={cn(
+                    "border-r-4",
+                    status === "ganha" && "border-r-success/60",
+                    status === "perdida" && "border-r-destructive/60", 
+                    status === "cancelada" && "border-r-muted-foreground/50",
+                    status === "pendente" && "border-r-primary/60"
+                  )}>
+                    {showCheckboxes && onSelectBet && (
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedBets.includes(aposta.id)}
+                          onCheckedChange={() => onSelectBet(aposta.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
-                      <Checkbox 
-                        checked={selectedBets.includes(aposta.id)}
-                        onCheckedChange={() => onSelectBet(aposta.id)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full flex-shrink-0",
+                          status === "ganha" && "bg-success",
+                          status === "perdida" && "bg-destructive", 
+                          status === "cancelada" && "bg-muted-foreground",
+                          status === "pendente" && "bg-primary"
+                        )} />
+                        <p className="font-medium text-sm">{aposta.game}</p>
+                      </div>
                     </TableCell>
-                  )}
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {/* Indicador visual adicional */}
-                      <div className={cn(
-                        "w-2 h-2 rounded-full flex-shrink-0",
-                        aposta.status === "ganha" && "bg-success",
-                        aposta.status === "perdida" && "bg-destructive", 
-                        aposta.status === "cancelada" && "bg-muted-foreground",
-                        aposta.status === "pendente" && "bg-primary"
-                      )} />
-                      <p className="font-medium text-sm">{aposta.evento}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm font-medium">{aposta.mercado}</p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">{aposta.odd.toFixed(2)}</p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">R$ {aposta.valor.toFixed(2)}</p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm font-medium">{aposta.casa}</p>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {new Date(aposta.data).toLocaleDateString('pt-BR')}
+                    <TableCell>
+                      <p className="text-sm font-medium">{aposta.market}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{aposta.odd.toFixed(2)}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">R$ {aposta.stake.toFixed(2)}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm font-medium">{aposta.houseId ? `#${aposta.houseId}` : "-"}</p>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-medium whitespace-pre-line">{dateStr}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {onStatusChange ? (
+                          <Select
+                            value={status}
+                            onValueChange={(value) => onStatusChange(aposta.id, value)}
+                          >
+                            <SelectTrigger className="w-28 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pendente">Pendente</SelectItem>
+                              <SelectItem value="ganha">Ganha</SelectItem>
+                              <SelectItem value="perdida">Perdida</SelectItem>
+                              <SelectItem value="cancelada">Cancelada</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge className={cn("text-xs", getStatusColor(status))}>
+                            {status.toUpperCase()}
+                          </Badge>
+                        )}
+                        {status === "ganha" && <span className="text-success font-bold text-lg">✓</span>}
+                        {status === "perdida" && <span className="text-destructive font-bold text-lg">✗</span>}
+                        {status === "cancelada" && <span className="text-muted-foreground font-bold text-lg">⦸</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className={cn("font-medium", getReturnColor(aposta))}>
+                        R$ {getRealReturn(aposta)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(aposta.data).toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {onStatusChange ? (
-                        <Select
-                          value={aposta.status}
-                          onValueChange={(value) => onStatusChange(aposta.id, value)}
-                        >
-                          <SelectTrigger className="w-28 h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pendente">Pendente</SelectItem>
-                            <SelectItem value="ganha">Ganha</SelectItem>
-                            <SelectItem value="perdida">Perdida</SelectItem>
-                            <SelectItem value="cancelada">Cancelada</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Badge className={cn("text-xs", getStatusColor(aposta.status))}>
-                          {aposta.status.toUpperCase()}
-                        </Badge>
-                      )}
-                      {/* Badge visual extra */}
-                      {aposta.status === "ganha" && <span className="text-success font-bold text-lg">✓</span>}
-                      {aposta.status === "perdida" && <span className="text-destructive font-bold text-lg">✗</span>}
-                      {aposta.status === "cancelada" && <span className="text-muted-foreground font-bold text-lg">⦸</span>}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className={cn("font-medium", getReturnColor(aposta))}>
-                      R$ {getRealReturn(aposta)}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      {onEdit && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(aposta)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(aposta.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-1">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(aposta)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {onDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(aposta.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

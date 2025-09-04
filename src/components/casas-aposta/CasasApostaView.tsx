@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 import { Building2, DollarSign, TrendingUp, Plus, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
-import { apiFetch, type Bet } from "@/lib/api";
+import { type BetItem } from "@/api/routes/get-bets";
+import { getHouseBalances, type HouseBalanceDto } from "@/api/routes/get-houses";
 
 interface CasasApostaViewProps {
-  apostas: Bet[];
+  apostas: BetItem[];
 }
 
 type CasaSaldo = { 
@@ -32,29 +33,16 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
       setIsLoading(true);
       setError(null);
       try {
-        // Filtra apenas casas que têm apostas ativas ou finalizadas
-        const casasComApostas = new Set(apostas.map(a => a.casa_nome || `Casa ${a.house_id}`));
-                 const casasFiltradas = Array.from(casasComApostas).map(casaNome => {
-           const apostasCasa = apostas.filter(a => (a.casa_nome || `Casa ${a.house_id}`) === casaNome);
-           const totalInvestido = apostasCasa
-             .filter(a => a.result_id !== 9 && a.result_id !== 10) // 9 = pendente, 10 = cancelada
-             .reduce((acc, a) => acc + a.stake, 0);
-           const totalRetorno = apostasCasa
-             .filter(a => a.result_id === 1) // 1 = ganha
-             .reduce((acc, a) => acc + (a.stake * a.odd), 0);
-           const saldoCalculado = totalRetorno - totalInvestido;
-          
-          return {
-            id: 0, // placeholder - não temos ID da casa no frontend
-            nome: casaNome,
-            saldo: saldoCalculado,
-            totalApostas: apostasCasa.length,
-            apostasGanhas: apostasCasa.filter(a => a.result_id === 1).length, // 1 = ganha
-            apostasPerdidas: apostasCasa.filter(a => a.result_id === 2).length, // 2 = perdida
-            apostasPendentes: apostasCasa.filter(a => a.result_id === 9).length, // 9 = pendente
-          };
-        });
-        
+        const balances = await getHouseBalances();
+        const casasFiltradas: CasaSaldo[] = (balances || []).map((b: HouseBalanceDto) => ({
+          id: b.houseId,
+          nome: b.houseName,
+          saldo: Number(b.realHouseBalance ?? b.houseBalance ?? 0),
+          totalApostas: Number(b.totalBets ?? 0),
+          apostasGanhas: Number(b.wonBets ?? 0),
+          apostasPerdidas: Number(b.lostBets ?? 0),
+          apostasPendentes: Number(b.pendingBets ?? 0),
+        }));
         setCasas(casasFiltradas);
       } catch (e: any) {
         setError(e.message || "Falha ao carregar saldos");
@@ -63,13 +51,13 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
       }
     };
     loadBalances();
-  }, [apostas]);
+  }, []);
 
-  const getApostasPorCasa = (casa: string) => {
-    return apostas.filter(aposta => (aposta.casa_nome || `Casa ${aposta.house_id}`) === casa);
+  const getApostasPorCasa = (houseId: number) => {
+    return apostas.filter(aposta => aposta.houseId === houseId);
   };
 
-  const getStatusColor = (resultId: number) => {
+  const getStatusColor = (resultId?: number | null) => {
     switch (resultId) {
       case 1: // ganha
         return 'bg-success text-success-foreground';
@@ -77,7 +65,8 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
         return 'bg-destructive text-destructive-foreground';
       case 9: // pendente
         return 'bg-secondary text-secondary-foreground';
-      case 10: // cancelada
+      case 3: // cancelada (ajustado para enum do routes)
+      case 10: // backward compat
         return 'bg-muted text-muted-foreground';
       default:
         return 'bg-muted text-muted-foreground';
@@ -135,7 +124,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
         ) : error ? (
           <div className="text-center text-destructive">{error}</div>
         ) : casas.map((casa, index) => {
-          const apostasCasa = getApostasPorCasa(casa.nome);
+          const apostasCasa = getApostasPorCasa(casa.id);
           return (
             <Card key={`${casa.nome}-${index}`}>
               <CardHeader>
@@ -164,7 +153,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleVerMovimentacao(casa)}
+                      onClick={() => handleVerMovimentacao({ nome: casa.nome, saldo: casa.saldo })}
                       className="flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />
@@ -188,14 +177,14 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
                         <div>
                           <p className="font-medium">{aposta.game}</p>
                           <p className="text-sm text-muted-foreground">
-                            {aposta.bet_time ? new Date(aposta.bet_time).toLocaleDateString() : 'N/A'} às {aposta.bet_time ? new Date(aposta.bet_time).toLocaleTimeString() : 'N/A'}
+                            {aposta.betTime ? new Date(aposta.betTime).toLocaleDateString() : 'N/A'} às {aposta.betTime ? new Date(aposta.betTime).toLocaleTimeString() : 'N/A'}
                           </p>
                         </div>
                         <div className="text-right space-y-1">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm">R$ {aposta.stake.toFixed(2)}</span>
-                            <Badge className={getStatusColor(aposta.result_id || 9)}>
-                              {aposta.result_id === 1 ? 'Ganha' : aposta.result_id === 2 ? 'Perdida' : aposta.result_id === 9 ? 'Pendente' : aposta.result_id === 10 ? 'Cancelada' : 'N/A'}
+                            <Badge className={getStatusColor(aposta.resultId)}>
+                              {aposta.resultId === 1 ? 'Ganha' : aposta.resultId === 2 ? 'Perdida' : aposta.resultId === 9 ? 'Pendente' : aposta.resultId === 3 ? 'Cancelada' : 'N/A'}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
@@ -229,6 +218,7 @@ export function CasasApostaView({ apostas }: CasasApostaViewProps) {
           onClose={() => setIsModalOpen(false)}
           casaNome={selectedCasa.nome}
           saldoAtual={selectedCasa.saldo}
+          houseId={(casas.find(c => c.nome === selectedCasa.nome)?.id) || 0}
         />
       )}
     </div>
