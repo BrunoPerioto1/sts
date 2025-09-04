@@ -76,7 +76,7 @@ export async function getBets(params?: BetFilterDto) {
   if (queryParams.startDate) queryParams.startDate = new Date(queryParams.startDate).toISOString();
   if (queryParams.endDate) queryParams.endDate = new Date(queryParams.endDate).toISOString();
 
-  const response = await api.bets.get<BetItem[]>('/bets', { params: queryParams });
+  const response = await api.bets.get<BetItem[]>('', { params: queryParams });
   return response.data;
 }
 

@@ -165,21 +165,21 @@ function DashboardPageContent() {
         />
         <MetricCard
           title="Lucro Total"
-          value={`${metrics.totalProfit >= 0 ? '+' : ''}R$ ${metrics.totalProfit.toFixed(2)}`}
-          icon={metrics.totalProfit >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
-          trend={metrics.totalProfit >= 0 ? "positive" : "negative"}
+          value={`${Number(metrics.totalProfit) >= 0 ? '+' : ''}R$ ${Number(metrics.totalProfit).toFixed(2)}`}
+          icon={Number(metrics.totalProfit) >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+          trend={Number(metrics.totalProfit) >= 0 ? "positive" : "negative"}
         />
         <MetricCard
           title="ROI"
-          value={`${metrics.roi >= 0 ? '+' : ''}${metrics.roi.toFixed(2)}%`}
+          value={`${Number(metrics.roi) >= 0 ? '+' : ''}${Number(metrics.roi).toFixed(2)}%`}
           icon={<BarChart3 className="h-6 w-6" />}
-          trend={metrics.roi >= 0 ? "positive" : "negative"}
+          trend={Number(metrics.roi) >= 0 ? "positive" : "negative"}
         />
         <MetricCard
           title="Taxa de Acerto"
-          value={`${metrics.hitRate.toFixed(1)}%`}
+          value={`${Number(metrics.hitRate).toFixed(1)}%`}
           icon={<Target className="h-6 w-6" />}
-          trend={metrics.hitRate >= 50 ? "positive" : "negative"}
+          trend={Number(metrics.hitRate) >= 50 ? "positive" : "negative"}
         />
       </div>
 
@@ -255,7 +255,7 @@ function DashboardPageContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Taxa:</span>
-                <span className="font-medium">{metrics.hitRate.toFixed(1)}%</span>
+                <span className="font-medium">{Number(metrics.hitRate).toFixed(1)}%</span>
               </div>
             </div>
           </CardContent>
@@ -269,16 +269,16 @@ function DashboardPageContent() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Investido:</span>
-                <span className="font-medium">R$ {metrics.totalStaked.toFixed(2)}</span>
+                <span className="font-medium">R$ {Number(metrics.totalStaked).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Retorno:</span>
-                <span className="font-medium">R$ {metrics.totalReturn.toFixed(2)}</span>
+                <span className="font-medium">R$ {Number(metrics.totalReturn).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className={`text-sm text-muted-foreground`}>Lucro:</span>
-                <span className={`font-medium ${metrics.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  R$ {metrics.totalProfit.toFixed(2)}
+                <span className={`font-medium ${Number(metrics.totalProfit) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  R$ {Number(metrics.totalProfit).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -293,8 +293,8 @@ function DashboardPageContent() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">ROI:</span>
-                <span className={`font-medium ${metrics.roi >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {metrics.roi.toFixed(2)}%
+                <span className={`font-medium ${Number(metrics.roi) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {Number(metrics.roi).toFixed(2)}%
                 </span>
               </div>
             </div>

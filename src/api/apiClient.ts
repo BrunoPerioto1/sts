@@ -12,7 +12,7 @@ export const apiClient = () => {
   });
 
   const houses = axios.create({
-    baseURL: baseURL + 'houses/',
+    baseURL: baseURL + 'house/',
   });
 
   const transactions = axios.create({
