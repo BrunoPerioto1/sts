@@ -256,8 +256,10 @@ function CasasPageContent() {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [editingCasa, setEditingCasa] = useState<Casa | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [selectedHouseBalance, setSelectedHouseBalance] = useState<HouseBalance | null>(null);
-  const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseMovement[]>([]);
+  const [selectedHouseMovements, setSelectedHouseMovements] = useState<HouseTransaction[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -400,8 +402,8 @@ function CasasPageContent() {
   };
 
   const handleViewHistory = (casa: Casa) => {
-    const houseMovements = mockHouseMovements[casa.id] || [];
-    setSelectedHouseMovements(houseMovements);
+    const houseTransactions = mockHouseTransactions[casa.id] || [];
+    setSelectedHouseMovements(houseTransactions);
     setSelectedCasa(casa);
     setIsHistoryModalOpen(true);
   };
@@ -648,7 +650,26 @@ function CasasPageContent() {
         <TabsContent value="transacoes">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Transações</CardTitle>
+              <div className="flex items-center justify-between gap-4">
+                <CardTitle>Histórico de Transações</CardTitle>
+                <div className="flex gap-2">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar casa..."
+                      value={transactionSearchTerm}
+                      onChange={(e) => setTransactionSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-48"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -657,12 +678,18 @@ function CasasPageContent() {
                     <TableHead>Casa</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Descrição</TableHead>
                     <TableHead>Data</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions
+                    .filter(transaction => {
+                      const matchesSearch = transactionSearchTerm === "" || 
+                        transaction.casa_nome.toLowerCase().includes(transactionSearchTerm.toLowerCase());
+                      const matchesDate = dateFilter === "" || 
+                        new Date(transaction.created_at).toISOString().split('T')[0] === dateFilter;
+                      return matchesSearch && matchesDate;
+                    })
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .map((transaction) => (
                     <TableRow key={transaction.id}>
@@ -682,7 +709,6 @@ function CasasPageContent() {
                           R$ {transaction.valor.toFixed(2)}
                         </span>
                       </TableCell>
-                      <TableCell>{transaction.descricao}</TableCell>
                       <TableCell>
                         {new Date(transaction.created_at).toLocaleDateString('pt-BR')} {' '}
                         {new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
@@ -850,58 +876,36 @@ function CasasPageContent() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Descrição</TableHead>
-                    <TableHead>Detalhes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {selectedHouseMovements
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                    .map((movement) => (
-                    <TableRow key={movement.id}>
+                    .map((transaction) => (
+                    <TableRow key={transaction.id}>
                       <TableCell>
-                        {new Date(movement.created_at).toLocaleDateString('pt-BR')} {' '}
-                        {new Date(movement.created_at).toLocaleTimeString('pt-BR', { 
+                        {new Date(transaction.created_at).toLocaleDateString('pt-BR')} {' '}
+                        {new Date(transaction.created_at).toLocaleTimeString('pt-BR', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
                         })}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getMovementTypeColor(movement.movement_type)}>
-                          {getMovementTypeName(movement.movement_type)}
+                        <Badge variant={
+                          transaction.transaction_type === "DEPOSIT" ? "default" :
+                          transaction.transaction_type === "WITHDRAWAL" ? "destructive" : "secondary"
+                        }>
+                          {transaction.transaction_type === "DEPOSIT" ? "Depósito" :
+                           transaction.transaction_type === "WITHDRAWAL" ? "Saque" : "Ajuste"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className={parseFloat(movement.profit) >= 0 ? "text-success" : "text-destructive"}>
-                          R$ {parseFloat(movement.profit).toFixed(2)}
+                        <span className={parseFloat(transaction.value) >= 0 ? "text-success" : "text-destructive"}>
+                          R$ {parseFloat(transaction.value).toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        {movement.movement_type === "BET" ? (
-                          <div className="space-y-1">
-                            <div className="font-medium">{movement.game}</div>
-                            <div className="text-sm text-muted-foreground">{movement.market}</div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            {movement.movement_type === "DEPOSIT" ? "Depósito inicial" : "Saque parcial"}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {movement.movement_type === "BET" ? (
-                          <div className="text-sm space-y-1">
-                            <div><span className="font-medium">Esporte:</span> {movement.sport}</div>
-                            <div><span className="font-medium">Stake:</span> R$ {movement.stake}</div>
-                            <div><span className="font-medium">Odd:</span> {movement.odd}</div>
-                            <div>
-                              <Badge variant={movement.result_id === 1 ? "default" : "destructive"}>
-                                {movement.result_id === 1 ? "Ganhou" : "Perdeu"}
-                              </Badge>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        {transaction.description}
                       </TableCell>
                     </TableRow>
                   ))}
