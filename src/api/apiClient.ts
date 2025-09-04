@@ -1,0 +1,31 @@
+import axios from 'axios';
+
+export const apiClient = () => {
+  const baseURL = 'http://localhost:4000/';
+
+  const dashboard = axios.create({
+    baseURL,
+  });
+
+  const bets = axios.create({
+    baseURL: baseURL + 'bets/',
+  });
+
+  const houses = axios.create({
+    baseURL: baseURL + 'houses/',
+  });
+
+  const transactions = axios.create({
+    baseURL: baseURL + 'transactions/',
+  });
+
+
+  return {
+    dashboard,
+    bets,
+    houses,
+    transactions,
+  };
+};
+
+export const api = apiClient();

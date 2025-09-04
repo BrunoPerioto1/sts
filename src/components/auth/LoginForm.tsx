@@ -25,7 +25,6 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validação simples
     if (!loginData.email || !loginData.password) {
       toast({
         title: "Erro",
