@@ -108,7 +108,7 @@ function DashboardPageContent() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Casa de Aposta</Label>
               <Select 
@@ -122,22 +122,20 @@ function DashboardPageContent() {
                   <SelectItem value="all">Todas as casas</SelectItem>
                   {casas.map(casa => (
                     <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
-                      {casa.houseName || 'Casa sem nome'}
+                      {casa.name || 'Casa sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label>Período</Label>
               <DateRangeFilter 
                 onDateRangeChange={handleDateRangeChange}
                 className="border rounded-md p-3"
               />
             </div>
-            
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2 lg:col-span-3">
               <Button variant="outline" onClick={clearFilters}>
                 Limpar Filtros
               </Button>

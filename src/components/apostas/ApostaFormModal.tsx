@@ -7,24 +7,18 @@ import { type BetItem } from "@/api/routes/get-bets";
 
 interface ApostaFormModalProps {
   onApostaAdded: (aposta: BetItem) => void;
+  open: boolean;
+  onClose: () => void;
 }
 
-export function ApostaFormModal({ onApostaAdded }: ApostaFormModalProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
+export function ApostaFormModal({ onApostaAdded, open, onClose }: ApostaFormModalProps) {
   const handleApostaAdded = (aposta: BetItem) => {
     onApostaAdded(aposta);
-    setIsOpen(false);
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Registrar Nova Aposta
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={open => { if (!open) onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Registrar Nova Aposta</DialogTitle>

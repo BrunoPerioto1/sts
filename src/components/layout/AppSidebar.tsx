@@ -14,7 +14,7 @@ import {
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, path: "/dashboard" },
-  { id: "apostas", label: "Apostas", icon: Target, path: "/apostas" },
+  { id: "apostas", label: "Apostas", icon: Target, path: "/nova-aposta" },
   { id: "casas", label: "Casas de Apostas", icon: Building2, path: "/casas" },
 ];
 

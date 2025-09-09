@@ -172,7 +172,7 @@ export function ApostasList({
                       <p className="font-medium">R$ {Number(aposta.stake || 0).toFixed(2)}</p>
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm font-medium">{aposta.houseId ? `#${aposta.houseId}` : "-"}</p>
+                      <p className="text-sm font-medium">{aposta.houseName }</p>
                     </TableCell>
                     <TableCell>
                       <div>

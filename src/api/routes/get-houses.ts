@@ -2,7 +2,7 @@ import { api } from '../apiClient';
 
 export interface HouseDto {
   houseId: number;
-  houseName: string;
+  name: string;
   active: boolean;
 }
 
@@ -58,6 +58,6 @@ export async function getHouseById(id: number) {
 
 // GET /house
 export async function getAllHouses() {
-  const response = await api.houses.get<FindAllHousesDTO[]>('');
+  const response = await api.houses.get<FindAllHousesDTO[]>('/all');
   return response.data;
 }
