@@ -7,6 +7,7 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
 import { Target, TrendingUp, TrendingDown, BarChart3, Calendar, RefreshCw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useToast } from "@/hooks/use-toast";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getDashboardMetrics as fetchDashboardMetrics, type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
@@ -16,6 +17,7 @@ import { getAllHouses, type HouseDto } from "@/api/routes/get-houses";
 function DashboardPageContent() {
   const [casas, setCasas] = useState<HouseDto[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   
   const [filters, setFilters] = useState({
     house_id: undefined as number | undefined,
@@ -97,6 +99,8 @@ function DashboardPageContent() {
     });
   };
 
+  
+
   return (
     <div className="space-y-6">
       {/* Filtros */}
@@ -148,6 +152,7 @@ function DashboardPageContent() {
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
+              
             </div>
           </div>
         </CardContent>

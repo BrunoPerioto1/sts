@@ -7,7 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Target, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { postRegister } from "@/api/routes/post-register";
+import { postLogin } from "@/api/routes/post-login";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -24,55 +26,48 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     confirmPassword: "",
     acceptTerms: false
   });
+  const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validações
+
     if (!registerData.nome || !registerData.email || !registerData.password) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "Por favor, preencha todos os campos obrigatórios.", variant: "destructive" });
       return;
     }
-
     if (registerData.password !== registerData.confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "As senhas não coincidem.", variant: "destructive" });
       return;
     }
-
     if (registerData.password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
       return;
     }
-
     if (!registerData.acceptTerms) {
-      toast({
-        title: "Erro",
-        description: "Você deve aceitar os termos de uso.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "Você deve aceitar os termos de uso.", variant: "destructive" });
       return;
     }
 
-    // Simulação de cadastro
-    toast({
-      title: "Conta criada!",
-      description: "Sua conta foi criada com sucesso. Bem-vindo ao TrackerBet!",
-    });
-    
-    // Aqui seria implementada a lógica de redirecionamento
-    console.log("Cadastro realizado:", registerData);
+    try {
+      // Backend exige: username, email, password, roleId, full_name?
+      await postRegister({
+        username: registerData.nome,
+        email: registerData.email,
+        password: registerData.password,
+        roleId: 1,
+        full_name: registerData.nome,
+      });
+
+      // Login automático após cadastro
+      const loginRes = await postLogin({ email: registerData.email, password: registerData.password });
+      localStorage.setItem("token", loginRes.access_token);
+
+      toast({ title: "Conta criada!", description: "Bem-vindo ao TrackerBet!" });
+      navigate("/dashboard");
+    } catch (err: any) {
+      const description = err?.response?.data?.message || "Falha ao criar conta.";
+      toast({ title: "Erro", description, variant: "destructive" });
+    }
   };
 
   return (

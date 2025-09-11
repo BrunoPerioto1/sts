@@ -1,4 +1,4 @@
-import { BarChart3, Target, Building2 } from "lucide-react";
+import { BarChart3, Target, Building2, User, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   Sidebar, 
@@ -16,6 +16,7 @@ const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, path: "/dashboard" },
   { id: "apostas", label: "Apostas", icon: Target, path: "/nova-aposta" },
   { id: "casas", label: "Casas de Apostas", icon: Building2, path: "/casas" },
+  { id: "perfil", label: "Perfil", icon: User, path: "/perfil" },
 ];
 
 export function AppSidebar() {
@@ -55,6 +56,14 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/logout" end className={getNavCls}>
+                    <LogOut className="h-5 w-5" />
+                    {!collapsed && <span>Sair</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
