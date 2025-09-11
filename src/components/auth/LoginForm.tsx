@@ -160,14 +160,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
-          <Link to="/">
-            <Button variant="ghost" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao sistema
-            </Button>
-          </Link>
-        </div>
+      
       </div>
     </div>
   );

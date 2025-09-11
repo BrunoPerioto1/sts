@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
-import { Target, TrendingUp, TrendingDown, BarChart3, Calendar, RefreshCw } from "lucide-react";
+import { DashboardFilter } from "@/components/dashboard/DashboardFilter";
+import { Target, TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getDashboardMetrics as fetchDashboardMetrics, type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { getDashboardDailySummary, type DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -20,7 +16,7 @@ function DashboardPageContent() {
   const { toast } = useToast();
   
   const [filters, setFilters] = useState({
-    house_id: undefined as number | undefined,
+    houseId: undefined as number | undefined,
     startDate: "",
     endDate: ""
   });
@@ -45,7 +41,7 @@ function DashboardPageContent() {
     try {
       setLoading(true);
       const params = {
-        house_id: filters.house_id,
+        house_id: filters.houseId,
         startDate: filters.startDate || undefined,
         endDate: filters.endDate || undefined,
       };
@@ -79,84 +75,23 @@ function DashboardPageContent() {
     loadHouses();
   }, []);
 
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
-    setFilters(prev => ({
-      ...prev,
-      startDate: startDate || "",
-      endDate: endDate || ""
-    }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      house_id: undefined,
-      startDate: "",
-      endDate: ""
-    });
-  };
-
-  
+  const handleFilterChange = (newFilters: { houseId?: number; startDate: string; endDate: string }) => {
+      setFilters({
+        houseId: newFilters.houseId !== undefined ? newFilters.houseId : undefined,
+        startDate: newFilters.startDate,
+        endDate: newFilters.endDate
+      });
+    };
 
   return (
     <div className="space-y-6">
       {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Filtros do Dashboard
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <Label>Casa de Aposta</Label>
-              <Select 
-                value={filters.house_id?.toString() || "all"} 
-                onValueChange={(value) => handleFilterChange('house_id', value === "all" ? undefined : Number(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as casas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as casas</SelectItem>
-                  {casas.map(casa => (
-                    <SelectItem key={casa.houseId || Math.random()} value={(casa.houseId || 0).toString()}>
-                      {casa.name || 'Casa sem nome'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2 lg:col-span-2">
-              <Label>Período</Label>
-              <DateRangeFilter 
-                onDateRangeChange={handleDateRangeChange}
-                className="border rounded-md p-3"
-              />
-            </div>
-            <div className="flex items-end gap-2 lg:col-span-3">
-              <Button variant="outline" onClick={clearFilters}>
-                Limpar Filtros
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={loadDashboardData}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
-              
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <DashboardFilter
+        onFilterChange={handleFilterChange}
+        onRefresh={loadDashboardData}
+        houses={casas.map(house => ({ id: house.id, name: house.name }))}
+        loading={loading}
+      />
 
       {/* Métricas principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

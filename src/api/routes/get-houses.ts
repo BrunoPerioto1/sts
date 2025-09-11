@@ -1,7 +1,7 @@
 import { api } from '../apiClient';
 
 export interface HouseDto {
-  houseId: number;
+  id: number;
   name: string;
   active: boolean;
 }
