@@ -24,7 +24,7 @@ export function DashboardFilter({ onFilterChange, onRefresh, houses, loading }: 
       startDate: startDate,
       endDate: endDate,
     });
-  }, [houseId, startDate, endDate, onFilterChange]);
+  }, [houseId, startDate, endDate]); // onFilterChange foi removido das dependências
 
   const handleClearFilter = () => {
     setHouseId("all");
@@ -36,7 +36,7 @@ export function DashboardFilter({ onFilterChange, onRefresh, houses, loading }: 
 
   return (
     <div className="flex items-end gap-4 p-4 border-b">
-      <div className="flex-1 space-y-2">
+      <div className="space-y-2 w-52">
         <Label>Casa de Aposta</Label>
         <Select 
           value={houseId} 

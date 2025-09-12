@@ -124,7 +124,7 @@ function DashboardPageContent() {
       {/* Gráfico de evolução diária expandido */}
       <Card>
         <CardHeader>
-          <CardTitle>Evolução Diária (Últimos 30 dias)</CardTitle>
+          <CardTitle>Evolução Diária </CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
