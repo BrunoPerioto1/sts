@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const apiClient = () => {
 
-  const baseURL = 'http://localhost:4000/';
+  const baseURL = 'https://vtsbackend.vercel.app/';
 
 
   const dashboard = axios.create({
