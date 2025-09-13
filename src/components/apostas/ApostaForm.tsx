@@ -35,7 +35,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
     const loadHouses = async () => {
       try {
         const data = await getAllHouses();
-        const normalized = data.map((h: any) => ({ id: Number(h.houseId ?? h.id), name: h.houseName ?? h.name })) as { id: number; name: string }[];
+        // Corrigido para usar os campos corretos da API: id e name
+        const normalized = data.map((h: any) => ({ id: Number(h.id), name: h.name })) as { id: number; name: string }[];
         setHouses(normalized);
         if ((initialData as any)?.houseId) {
           const match = normalized.find(h => h.id === (initialData as any).houseId);
@@ -80,6 +81,7 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
           houseId: formData.houseId,
           market: formData.market,
           sport: formData.sport,
+          betTime: new Date().toISOString(),
         };
         const created = await createBetRoute(payload);
         onApostaAdded(created);
@@ -166,8 +168,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
                   <SelectValue placeholder="Selecione a casa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {houses.map(h => (
-                    <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+                  {houses.map(house => (
+                    <SelectItem key={house.id} value={house.id.toString()}>{house.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

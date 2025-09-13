@@ -7,7 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Target, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { postLogin } from "@/api/routes/post-login";
+import { getMe } from "@/api/routes/get-me";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -21,10 +23,11 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     password: "",
     rememberMe: false
   });
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!loginData.email || !loginData.password) {
       toast({
         title: "Erro",
@@ -34,14 +37,25 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       return;
     }
 
-    // Simulação de login
-    toast({
-      title: "Login realizado!",
-      description: "Bem-vindo de volta ao TrackerBet.",
-    });
-    
-    // Aqui seria implementada a lógica de redirecionamento
-    console.log("Login realizado:", loginData);
+    try {
+      const res = await postLogin({ email: loginData.email, password: loginData.password });
+      localStorage.setItem("token", res.access_token);
+      if (loginData.rememberMe) {
+        // mantém token; caso contrário, poderia usar sessionStorage
+      }
+
+      // Opcional: buscar dados do usuário logado
+      await getMe().catch(() => undefined);
+
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta ao TrackerBet.",
+      });
+      navigate("/dashboard");
+    } catch (err: any) {
+      const description = err?.response?.data?.message || "Falha ao realizar login.";
+      toast({ title: "Erro", description, variant: "destructive" });
+    }
   };
 
   return (
@@ -146,14 +160,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
-          <Link to="/">
-            <Button variant="ghost" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao sistema
-            </Button>
-          </Link>
-        </div>
+      
       </div>
     </div>
   );
