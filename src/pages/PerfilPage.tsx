@@ -37,7 +37,7 @@ export default function PerfilPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Vincular Telegram</CardTitle>
+            <CardTitle>Vincule seu  Telegram</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
