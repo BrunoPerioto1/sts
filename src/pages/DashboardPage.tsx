@@ -2,23 +2,31 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DashboardFilter } from "@/components/dashboard/DashboardFilter";
-import { Target, TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Target, TrendingUp, TrendingDown, BarChart3, DollarSign, PercentIcon, Award, ChevronDown, ChevronUp } from "lucide-react";
+import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
+
 import { useToast } from "@/hooks/use-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { getDashboardMetrics as fetchDashboardMetrics, type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import { getDashboardDailySummary, type DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
+import {
+  getDashboardMetrics as fetchDashboardMetrics,
+  type DashboardMetrics,
+} from "@/api/routes/get-dashboard-metrics";
+import {
+  getDashboardDailySummary,
+  type DailySummaryPoint,
+} from "@/api/routes/get-dashboard-daily";
 import { getAllHouses, type HouseDto } from "@/api/routes/get-houses";
 
 function DashboardPageContent() {
   const [casas, setCasas] = useState<HouseDto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showBetDetails, setShowBetDetails] = useState(false);
   const { toast } = useToast();
-  
+
   const [filters, setFilters] = useState({
     houseId: undefined as number | undefined,
     startDate: "",
-    endDate: ""
+    endDate: "",
   });
 
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -33,7 +41,7 @@ function DashboardPageContent() {
     averageOdd: 0,
     totalProfit: 0,
     roi: 0,
-    hitRate: 0
+    hitRate: 0,
   });
   const [dailyData, setDailyData] = useState<DailySummaryPoint[]>([]);
 
@@ -47,14 +55,14 @@ function DashboardPageContent() {
       };
       const [metricsData, dailyData] = await Promise.all([
         fetchDashboardMetrics(params),
-        getDashboardDailySummary(params)
+        getDashboardDailySummary(params),
       ]);
       setMetrics(metricsData);
       setDailyData(dailyData || []);
     } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-    } finally { 
-      setLoading(false); 
+      console.error("Erro ao carregar dados do dashboard:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,20 +76,24 @@ function DashboardPageContent() {
         const houses = await getAllHouses();
         setCasas(houses || []);
       } catch (error) {
-        console.error('Erro ao carregar casas:', error);
+        console.error("Erro ao carregar casas:", error);
         setCasas([]);
       }
     };
     loadHouses();
   }, []);
 
-  const handleFilterChange = (newFilters: { houseId?: number; startDate: string; endDate: string }) => {
-      setFilters({
-        houseId: newFilters.houseId !== undefined ? newFilters.houseId : undefined,
-        startDate: newFilters.startDate,
-        endDate: newFilters.endDate
-      });
-    };
+  const handleFilterChange = (newFilters: {
+    houseId?: number;
+    startDate: string;
+    endDate: string;
+  }) => {
+    setFilters({
+      houseId: newFilters.houseId !== undefined ? newFilters.houseId : undefined,
+      startDate: newFilters.startDate,
+      endDate: newFilters.endDate,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -89,7 +101,7 @@ function DashboardPageContent() {
       <DashboardFilter
         onFilterChange={handleFilterChange}
         onRefresh={loadDashboardData}
-        houses={casas.map(house => ({ id: house.id, name: house.name }))}
+        houses={casas.map((house) => ({ id: house.id, name: house.name }))}
         loading={loading}
       />
 
@@ -100,139 +112,199 @@ function DashboardPageContent() {
           value={metrics.totalBets}
           icon={<Target className="h-6 w-6" />}
           trend="neutral"
+          subtext={`${metrics.wonBets} ganhas / ${metrics.lostBets} perdidas`}
+          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-primary"
         />
         <MetricCard
           title="Lucro Total"
-          value={`${Number(metrics.totalProfit) >= 0 ? '+' : ''}R$ ${Number(metrics.totalProfit).toFixed(2)}`}
-          icon={Number(metrics.totalProfit) >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+          value={`${
+            Number(metrics.totalProfit) >= 0 ? "+" : ""
+          }R$ ${Number(metrics.totalProfit).toFixed(2)}`}
+          icon={
+            Number(metrics.totalProfit) >= 0 ? (
+              <DollarSign className="h-6 w-6" />
+            ) : (
+              <DollarSign className="h-6 w-6" />
+            )
+          }
           trend={Number(metrics.totalProfit) >= 0 ? "positive" : "negative"}
+          subtext={`Valor Apostado: R$ ${Number(metrics.totalStaked).toFixed(2)}`}
+          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-[#22c55e]"
         />
         <MetricCard
           title="ROI"
-          value={`${Number(metrics.roi) >= 0 ? '+' : ''}${Number(metrics.roi).toFixed(2)}%`}
-          icon={<BarChart3 className="h-6 w-6" />}
+          value={`${
+            Number(metrics.roi) >= 0 ? "+" : ""
+          }${Number(metrics.roi).toFixed(2)}%`}
+          icon={<PercentIcon className="h-6 w-6" />}
           trend={Number(metrics.roi) >= 0 ? "positive" : "negative"}
+          subtext={`Odd Média: ${Number(metrics.averageOdd).toFixed(2)}`}
+          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-amber-500"
         />
         <MetricCard
           title="Taxa de Acerto"
-          value={`${Number(metrics.hitRate).toFixed(1)}%`}
-          icon={<Target className="h-6 w-6" />}
+          value={`${Number(metrics.hitRate).toFixed(2)}%`}
+          icon={<Award className="h-6 w-6" />}
           trend={Number(metrics.hitRate) >= 50 ? "positive" : "negative"}
+          subtext={`${metrics.wonBets}/${metrics.totalBets} apostas`}
+          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-blue-500"
         />
       </div>
 
-      {/* Gráfico de evolução diária expandido */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Evolução Diária </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="date" 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-              />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-                labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
-                formatter={(value: number, name: string) => [
-                  name === 'profitDay' ? `R$ ${value.toFixed(2)}` : value,
-                  name === 'profitDay' ? 'Lucro' : 'Apostas'
-                ]}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="totalBets" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={3}
-                name="apostas"
-                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="profitDay" 
-                stroke="hsl(var(--chart-green))" 
-                strokeWidth={3}
-                name="lucro"
-                dot={{ fill: 'hsl(var(--chart-green))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'hsl(var(--chart-green))', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <DailyEvolutionChart data={dailyData} />
 
       {/* Cards de resumo adicional */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Apostas por Status</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-primary overflow-hidden">
+          <CardHeader className="pb-2 bg-muted/20">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Apostas por Status
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Ganhas:</span>
-                <span className="font-medium text-success">{metrics.wonBets}</span>
+          <CardContent className="pt-4">
+            {/* Card initial state - shows only main metrics */}
+            {!showBetDetails ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-2 border-b border-border pb-3">
+                  <span className="text-base font-semibold">Total:</span>
+                  <span className="font-bold text-xl">{metrics.totalBets}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                  <span className="text-base font-semibold">Taxa de Acerto:</span>
+                  <span className={`font-bold text-xl ${
+                      Number(metrics.hitRate) >= 50
+                        ? "text-success"
+                        : "text-destructive"
+                    }`}>
+                    {Number(metrics.hitRate).toFixed(2)}%
+                  </span>
+                </div>
+                
+                <button 
+                  onClick={() => setShowBetDetails(true)}
+                  className="w-full mt-2 flex items-center justify-center gap-2 p-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 rounded-md"
+                >
+                  <span>Mostrar Mais Detalhes</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Total:</span>
-                <span className="font-medium">{metrics.totalBets}</span>
+            ) : (
+              /* Expanded state - shows all metrics */
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-2 rounded-md bg-success/5 hover:bg-success/10 transition-colors">
+                  <span className="text-sm font-medium">Ganhas:</span>
+                  <span className="font-bold text-lg text-success">
+                    {metrics.wonBets}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-md bg-destructive/5 hover:bg-destructive/10 transition-colors">
+                  <span className="text-sm font-medium">Perdidas:</span>
+                  <span className="font-bold text-lg text-destructive">
+                    {metrics.lostBets}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-md bg-amber-500/5 hover:bg-amber-500/10 transition-colors">
+                  <span className="text-sm font-medium">Pendentes:</span>
+                  <span className="font-bold text-lg text-amber-500">
+                    {metrics.pendingBets}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                  <span className="text-sm font-medium">Canceladas:</span>
+                  <span className="font-bold text-lg">
+                    {metrics.canceledBets}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 border-t border-border mt-3 pt-3">
+                  <span className="text-base font-semibold">Total:</span>
+                  <span className="font-bold text-xl">{metrics.totalBets}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors">
+                  <span className="text-base font-semibold">Taxa de Acerto:</span>
+                  <span className={`font-bold text-xl ${
+                      Number(metrics.hitRate) >= 50
+                        ? "text-success"
+                        : "text-destructive"
+                    }`}>
+                    {Number(metrics.hitRate).toFixed(2)}%
+                  </span>
+                </div>
+                
+                <button 
+                  onClick={() => setShowBetDetails(false)}
+                  className="w-full mt-2 flex items-center justify-center gap-2 p-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors bg-primary/5 hover:bg-primary/10 rounded-md"
+                >
+                  <span>Mostrar Menos</span>
+                  <ChevronUp className="h-4 w-4" />
+                </button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Taxa:</span>
-                <span className="font-medium">{Number(metrics.hitRate).toFixed(1)}%</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Valores</CardTitle>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-[#22c55e] overflow-hidden">
+          <CardHeader className="pb-2 bg-muted/20">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-[#22c55e]" />
+              Valores
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Investido:</span>
-                <span className="font-medium">R$ {Number(metrics.totalStaked).toFixed(2)}</span>
+          <CardContent className="pt-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                <span className="text-sm font-medium">Investido:</span>
+                <span className="font-bold text-lg">
+                  R$ {Number(metrics.totalStaked).toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Retorno:</span>
-                <span className="font-medium">R$ {Number(metrics.totalReturn).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className={`text-sm text-muted-foreground`}>Lucro:</span>
-                <span className={`font-medium ${Number(metrics.totalProfit) >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                <span className={`text-base font-semibold`}>Lucro:</span>
+                <span
+                  className={`font-bold text-xl ${
+                    Number(metrics.totalProfit) >= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
                   R$ {Number(metrics.totalProfit).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                <span className="text-base font-semibold">ROI:</span>
+                <span
+                  className={`font-bold text-xl ${
+                    Number(metrics.roi) >= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
+                  {Number(metrics.roi).toFixed(2)}%
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance</CardTitle>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-blue-500 overflow-hidden">
+          <CardHeader className="pb-2 bg-muted/20">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-500" />
+              Estatísticas
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">ROI:</span>
-                <span className={`font-medium ${Number(metrics.roi) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {Number(metrics.roi).toFixed(2)}%
+          <CardContent className="pt-4d">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                <span className="text-sm font-medium">Stake Médio:</span>
+                <span className="font-bold text-lg">
+                  R$ {Number(metrics.averageStake).toFixed(1)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
+                <span className="text-sm font-medium">Odd Média:</span>
+                <span className="font-bold text-lg">
+                  {Number(metrics.averageOdd).toFixed(1)}
                 </span>
               </div>
             </div>

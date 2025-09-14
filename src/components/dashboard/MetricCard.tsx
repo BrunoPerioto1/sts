@@ -7,31 +7,51 @@ interface MetricCardProps {
   value: string | number;
   icon?: ReactNode;
   trend?: "positive" | "negative" | "neutral";
+  subtext?: string;
   className?: string;
 }
 
-export function MetricCard({ title, value, icon, trend = "neutral", className }: MetricCardProps) {
+export function MetricCard({ 
+  title, 
+  value, 
+  icon, 
+  trend = "neutral", 
+  subtext,
+  className 
+}: MetricCardProps) {
   return (
-    <Card className={cn("", className)}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+    <Card className={cn("overflow-hidden", className)}>
+      <CardContent className="p-0">
+        <div className="bg-muted/20 py-3 px-4 border-b">
+          <div className="flex items-center gap-2">
+            {icon && (
+              <div className={cn(
+                "p-2 rounded-full",
+                trend === "positive" && "bg-success/10 text-success",
+                trend === "negative" && "bg-destructive/10 text-destructive",
+                trend === "neutral" && "bg-primary/10 text-primary"
+              )}>
+                {icon}
+              </div>
+            )}
+            <p className="text-sm font-medium uppercase tracking-wide">
               {title}
             </p>
-            <p className={cn(
-              "text-3xl font-bold mt-2",
-              trend === "positive" && "text-success",
-              trend === "negative" && "text-destructive",
-              trend === "neutral" && "text-foreground"
-            )}>
-              {value}
-            </p>
           </div>
-          {icon && (
-            <div className="text-muted-foreground">
-              {icon}
-            </div>
+        </div>
+        <div className="p-5">
+          <p className={cn(
+            "text-3xl font-bold",
+            trend === "positive" && "text-success",
+            trend === "negative" && "text-destructive",
+            trend === "neutral" && "text-foreground"
+          )}>
+            {value}
+          </p>
+          {subtext && (
+            <p className="text-sm text-muted-foreground mt-2 font-medium">
+              {subtext}
+            </p>
           )}
         </div>
       </CardContent>
