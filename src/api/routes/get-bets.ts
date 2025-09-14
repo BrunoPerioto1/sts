@@ -118,15 +118,6 @@ export async function finalizeMultipleBets(data: FinalizarMultiplasDto) {
   }
 }
 
-// Deletar aposta individual: /bets/{id}
-export async function deleteBet(id: number) {
-  try {
-    const response = await api.bets.delete(`/${id}`);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
-}
 
 // Deletar múltiplas apostas: /bets/delete-multiple
 export async function deleteMultipleBets(betIds: number[]) {
@@ -137,3 +128,16 @@ export async function deleteMultipleBets(betIds: number[]) {
     throw new Error(`${e?.message || e}`);
   }
 }
+
+
+// Deletar aposta individual: /bets/{id}
+export async function deleteBet(id: number) {
+  try {
+    const response = await api.bets.delete(`/${id}`);
+    return response.data;
+  } catch (e: any) {
+    throw new Error(`${e?.message || e}`);
+  }
+}
+
+

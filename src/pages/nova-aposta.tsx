@@ -4,7 +4,7 @@ import { ApostasList } from "@/components/apostas/ApostasList";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
-import { getBets as fetchBets, type BetItem, ResultIdEnum, deleteMultipleBets, finalizeMultipleBets } from "@/api/routes/get-bets";
+import { getBets as fetchBets, type BetItem, ResultIdEnum, deleteMultipleBets, deleteBet, finalizeMultipleBets } from "@/api/routes/get-bets";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -169,6 +169,18 @@ export default function NovaApostaPage() {
             <ApostasList
               apostas={apostas}
               onEdit={handleEdit}
+              onDelete={async (id) => {
+                setLoading(true);
+                try {
+                  await deleteBet(id);
+                  setApostas(prev => prev.filter(a => a.id !== id));
+                  toast({ title: "Sucesso", description: "Aposta excluída!" });
+                } catch (e: any) {
+                  toast({ title: "Erro", description: e.message || "Falha ao excluir aposta", variant: "destructive" });
+                } finally {
+                  setLoading(false);
+                }
+              }}
               selectedBets={selectedBets}
               onSelectBet={handleSelectBet}
               showCheckboxes
