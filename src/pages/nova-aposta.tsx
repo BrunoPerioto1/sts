@@ -4,13 +4,14 @@ import { ApostasList } from "@/components/apostas/ApostasList";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
-import { getBets as fetchBets, type BetItem, ResultIdEnum, deleteMultipleBets, deleteBet, finalizeMultipleBets } from "@/api/routes/get-bets";
+import { getBets as fetchBets, type BetItem, ResultIdEnum, deleteMultipleBets, deleteBet, finalizeMultipleBets, type PaginatedBetsResponseDto } from "@/api/routes/get-bets";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function NovaApostaPage() {
   const [apostas, setApostas] = useState<BetItem[]>([]);
@@ -23,24 +24,30 @@ export default function NovaApostaPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
   const { toast } = useToast();
 
   const fetchFilteredBets = async () => {
     setLoading(true);
     try {
-      const params: any = {};
+      const params: any = { page, perPage };
       if (statusFilter) params.resultId = statusFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      const data = await fetchBets(params);
-      
-      const filteredData = data.filter(aposta =>
+      const response: PaginatedBetsResponseDto = await fetchBets(params);
+      const serverData = Array.isArray(response?.data) ? response.data : [];
+      const filteredData = serverData.filter(aposta =>
         aposta.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
         aposta.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (aposta.resultName || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
 
       setApostas(filteredData);
+      setTotalPages(response?.totalPages || 1);
+      setTotal(response?.total || filteredData.length);
     } finally {
       setLoading(false);
     }
@@ -48,7 +55,7 @@ export default function NovaApostaPage() {
 
   useEffect(() => {
     fetchFilteredBets();
-  }, [statusFilter, startDate, endDate, searchTerm]);
+  }, [statusFilter, startDate, endDate, searchTerm, page, perPage]);
 
   const handleApostaAdded = (aposta: BetItem) => {
     setApostas(prev => [aposta, ...prev]);
@@ -136,6 +143,15 @@ export default function NovaApostaPage() {
                 <Button variant="default" onClick={() => setCreateModalOpen(true)}>
                   Nova Aposta
                 </Button>
+                <Select value={String(perPage)} onValueChange={(v) => { setPage(1); setPerPage(Number(v)); }}>
+                  <SelectTrigger className="w-28"><SelectValue placeholder="Itens/página" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 por página</SelectItem>
+                    <SelectItem value="20">20 por página</SelectItem>
+                    <SelectItem value="30">30 por página</SelectItem>
+                    <SelectItem value="50">50 por página</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-2 items-center">
@@ -185,6 +201,41 @@ export default function NovaApostaPage() {
               onSelectBet={handleSelectBet}
               showCheckboxes
             />
+
+            {/* Paginação */}
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-muted-foreground">{`Total: ${total}`}</p>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                    />
+                  </PaginationItem>
+                  {/* Simple numbered pagination (up to 5 pages around current) */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                    .map(p => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          href="#"
+                          isActive={p === page}
+                          onClick={(e) => { e.preventDefault(); setPage(p); }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </CardContent>
         </Card>
 
