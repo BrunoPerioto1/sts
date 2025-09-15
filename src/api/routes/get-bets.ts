@@ -70,14 +70,22 @@ export interface BetFilterDto {
   endDate?: string | Date;
   resultId?: number;
   market?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface PaginatedBetsResponseDto {
+  totalPages?: number;
+  total?: number;
+  data?: BetItem[];
 }
 
 export async function getBets(params?: BetFilterDto) {
-  const queryParams = { ...params };
+  const queryParams: Record<string, any> = { ...params };
   if (queryParams.startDate) queryParams.startDate = new Date(queryParams.startDate).toISOString();
   if (queryParams.endDate) queryParams.endDate = new Date(queryParams.endDate).toISOString();
 
-  const response = await api.bets.get<BetItem[]>('', { params: queryParams });
+  const response = await api.bets.get<PaginatedBetsResponseDto>('', { params: queryParams });
   return response.data;
 }
 
