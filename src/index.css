@@ -2,109 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Tema baseado na referência visual */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: #FFFFFF;
+    --foreground: #09090B;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: #FFFFFF;
+    --card-foreground: #09090B;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: #FFFFFF;
+    --popover-foreground: #09090B;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: #2563EB;
+    --primary-foreground: #FFFFFF;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: #F4F4F5;
+    --secondary-foreground: #18181B;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: #F4F4F5;
+    --accent-foreground: #18181B;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: #EF4444;
+    --destructive-foreground: #FAFAFA;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221 83% 53%;
+    --border: #E4E4E7;
+    --input: #E4E4E7;
+    --ring: #2563EB;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --success: #16A34A;
+    --success-foreground: #FFFFFF;
     
-    --chart-green: 142 76% 36%;
-    --chart-red: 0 84% 60%;
-    --chart-blue: 221 83% 45%;
-    --chart-orange: 25 95% 53%;
+    --chart-green: #16A34A;
+    --chart-red: #EF4444;
+    --chart-blue: #2563EB;
+    --chart-orange: #F97316;
 
     --radius: 0.5rem;
 
-    /* Sidebar escura como na referência */
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 221 83% 53%;
+    /* Sidebar com azul mais escuro */
+    --sidebar-background: #070750;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #FFFFFF;
+    --sidebar-primary-foreground: #070750;
+    --sidebar-accent: #0A0A7A;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: #090960;
+    --sidebar-ring: #FFFFFF;
   }
 
   .dark {
-    /* Mantém o tema claro como padrão baseado na referência */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: #FFFFFF;
+    --foreground: #09090B;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: #FFFFFF;
+    --card-foreground: #09090B;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: #FFFFFF;
+    --popover-foreground: #09090B;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: #2563EB;
+    --primary-foreground: #FFFFFF;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: #F4F4F5;
+    --secondary-foreground: #18181B;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: #F4F4F5;
+    --accent-foreground: #18181B;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: #EF4444;
+    --destructive-foreground: #FAFAFA;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221 83% 53%;
+    --border: #E4E4E7;
+    --input: #E4E4E7;
+    --ring: #2563EB;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    
-    --chart-green: 142 76% 36%;
-    --chart-red: 0 84% 60%;
-    --chart-blue: 221 83% 45%;
-    --chart-orange: 25 95% 53%;
+    --success: #16A34A;
+    --success-foreground: #FFFFFF;
 
-    /* Sidebar mantém-se escura */
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 221 83% 53%;
+    --chart-green: #16A34A;
+    --chart-red: #EF4444;
+    --chart-blue: #2563EB;
+    --chart-orange: #F97316;
+
+    /* Sidebar mantendo o mesmo tom no dark */
+    --sidebar-background: #070750;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #FFFFFF;
+    --sidebar-primary-foreground: #070750;
+    --sidebar-accent: #0A0A7A;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: #090960;
+    --sidebar-ring: #FFFFFF;
   }
 }
 

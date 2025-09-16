@@ -17,6 +17,8 @@ import {
 } from "@/api/routes/get-dashboard-daily";
 import { getAllHouses, type HouseDto } from "@/api/routes/get-houses";
 
+import { MainMetrics } from "@/components/dashboard/MainMetrics";
+
 function DashboardPageContent() {
   const [casas, setCasas] = useState<HouseDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,50 +108,7 @@ function DashboardPageContent() {
       />
 
       {/* Métricas principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total de Apostas"
-          value={metrics.totalBets}
-          icon={<Target className="h-6 w-6" />}
-          trend="neutral"
-          subtext={`${metrics.wonBets} ganhas / ${metrics.lostBets} perdidas`}
-          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-primary"
-        />
-        <MetricCard
-          title="Lucro Total"
-          value={`${
-            Number(metrics.totalProfit) >= 0 ? "+" : ""
-          }R$ ${Number(metrics.totalProfit).toFixed(2)}`}
-          icon={
-            Number(metrics.totalProfit) >= 0 ? (
-              <DollarSign className="h-6 w-6" />
-            ) : (
-              <DollarSign className="h-6 w-6" />
-            )
-          }
-          trend={Number(metrics.totalProfit) >= 0 ? "positive" : "negative"}
-          subtext={`Valor Apostado: R$ ${Number(metrics.totalStaked).toFixed(2)}`}
-          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-[#22c55e]"
-        />
-        <MetricCard
-          title="ROI"
-          value={`${
-            Number(metrics.roi) >= 0 ? "+" : ""
-          }${Number(metrics.roi).toFixed(2)}%`}
-          icon={<PercentIcon className="h-6 w-6" />}
-          trend={Number(metrics.roi) >= 0 ? "positive" : "negative"}
-          subtext={`Odd Média: ${Number(metrics.averageOdd).toFixed(2)}`}
-          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-amber-500"
-        />
-        <MetricCard
-          title="Taxa de Acerto"
-          value={`${Number(metrics.hitRate).toFixed(2)}%`}
-          icon={<Award className="h-6 w-6" />}
-          trend={Number(metrics.hitRate) >= 50 ? "positive" : "negative"}
-          subtext={`${metrics.wonBets}/${metrics.totalBets} apostas`}
-          className="shadow-lg hover:shadow-xl transition-all border-l-4 border-l-blue-500"
-        />
-      </div>
+      <MainMetrics metrics={metrics} />
 
       <DailyEvolutionChart data={dailyData} />
 
@@ -173,7 +132,7 @@ function DashboardPageContent() {
                 <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
                   <span className="text-base font-semibold">Taxa de Acerto:</span>
                   <span className={`font-bold text-xl ${
-                      Number(metrics.hitRate) >= 50
+                      Number(metrics.hitRate) >= 20
                         ? "text-success"
                         : "text-destructive"
                     }`}>
@@ -223,7 +182,7 @@ function DashboardPageContent() {
                 <div className="flex justify-between items-center p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors">
                   <span className="text-base font-semibold">Taxa de Acerto:</span>
                   <span className={`font-bold text-xl ${
-                      Number(metrics.hitRate) >= 50
+                      Number(metrics.hitRate) >= 20
                         ? "text-success"
                         : "text-destructive"
                     }`}>

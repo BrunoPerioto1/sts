@@ -151,8 +151,8 @@ export const DailyEvolutionChart = ({
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.profitDay >= 0 
-                      ? 'hsl(var(--chart-green))' 
-                      : 'hsl(var(--destructive))'
+                      ? '#16A34A'  // verde
+                      : '#EF4444'  // vermelho
                     }
                   />
                 ))}
@@ -163,11 +163,11 @@ export const DailyEvolutionChart = ({
         
         <div className="flex items-center justify-center gap-8 mt-5 pt-5 border-t">
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-md bg-[hsl(var(--chart-green))]"></div>
+            <div className="w-4 h-4 rounded-md bg-[#16A34A]"></div>
             <span className="text-sm font-medium text-success">Lucro</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-md bg-[hsl(var(--destructive))]"></div>
+            <div className="w-4 h-4 rounded-md bg-[#EF4444]"></div>
             <span className="text-sm font-medium text-destructive">Prejuízo</span>
           </div>
         </div>
