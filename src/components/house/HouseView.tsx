@@ -96,6 +96,7 @@ export function CasasApostaView() {
             house={house} 
             onViewDetails={() => handleViewDetails(house)}
             onNewTransaction={() => handleOpenNovaTransacao(house)}
+            onOpenHistory={() => handleOpenMovimentacao(house)}
           />
         ))}
       </div>

@@ -22,9 +22,9 @@ export interface TransactionTypeDto {
 }
 
 export enum TransactionTypeEnum {
-  DEPOSIT = 1,
-  WITHDRAWAL = 2,
-  ADJUSTMENT = 3,
+  DEPOSIT = 1,      // Depósito
+  WITHDRAWAL = 2,   // Saque
+  ADJUSTMENT = 3    // Ajuste
 }
 
 
@@ -44,7 +44,7 @@ export interface TransactionFilterParams {
 export interface TransactionDto {
   id: number;
   houseName: string;
-  transactionType: number;
+  transactionType: string;
   value: number;
   createdAt: string;
 }
