@@ -25,48 +25,69 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : 
-    "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground";
-
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
-      <SidebarContent>
-        <div className="p-6">
-          {!collapsed && (
-            <h2 className="text-lg font-bold text-sidebar-foreground">SportsBet Manager</h2>
-          )}
+    <Sidebar 
+      className={`${
+        collapsed ? "w-16" : "w-64"
+      } bg-[#070750] border-r border-[#090960] h-screen`}
+      collapsible="icon"
+    >
+      <SidebarContent className="flex flex-col justify-between h-full">
+        <div>
+          <div className="p-6">
+            {!collapsed && (
+              <h2 className="text-lg font-bold text-white">SportsBet Manager</h2>
+            )}
+          </div>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold text-white/70 uppercase tracking-wide">
+              Menu Principal
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.path}
+                          end
+                          className={({ isActive }) =>
+                            `flex items-center gap-4 rounded-lg px-6 py-5 transition-colors ${
+                              isActive
+                                ? "bg-[#0A0A7A] text-white font-medium"
+                                : "text-white hover:bg-[#0A0A7A]/50"
+                            }`
+                          }
+                        >
+                          <Icon className="h-7 w-7" />
+                          {!collapsed && <span className="text-lg">{item.label}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.path} end className={getNavCls}>
-                        <Icon className="h-5 w-5" />
-                        {!collapsed && <span>{item.label}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/logout" end className={getNavCls}>
-                    <LogOut className="h-5 w-5" />
-                    {!collapsed && <span>Sair</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SidebarMenu className="p-4">
+          <SidebarMenuItem className="mt-auto border-t border-sidebar-subtle-border pt-4">
+            <SidebarMenuButton asChild>
+              <NavLink
+                to="/logout"
+                end
+                className="flex items-center gap-4 rounded-lg px-6 py-5 text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="h-7 w-7" />
+                {!collapsed && <span className="text-lg">Sair</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
     </Sidebar>
   );

@@ -4,17 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { HouseBalanceDto } from "@/api/routes/get-houses";
-import { createTransaction } from "@/api/routes/create-transaction";
-import { getTransactionTypes, type TransactionTypeDto } from "@/api/routes/create-transaction";
+import { createTransaction } from "@/api/routes/get-transaction";
+import { getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-transaction";
 
 interface NovaTransacaoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  house: HouseBalanceDto;
+  houseId: number;
 }
 
-export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModalProps) {
+export function NovaTransacaoModal({ isOpen, onClose, houseId }: NovaTransacaoModalProps) {
   const [novaMov, setNovaMov] = useState({ tipoId: 0, valor: "" });
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +40,6 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
     e.preventDefault();
     if (!novaMov.valor || !novaMov.tipoId) return;
 
-    // Converte valor (aceita vírgula ou ponto)
     const value = Number(novaMov.valor.replace(",", "."));
     if (isNaN(value) || value <= 0) {
       alert("Informe um valor válido maior que zero.");
@@ -51,7 +49,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
     setLoading(true);
     try {
       await createTransaction({
-        houseId: house.houseId,
+        houseId,
         transactionTypeId: novaMov.tipoId,
         value
       });
@@ -70,9 +68,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Nova Transação - {house.houseName}</DialogTitle>
-        </DialogHeader>
+      
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           {/* Tipo de transação */}
@@ -104,9 +100,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
               type="text"
               placeholder="0,00"
               value={novaMov.valor}
-              onChange={e =>
-                setNovaMov(prev => ({ ...prev, valor: e.target.value }))
-              }
+              onChange={e => setNovaMov(prev => ({ ...prev, valor: e.target.value }))}
             />
           </div>
 

@@ -135,7 +135,7 @@ export function CasasApostaView() {
           <NovaTransacaoModal
             isOpen={isNovaTransacaoModalOpen}
             onClose={() => setIsNovaTransacaoModalOpen(false)}
-            house={selectedHouse}
+             houseId={selectedHouse.houseId}
           />
         </>
       )}
