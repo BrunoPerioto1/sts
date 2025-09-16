@@ -132,7 +132,7 @@ function DashboardPageContent() {
                 <div className="flex justify-between items-center p-2 rounded-md bg-muted/20 hover:bg-muted/30 transition-colors">
                   <span className="text-base font-semibold">Taxa de Acerto:</span>
                   <span className={`font-bold text-xl ${
-                      Number(metrics.hitRate) >= 50
+                      Number(metrics.hitRate) >= 20
                         ? "text-success"
                         : "text-destructive"
                     }`}>
@@ -182,7 +182,7 @@ function DashboardPageContent() {
                 <div className="flex justify-between items-center p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors">
                   <span className="text-base font-semibold">Taxa de Acerto:</span>
                   <span className={`font-bold text-xl ${
-                      Number(metrics.hitRate) >= 50
+                      Number(metrics.hitRate) >= 20
                         ? "text-success"
                         : "text-destructive"
                     }`}>

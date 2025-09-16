@@ -36,8 +36,8 @@ export function MainMetrics({ metrics }: MainMetricsProps) {
         value={`${
           Number(metrics.roi) >= 0 ? "+" : ""
         }${Number(metrics.roi).toFixed(2)}%`}
-        icon={<PercentIcon className="h-5 w-5 text-amber-500" />}
-        valueClass={Number(metrics.roi) >= 0 ? "text-amber-500" : "text-red-500"}
+        icon={<PercentIcon className="h-5 w-5 text-green-500" />}
+        valueClass={Number(metrics.roi) >= 0 ? "text-green-600" : "text-red-500"}
         subtext={`Odd Média: ${Number(metrics.averageOdd).toFixed(2)}`}
       />
       <MetricCard
@@ -45,7 +45,7 @@ export function MainMetrics({ metrics }: MainMetricsProps) {
         value={`${Number(metrics.hitRate).toFixed(2)}%`}
         icon={<Award className="h-5 w-5 text-blue-500" />}
         valueClass={
-          Number(metrics.hitRate) >= 50 ? "text-blue-500" : "text-red-500"
+          Number(metrics.hitRate) >= 5 ? "text-black-500" : "text-red-500"
         }
         subtext={`${metrics.wonBets}/${metrics.totalBets} apostas`}
       />
