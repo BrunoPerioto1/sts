@@ -12,7 +12,7 @@ export async function createTransaction({
   value
 }: CreateTransactionParams) {
   try {
-    return await api.transactions.post('', {
+    return await api.transactions.post('new', {
       houseId,
       transactionTypeId,
       value
@@ -21,3 +21,21 @@ export async function createTransaction({
     throw new Error(`${e?.message || e}`);
   }
 }
+
+export interface TransactionTypeDto {
+  id: number;
+  name: string;
+}
+
+export enum TransactionTypeEnum {
+  DEPOSIT = 1,
+  WITHDRAWAL = 2,
+  ADJUSTMENT = 3,
+}
+
+
+export async function getTransactionTypes(): Promise<TransactionTypeDto[]> {
+  const response = await api.transactions.get<TransactionTypeDto[]>("/types");
+  return response.data;
+}
+

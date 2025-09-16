@@ -8,7 +8,6 @@ export interface TransactionFilterParams {
 
 export interface TransactionDto {
   id: number;
-  houseId: number;
   houseName: string;
   transactionType: number;
   value: number;
@@ -17,7 +16,7 @@ export interface TransactionDto {
 
 export async function getTransactions(params: TransactionFilterParams) {
   const response = await apiClient().transactions.get<TransactionDto[]>(
-    "",
+    "all",
     { params }
   );
   return response.data;

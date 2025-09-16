@@ -1,11 +1,12 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { createTransaction } from "@/api/routes/create-transaction";
-import { getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-type-trasaction";
+import { getTransactionTypes, type TransactionTypeDto } from "@/api/routes/create-transaction";
 
 interface NovaTransacaoModalProps {
   isOpen: boolean;
@@ -25,7 +26,9 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
       try {
         const txTypes = await getTransactionTypes();
         setTypes(txTypes);
-        if (txTypes[0]) setNovaMov(prev => ({ ...prev, tipoId: txTypes[0].id }));
+        if (txTypes[0]) {
+          setNovaMov(prev => ({ ...prev, tipoId: txTypes[0].id }));
+        }
       } catch (err) {
         console.error("Erro ao carregar tipos de transação:", err);
       }
@@ -38,20 +41,27 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
     e.preventDefault();
     if (!novaMov.valor || !novaMov.tipoId) return;
 
+    // Converte valor (aceita vírgula ou ponto)
+    const value = Number(novaMov.valor.replace(",", "."));
+    if (isNaN(value) || value <= 0) {
+      alert("Informe um valor válido maior que zero.");
+      return;
+    }
+
     setLoading(true);
     try {
       await createTransaction({
         houseId: house.houseId,
         transactionTypeId: novaMov.tipoId,
-        value: parseFloat(novaMov.valor),
+        value
       });
 
       // Reset e fechar modal
       setNovaMov({ tipoId: types[0]?.id || 0, valor: "" });
       onClose();
-    } catch (err) {
-      console.error("Erro ao criar transação:", err);
-      alert("Erro ao criar transação");
+    } catch (err: any) {
+      console.error("Erro ao criar transação:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Erro ao criar transação");
     } finally {
       setLoading(false);
     }
@@ -65,6 +75,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          {/* Tipo de transação */}
           <div>
             <label className="text-sm font-medium">Tipo</label>
             <Select
@@ -74,7 +85,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione um tipo" />
               </SelectTrigger>
               <SelectContent>
                 {types.map(t => (
@@ -86,17 +97,20 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
             </Select>
           </div>
 
+          {/* Valor */}
           <div>
             <label className="text-sm font-medium">Valor</label>
             <Input
-              type="number"
-              step="0.01"
+              type="text"
               placeholder="0,00"
               value={novaMov.valor}
-              onChange={e => setNovaMov(prev => ({ ...prev, valor: e.target.value }))}
+              onChange={e =>
+                setNovaMov(prev => ({ ...prev, valor: e.target.value }))
+              }
             />
           </div>
 
+          {/* Botões */}
           <div className="flex gap-2 justify-end">
             <Button type="submit" disabled={loading}>
               {loading ? "Enviando..." : "Adicionar"}
