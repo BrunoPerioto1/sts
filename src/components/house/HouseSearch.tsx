@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 interface HousesSearchProps {
   searchTerm: string;
   onChange: (val: string) => void;
+  isLoading?: boolean;
 }
 
-export function HousesSearch({ searchTerm, onChange }: HousesSearchProps) {
+export function HousesSearch({ searchTerm, onChange, isLoading = false }: HousesSearchProps) {
   return (
     <div className="bg-card border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -20,6 +21,7 @@ export function HousesSearch({ searchTerm, onChange }: HousesSearchProps) {
           value={searchTerm}
           onChange={(e) => onChange(e.target.value)}
           className="pl-10 bg-background"
+          disabled={isLoading}
         />
       </div>
     </div>

@@ -3,7 +3,7 @@ import { HouseDetailsModal } from "./HouseDetailsModal";
 import { HouseListItem } from "./HouseListItem";
 import { HousesMetrics } from "./HouseMetrics";
 import { HousesSearch } from "./HouseSearch";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 import { 
   HouseBalanceDto, 
   HouseMetricsDto,
@@ -80,14 +80,27 @@ export function CasasApostaView() {
   };
 
   if (loading) {
-    return <div>Carregando...</div>; 
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Carregando casas de apostas...</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      {metrics && <HousesMetrics metrics={metrics} formatCurrency={formatCurrency} />}
-
-      <HousesSearch searchTerm={searchTerm} onChange={setSearchTerm} />
+      {/* Metrics section */}
+      {metrics && <HousesMetrics metrics={metrics} formatCurrency={formatCurrency} isLoading={loading} />}
+      
+      {/* Search section */}
+      <div className="w-full">
+        <HousesSearch 
+          searchTerm={searchTerm} 
+          onChange={setSearchTerm} 
+          isLoading={loading}
+        />
+      </div>
 
       <div className="space-y-4">
         {filteredHouses.map((house) => (
@@ -102,8 +115,8 @@ export function CasasApostaView() {
       </div>
 
       {filteredHouses.length === 0 && (
-        <div className="bg-card border border-border rounded-lg p-12 text-center">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <div className="flex flex-col items-center justify-center py-12 bg-card border border-border rounded-lg">
+          <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold text-foreground mb-2">
             Nenhuma casa encontrada
           </h3>

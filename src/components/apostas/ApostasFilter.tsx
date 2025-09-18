@@ -11,6 +11,7 @@ interface ApostasFilterProps {
   onDateToChange?: (date: string) => void;
   onClearFilters?: () => void;
   className?: string;
+  isLoading?: boolean;
 }
 
 export function ApostasFilter({
@@ -19,7 +20,8 @@ export function ApostasFilter({
   onDateFromChange,
   onDateToChange,
   onClearFilters,
-  className
+  className,
+  isLoading = false
 }: ApostasFilterProps) {
   return (
     <div className={cn("flex items-end gap-4 w-full", className)}>
@@ -35,6 +37,7 @@ export function ApostasFilter({
               placeholder="Buscar apostas..."
               onChange={(e) => onSearch(e.target.value)}
               className="pl-10"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -47,6 +50,7 @@ export function ApostasFilter({
             type="date"
             onChange={(e) => onDateFromChange?.(e.target.value)}
             className="w-40"
+            disabled={isLoading}
           />
         </div>
 
@@ -58,6 +62,7 @@ export function ApostasFilter({
             type="date"
             onChange={(e) => onDateToChange?.(e.target.value)}
             className="w-40"
+            disabled={isLoading}
           />
         </div>
 
@@ -65,7 +70,11 @@ export function ApostasFilter({
           <label className="text-sm font-medium">
             Status
           </label>
-          <Select onValueChange={value => onFilterStatus?.(value)} defaultValue="0">
+          <Select 
+            onValueChange={value => onFilterStatus?.(value)} 
+            defaultValue="0"
+            disabled={isLoading}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -84,6 +93,7 @@ export function ApostasFilter({
         <Button 
           variant="outline" 
           onClick={onClearFilters}
+          disabled={isLoading}
         >
           Limpar Filtros
         </Button>

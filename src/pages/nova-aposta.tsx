@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RefreshCw, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function NovaApostaPage() {
@@ -49,6 +49,10 @@ export default function NovaApostaPage() {
   useEffect(() => {
     fetchFilteredBets();
   }, [statusFilter, startDate, endDate, searchTerm]);
+  
+  useEffect(() => {
+    setLoading(true);
+  }, []);
 
   const handleApostaAdded = (aposta: BetItem) => {
     setApostas(prev => [aposta, ...prev]);
@@ -119,6 +123,7 @@ export default function NovaApostaPage() {
             setStatusFilter("");
             setSearchTerm("");
           }}
+          isLoading={loading}
         />
         
         {/* Agora, um único Card para agrupar o título, botões de ação, checkbox e a tabela */}
@@ -131,9 +136,14 @@ export default function NovaApostaPage() {
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div className="flex gap-2 items-center">
                 <Button variant="outline" onClick={fetchFilteredBets} disabled={loading}>
-                  <RefreshCw className="h-4 w-4 mr-1" /> Atualizar
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                  )} 
+                  Atualizar
                 </Button>
-                <Button variant="default" onClick={() => setCreateModalOpen(true)}>
+                <Button variant="default" onClick={() => setCreateModalOpen(true)} disabled={loading}>
                   Nova Aposta
                 </Button>
               </div>
@@ -143,15 +153,29 @@ export default function NovaApostaPage() {
                   id="select-all"
                   checked={selectedBets.length === apostas.length && apostas.length > 0} 
                   onCheckedChange={handleSelectAll} 
+                  disabled={loading}
                 />
                 <label htmlFor="select-all" className="text-sm">Selecionar todas</label>
 
                 {selectedBets.length > 0 && (
                   <>
-                    <Button variant="destructive" onClick={handleDeleteSelected} className="flex items-center gap-2">
-                      <Trash2 className="h-4 w-4" /> Excluir Selecionadas
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteSelected} 
+                      className="flex items-center gap-2"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )} 
+                      Excluir Selecionadas
                     </Button>
-                    <Select onValueChange={value => handleBulkStatusChange(Number(value))}>
+                    <Select 
+                      onValueChange={value => handleBulkStatusChange(Number(value))}
+                      disabled={loading}
+                    >
                       <SelectTrigger className="w-40"><SelectValue placeholder="Alterar Status" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
@@ -168,6 +192,7 @@ export default function NovaApostaPage() {
             {/* A tabela da lista de apostas */}
             <ApostasList
               apostas={apostas}
+              isLoading={loading}
               onEdit={handleEdit}
               onDelete={async (id) => {
                 setLoading(true);
