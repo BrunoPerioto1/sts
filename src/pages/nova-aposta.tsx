@@ -1,16 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasList } from "@/components/apostas/ApostasList";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
-import { getBets as fetchBets, type BetItem, ResultIdEnum, deleteMultipleBets, deleteBet, finalizeMultipleBets } from "@/api/routes/get-bets";
+import { 
+  getBets as fetchBets, 
+  type BetItem, 
+  ResultIdEnum, 
+  deleteMultipleBets, 
+  deleteBet, 
+  finalizeMultipleBets, 
+  type PaginatedBetsResponseDto 
+} from "@/api/routes/get-bets";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function NovaApostaPage() {
   const [apostas, setApostas] = useState<BetItem[]>([]);
@@ -22,37 +31,58 @@ export default function NovaApostaPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // só para tabela/botões
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
   const { toast } = useToast();
+
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToTop = () => {
+    if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const fetchFilteredBets = async () => {
     setLoading(true);
     try {
-      const params: any = {};
+      const params: any = { page, perPage };
       if (statusFilter) params.resultId = statusFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      const data = await fetchBets(params);
-      
-      const filteredData = data.filter(aposta =>
+
+      const response: PaginatedBetsResponseDto = await fetchBets(params);
+      const serverData = Array.isArray(response?.data) ? response.data : [];
+      const filteredData = serverData.filter(aposta =>
         aposta.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
         aposta.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (aposta.resultName || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
 
       setApostas(filteredData);
+      setTotalPages(response?.totalPages || 1);
+      setTotal(response?.total || filteredData.length);
     } finally {
       setLoading(false);
     }
   };
 
+  // Debounce na pesquisa
   useEffect(() => {
-    fetchFilteredBets();
-  }, [statusFilter, startDate, endDate, searchTerm]);
-  
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      fetchFilteredBets();
+    }, 300);
+
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, [searchTerm, statusFilter, startDate, endDate, page, perPage]);
+
   useEffect(() => {
-    setLoading(true);
-  }, []);
+    scrollToTop();
+  }, [page]);
 
   const handleApostaAdded = (aposta: BetItem) => {
     setApostas(prev => [aposta, ...prev]);
@@ -111,7 +141,6 @@ export default function NovaApostaPage() {
   return (
     <MainLayout title="Gestão de Apostas">
       <div className="space-y-4">
-        {/* O filtro agora é renderizado aqui, e apenas aqui */}
         <ApostasFilter
           onSearch={setSearchTerm}
           onFilterStatus={(status) => setStatusFilter(status === "0" ? "" : status)}
@@ -123,10 +152,9 @@ export default function NovaApostaPage() {
             setStatusFilter("");
             setSearchTerm("");
           }}
-          isLoading={loading}
+          isLoading={false} // filtros nunca bloqueiam
         />
-        
-        {/* Agora, um único Card para agrupar o título, botões de ação, checkbox e a tabela */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-xl font-bold">Apostas Registradas</CardTitle>
@@ -140,39 +168,42 @@ export default function NovaApostaPage() {
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   ) : (
                     <RefreshCw className="h-4 w-4 mr-1" />
-                  )} 
+                  )}
                   Atualizar
                 </Button>
                 <Button variant="default" onClick={() => setCreateModalOpen(true)} disabled={loading}>
                   Nova Aposta
                 </Button>
+                <Select
+                  value={String(perPage)}
+                  onValueChange={(v) => { setPage(1); setPerPage(Number(v)); }}
+                >
+                  <SelectTrigger className="w-28"><SelectValue placeholder="Itens/página" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 por página</SelectItem>
+                    <SelectItem value="20">20 por página</SelectItem>
+                    <SelectItem value="30">30 por página</SelectItem>
+                    <SelectItem value="50">50 por página</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-2 items-center">
-                <Checkbox 
+                <Checkbox
                   id="select-all"
-                  checked={selectedBets.length === apostas.length && apostas.length > 0} 
-                  onCheckedChange={handleSelectAll} 
+                  checked={selectedBets.length === apostas.length && apostas.length > 0}
+                  onCheckedChange={handleSelectAll}
                   disabled={loading}
                 />
                 <label htmlFor="select-all" className="text-sm">Selecionar todas</label>
 
                 {selectedBets.length > 0 && (
                   <>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDeleteSelected} 
-                      className="flex items-center gap-2"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )} 
+                    <Button variant="destructive" onClick={handleDeleteSelected} className="flex items-center gap-2" disabled={loading}>
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       Excluir Selecionadas
                     </Button>
-                    <Select 
+                    <Select
                       onValueChange={value => handleBulkStatusChange(Number(value))}
                       disabled={loading}
                     >
@@ -188,7 +219,6 @@ export default function NovaApostaPage() {
                 )}
               </div>
             </div>
-            
             {/* A tabela da lista de apostas */}
             <ApostasList
               apostas={apostas}
@@ -210,6 +240,56 @@ export default function NovaApostaPage() {
               onSelectBet={handleSelectBet}
               showCheckboxes
             />
+
+            {/* Paginação */}
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-muted-foreground">{`Total: ${total}`}</p>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        if (page > 1) {
+                          setPage(page - 1); 
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                  {/* Simple numbered pagination (up to 5 pages around current) */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                    .map(p => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          href="#"
+                          isActive={p === page}
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            if (p !== page) {
+                              setPage(p); 
+                            }
+                          }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        if (page < totalPages) {
+                          setPage(page + 1); 
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </CardContent>
         </Card>
 
