@@ -54,16 +54,7 @@ export default function PerfilPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sessão</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" onClick={handleLogout}>
-              Sair
-            </Button>
-          </CardContent>
-        </Card>
+        
       </div>
     </MainLayout>
   );

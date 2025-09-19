@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 
@@ -15,6 +15,7 @@ interface ApostasListProps {
   selectedBets?: number[];
   onSelectBet?: (betId: number) => void;
   showCheckboxes?: boolean;
+  isLoading?: boolean;
 }
 
 export function ApostasList({ 
@@ -24,7 +25,8 @@ export function ApostasList({
   onStatusChange,
   selectedBets = [], 
   onSelectBet, 
-  showCheckboxes = false 
+  showCheckboxes = false,
+  isLoading = false
 }: ApostasListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,7 +83,12 @@ export function ApostasList({
 
   return (
     <>
-      {apostas.length === 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Carregando apostas...</p>
+        </div>
+      ) : apostas.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
           {"Nenhuma aposta encontrada com os critérios de busca."}
         </p>
