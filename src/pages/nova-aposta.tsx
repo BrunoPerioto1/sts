@@ -51,18 +51,14 @@ export default function NovaApostaPage() {
       if (statusFilter) params.resultId = statusFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
+      if (searchTerm) params.q = searchTerm;
 
       const response: PaginatedBetsResponseDto = await fetchBets(params);
       const serverData = Array.isArray(response?.data) ? response.data : [];
-      const filteredData = serverData.filter(aposta =>
-        aposta.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        aposta.market.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (aposta.resultName || "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
 
-      setApostas(filteredData);
+      setApostas(serverData);
       setTotalPages(response?.totalPages || 1);
-      setTotal(response?.total || filteredData.length);
+      setTotal(response?.total || 0);
     } finally {
       setLoading(false);
     }
@@ -85,14 +81,15 @@ export default function NovaApostaPage() {
   }, [page]);
 
   const handleApostaAdded = (aposta: BetItem) => {
-    setApostas(prev => [aposta, ...prev]);
     setCreateModalOpen(false);
+    setPage(1); // Volta para página 1 onde a nova aposta estará
+    fetchFilteredBets(); // Recarrega dados do servidor
   };
 
   const handleApostaUpdated = (aposta: BetItem) => {
-    setApostas(prev => prev.map(a => a.id === aposta.id ? aposta : a));
     setEditModalOpen(false);
     setEditAposta(null);
+    fetchFilteredBets(); // Recarrega dados para respeitar filtros
   };
 
   const handleEdit = (aposta: BetItem) => {
@@ -113,8 +110,8 @@ export default function NovaApostaPage() {
     setLoading(true);
     try {
       await deleteMultipleBets(selectedBets);
-      setApostas(prev => prev.filter(a => !selectedBets.includes(a.id)));
       setSelectedBets([]);
+      await fetchFilteredBets(); // Recarrega dados do servidor
       toast({ title: "Sucesso", description: "Apostas excluídas!" });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message || "Falha ao excluir apostas", variant: "destructive" });
@@ -142,15 +139,16 @@ export default function NovaApostaPage() {
     <MainLayout title="Gestão de Apostas">
       <div className="space-y-4">
         <ApostasFilter
-          onSearch={setSearchTerm}
-          onFilterStatus={(status) => setStatusFilter(status === "0" ? "" : status)}
-          onDateFromChange={setStartDate}
-          onDateToChange={setEndDate}
+          onSearch={(term) => { setSearchTerm(term); setPage(1); }}
+          onFilterStatus={(status) => { setStatusFilter(status === "0" ? "" : status); setPage(1); }}
+          onDateFromChange={(date) => { setStartDate(date); setPage(1); }}
+          onDateToChange={(date) => { setEndDate(date); setPage(1); }}
           onClearFilters={() => {
             setStartDate("");
             setEndDate("");
             setStatusFilter("");
             setSearchTerm("");
+            setPage(1);
           }}
           isLoading={false} // filtros nunca bloqueiam
         />
@@ -163,7 +161,11 @@ export default function NovaApostaPage() {
             {/* Botões de Ação e Checkbox "Selecionar todas" */}
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div className="flex gap-2 items-center">
-                <Button variant="outline" onClick={fetchFilteredBets} disabled={loading}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { setPage(1); fetchFilteredBets(); }} 
+                  disabled={loading}
+                >
                   {loading ? (
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   ) : (
@@ -228,7 +230,8 @@ export default function NovaApostaPage() {
                 setLoading(true);
                 try {
                   await deleteBet(id);
-                  setApostas(prev => prev.filter(a => a.id !== id));
+                  setSelectedBets(prev => prev.filter(betId => betId !== id)); // Limpa seleções
+                  await fetchFilteredBets(); // Recarrega dados do servidor
                   toast({ title: "Sucesso", description: "Aposta excluída!" });
                 } catch (e: any) {
                   toast({ title: "Erro", description: e.message || "Falha ao excluir aposta", variant: "destructive" });

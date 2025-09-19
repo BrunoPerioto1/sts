@@ -69,7 +69,7 @@ export interface BetFilterDto {
   startDate?: string | Date;
   endDate?: string | Date;
   resultId?: number;
-  market?: string;
+  q?: string;
   page?: number;
   perPage?: number;
 }
