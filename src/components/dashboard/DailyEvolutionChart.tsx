@@ -67,7 +67,7 @@ const formatAxisValue = (value: number) => {
 
 export const DailyEvolutionChart = ({ 
   data, 
-  title = "Evolução Diária", 
+  title = "Ganhos Diários", 
   className = "" 
 }: DailyEvolutionChartProps) => {
   const totalProfit = data.reduce((sum, item) => sum + item.profitDay, 0);
