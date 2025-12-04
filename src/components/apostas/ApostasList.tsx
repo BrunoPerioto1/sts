@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Edit2, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 
 interface ApostasListProps {
@@ -78,7 +80,126 @@ export function ApostasList({
     if (!value) return "";
     const d = value instanceof Date ? value : new Date(value);
     if (isNaN(d.getTime())) return "";
-    return `${d.toLocaleDateString('pt-BR')}\n${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
+
+  const formatDateShort = (value: Date | string | undefined) => {
+    if (!value) return "";
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
+
+  const isMobile = useIsMobile();
+
+  // Renderizar card para mobile
+  const renderMobileCard = (aposta: BetItem) => {
+    const status = mapResultToStatus(aposta);
+    return (
+      <Card 
+        key={aposta.id}
+        className={cn(
+          "border-l-4",
+          status === "ganha" && "border-l-success",
+          status === "perdida" && "border-l-destructive",
+          status === "cancelada" && "border-l-muted",
+          status === "pendente" && "border-l-primary"
+        )}
+      >
+        <CardContent className="p-3 space-y-2.5">
+          {/* Header com checkbox e ações */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {showCheckboxes && onSelectBet && (
+                <Checkbox 
+                  checked={selectedBets.includes(aposta.id)}
+                  onCheckedChange={() => onSelectBet(aposta.id)}
+                  className="shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm leading-tight">{aposta.game}</h3>
+                <p className="text-xs text-muted-foreground leading-tight mt-0.5 line-clamp-2">{aposta.market}</p>
+              </div>
+            </div>
+            <div className="flex gap-0.5 shrink-0">
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(aposta)}
+                  className="h-7 w-7 p-0"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(aposta.id)}
+                  className="h-7 w-7 p-0"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Informações principais */}
+          <div className="grid grid-cols-2 gap-2.5 text-sm">
+            <div>
+              <p className="text-muted-foreground text-xs mb-0.5">Odd</p>
+              <p className="font-semibold text-sm">{Number(aposta.odd || 0).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs mb-0.5">Stake</p>
+              <p className="font-semibold text-sm">R$ {Number(aposta.stake || 0).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs mb-0.5">Casa</p>
+              <p className="font-semibold text-xs truncate">{aposta.houseName}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs mb-0.5">Data</p>
+              <p className="font-semibold text-xs">{formatDateShort(aposta.betTime)}</p>
+            </div>
+          </div>
+
+          {/* Status e Retorno */}
+          <div className="flex items-center justify-between pt-1.5 border-t">
+            <div className="flex items-center gap-1.5">
+              {onStatusChange ? (
+                <Select
+                  value={status}
+                  onValueChange={(value) => onStatusChange(aposta.id, value)}
+                >
+                  <SelectTrigger className="w-24 h-6 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="ganha">Ganha</SelectItem>
+                    <SelectItem value="perdida">Perdida</SelectItem>
+                    <SelectItem value="cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge className={cn("text-[10px] px-1.5 py-0.5", getStatusColor(status))}>
+                  {status.toUpperCase()}
+                </Badge>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground mb-0.5">Retorno</p>
+              <p className={cn("font-bold text-xs", getReturnColor(aposta))}>
+                R$ {getRealReturn(aposta)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -92,8 +213,15 @@ export function ApostasList({
         <p className="text-muted-foreground text-center py-8">
           {"Nenhuma aposta encontrada com os critérios de busca."}
         </p>
+      ) : isMobile ? (
+        // Versão Mobile: Cards
+        <div className="space-y-2">
+          {apostas.map(renderMobileCard)}
+        </div>
       ) : (
-        <Table>
+        // Versão Desktop: Tabela
+        <div className="overflow-x-auto">
+          <Table>
           <TableHeader>
             <TableRow>
               {showCheckboxes && <TableHead className="w-12"></TableHead>}
@@ -208,6 +336,7 @@ export function ApostasList({
             })}
           </TableBody>
         </Table>
+        </div>
       )}
     </>
   );

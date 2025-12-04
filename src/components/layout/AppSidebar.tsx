@@ -13,9 +13,10 @@ const menuItems = [
 interface AppSidebarProps {
   collapsed?: boolean;
   setCollapsed?: (collapsed: boolean) => void;
+  onNavigate?: () => void;
 }
 
-export function AppSidebar({ collapsed = false, setCollapsed = () => {} }: AppSidebarProps) {
+export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavigate }: AppSidebarProps) {
   // Usando estado interno quando não receber props
   const [internalCollapsed, setInternalCollapsed] = useState(collapsed);
   const location = useLocation();
@@ -55,58 +56,63 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {} }: AppSi
     };
   }, []);
 
+  // Determinar se está em modo mobile (quando onNavigate existe, está no drawer)
+  const isInDrawer = !!onNavigate;
+  
   return (
     <div 
       className={`sidebarContainer ${internalCollapsed ? 'shrink' : ''}`}
       style={{
         backgroundColor: 'var(--sidebar-bg)',
-        boxShadow: 'var(--container-shadow)',
-        borderRadius: '0 10px 10px 0',
+        boxShadow: isInDrawer ? 'none' : 'var(--container-shadow)',
+        borderRadius: isInDrawer ? '0' : '0 10px 10px 0',
         padding: '16px',
         transition: 'width 0.3s',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        width: internalCollapsed ? '92px' : '240px',
-        height: '100vh',
+        position: isInDrawer ? 'relative' : 'fixed',
+        left: isInDrawer ? 'auto' : 0,
+        top: isInDrawer ? 'auto' : 0,
+        width: isInDrawer ? '100%' : (internalCollapsed ? '92px' : '240px'),
+        height: isInDrawer ? '100%' : '100vh',
         display: 'flex',
         flexDirection: 'column',
         margin: '0',
         fontFamily: "'Poppins', sans-serif",
         color: 'var(--sidebar-text)',
-        zIndex: 50
+        zIndex: isInDrawer ? 'auto' : 50
       }}
     >
-      {/* Toggle sidebar button */}
-      <button 
-        className="sidebarViewButton"
-        onClick={toggleCollapse}
-        style={{
-          position: 'absolute',
-          width: '24px',
-          height: '24px',
-          right: '-12px',
-          top: '32px',
-          border: 'none',
-          borderRadius: '50%',
-          backgroundColor: 'var(--sidebar-button)',
-          color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'var(--container-shadow)',
-          transition: '0.3s'
-        }}
-      >
-        <ChevronLeft 
+      {/* Toggle sidebar button - apenas em desktop */}
+      {!isInDrawer && (
+        <button 
+          className="sidebarViewButton"
+          onClick={toggleCollapse}
           style={{
-            width: '16px',
-            transform: internalCollapsed ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.3s'
+            position: 'absolute',
+            width: '24px',
+            height: '24px',
+            right: '-12px',
+            top: '32px',
+            border: 'none',
+            borderRadius: '50%',
+            backgroundColor: 'var(--sidebar-button)',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 'var(--container-shadow)',
+            transition: '0.3s'
           }}
-        />
-      </button>
+        >
+          <ChevronLeft 
+            style={{
+              width: '16px',
+              transform: internalCollapsed ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s'
+            }}
+          />
+        </button>
+      )}
       
      <div className="app-title" style={{ padding: '4px 0' }}>
   {!internalCollapsed && (
@@ -168,6 +174,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {} }: AppSi
                 <NavLink
                   to={item.path}
                   end
+                  onClick={onNavigate}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -215,7 +222,10 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {} }: AppSi
             transition: 'background 0.3s',
             color: 'var(--sidebar-text)'
           }}
-          onClick={() => window.location.href = "/logout"}
+          onClick={() => {
+            if (onNavigate) onNavigate();
+            window.location.href = "/logout";
+          }}
         >
           <div 
             style={{

@@ -42,30 +42,32 @@ export function ApostasFilter({
   };
 
   return (
-    <div className={cn("flex items-end gap-4 w-full", className)}>
-      <div className="flex-1 flex items-center gap-4">
-        <div className="flex-1 space-y-2">
-          <label htmlFor="search" className="text-sm font-medium">Buscar</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              id="search"
-              placeholder="Buscar apostas..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
-              className="pl-10"
-              disabled={isLoading}
-            />
-          </div>
+    <div className={cn("w-full space-y-3", className)}>
+      {/* Busca - sempre em linha completa */}
+      <div className="space-y-2">
+        <label htmlFor="search" className="text-sm font-medium">Buscar</label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            id="search"
+            placeholder="Buscar apostas..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
+            className="pl-10"
+            disabled={isLoading}
+          />
         </div>
+      </div>
 
+      {/* Filtros em grid responsivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">Data Inicial</label>
           <Input
             type="date"
             value={dateFrom}
             onChange={(e) => { setDateFrom(e.target.value); onDateFromChange?.(e.target.value); }}
-            className="w-40"
+            className="w-full"
             disabled={isLoading}
           />
         </div>
@@ -76,7 +78,7 @@ export function ApostasFilter({
             type="date"
             value={dateTo}
             onChange={(e) => { setDateTo(e.target.value); onDateToChange?.(e.target.value); }}
-            className="w-40"
+            className="w-full"
             disabled={isLoading}
           />
         </div>
@@ -88,7 +90,7 @@ export function ApostasFilter({
             onValueChange={(value) => { setStatus(value); onFilterStatus?.(value); }} 
             disabled={isLoading}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -100,12 +102,17 @@ export function ApostasFilter({
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2 pb-[2px]">
-        <Button variant="outline" onClick={handleClear} disabled={isLoading}>
-          Limpar Filtros
-        </Button>
+        <div className="space-y-2 flex flex-col justify-end">
+          <Button 
+            variant="outline" 
+            onClick={handleClear} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            Limpar Filtros
+          </Button>
+        </div>
       </div>
     </div>
   );

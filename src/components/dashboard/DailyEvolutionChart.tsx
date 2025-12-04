@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DailyData {
   date: string;
@@ -73,6 +74,7 @@ export const DailyEvolutionChart = ({
   const totalProfit = data.reduce((sum, item) => sum + item.profitDay, 0);
   const profitableDays = data.filter(item => item.profitDay > 0).length;
   const totalDays = data.length;
+  const isMobile = useIsMobile();
   
   return (
     <Card className={`chart-container shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-primary overflow-hidden ${className}`}>
@@ -96,11 +98,11 @@ export const DailyEvolutionChart = ({
       </CardHeader>
       <CardContent className="pt-4">
         <div className="chart-wrapper">
-          <ResponsiveContainer width="100%" height={460}>
-            <BarChart 
+          <ResponsiveContainer width="100%" height={isMobile ? 300 : 460}>
+              <BarChart 
               data={data} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              barCategoryGap={16}>
+              margin={{ top: 20, right: isMobile ? 10 : 30, left: isMobile ? 10 : 20, bottom: isMobile ? 40 : 5 }}
+              barCategoryGap={isMobile ? 8 : 16}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"

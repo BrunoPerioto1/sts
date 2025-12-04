@@ -154,62 +154,88 @@ export default function NovaApostaPage() {
         />
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Apostas Registradas</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg md:text-xl font-bold">Apostas Registradas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 px-3 md:px-6 pb-4">
             {/* Botões de Ação e Checkbox "Selecionar todas" */}
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div className="flex gap-2 items-center">
-                <Button 
-                  variant="outline" 
-                  onClick={() => { setPage(1); fetchFilteredBets(); }} 
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                  )}
-                  Atualizar
-                </Button>
-                <Button variant="default" onClick={() => setCreateModalOpen(true)} disabled={loading}>
-                  Nova Aposta
-                </Button>
-                <Select
-                  value={String(perPage)}
-                  onValueChange={(v) => { setPage(1); setPerPage(Number(v)); }}
-                >
-                  <SelectTrigger className="w-28"><SelectValue placeholder="Itens/página" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 por página</SelectItem>
-                    <SelectItem value="20">20 por página</SelectItem>
-                    <SelectItem value="30">30 por página</SelectItem>
-                    <SelectItem value="50">50 por página</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-3">
+              {/* Primeira linha: Ações principais */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => { setPage(1); fetchFilteredBets(); }} 
+                    disabled={loading}
+                    size="sm"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                    )}
+                    <span className="hidden sm:inline">Atualizar</span>
+                    <span className="sm:hidden">Atualizar</span>
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    onClick={() => setCreateModalOpen(true)} 
+                    disabled={loading}
+                    size="sm"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    Nova Aposta
+                  </Button>
+                  <Select
+                    value={String(perPage)}
+                    onValueChange={(v) => { setPage(1); setPerPage(Number(v)); }}
+                  >
+                    <SelectTrigger className="w-full sm:w-32">
+                      <SelectValue placeholder="Itens/página" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 por página</SelectItem>
+                      <SelectItem value="20">20 por página</SelectItem>
+                      <SelectItem value="30">30 por página</SelectItem>
+                      <SelectItem value="50">50 por página</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="flex gap-2 items-center">
-                <Checkbox
-                  id="select-all"
-                  checked={selectedBets.length === apostas.length && apostas.length > 0}
-                  onCheckedChange={handleSelectAll}
-                  disabled={loading}
-                />
-                <label htmlFor="select-all" className="text-sm">Selecionar todas</label>
+              {/* Segunda linha: Seleção e ações em lote */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedBets.length === apostas.length && apostas.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    disabled={loading}
+                  />
+                  <label htmlFor="select-all" className="text-sm">Selecionar todas</label>
+                </div>
 
                 {selectedBets.length > 0 && (
-                  <>
-                    <Button variant="destructive" onClick={handleDeleteSelected} className="flex items-center gap-2" disabled={loading}>
+                  <div className="flex flex-wrap gap-2">
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteSelected} 
+                      className="flex items-center gap-2 flex-1 sm:flex-initial" 
+                      disabled={loading}
+                      size="sm"
+                    >
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                      Excluir Selecionadas
+                      <span className="hidden sm:inline">Excluir Selecionadas</span>
+                      <span className="sm:hidden">Excluir</span>
                     </Button>
                     <Select
                       onValueChange={value => handleBulkStatusChange(Number(value))}
                       disabled={loading}
                     >
-                      <SelectTrigger className="w-40"><SelectValue placeholder="Alterar Status" /></SelectTrigger>
+                      <SelectTrigger className="w-full sm:w-40">
+                        <SelectValue placeholder="Alterar Status" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
                         <SelectItem value={String(ResultIdEnum.WON)}>Ganha</SelectItem>
@@ -217,7 +243,7 @@ export default function NovaApostaPage() {
                         <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                       </SelectContent>
                     </Select>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
@@ -245,8 +271,8 @@ export default function NovaApostaPage() {
             />
 
             {/* Paginação */}
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-muted-foreground">{`Total: ${total}`}</p>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2">
+              <p className="text-sm text-muted-foreground text-center sm:text-left">{`Total: ${total}`}</p>
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
