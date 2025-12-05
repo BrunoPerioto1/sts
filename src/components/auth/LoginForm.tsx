@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,38 @@ interface LoginFormProps {
   onSwitchToRegister: () => void;
 }
 
+const REMEMBERED_EMAIL_KEY = "remembered_email";
+
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false
-  });
   const navigate = useNavigate();
+  
+  const [loginData, setLoginData] = useState(() => {
+    // Carregar email salvo no estado inicial
+    const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    return {
+      email: rememberedEmail || "",
+      password: "",
+      rememberMe: !!rememberedEmail
+    };
+  });
+
+  // Verificar se já está autenticado ao carregar a página
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Verificar se o token ainda é válido fazendo uma requisição
+      getMe()
+        .then(() => {
+          navigate("/dashboard", { replace: true });
+        })
+        .catch(() => {
+          // Token inválido, limpar
+          localStorage.removeItem("token");
+        });
+    }
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +63,12 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     try {
       const res = await postLogin({ email: loginData.email, password: loginData.password });
       localStorage.setItem("token", res.access_token);
+      
+      // Salvar ou remover email baseado no checkbox "lembrar de mim"
       if (loginData.rememberMe) {
-        // mantém token; caso contrário, poderia usar sessionStorage
+        localStorage.setItem(REMEMBERED_EMAIL_KEY, loginData.email);
+      } else {
+        localStorage.removeItem(REMEMBERED_EMAIL_KEY);
       }
 
       // Opcional: buscar dados do usuário logado

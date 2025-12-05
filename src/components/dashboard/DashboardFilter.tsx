@@ -65,7 +65,7 @@ export function DashboardFilter({
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-end gap-4 p-4 border-b">
-      {/* Casa de Aposta */}
+      {}
       <div className="space-y-2 w-full sm:w-52">
         <Label>Casa de Aposta</Label>
         <Select
