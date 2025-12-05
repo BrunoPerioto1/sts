@@ -8,7 +8,7 @@ interface HouseListItemProps {
   onViewDetails?: (houseId: number) => void;
   onOpenHistory?: (house: HouseBalanceDto) => void;
   onNewTransaction?: (house: HouseBalanceDto) => void;
-  index?: number; // zebra striping
+  index?: number; 
 }
 
 export function HouseListItem({
