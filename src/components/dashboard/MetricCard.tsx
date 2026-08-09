@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 
 export function MetricCard({
   title,
@@ -7,6 +8,7 @@ export function MetricCard({
   subtext,
   valueClass = "",
   className,
+  sparkline,
 }: {
   title: string;
   value: string;
@@ -14,20 +16,33 @@ export function MetricCard({
   subtext?: string;
   valueClass?: string;
   className?: string;
+  sparkline?: number[];
 }) {
   return (
-    <div
-      className={cn(
-        "bg-card border border-border rounded-lg p-5 shadow-sm hover:shadow-lg transition-all",
-        className
-      )}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 rounded-md bg-muted/40">{icon}</div>
-        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
+    <div className={cn("card elev-sm bg-card rounded-md p-[14px_16px] flex flex-col gap-2", className)}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-accent">
+          {icon}
+          <h4 className="text-[10px] uppercase tracking-widest opacity-70">{title}</h4>
+        </div>
+        {sparkline && sparkline.length > 0 && (
+          <div className="w-[50px] h-[26px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={sparkline.map((v) => ({ v }))} barCategoryGap={2}>
+                <Bar dataKey="v" radius={[1.5, 1.5, 1.5, 1.5]}>
+                  {sparkline.map((v, i) => (
+                    <Cell key={i} fill={v >= 0 ? "#4ade9e" : "#f0797e"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
-      <p className={cn("text-2xl font-bold", valueClass)}>{value}</p>
-      {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
+      <p className={cn("text-[27px] font-medium tabular-nums", valueClass)} style={{ letterSpacing: "-0.02em" }}>
+        {value}
+      </p>
+      {subtext && <p className="text-[11.5px] opacity-45">{subtext}</p>}
     </div>
   );
 }

@@ -6,9 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import { DashboardPage } from "./pages/DashboardPage";
-// import { ApostasPage } from "./pages/ApostasPage";
+import ApostasPage from "./pages/ApostasPage";
 import { CasasPage } from "./pages/CasasPage";
-import NovaApostaPage from "./pages/nova-aposta";
+import ComparadorPage from "./pages/ComparadorPage";
 import PerfilPage from "./pages/PerfilPage";
 import { Navigate } from "react-router-dom";
 
@@ -25,9 +25,9 @@ const App = () => (
           <Route path="/login" element={<AuthPage />} />
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
           <Route path="/perfil" element={<RequireAuth><PerfilPage /></RequireAuth>} />
-          {/* <Route path="/apostas" element={<ApostasPage />} /> */}
-          <Route path="/nova-aposta" element={<RequireAuth><NovaApostaPage /></RequireAuth>} />
+          <Route path="/apostas" element={<RequireAuth><ApostasPage /></RequireAuth>} />
           <Route path="/casas" element={<RequireAuth><CasasPage /></RequireAuth>} />
+          <Route path="/comparador" element={<RequireAuth><ComparadorPage /></RequireAuth>} />
           {}
           <Route path="/logout" element={<LogoutRoute />} />
           <Route path="*" element={<NotFound />} />

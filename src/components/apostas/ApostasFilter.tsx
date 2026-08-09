@@ -2,118 +2,125 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface ApostasFilterProps {
+  houses: { id: number; name: string }[];
   onSearch: (term: string) => void;
   onFilterStatus?: (status: string) => void;
+  onFilterHouse?: (houseId: string) => void;
   onDateFromChange?: (date: string) => void;
   onDateToChange?: (date: string) => void;
   onClearFilters?: () => void;
+  onExportCsv?: () => void;
   className?: string;
   isLoading?: boolean;
 }
 
+const statusLabels: Record<string, string> = {
+  "9": "Pendente",
+  "1": "Ganha",
+  "2": "Perdida",
+  "3": "Cancelada",
+};
+
 export function ApostasFilter({
+  houses,
   onSearch,
   onFilterStatus,
+  onFilterHouse,
   onDateFromChange,
   onDateToChange,
   onClearFilters,
+  onExportCsv,
   className,
-  isLoading = false
+  isLoading = false,
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [status, setStatus] = useState("0");
+  const [houseId, setHouseId] = useState("0");
+
+  const activeChips: { key: string; label: string; clear: () => void }[] = [];
+  if (searchTerm) activeChips.push({ key: "q", label: `Busca: ${searchTerm}`, clear: () => { setSearchTerm(""); onSearch(""); } });
+  if (status !== "0") activeChips.push({ key: "status", label: statusLabels[status] ?? status, clear: () => { setStatus("0"); onFilterStatus?.("0"); } });
+  if (houseId !== "0") {
+    const houseName = houses.find((h) => h.id.toString() === houseId)?.name ?? houseId;
+    activeChips.push({ key: "house", label: houseName, clear: () => { setHouseId("0"); onFilterHouse?.("0"); } });
+  }
+  if (dateFrom) activeChips.push({ key: "from", label: `De ${dateFrom}`, clear: () => { setDateFrom(""); onDateFromChange?.(""); } });
+  if (dateTo) activeChips.push({ key: "to", label: `Até ${dateTo}`, clear: () => { setDateTo(""); onDateToChange?.(""); } });
 
   const handleClear = () => {
     setSearchTerm("");
     setDateFrom("");
     setDateTo("");
     setStatus("0");
+    setHouseId("0");
     onClearFilters?.();
-    onSearch(""); // garante que o pai também resetará
-    onFilterStatus?.("0");
-    onDateFromChange?.("");
-    onDateToChange?.("");
   };
 
   return (
-    <div className={cn("w-full space-y-3", className)}>
-      {/* Busca - sempre em linha completa */}
-      <div className="space-y-2">
-        <label htmlFor="search" className="text-sm font-medium">Buscar</label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+    <div className={cn("w-full space-y-2", className)}>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative w-full sm:w-[280px]">
+          <MagnifyingGlass size={14} className="absolute left-[10px] top-1/2 -translate-y-1/2 opacity-50" />
           <Input
-            id="search"
             placeholder="Buscar apostas..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
-            className="pl-10"
-            disabled={isLoading}
-          />
-        </div>
-      </div>
-
-      {/* Filtros em grid responsivo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Data Inicial</label>
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); onDateFromChange?.(e.target.value); }}
-            className="w-full"
+            className="pl-8"
             disabled={isLoading}
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Data Final</label>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); onDateToChange?.(e.target.value); }}
-            className="w-full"
-            disabled={isLoading}
-          />
-        </div>
+        <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); onDateFromChange?.(e.target.value); }} className="w-[150px]" disabled={isLoading} />
+        <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); onDateToChange?.(e.target.value); }} className="w-[150px]" disabled={isLoading} />
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Status</label>
-          <Select 
-            value={status}
-            onValueChange={(value) => { setStatus(value); onFilterStatus?.(value); }} 
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">Todos</SelectItem>
-              <SelectItem value="9">Pendente</SelectItem>
-              <SelectItem value="1">Ganha</SelectItem>
-              <SelectItem value="2">Perdida</SelectItem>
-              <SelectItem value="3">Cancelada</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={status} onValueChange={(v) => { setStatus(v); onFilterStatus?.(v); }} disabled={isLoading}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">Todos os status</SelectItem>
+            <SelectItem value="9">Pendente</SelectItem>
+            <SelectItem value="1">Ganha</SelectItem>
+            <SelectItem value="2">Perdida</SelectItem>
+            <SelectItem value="3">Cancelada</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <div className="space-y-2 flex flex-col justify-end">
-          <Button 
-            variant="outline" 
-            onClick={handleClear} 
-            disabled={isLoading}
-            className="w-full"
-          >
-            Limpar Filtros
+        <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Casa" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">Todas as casas</SelectItem>
+            {houses.map((h) => (
+              <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {onExportCsv && (
+          <Button variant="ghost" onClick={onExportCsv} className="ml-auto gap-2">
+            <DownloadSimple size={16} /> Exportar CSV
           </Button>
-        </div>
+        )}
       </div>
+
+      {activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] opacity-45">Filtros ativos</span>
+          {activeChips.map((chip) => (
+            <span key={chip.key} className="tag border border-accent text-accent inline-flex items-center gap-1 rounded-[6px] px-[10px] py-[3px] text-[11px]">
+              {chip.label}
+              <button onClick={chip.clear} aria-label="Remover filtro">
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+          <button onClick={handleClear} className="text-[11px] text-accent hover:underline">Limpar tudo</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,256 +1,147 @@
-import { BarChart3, Target, Building2, User, LogOut, ChevronLeft } from "lucide-react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import {
+  ChartLineUp,
+  SidebarSimple,
+  SquaresFour,
+  Receipt,
+  Buildings,
+  Ranking,
+  UserCircle,
+  SignOut,
+} from "@phosphor-icons/react";
+import { getMe } from "@/api/routes/get-me";
 
 const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: BarChart3, path: "/dashboard" },
-  { id: "apostas", label: "Apostas", icon: Target, path: "/nova-aposta" },
-  { id: "casas", label: "Casas de Apostas", icon: Building2, path: "/casas" },
-  { id: "perfil", label: "Perfil", icon: User, path: "/perfil" },
+  { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
+  { id: "apostas", label: "Apostas", icon: Receipt, path: "/apostas" },
+  { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/casas" },
+  { id: "comparador", label: "Comparador", icon: Ranking, path: "/comparador" },
+  { id: "perfil", label: "Perfil", icon: UserCircle, path: "/perfil" },
 ];
 
-// Interface para as props do AppSidebar
 interface AppSidebarProps {
   collapsed?: boolean;
   setCollapsed?: (collapsed: boolean) => void;
   onNavigate?: () => void;
 }
 
+function initialsOf(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
 export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavigate }: AppSidebarProps) {
-  // Usando estado interno quando não receber props
-  const [internalCollapsed, setInternalCollapsed] = useState(collapsed);
   const location = useLocation();
-  
-  // Função para controlar o colapso do sidebar
-  const toggleCollapse = () => {
-    const newState = !internalCollapsed;
-    setInternalCollapsed(newState);
-    setCollapsed(newState); // Comunica o estado para o pai, se fornecido
-  };
-  
-  // Sincroniza o estado interno com props
+  const isInDrawer = !!onNavigate;
+  const [user, setUser] = useState<{ username: string; email: string } | null>(null);
+
   useEffect(() => {
-    setInternalCollapsed(collapsed);
-  }, [collapsed]);
-  
-  // Importar CSS uma vez ao montar o componente
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
-      
-      :root {
-        --sidebar-bg: #1a237e;
-        --sidebar-hover: #283593;
-        --sidebar-active: #3949ab;
-        --sidebar-text: #ffffff;
-        --sidebar-icon: #c5cae9;
-        --sidebar-button: #448aff;
-        --container-shadow: rgba(0, 0, 0, 0.3) 0px 5px 15px;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
+    getMe()
+      .then((me) => setUser({ username: me.username, email: me.email }))
+      .catch(() => setUser(null));
   }, []);
 
-  // Determinar se está em modo mobile (quando onNavigate existe, está no drawer)
-  const isInDrawer = !!onNavigate;
-  
   return (
-    <div 
-      className={`sidebarContainer ${internalCollapsed ? 'shrink' : ''}`}
+    <div
+      className="flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200"
       style={{
-        backgroundColor: 'var(--sidebar-bg)',
-        boxShadow: isInDrawer ? 'none' : 'var(--container-shadow)',
-        borderRadius: isInDrawer ? '0' : '0 10px 10px 0',
-        padding: '16px',
-        transition: 'width 0.3s',
-        position: isInDrawer ? 'relative' : 'fixed',
-        left: isInDrawer ? 'auto' : 0,
-        top: isInDrawer ? 'auto' : 0,
-        width: isInDrawer ? '100%' : (internalCollapsed ? '92px' : '240px'),
-        height: isInDrawer ? '100%' : '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        margin: '0',
-        fontFamily: "'Poppins', sans-serif",
-        color: 'var(--sidebar-text)',
-        zIndex: isInDrawer ? 'auto' : 50
+        width: collapsed ? "64px" : "216px",
+        position: isInDrawer ? "relative" : "fixed",
+        left: isInDrawer ? "auto" : 0,
+        top: isInDrawer ? "auto" : 0,
+        height: "100vh",
+        padding: "18px 12px",
+        zIndex: isInDrawer ? "auto" : 50,
       }}
     >
-      {/* Toggle sidebar button - apenas em desktop */}
-      {!isInDrawer && (
-        <button 
-          className="sidebarViewButton"
-          onClick={toggleCollapse}
-          style={{
-            position: 'absolute',
-            width: '24px',
-            height: '24px',
-            right: '-12px',
-            top: '32px',
-            border: 'none',
-            borderRadius: '50%',
-            backgroundColor: 'var(--sidebar-button)',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--container-shadow)',
-            transition: '0.3s'
-          }}
+      <div className="flex items-center justify-between mb-6 px-1">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="w-[26px] h-[26px] rounded-md border border-accent flex items-center justify-center shrink-0">
+            <ChartLineUp size={16} className="text-accent" />
+          </div>
+          {!collapsed && (
+            <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              SportsBet Manager
+            </span>
+          )}
+        </div>
+        {!isInDrawer && !collapsed && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-foreground/50 hover:text-foreground shrink-0"
+            aria-label="Colapsar menu"
+          >
+            <SidebarSimple size={18} />
+          </button>
+        )}
+      </div>
+
+      {!isInDrawer && collapsed && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-foreground/50 hover:text-foreground mb-4 px-1 self-start"
+          aria-label="Expandir menu"
         >
-          <ChevronLeft 
-            style={{
-              width: '16px',
-              transform: internalCollapsed ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s'
-            }}
-          />
+          <SidebarSimple size={18} />
         </button>
       )}
-      
-     <div className="app-title" style={{ padding: '4px 0' }}>
-  {!internalCollapsed && (
-    <h2 style={{ color: 'var(--sidebar-text)', margin: 0 }}>SportsBet Manager</h2>
-  )}
-</div>
 
-<div 
-  className="sidebarWrapper"
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    flexGrow: 1,
-    marginTop: '8px'
-  }}
->
-        {/* Theme toggle */}
-        <div 
-          className="sidebarThemeContainer"
-          style={{
-            padding: '4px',
-            borderRadius: '4px',
-            marginBottom: '16px',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-            paddingBottom: '12px'
-          }}
-        >
-         
-        </div>
-        
-        {/* Menu items */}
-        <ul 
-          className="sidebarList"
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: 0,
-            flexGrow: 1
-          }}
-        >
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li 
-                key={item.id} 
-                className="sidebarListItem"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  backgroundColor: isActive ? 'var(--sidebar-active)' : 'transparent'
-                }}
-              >
-                <NavLink
-                  to={item.path}
-                  end
-                  onClick={onNavigate}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '12px',
-                    width: '100%',
-                    textDecoration: 'none',
-                    color: 'var(--sidebar-text)'
-                  }}
-                >
-                  <Icon 
-                    className="sidebarListIcon"
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      marginRight: internalCollapsed ? '0' : '12px',
-                      color: 'var(--sidebar-icon)'
-                    }}
-                  />
-                  {!internalCollapsed && (
-                    <span className="sidebarListItemText" style={{
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      {item.label}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
-        
-        {/* Profile section */}
-        <div 
-          className="sidebarProfileSection"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginTop: 'auto',
-            border: '1px solid rgba(255,255,255,0.2)',
-            padding: '8px 10px',
-            borderRadius: '28px',
-            cursor: 'pointer',
-            transition: 'background 0.3s',
-            color: 'var(--sidebar-text)'
-          }}
+      <nav className="flex flex-col gap-[2px] flex-1">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname.startsWith(item.path);
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              onClick={onNavigate}
+              className="flex items-center gap-2 rounded-lg px-[10px] py-2 text-[13px] transition-colors"
+              style={{
+                color: isActive ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 62%, transparent)",
+                background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
+                boxShadow: isActive ? "inset 2px 0 0 var(--color-accent)" : "none",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "color-mix(in srgb, var(--color-text) 7%, transparent)";
+                  e.currentTarget.style.color = "var(--color-text)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "color-mix(in srgb, var(--color-text) 62%, transparent)";
+                }
+              }}
+            >
+              <Icon size={18} weight={isActive ? "fill" : "regular"} className="shrink-0" />
+              {!collapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      <div className="pt-3 mt-2 border-t border-border">
+        <button
           onClick={() => {
             if (onNavigate) onNavigate();
             window.location.href = "/logout";
           }}
+          className="flex items-center gap-2 w-full rounded-lg px-1 py-1 hover:bg-foreground/[0.07] transition-colors"
         >
-          <div 
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginRight: internalCollapsed ? '0' : '8px'
-            }}
-          >
-            <LogOut size={20} color="#fff" />
+          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-[11px] font-medium shrink-0">
+            {user ? initialsOf(user.username) : "?"}
           </div>
-          {!internalCollapsed && (
-            <span style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
-              Sair
-            </span>
+          {!collapsed && (
+            <div className="text-left overflow-hidden flex-1">
+              <div className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
+              <div className="text-[10px] opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
+            </div>
           )}
-        </div>
+          {!collapsed && <SignOut size={16} className="opacity-55 shrink-0" />}
+        </button>
       </div>
     </div>
   );

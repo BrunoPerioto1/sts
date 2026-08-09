@@ -10,11 +10,12 @@ export type FindByIdDto = HouseDto;
 export type FindAllHousesDTO = HouseDto;
 
 export interface HouseMetricsDto {
-  totalInvested: string | number;
-  currentBalance: string | number;
-  totalProfit: string | number;
-  totalBets: string | number;
-  totalHousesUsed: string | number;
+  totalBalance: number;
+  totalDeposit: number;
+  totalWithdrawal: number;
+  consolidatedProfit: number;
+  negativeHouses: number;
+  totalHousesUsed: number;
 }
 
 export interface HouseBalanceDto {
@@ -31,6 +32,7 @@ export interface HouseBalanceDto {
   pendingBets: string | number;
   wonBets: string | number;
   lostBets: string | number;
+  lastMovementAt: string | null;
 }
 
 export interface HouseBalanceFilter {
@@ -59,5 +61,11 @@ export async function getHouseById(id: number) {
 // GET /house
 export async function getAllHouses() {
   const response = await api.houses.get<FindAllHousesDTO[]>('/all');
+  return response.data;
+}
+
+// POST /house
+export async function createHouse(houseName: string) {
+  const response = await api.houses.post('', { houseName });
   return response.data;
 }

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,50 +16,45 @@ interface ApostaFormProps {
 export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: ApostaFormProps) {
   const { toast } = useToast();
   const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     game: initialData?.game || "",
     market: initialData?.market || "",
     odd: initialData?.odd?.toString() || "",
     stake: initialData?.stake?.toString() || "",
-    houseId: (initialData as any)?.houseId ?? initialData?.houseId ?? undefined as number | undefined,
+    houseId: (initialData as any)?.houseId ?? undefined as number | undefined,
     sport: initialData?.sport || "futebol",
-    status: "pendente"
   });
-  const selectedHouseName = useMemo(() => {
-    const found = houses.find(h => h.id === formData.houseId);
-    return found?.name || "";
-  }, [houses, formData.houseId]);
 
   useEffect(() => {
-    const loadHouses = async () => {
-      try {
-        const data = await getAllHouses();
-        // Corrigido para usar os campos corretos da API: id e name
-        const normalized = data.map((h: any) => ({ id: Number(h.id), name: h.name })) as { id: number; name: string }[];
+    getAllHouses()
+      .then((data) => {
+        const normalized = data.map((h: any) => ({ id: Number(h.id), name: h.name }));
         setHouses(normalized);
         if ((initialData as any)?.houseId) {
-          const match = normalized.find(h => h.id === (initialData as any).houseId);
-          if (match) setFormData(prev => ({ ...prev, houseId: match.id }));
+          const match = normalized.find((h) => h.id === (initialData as any).houseId);
+          if (match) setFormData((prev) => ({ ...prev, houseId: match.id }));
         }
-      } catch (e) {
-        // silencioso
-      }
-    };
-    loadHouses();
+      })
+      .catch(() => undefined);
   }, [initialData]);
+
+  const potentialReturn = useMemo(() => {
+    const odd = parseFloat(formData.odd.replace(",", "."));
+    const stake = parseFloat(formData.stake.replace(",", "."));
+    if (!Number.isFinite(odd) || !Number.isFinite(stake) || odd <= 0 || stake <= 0) return null;
+    return { total: odd * stake, profit: odd * stake - stake };
+  }, [formData.odd, formData.stake]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.game || !formData.market || !formData.odd || !formData.stake || !formData.houseId) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
 
+    setSubmitting(true);
     try {
       if (isEditing && initialData?.id) {
         const payload: any = {
@@ -86,126 +80,73 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
         const created = await createBetRoute(payload);
         onApostaAdded(created);
       }
+      toast({ title: "Sucesso", description: isEditing ? "Aposta atualizada com sucesso!" : "Aposta registrada com sucesso!" });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
-      return;
+    } finally {
+      setSubmitting(false);
     }
-    
-    if (!isEditing) {
-      setFormData({
-        game: "",
-        market: "",
-        odd: "",
-        stake: "",
-        houseId: undefined,
-        sport: "futebol",
-        status: "pendente"
-      });
-    }
-
-    toast({
-      title: "Sucesso",
-      description: isEditing ? "Aposta atualizada com sucesso!" : "Aposta registrada com sucesso!",
-    });
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">{isEditing ? "Editar Aposta" : "Registrar Nova Aposta"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="mercado">Mercado *</Label>
-              <Input
-                id="mercado"
-                placeholder="Ex: Vitória do Palmeiras"
-                value={formData.market}
-                onChange={(e) => setFormData({ ...formData, market: e.target.value })}
-              />
-            </div>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 space-y-1.5">
+          <Label htmlFor="evento" className="text-xs">Evento *</Label>
+          <Input id="evento" placeholder="Ex: Palmeiras vs Flamengo" value={formData.game} onChange={(e) => setFormData({ ...formData, game: e.target.value })} />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="evento">Jogo *</Label>
-              <Input
-                id="evento"
-                placeholder="Ex: Palmeiras vs Flamengo"
-                value={formData.game}
-                onChange={(e) => setFormData({ ...formData, game: e.target.value })}
-              />
-            </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label htmlFor="mercado" className="text-xs">Mercado *</Label>
+          <Input id="mercado" placeholder="Ex: Vitória do Palmeiras" value={formData.market} onChange={(e) => setFormData({ ...formData, market: e.target.value })} />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="odd">Odd *</Label>
-              <Input
-                id="odd"
-                type="number"
-                step="0.01"
-                placeholder="Ex: 2.50"
-                value={formData.odd}
-                onChange={(e) => setFormData({ ...formData, odd: e.target.value })}
-              />
-            </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Casa *</Label>
+          <Select value={formData.houseId?.toString()} onValueChange={(value) => setFormData({ ...formData, houseId: Number(value) })}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {houses.map((h) => (
+                <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="valor">Valor (R$) *</Label>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
-                placeholder="Ex: 100.00"
-                value={formData.stake}
-                onChange={(e) => setFormData({ ...formData, stake: e.target.value })}
-              />
-            </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="esporte" className="text-xs">Esporte</Label>
+          <Input id="esporte" placeholder="Ex: futebol" value={formData.sport} onChange={(e) => setFormData({ ...formData, sport: e.target.value })} />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="casa">Casa de Aposta *</Label>
-              <Select value={formData.houseId?.toString()} onValueChange={(value) => setFormData({ ...formData, houseId: Number(value) })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a casa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {houses.map(house => (
-                    <SelectItem key={house.id} value={house.id.toString()}>{house.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="odd" className="text-xs">Odd *</Label>
+          <Input id="odd" type="number" step="0.01" placeholder="Ex: 2.50" value={formData.odd} onChange={(e) => setFormData({ ...formData, odd: e.target.value })} />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="esporte">Esporte *</Label>
-              <Input
-                id="esporte"
-                placeholder="Ex: futebol"
-                value={formData.sport}
-                onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
-              />
-            </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="stake" className="text-xs">Stake (R$) *</Label>
+          <Input id="stake" type="number" step="0.01" placeholder="Ex: 100.00" value={formData.stake} onChange={(e) => setFormData({ ...formData, stake: e.target.value })} />
+        </div>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status da aposta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="ganha">Ganha</SelectItem>
-                  <SelectItem value="perdida">Perdida</SelectItem>
-                  <SelectItem value="cancelada">Cancelada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {potentialReturn && (
+        <div
+          className="flex items-center justify-between rounded-md p-3 text-[13px]"
+          style={{ background: "var(--color-bg)", boxShadow: "inset 2px 0 0 var(--color-accent)" }}
+        >
+          <span>
+            Retorno potencial{" "}
+            <strong className="text-[20px] text-positive tabular-nums">R$ {potentialReturn.total.toFixed(2)}</strong>
+          </span>
+          <span className="opacity-70">Lucro se ganhar +R$ {potentialReturn.profit.toFixed(2)}</span>
+        </div>
+      )}
 
-          <Button type="submit" className="w-full">
-            {isEditing ? "Atualizar Aposta" : "Registrar Aposta"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end gap-2 mt-1">
+        <Button type="submit" disabled={submitting}>
+          {submitting ? "Salvando…" : isEditing ? "Atualizar aposta" : "Registrar aposta"}
+        </Button>
+      </div>
+    </form>
   );
 }

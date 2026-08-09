@@ -19,9 +19,9 @@ export function ApostaFormModal({ onApostaAdded, open, onClose }: ApostaFormModa
 
   return (
     <Dialog open={open} onOpenChange={open => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Registrar Nova Aposta</DialogTitle>
+          <DialogTitle>Nova aposta</DialogTitle>
         </DialogHeader>
         <ApostaForm onApostaAdded={handleApostaAdded} />
       </DialogContent>

@@ -4,8 +4,10 @@ export type MeResponse = {
   id: number;
   username: string;
   email: string;
-  full_name?: string | null;
-  role_id: number;
+  fullName?: string | null;
+  roleId: number;
+  createdAt?: string | null;
+  telegramUserId?: number | null;
 };
 
 export async function getMe(): Promise<MeResponse> {
