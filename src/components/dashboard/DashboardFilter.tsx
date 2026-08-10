@@ -1,6 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
+
+const fieldLabelClass = "block mb-2 text-xs opacity-70";
 
 interface DashboardFilterProps {
   houses: { id: number; name: string }[];
@@ -13,9 +15,9 @@ interface DashboardFilterProps {
 
 export function DashboardFilter({ houses, houseId, onHouseChange, startDate, endDate, onCustomRange }: DashboardFilterProps) {
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1">
-        <Label className="text-xs opacity-70">Casa de aposta</Label>
+    <div className="flex flex-wrap items-end gap-5">
+      <div>
+        <Label className={fieldLabelClass}>Casa de aposta</Label>
         <Select value={houseId ? houseId.toString() : "all"} onValueChange={(v) => onHouseChange(v === "all" ? undefined : Number(v))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Todas as casas" />
@@ -31,13 +33,13 @@ export function DashboardFilter({ houses, houseId, onHouseChange, startDate, end
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs opacity-70">De</Label>
-        <Input type="date" value={startDate} onChange={(e) => onCustomRange(e.target.value, endDate)} className="w-[150px]" />
+      <div>
+        <Label className={fieldLabelClass}>De</Label>
+        <DateField value={startDate} onChange={(v) => onCustomRange(v, endDate)} className="w-[150px]" />
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs opacity-70">Até</Label>
-        <Input type="date" value={endDate} onChange={(e) => onCustomRange(startDate, e.target.value)} className="w-[150px]" />
+      <div>
+        <Label className={fieldLabelClass}>Até</Label>
+        <DateField value={endDate} onChange={(v) => onCustomRange(startDate, v)} className="w-[150px]" />
       </div>
     </div>
   );

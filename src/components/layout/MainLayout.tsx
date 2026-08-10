@@ -37,7 +37,7 @@ export function MainLayout({ children, title, actions }: MainLayoutProps) {
 
       <main
         className="flex-1 w-full transition-[margin] duration-200"
-        style={{ marginLeft: !isMobile ? (sidebarCollapsed ? "64px" : "216px") : "0" }}
+        style={{ marginLeft: !isMobile ? (sidebarCollapsed ? "72px" : "248px") : "0" }}
       >
         <header className="border-b border-border sticky top-0 z-40 bg-background">
           <div className="flex items-center justify-between gap-4" style={{ padding: "16px 24px" }}>

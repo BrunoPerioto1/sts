@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Segmented } from "@/components/ui/segmented";
+import { Button } from "@/components/ui/button";
+import { DateField } from "@/components/ui/date-field";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { HouseMultiSelect } from "@/components/comparador/HouseMultiSelect";
 import { Lightbulb, Trophy } from "@phosphor-icons/react";
-import { format, subDays } from "date-fns";
 import { getHouseRanking, type HouseRankingItem } from "@/api/routes/get-house-ranking";
 
 type Metric = "roi" | "profit" | "hitRate";
+
+const fieldLabelClass = "block mb-2 text-xs opacity-70";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -35,33 +41,68 @@ function buildInsight(ranking: HouseRankingItem[]): string | null {
 
 export default function ComparadorPage() {
   const [metric, setMetric] = useState<Metric>("roi");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedHouseIds, setSelectedHouseIds] = useState<number[]>([]);
   const [ranking, setRanking] = useState<HouseRankingItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [range] = useState({ startDate: format(subDays(new Date(), 90), "yyyy-MM-dd"), endDate: format(new Date(), "yyyy-MM-dd") });
 
   useEffect(() => {
     setLoading(true);
-    getHouseRanking({ startDate: range.startDate, endDate: range.endDate, minBets: 20 })
+    getHouseRanking({ startDate: startDate || undefined, endDate: endDate || undefined, minBets: 20 })
       .then(setRanking)
       .catch(() => setRanking([]))
       .finally(() => setLoading(false));
-  }, [range]);
+  }, [startDate, endDate]);
+
+  const houseOptions = useMemo(
+    () => ranking.map((h) => ({ id: h.houseId, name: h.houseName })),
+    [ranking]
+  );
+
+  const filteredRanking = useMemo(
+    () => (selectedHouseIds.length === 0 ? ranking : ranking.filter((h) => selectedHouseIds.includes(h.houseId))),
+    [ranking, selectedHouseIds]
+  );
 
   const sorted = useMemo(() => {
-    return [...ranking].sort((a, b) => b[metric] - a[metric]);
-  }, [ranking, metric]);
+    return [...filteredRanking].sort((a, b) => b[metric] - a[metric]);
+  }, [filteredRanking, metric]);
 
   const podium = sorted.slice(0, 3);
-  const maxAbsRoi = Math.max(...ranking.map((h) => Math.abs(h.roi) * 100), 1);
-  const insight = buildInsight(ranking);
+  const maxAbsRoi = Math.max(...filteredRanking.map((h) => Math.abs(h.roi) * 100), 1);
+  const insight = buildInsight(filteredRanking);
 
   return (
     <MainLayout title="Comparador">
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[12.5px] opacity-55">
-            Só casas com 20+ apostas liquidadas · {new Date(range.startDate).toLocaleDateString("pt-BR")} – {new Date(range.endDate).toLocaleDateString("pt-BR")}
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <Label className={fieldLabelClass}>De</Label>
+              <DateField value={startDate} onChange={setStartDate} placeholder="Desde sempre" className="w-[150px]" />
+            </div>
+            <div>
+              <Label className={fieldLabelClass}>Até</Label>
+              <DateField value={endDate} onChange={setEndDate} placeholder="Hoje" className="w-[150px]" />
+            </div>
+            <div>
+              <Label className={fieldLabelClass}>Casas</Label>
+              <HouseMultiSelect options={houseOptions} selected={selectedHouseIds} onChange={setSelectedHouseIds} />
+            </div>
+            {(startDate || endDate || selectedHouseIds.length > 0) && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  setSelectedHouseIds([]);
+                }}
+              >
+                Limpar tudo
+              </Button>
+            )}
+          </div>
           <Segmented
             options={[
               { value: "roi", label: "ROI" },
@@ -73,6 +114,14 @@ export default function ComparadorPage() {
           />
         </div>
 
+        <p className="text-[12.5px] opacity-55">Só casas com 20+ apostas liquidadas no período</p>
+
+        {loading && (
+          <div className="py-16">
+            <Spinner label="Carregando comparador…" />
+          </div>
+        )}
+
         {!loading && ranking.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
             <Trophy size={30} className="opacity-35 mb-3" />
@@ -83,7 +132,7 @@ export default function ComparadorPage() {
           </div>
         )}
 
-        {podium.length > 0 && (
+        {!loading && podium.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {podium.map((h, i) => (
               <div key={h.houseId} className="card elev-sm bg-card rounded-md p-[14px_16px] flex flex-col gap-2">

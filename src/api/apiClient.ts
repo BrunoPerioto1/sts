@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const apiClient = () => {
 
-  const baseURL = 'https://vtsbackend.vercel.app/';
+  const baseURL = import.meta.env.VITE_API_URL;
 
 
   const dashboard = axios.create({

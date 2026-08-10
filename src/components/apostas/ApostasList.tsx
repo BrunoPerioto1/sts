@@ -61,6 +61,12 @@ const statusLabel = {
   cancelada: "Cancelada",
 };
 
+function eventTextClass(text: string) {
+  if (text.length > 70) return "text-[11.5px] leading-snug";
+  if (text.length > 45) return "text-[12.5px] leading-snug";
+  return "text-[14px]";
+}
+
 function ReturnValue({ aposta }: { aposta: BetItem }) {
   const status = mapResultToStatus(aposta);
   if (status === "pendente") return <span className="opacity-35 tabular-nums">—</span>;
@@ -160,7 +166,7 @@ export function ApostasList({
                     <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{aposta.game}</p>
+                    <p className={cn("font-medium truncate", eventTextClass(aposta.game))}>{aposta.game}</p>
                     <p className="text-xs opacity-55 truncate">{aposta.market}</p>
                   </div>
                 </div>
@@ -186,14 +192,14 @@ export function ApostasList({
         <thead>
           <tr className="text-left border-b border-border">
             {showCheckboxes && <th className="w-8"></th>}
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 88 }}>Data</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Evento</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Mercado</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Casa</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Odd</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Stake</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Status</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Retorno</th>
+            <th className="py-2 pr-4 text-[11px] uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 88 }}>Data</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[220px]">Evento</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[160px]">Mercado</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Casa</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Odd</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Stake</th>
+            <th className="py-2 pl-4 text-[11px] uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Status</th>
+            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Retorno</th>
             <th className="w-11"></th>
           </tr>
         </thead>
@@ -207,16 +213,16 @@ export function ApostasList({
                     <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
                   </td>
                 )}
-                <td className="py-2 opacity-60">{new Date(aposta.betTime).toLocaleDateString("pt-BR")}</td>
-                <td className="py-2 font-medium">{aposta.game}</td>
-                <td className="py-2 opacity-70">{aposta.market}</td>
-                <td className="py-2">{aposta.houseName}</td>
-                <td className="py-2 text-right tabular-nums">{Number(aposta.odd).toFixed(2)}</td>
-                <td className="py-2 text-right tabular-nums">R$ {Number(aposta.stake).toFixed(2)}</td>
-                <td className="py-2">
+                <td className="py-2 pr-4 opacity-60 whitespace-nowrap">{new Date(aposta.betTime).toLocaleDateString("pt-BR")}</td>
+                <td className={cn("py-2 font-semibold", eventTextClass(aposta.game))}>{aposta.game}</td>
+                <td className="py-2 opacity-70 text-[12.5px]">{aposta.market}</td>
+                <td className="py-2 whitespace-nowrap">{aposta.houseName}</td>
+                <td className="py-2 text-right tabular-nums whitespace-nowrap">{Number(aposta.odd).toFixed(2)}</td>
+                <td className="py-2 text-right tabular-nums whitespace-nowrap">R$ {Number(aposta.stake).toFixed(2)}</td>
+                <td className="py-2 pl-4">
                   <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
                 </td>
-                <td className="py-2 text-right">
+                <td className="py-2 text-right whitespace-nowrap">
                   <ReturnValue aposta={aposta} />
                 </td>
                 <td className="py-2 text-right">

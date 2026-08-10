@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -76,8 +77,8 @@ export function ApostasFilter({
           />
         </div>
 
-        <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); onDateFromChange?.(e.target.value); }} className="w-[150px]" disabled={isLoading} />
-        <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); onDateToChange?.(e.target.value); }} className="w-[150px]" disabled={isLoading} />
+        <DateField value={dateFrom} onChange={(v) => { setDateFrom(v); onDateFromChange?.(v); }} className="w-[150px]" disabled={isLoading} />
+        <DateField value={dateTo} onChange={(v) => { setDateTo(v); onDateToChange?.(v); }} className="w-[150px]" disabled={isLoading} />
 
         <Select value={status} onValueChange={(v) => { setStatus(v); onFilterStatus?.(v); }} disabled={isLoading}>
           <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>

@@ -47,7 +47,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
     <div
       className="flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200"
       style={{
-        width: collapsed ? "64px" : "216px",
+        width: collapsed ? "72px" : "248px",
         position: isInDrawer ? "relative" : "fixed",
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
@@ -70,8 +70,9 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         {!isInDrawer && !collapsed && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="text-foreground/50 hover:text-foreground shrink-0"
+            className="text-foreground/50 hover:text-foreground shrink-0 transition-transform"
             aria-label="Colapsar menu"
+            title="Colapsar menu"
           >
             <SidebarSimple size={18} />
           </button>
@@ -81,8 +82,10 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
       {!isInDrawer && collapsed && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="text-foreground/50 hover:text-foreground mb-4 px-1 self-start"
+          className="text-foreground/50 hover:text-foreground mb-4 px-1 self-start transition-transform"
           aria-label="Expandir menu"
+          title="Expandir menu"
+          style={{ transform: "scaleX(-1)" }}
         >
           <SidebarSimple size={18} />
         </button>

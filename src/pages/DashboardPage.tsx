@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/useDashboardFilters";
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { getBets, type BetItem } from "@/api/routes/get-bets";
+import { Spinner } from "@/components/ui/spinner";
 
 function formatDate(iso: string | null) {
   if (!iso) return "";
@@ -27,6 +28,14 @@ function DashboardPageContent() {
       .then((res) => setRecentBets(res.data ?? []))
       .catch(() => setRecentBets([]));
   }, [filters, ready]);
+
+  if (!ready) {
+    return (
+      <div className="py-24">
+        <Spinner label="Carregando dashboard…" />
+      </div>
+    );
+  }
 
   if (ready && hasNoBets) {
     return (

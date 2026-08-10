@@ -39,7 +39,7 @@ export default function ApostasPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage] = useState(30);
   const [totalPages, setTotalPages] = useState(1);
@@ -185,7 +185,7 @@ export default function ApostasPage() {
           onDateToChange={(date) => { setEndDate(date); setPage(1); }}
           onClearFilters={() => { setStartDate(""); setEndDate(""); setStatusFilter(""); setHouseFilter(undefined); setSearchTerm(""); setPage(1); }}
           onExportCsv={handleExportCsv}
-          isLoading={false}
+          isLoading={loading}
         />
 
         <div className="card elev-sm bg-card rounded-md p-[14px_16px] space-y-3">

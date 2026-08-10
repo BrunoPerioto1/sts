@@ -23,7 +23,7 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
     odd: initialData?.odd?.toString() || "",
     stake: initialData?.stake?.toString() || "",
     houseId: (initialData as any)?.houseId ?? undefined as number | undefined,
-    sport: initialData?.sport || "futebol",
+    sport: initialData?.sport || "Futebol",
   });
 
   useEffect(() => {
