@@ -11,13 +11,14 @@ import {
   SignOut,
 } from "@phosphor-icons/react";
 import { getMe } from "@/api/routes/get-me";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
-  { id: "apostas", label: "Apostas", icon: Receipt, path: "/apostas" },
-  { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/casas" },
-  { id: "comparador", label: "Comparador", icon: Ranking, path: "/comparador" },
-  { id: "perfil", label: "Perfil", icon: UserCircle, path: "/perfil" },
+  { id: "apostas", label: "Apostas", icon: Receipt, path: "/bets" },
+  { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
+  { id: "comparador", label: "Comparador", icon: Ranking, path: "/comparison" },
+  { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
 
 interface AppSidebarProps {
@@ -56,7 +57,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         zIndex: isInDrawer ? "auto" : 50,
       }}
     >
-      <div className="flex items-center justify-between mb-6 px-1">
+      <div className={cn("flex items-center mb-6 px-1", collapsed ? "justify-center" : "justify-between")}>
         <div className="flex items-center gap-2 overflow-hidden">
           <div className="w-[26px] h-[26px] rounded-md border border-accent flex items-center justify-center shrink-0">
             <ChartLineUp size={16} className="text-accent" />
@@ -82,7 +83,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
       {!isInDrawer && collapsed && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="text-foreground/50 hover:text-foreground mb-4 px-1 self-start transition-transform"
+          className="text-foreground/50 hover:text-foreground mb-4 self-center transition-transform"
           aria-label="Expandir menu"
           title="Expandir menu"
           style={{ transform: "scaleX(-1)" }}
@@ -91,7 +92,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         </button>
       )}
 
-      <nav className="flex flex-col gap-[2px] flex-1">
+      <nav className="flex flex-col gap-[2px] flex-1 min-h-0 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname.startsWith(item.path);
@@ -100,7 +101,10 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
               key={item.id}
               to={item.path}
               onClick={onNavigate}
-              className="flex items-center gap-2 rounded-lg px-[10px] py-2 text-[13px] transition-colors"
+              className={cn(
+                "flex items-center gap-2 rounded-lg py-2 text-[13px] transition-colors",
+                collapsed ? "justify-center px-0" : "px-[10px]"
+              )}
               style={{
                 color: isActive ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 62%, transparent)",
                 background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
@@ -126,13 +130,16 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         })}
       </nav>
 
-      <div className="pt-3 mt-2 border-t border-border">
+      <div className="pt-3 mt-2 border-t border-border shrink-0">
         <button
           onClick={() => {
             if (onNavigate) onNavigate();
             window.location.href = "/logout";
           }}
-          className="flex items-center gap-2 w-full rounded-lg px-1 py-1 hover:bg-foreground/[0.07] transition-colors"
+          className={cn(
+            "flex items-center gap-2 w-full rounded-lg py-1 hover:bg-foreground/[0.07] transition-colors",
+            collapsed ? "justify-center px-0" : "px-1"
+          )}
         >
           <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-[11px] font-medium shrink-0">
             {user ? initialsOf(user.username) : "?"}

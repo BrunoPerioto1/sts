@@ -20,7 +20,7 @@ import { getAllHouses } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CaretLeft, CaretRight, Plus, Trash } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Plus, Trash, ArrowClockwise } from "@phosphor-icons/react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ApostasPage() {
@@ -168,9 +168,21 @@ export default function ApostasPage() {
     <MainLayout
       title="Apostas"
       actions={
-        <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
-          <Plus size={16} /> Nova aposta
-        </Button>
+        <>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={reload}
+            disabled={loading}
+            aria-label="Recarregar"
+            title="Recarregar"
+          >
+            <ArrowClockwise size={16} className={loading ? "animate-spin" : ""} />
+          </Button>
+          <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
+            <Plus size={16} /> Nova aposta
+          </Button>
+        </>
       }
     >
       <div className="space-y-4">

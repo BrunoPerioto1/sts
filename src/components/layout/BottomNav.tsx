@@ -3,10 +3,10 @@ import { SquaresFour, Receipt, Buildings, Ranking, UserCircle } from "@phosphor-
 
 const items = [
   { label: "Início", icon: SquaresFour, path: "/dashboard" },
-  { label: "Apostas", icon: Receipt, path: "/apostas" },
-  { label: "Casas", icon: Buildings, path: "/casas" },
-  { label: "Ranking", icon: Ranking, path: "/comparador" },
-  { label: "Perfil", icon: UserCircle, path: "/perfil" },
+  { label: "Apostas", icon: Receipt, path: "/bets" },
+  { label: "Casas", icon: Buildings, path: "/houses" },
+  { label: "Ranking", icon: Ranking, path: "/comparison" },
+  { label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
 
 export function BottomNav() {

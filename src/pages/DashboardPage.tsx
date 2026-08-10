@@ -46,7 +46,7 @@ function DashboardPageContent() {
           Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas.
         </p>
         <Button asChild>
-          <Link to="/apostas">Nova aposta</Link>
+          <Link to="/bets">Nova aposta</Link>
         </Button>
       </div>
     );
@@ -102,7 +102,7 @@ function DashboardPageContent() {
       <div className="card elev-sm bg-card rounded-md p-[14px_16px]">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-base font-medium">Últimas apostas</h3>
-          <Link to="/apostas" className="text-accent text-sm hover:underline">Ver todas</Link>
+          <Link to="/bets" className="text-accent text-sm hover:underline">Ver todas</Link>
         </div>
         {recentBets.length === 0 ? (
           <p className="text-[12.5px] opacity-55 py-6 text-center">Nenhuma aposta neste período.</p>

@@ -24,10 +24,10 @@ const App = () => (
           <Route path="/" element={<AuthPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-          <Route path="/perfil" element={<RequireAuth><PerfilPage /></RequireAuth>} />
-          <Route path="/apostas" element={<RequireAuth><ApostasPage /></RequireAuth>} />
-          <Route path="/casas" element={<RequireAuth><CasasPage /></RequireAuth>} />
-          <Route path="/comparador" element={<RequireAuth><ComparadorPage /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
+          <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
+          <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
+          <Route path="/comparison" element={<RequireAuth><ComparadorPage /></RequireAuth>} />
           {}
           <Route path="/logout" element={<LogoutRoute />} />
           <Route path="*" element={<NotFound />} />
