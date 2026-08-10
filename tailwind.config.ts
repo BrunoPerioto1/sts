@@ -19,64 +19,96 @@ export default {
         },
         extend: {
             colors: {
-                border: '#E4E4E7',
-                input: '#E4E4E7',
-                ring: '#2563EB',
-                background: '#FFFFFF',
-                foreground: '#09090B',
+                border: 'var(--color-divider)',
+                input: 'var(--color-divider)',
+                ring: 'var(--color-accent)',
+                background: 'var(--color-bg)',
+                foreground: 'var(--color-text)',
                 primary: {
-                    DEFAULT: '#2563EB',
-                    foreground: '#FFFFFF'
+                    DEFAULT: 'var(--color-accent)',
+                    foreground: 'var(--color-bg)'
                 },
                 secondary: {
-                    DEFAULT: '#F4F4F5',
-                    foreground: '#18181B'
+                    DEFAULT: 'var(--color-surface)',
+                    foreground: 'var(--color-text)'
                 },
                 destructive: {
-                    DEFAULT: '#EF4444',
-                    foreground: '#FAFAFA'
+                    DEFAULT: '#f0797e',
+                    foreground: 'var(--color-text)'
                 },
                 muted: {
-                    DEFAULT: '#F4F4F5',
-                    foreground: '#71717A'
+                    DEFAULT: 'var(--color-surface)',
+                    foreground: 'color-mix(in srgb, var(--color-text) 55%, transparent)'
                 },
                 accent: {
-                    DEFAULT: '#F4F4F5',
-                    foreground: '#18181B'
+                    DEFAULT: 'var(--color-accent)',
+                    foreground: 'var(--color-bg)',
+                    2: 'var(--color-accent-2)',
+                    100: 'var(--color-accent-100)',
+                    200: 'var(--color-accent-200)',
+                    300: 'var(--color-accent-300)',
+                    400: 'var(--color-accent-400)',
+                    500: 'var(--color-accent-500)',
+                    600: 'var(--color-accent-600)',
+                    700: 'var(--color-accent-700)',
+                    800: 'var(--color-accent-800)',
+                    900: 'var(--color-accent-900)'
                 },
                 popover: {
-                    DEFAULT: '#FFFFFF',
-                    foreground: '#09090B'
+                    DEFAULT: 'var(--color-surface)',
+                    foreground: 'var(--color-text)'
                 },
                 card: {
-                    DEFAULT: '#FFFFFF',
-                    foreground: '#09090B'
+                    DEFAULT: 'var(--color-surface)',
+                    foreground: 'var(--color-text)'
                 },
                 success: {
-                    DEFAULT: '#16A34A',
-                    foreground: '#FFFFFF'
+                    DEFAULT: '#4ade9e',
+                    foreground: 'var(--color-bg)'
+                },
+                positive: '#4ade9e',
+                negative: '#f0797e',
+                neutral: {
+                    100: 'var(--color-neutral-100)',
+                    200: 'var(--color-neutral-200)',
+                    300: 'var(--color-neutral-300)',
+                    400: 'var(--color-neutral-400)',
+                    500: 'var(--color-neutral-500)',
+                    600: 'var(--color-neutral-600)',
+                    700: 'var(--color-neutral-700)',
+                    800: 'var(--color-neutral-800)',
+                    900: 'var(--color-neutral-900)'
                 },
                 chart: {
-                    green: '#16A34A',
-                    red: '#EF4444',
-                    blue: '#2563EB'
+                    green: '#4ade9e',
+                    red: '#f0797e',
+                    blue: 'var(--color-accent)'
                 },
                 sidebar: {
-                    DEFAULT: '#070750',
-                    border: '#090960',
-                    'subtle-border': '#EAEAEA',
-                    foreground: '#FFFFFF',
-                    primary: '#FFFFFF',
-                    'primary-foreground': '#070750',
-                    accent: '#0A0A7A',
-                    'accent-foreground': '#FFFFFF',
-                    ring: '#FFFFFF'
+                    DEFAULT: 'var(--color-surface)',
+                    border: 'var(--color-divider)',
+                    'subtle-border': 'var(--color-divider)',
+                    foreground: 'var(--color-text)',
+                    primary: 'var(--color-accent)',
+                    'primary-foreground': 'var(--color-bg)',
+                    accent: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                    'accent-foreground': 'var(--color-accent)',
+                    ring: 'var(--color-accent)'
                 }
             },
+            fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
             borderRadius: {
-                lg: 'var(--radius)',
-                md: 'calc(var(--radius) - 2px)',
-                sm: 'calc(var(--radius) - 4px)'
+                lg: 'var(--radius-lg)',
+                md: 'var(--radius-md)',
+                sm: 'var(--radius-sm)'
+            },
+            boxShadow: {
+                sm: 'var(--shadow-sm)',
+                DEFAULT: 'var(--shadow-sm)',
+                md: 'var(--shadow-md)',
+                lg: 'var(--shadow-lg)'
             },
             keyframes: {
                 'accordion-down': {

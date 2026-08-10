@@ -1,166 +1,87 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { Badge } from "@/components/ui/badge";
-import {
-  Building2,
-  DollarSign,
-  TrendingUp,
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface HouseDetailsModalProps {
   house: HouseBalanceDto | null;
   isOpen: boolean;
   onClose: () => void;
+  onNewTransaction?: (house: HouseBalanceDto) => void;
 }
 
-export function HouseDetailsModal({
-  house,
-  isOpen,
-  onClose,
-}: HouseDetailsModalProps) {
+function formatCurrency(value: string | number) {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
+}
+
+function Group({ kicker, children }: { kicker: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-accent mb-2">{kicker}</div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12.5px]">{children}</div>
+    </div>
+  );
+}
+
+function Pair({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div>
+      <div className="opacity-58">{label}</div>
+      <div className={`font-medium tabular-nums ${valueClass ?? ""}`}>{value}</div>
+    </div>
+  );
+}
+
+export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: HouseDetailsModalProps) {
+  const navigate = useNavigate();
   if (!house) return null;
 
-  const formatCurrency = (value: string | number) => {
-    const num = typeof value === "string" ? parseFloat(value) : value;
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(num);
-  };
-
   const profit = Number(house.totalBetProfit);
-  const isProfit = profit >= 0;
+  const isProfit = Number(house.realHouseBalance) >= 0;
+  const hitRate = Number(house.totalBets) > 0 ? (Number(house.wonBets) / Number(house.totalBets)) * 100 : 0;
 
   return (
-   <Dialog open={isOpen} onOpenChange={onClose}>
-  <DialogContent className="max-w-4xl"> {/* aumenta largura */}
-    <DialogHeader>
-      <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-        <Building2 className="h-5 w-5 text-primary" />
-        {house.houseName}
-        <Badge
-          variant={isProfit ? "default" : "destructive"}
-          className="ml-2 text-xs"
-        >
-          {isProfit ? "Lucro" : "Prejuízo"}
-        </Badge>
-      </DialogTitle>
-    </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {house.houseName}
+            <Badge variant={isProfit ? "won" : "lost"}>
+              {isProfit ? `Lucro ${formatCurrency(house.realHouseBalance)}` : `Prejuízo ${formatCurrency(house.realHouseBalance)}`}
+            </Badge>
+          </DialogTitle>
+        </DialogHeader>
 
-    {/* grid responsivo */}
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-      {/* Coluna 1 */}
-      <div className="space-y-6">
-        {/* Saldos */}
-        <section>
-          <h4 className="font-semibold flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-primary" />
-            Saldos
-          </h4>
-          <ul className="divide-y divide-border rounded-md border">
-            <li className="p-2">
-              <div className="text-muted-foreground">Saldo Real</div>
-              <div className="font-semibold">{formatCurrency(house.realHouseBalance)}</div>
-            </li>
-            <li className="p-2">
-              <div className="text-muted-foreground">Saldo Sistema</div>
-              <div className="font-semibold">{formatCurrency(house.houseBalance)}</div>
-            </li>
-          </ul>
-        </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-1">
+          <div className="space-y-5">
+            <Group kicker="Saldos">
+              <Pair label="Saldo atual" value={formatCurrency(house.houseBalance)} />
+              <Pair label="Saldo real" value={formatCurrency(house.realHouseBalance)} valueClass={isProfit ? "text-positive" : "text-negative"} />
+            </Group>
 
-        {/* Apostas */}
-        <section>
-          <h4 className="font-semibold flex items-center gap-2 mb-2">
-            <Activity className="h-4 w-4 text-primary" />
-            Apostas
-          </h4>
-          <ul className="divide-y divide-border rounded-md border">
-            <li className="p-2">
-              <div className="text-muted-foreground">Total de Apostas</div>
-              <div className="font-semibold">{house.totalBets}</div>
-            </li>
-            <li className="grid grid-cols-3 divide-x divide-border">
-              <div className="p-2 text-center">
-                <div className="text-xs text-success">Ganhas</div>
-                <div className="font-semibold text-success">{house.wonBets}</div>
-              </div>
-              <div className="p-2 text-center">
-                <div className="text-xs text-destructive">Perdidas</div>
-                <div className="font-semibold text-destructive">{house.lostBets}</div>
-              </div>
-              <div className="p-2 text-center">
-                <div className="text-xs text-muted-foreground">Pendentes</div>
-                <div className="font-semibold">{house.pendingBets}</div>
-              </div>
-            </li>
-          </ul>
-        </section>
-      </div>
+            <Group kicker="Movimentação">
+              <Pair label="Depósitos" value={formatCurrency(house.totalDeposit)} />
+              <Pair label="Saques" value={formatCurrency(house.totalWithdrawal)} />
+            </Group>
+          </div>
 
-      {/* Coluna 2 */}
-      <div className="space-y-6">
-        {/* Movimentação */}
-        <section>
-          <h4 className="font-semibold flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            Movimentação
-          </h4>
-          <ul className="divide-y divide-border rounded-md border">
-            <li className="p-2">
-              <div className="text-muted-foreground">Total Apostado</div>
-              <div className="font-semibold">{formatCurrency(house.totalStake)}</div>
-            </li>
-            <li className="grid grid-cols-2 divide-x divide-border">
-              <div className="p-2">
-                <div className="flex items-center gap-1 text-xs text-success">
-                  <ArrowUpRight className="h-3 w-3" />
-                  Depósitos
-                </div>
-                <div className="font-semibold text-success">
-                  {formatCurrency(house.totalDeposit)}
-                </div>
-              </div>
-              <div className="p-2">
-                <div className="flex items-center gap-1 text-xs text-destructive">
-                  <ArrowDownRight className="h-3 w-3" />
-                  Saques
-                </div>
-                <div className="font-semibold text-destructive">
-                  {formatCurrency(house.totalWithdrawal)}
-                </div>
-              </div>
-            </li>
-          </ul>
-        </section>
+          <div className="space-y-5">
+            <Group kicker="Apostas">
+              <Pair label="Liquidadas" value={String(house.totalBets)} />
+              <Pair label="Taxa de acerto" value={`${hitRate.toFixed(1)}%`} />
+              <Pair label="ROI" value={`${Number(house.totalStake) > 0 ? ((profit / Number(house.totalStake)) * 100).toFixed(1) : "0.0"}%`} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
+              <Pair label="Lucro em apostas" value={formatCurrency(profit)} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
+            </Group>
+          </div>
+        </div>
 
-        {/* Resumo */}
-        <section>
-          <h4 className="font-semibold mb-2">Resumo</h4>
-          <ul className="divide-y divide-border rounded-md border">
-            <li className={`p-2 ${isProfit ? "bg-success/5" : "bg-destructive/5"}`}>
-              <div className="text-muted-foreground text-xs">Lucro Total</div>
-              <div className={`font-bold text-lg ${isProfit ? "text-success" : "text-destructive"}`}>
-                {formatCurrency(profit)}
-              </div>
-            </li>
-            <li className="p-2">
-              <div className="text-muted-foreground">Total de Transações</div>
-              <div className="font-semibold">{house.totalTransactions}</div>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" onClick={() => onNewTransaction?.(house)}>Nova movimentação</Button>
+          <Button onClick={() => navigate(`/bets?houseId=${house.houseId}`)}>Ver apostas</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

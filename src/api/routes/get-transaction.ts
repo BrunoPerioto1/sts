@@ -4,6 +4,7 @@ export interface CreateTransactionParams {
   houseId: number;
   transactionTypeId: number;
   value: number;
+  description?: string;
 }
 
 export async function createTransaction(transaction: CreateTransactionParams) {

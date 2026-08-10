@@ -20,9 +20,9 @@ export function EditApostaModal({ aposta, isOpen, onClose, onApostaUpdated }: Ed
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Aposta</DialogTitle>
+          <DialogTitle>Editar aposta</DialogTitle>
         </DialogHeader>
         <ApostaForm 
           onApostaAdded={handleApostaUpdated} 

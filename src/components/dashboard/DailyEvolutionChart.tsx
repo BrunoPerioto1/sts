@@ -1,16 +1,17 @@
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Cell,
   ReferenceLine,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { format, startOfWeek, startOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Segmented } from "@/components/ui/segmented";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DailyData {
@@ -20,39 +21,40 @@ interface DailyData {
 
 interface DailyEvolutionChartProps {
   data: DailyData[];
-  title?: string;
   className?: string;
+}
+
+type Grouping = "day" | "week" | "month";
+
+function groupData(data: DailyData[], grouping: Grouping) {
+  if (grouping === "day") return data;
+
+  const buckets = new Map<string, number>();
+  for (const point of data) {
+    const d = new Date(point.date);
+    const key =
+      grouping === "week"
+        ? format(startOfWeek(d, { weekStartsOn: 1 }), "yyyy-MM-dd")
+        : format(startOfMonth(d), "yyyy-MM-dd");
+    buckets.set(key, (buckets.get(key) ?? 0) + point.profitDay);
+  }
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, profitDay]) => ({ date, profitDay }));
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const value = payload[0].value;
     const isPositive = value >= 0;
-    
     return (
-      <div className="rounded-lg border bg-card p-3 shadow-lg">
-        <p className="text-sm font-medium text-card-foreground">
-          {new Date(label).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-          })}
+      <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-[12px]">
+        <p className="opacity-70 mb-1">
+          {new Date(label).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
         </p>
-        <div className="flex items-center gap-2 mt-1">
-          {isPositive ? (
-            <TrendingUp className="h-4 w-4 text-chart-green" />
-          ) : (
-            <TrendingDown className="h-4 w-4 text-chart-red" />
-          )}
-          <span className={`font-bold ${
-            isPositive ? 'text-chart-green' : 'text-chart-red'
-          }`}>
-            R$ {Math.abs(value).toFixed(2)}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {isPositive ? 'lucro' : 'prejuízo'}
-          </span>
-        </div>
+        <span className={isPositive ? "text-positive font-medium" : "text-negative font-medium"}>
+          {isPositive ? "+" : ""}R$ {value.toFixed(2)}
+        </span>
       </div>
     );
   }
@@ -60,120 +62,83 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const formatAxisValue = (value: number) => {
-  if (Math.abs(value) >= 1000) {
-    return `R$ ${(value / 1000).toFixed(1)}k`;
-  }
+  if (Math.abs(value) >= 1000) return `R$ ${(value / 1000).toFixed(1)}k`;
   return `R$ ${value.toFixed(0)}`;
 };
 
-export const DailyEvolutionChart = ({ 
-  data, 
-  title = "Ganhos Diários", 
-  className = "" 
-}: DailyEvolutionChartProps) => {
-  const totalProfit = data.reduce((sum, item) => sum + item.profitDay, 0);
-  const profitableDays = data.filter(item => item.profitDay > 0).length;
-  const totalDays = data.length;
+export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChartProps) => {
+  const [grouping, setGrouping] = useState<Grouping>("week");
   const isMobile = useIsMobile();
-  
+  const grouped = useMemo(() => groupData(data, grouping), [data, grouping]);
+
+  const totalProfit = data.reduce((sum, item) => sum + item.profitDay, 0);
+  const positiveCount = grouped.filter((d) => d.profitDay > 0).length;
+
   return (
-    <Card className={`chart-container shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-primary overflow-hidden ${className}`}>
-      <CardHeader className="pb-4 bg-muted/20">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <div className="p-2 rounded-full bg-primary/10">
-              <DollarSign className="h-5 w-5 text-primary" />
-            </div>
-            {title}
-          </CardTitle>
-          <div className="text-right">
-            <p className={`text-2xl font-bold ${totalProfit >= 0 ? "text-success" : "text-destructive"}`}>
-              {totalProfit >= 0 ? "+" : ""}R$ {totalProfit.toFixed(2)}
-            </p>
-            <p className="text-sm text-muted-foreground font-medium">
-              {profitableDays}/{totalDays} dias positivos
-            </p>
-          </div>
+    <div className={`card elev-sm bg-card rounded-md p-[14px_16px] ${className}`}>
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div>
+          <h3 className="text-base font-medium">Resultado diário</h3>
+          <p className="text-[11.5px] opacity-55">Lucro líquido por período selecionado</p>
         </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <div className="chart-wrapper">
-          <ResponsiveContainer width="100%" height={isMobile ? 300 : 460}>
-              <BarChart 
-              data={data} 
-              margin={{ top: 20, right: isMobile ? 10 : 30, left: isMobile ? 10 : 20, bottom: isMobile ? 40 : 5 }}
-              barCategoryGap={isMobile ? 8 : 16}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                opacity={0.3}
-              />
-              <XAxis
-                dataKey="date"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                  })
-                }
-              />
-              <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={formatAxisValue}
-                domain={[(dataMin: number) => Math.min(dataMin, -300), (dataMax: number) => Math.max(dataMax * 1.1, 200)]}
-              />
-              <Tooltip 
-                content={<CustomTooltip />}
-                cursor={{
-                  fill: 'rgba(0, 0, 0, 0.08)'
-                }}
-              />
+        <Segmented
+          options={[
+            { value: "day", label: "Dia" },
+            { value: "week", label: "Semana" },
+            { value: "month", label: "Mês" },
+          ]}
+          value={grouping}
+          onChange={(v) => setGrouping(v as Grouping)}
+        />
+      </div>
 
-              <ReferenceLine 
-                y={0} 
-                stroke="hsl(var(--border))" 
-                strokeWidth={2} 
-                strokeDasharray="5 5"
-              />
+      <div style={{ height: isMobile ? 180 : 212 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={grouped} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={isMobile ? 4 : 8}>
+            <XAxis
+              dataKey="date"
+              stroke="var(--color-text)"
+              opacity={0.45}
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) =>
+                format(new Date(value), grouping === "month" ? "MMM" : "dd/MM", { locale: ptBR })
+              }
+            />
+            <YAxis
+              stroke="var(--color-text)"
+              opacity={0.45}
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={formatAxisValue}
+              width={48}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "color-mix(in srgb, var(--color-text) 6%, transparent)" }} />
+            <ReferenceLine y={0} stroke="var(--color-divider)" strokeWidth={1} />
+            <Bar dataKey="profitDay" radius={[3, 3, 0, 0]}>
+              {grouped.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.profitDay >= 0 ? "#4ade9e" : "#f0797e"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-              <Bar
-                dataKey="profitDay"
-                name="Lucro Diário"
-                radius={[6, 6, 0, 0]}
-                barSize={40}
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.profitDay >= 0 
-                      ? '#16A34A'  // verde
-                      : '#EF4444'  // vermelho
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-[11px]">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-[6px]">
+            <span className="w-2 h-2 rounded-sm bg-positive inline-block" /> Período positivo
+          </span>
+          <span className="flex items-center gap-[6px]">
+            <span className="w-2 h-2 rounded-sm bg-negative inline-block" /> Período negativo
+          </span>
         </div>
-        
-        <div className="flex items-center justify-center gap-8 mt-5 pt-5 border-t">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-md bg-[#16A34A]"></div>
-            <span className="text-sm font-medium text-success">Lucro</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-md bg-[#EF4444]"></div>
-            <span className="text-sm font-medium text-destructive">Prejuízo</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        <span className={totalProfit >= 0 ? "text-positive font-medium" : "text-negative font-medium"}>
+          {totalProfit >= 0 ? "+" : ""}R$ {totalProfit.toFixed(2)} · {positiveCount}/{grouped.length} positivos
+        </span>
+      </div>
+    </div>
   );
 };
