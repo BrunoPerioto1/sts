@@ -58,6 +58,7 @@ export interface BetItem {
   market: string;
   sport: string;
   profit: string | number | null;
+  cashoutValue?: string | number | null;
   betTime: string | Date;
   resultId: number;
   resultName: string;
@@ -94,11 +95,15 @@ export enum ResultIdEnum {
   WON = 1,
   LOST = 2,
   CANCELED = 3,
+  HALF_WON = 4,
+  HALF_LOST = 5,
+  CASHOUT = 6,
   PENDING = 9
 }
 
 export interface FinalizarApostaDto {
   resultId: ResultIdEnum;
+  cashoutValue?: number;
 }
 
 export interface FinalizarMultiplasDto {
