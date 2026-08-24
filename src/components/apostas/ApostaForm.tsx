@@ -97,8 +97,8 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
         </div>
 
         <div className="col-span-2 space-y-1.5">
-          <Label htmlFor="mercado" className="text-xs">Mercado *</Label>
-          <Input id="mercado" placeholder="Ex: Vitória do Palmeiras" value={formData.market} onChange={(e) => setFormData({ ...formData, market: e.target.value })} />
+          <Label htmlFor="mercado" className="text-xs">Mercado / Aposta *</Label>
+          <Input id="mercado" placeholder="Ex: Resultado Final - Vitória do Palmeiras" value={formData.market} onChange={(e) => setFormData({ ...formData, market: e.target.value })} />
         </div>
 
         <div className="space-y-1.5">

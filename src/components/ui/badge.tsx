@@ -16,6 +16,9 @@ const badgeVariants = cva(
         lost: "border-transparent bg-negative/[0.16] text-negative",
         pending: "border-transparent bg-accent-800 text-accent-100",
         canceled: "border-transparent bg-neutral-800 text-neutral-300",
+        halfWon: "border-transparent bg-positive/[0.10] text-positive",
+        halfLost: "border-transparent bg-negative/[0.10] text-negative",
+        cashout: "border-transparent bg-accent-700 text-accent-100",
       },
     },
     defaultVariants: {

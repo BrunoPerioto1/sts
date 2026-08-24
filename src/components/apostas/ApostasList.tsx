@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -11,6 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DotsThreeOutline } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,20 +25,16 @@ interface ApostasListProps {
   onEdit?: (aposta: BetItem) => void;
   onDelete?: (id: number) => void;
   onDuplicate?: (aposta: BetItem) => void;
-  onFinalize?: (id: number, resultId: ResultIdEnum) => void;
+  onFinalize?: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
   selectedBets?: number[];
   onSelectBet?: (betId: number) => void;
   showCheckboxes?: boolean;
   isLoading?: boolean;
 }
 
-function mapResultToStatus(aposta: BetItem): "ganha" | "perdida" | "pendente" | "cancelada" {
-  if (aposta.resultName) {
-    const rn = aposta.resultName.toLowerCase();
-    if (rn.includes("won") || rn.includes("ganh")) return "ganha";
-    if (rn.includes("lost") || rn.includes("perdid")) return "perdida";
-    if (rn.includes("cancel")) return "cancelada";
-  }
+type Status = "ganha" | "perdida" | "pendente" | "cancelada" | "meiaGanha" | "meiaPerdida" | "cashout";
+
+function mapResultToStatus(aposta: BetItem): Status {
   switch (aposta.resultId) {
     case ResultIdEnum.WON:
       return "ganha";
@@ -42,6 +42,12 @@ function mapResultToStatus(aposta: BetItem): "ganha" | "perdida" | "pendente" | 
       return "perdida";
     case ResultIdEnum.CANCELED:
       return "cancelada";
+    case ResultIdEnum.HALF_WON:
+      return "meiaGanha";
+    case ResultIdEnum.HALF_LOST:
+      return "meiaPerdida";
+    case ResultIdEnum.CASHOUT:
+      return "cashout";
     default:
       return "pendente";
   }
@@ -52,6 +58,9 @@ const statusVariant = {
   perdida: "lost",
   pendente: "pending",
   cancelada: "canceled",
+  meiaGanha: "halfWon",
+  meiaPerdida: "halfLost",
+  cashout: "cashout",
 } as const;
 
 const statusLabel = {
@@ -59,6 +68,9 @@ const statusLabel = {
   perdida: "Perdida",
   pendente: "Pendente",
   cancelada: "Cancelada",
+  meiaGanha: "Meia Ganha",
+  meiaPerdida: "Meia Perdida",
+  cashout: "Cashout",
 };
 
 function eventTextClass(text: string) {
@@ -80,6 +92,53 @@ function ReturnValue({ aposta }: { aposta: BetItem }) {
   );
 }
 
+function CashoutDialog({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (value: number) => void;
+}) {
+  const [value, setValue] = useState("");
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Cashout</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor="cashout-value" className="text-xs">Valor recebido (R$)</Label>
+          <Input
+            id="cashout-value"
+            type="number"
+            step="0.01"
+            autoFocus
+            placeholder="Ex: 45.00"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button
+            disabled={!value || Number.isNaN(Number(value))}
+            onClick={() => {
+              onConfirm(Number(value));
+              setValue("");
+              onClose();
+            }}
+          >
+            Confirmar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function RowActions({
   aposta,
   onEdit,
@@ -91,8 +150,10 @@ function RowActions({
   onEdit?: (a: BetItem) => void;
   onDelete?: (id: number) => void;
   onDuplicate?: (a: BetItem) => void;
-  onFinalize?: (id: number, resultId: ResultIdEnum) => void;
+  onFinalize?: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
 }) {
+  const [cashoutOpen, setCashoutOpen] = useState(false);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -100,8 +161,17 @@ function RowActions({
           <DotsThreeOutline size={18} weight="fill" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {onEdit && <DropdownMenuItem onClick={() => onEdit(aposta)}>Editar</DropdownMenuItem>}
+      <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+        {onEdit && (
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setTimeout(() => onEdit(aposta), 0);
+            }}
+          >
+            Editar
+          </DropdownMenuItem>
+        )}
         {onDuplicate && <DropdownMenuItem onClick={() => onDuplicate(aposta)}>Duplicar</DropdownMenuItem>}
         {onFinalize && (
           <DropdownMenuSub>
@@ -109,6 +179,9 @@ function RowActions({
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.WON)}>Ganha</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.LOST)}>Perdida</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.HALF_WON)}>Meia Ganha</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.HALF_LOST)}>Meia Perdida</DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setCashoutOpen(true); }}>Cashout</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.CANCELED)}>Cancelada</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
@@ -122,6 +195,13 @@ function RowActions({
           </>
         )}
       </DropdownMenuContent>
+      {onFinalize && (
+        <CashoutDialog
+          open={cashoutOpen}
+          onClose={() => setCashoutOpen(false)}
+          onConfirm={(value) => onFinalize(aposta.id, ResultIdEnum.CASHOUT, value)}
+        />
+      )}
     </DropdownMenu>
   );
 }

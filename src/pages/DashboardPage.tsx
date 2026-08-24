@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Info, CalendarSlash } from "@phosphor-icons/react";
+import { CalendarSlash } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { DashboardFilter } from "@/components/dashboard/DashboardFilter";
 import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
@@ -12,13 +12,8 @@ import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { getBets, type BetItem } from "@/api/routes/get-bets";
 import { Spinner } from "@/components/ui/spinner";
 
-function formatDate(iso: string | null) {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-}
-
 function DashboardPageContent() {
-  const { filters, preset, setPreset, setCustomRange, setHouseId, lastBetDate, hasNoBets, ready } = useDashboardFilters();
+  const { filters, preset, setPreset, setCustomRange, setHouseId, hasNoBets, ready } = useDashboardFilters();
   const { houses, metrics, dailyData, loading, reload } = useDashboardData(filters);
   const [recentBets, setRecentBets] = useState<BetItem[]>([]);
 
@@ -57,34 +52,15 @@ function DashboardPageContent() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented
           options={[
-            { value: "lastWithData", label: "Com dados" },
+            { value: "currentMonth", label: "Mês atual" },
+            { value: "60d", label: "60 dias" },
             { value: "90d", label: "90 dias" },
             { value: "allTime", label: "Desde sempre" },
           ]}
-          value={preset === "custom" ? "lastWithData" : preset}
+          value={preset === "custom" ? "currentMonth" : preset}
           onChange={(v) => setPreset(v as DatePreset)}
         />
       </div>
-
-      {preset === "lastWithData" && lastBetDate && (
-        <div
-          className="flex items-center justify-between gap-3 rounded-md p-3 text-[12.5px]"
-          style={{
-            background: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
-            boxShadow: "inset 2px 0 0 var(--color-accent)",
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <Info size={16} className="text-accent shrink-0" />
-            <span>
-              Mostrando <strong>o último período com apostas registradas</strong> ({formatDate(filters.startDate)} – {formatDate(filters.endDate)}).
-            </span>
-          </div>
-          <button onClick={() => setPreset("allTime")} className="text-accent hover:underline whitespace-nowrap">
-            Ver desde sempre
-          </button>
-        </div>
-      )}
 
       <DashboardFilter
         houses={houses.map((h) => ({ id: h.id, name: h.name }))}

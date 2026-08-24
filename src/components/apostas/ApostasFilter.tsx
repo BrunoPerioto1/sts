@@ -17,6 +17,8 @@ interface ApostasFilterProps {
   onExportCsv?: () => void;
   className?: string;
   isLoading?: boolean;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 const statusLabels: Record<string, string> = {
@@ -24,6 +26,9 @@ const statusLabels: Record<string, string> = {
   "1": "Ganha",
   "2": "Perdida",
   "3": "Cancelada",
+  "4": "Meia Ganha",
+  "5": "Meia Perdida",
+  "6": "Cashout",
 };
 
 export function ApostasFilter({
@@ -37,10 +42,12 @@ export function ApostasFilter({
   onExportCsv,
   className,
   isLoading = false,
+  initialDateFrom = "",
+  initialDateTo = "",
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(initialDateFrom);
+  const [dateTo, setDateTo] = useState(initialDateTo);
   const [status, setStatus] = useState("0");
   const [houseId, setHouseId] = useState("0");
 
@@ -87,6 +94,9 @@ export function ApostasFilter({
             <SelectItem value="9">Pendente</SelectItem>
             <SelectItem value="1">Ganha</SelectItem>
             <SelectItem value="2">Perdida</SelectItem>
+            <SelectItem value="4">Meia Ganha</SelectItem>
+            <SelectItem value="5">Meia Perdida</SelectItem>
+            <SelectItem value="6">Cashout</SelectItem>
             <SelectItem value="3">Cancelada</SelectItem>
           </SelectContent>
         </Select>

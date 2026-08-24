@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { format, startOfMonth } from "date-fns";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasList } from "@/components/apostas/ApostasList";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
@@ -37,8 +38,8 @@ export default function ApostasPage() {
     return fromUrl ? Number(fromUrl) : undefined;
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(() => format(startOfMonth(new Date()), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage] = useState(30);
@@ -110,9 +111,9 @@ export default function ApostasPage() {
     }
   };
 
-  const handleFinalize = async (id: number, resultId: ResultIdEnum) => {
+  const handleFinalize = async (id: number, resultId: ResultIdEnum, cashoutValue?: number) => {
     try {
-      await finalizeBet(id, { resultId });
+      await finalizeBet(id, { resultId, cashoutValue });
       await reload();
       toast({ title: "Aposta liquidada" });
     } catch (e: any) {
@@ -190,6 +191,8 @@ export default function ApostasPage() {
 
         <ApostasFilter
           houses={houses}
+          initialDateFrom={startDate}
+          initialDateTo={endDate}
           onSearch={(term) => { setSearchTerm(term); setPage(1); }}
           onFilterStatus={(status) => { setStatusFilter(status === "0" ? "" : status); setPage(1); }}
           onFilterHouse={(id) => { setHouseFilter(id === "0" ? undefined : Number(id)); setPage(1); }}
@@ -219,6 +222,8 @@ export default function ApostasPage() {
                     <SelectItem value={String(ResultIdEnum.PENDING)}>Pendente</SelectItem>
                     <SelectItem value={String(ResultIdEnum.WON)}>Ganha</SelectItem>
                     <SelectItem value={String(ResultIdEnum.LOST)}>Perdida</SelectItem>
+                    <SelectItem value={String(ResultIdEnum.HALF_WON)}>Meia Ganha</SelectItem>
+                    <SelectItem value={String(ResultIdEnum.HALF_LOST)}>Meia Perdida</SelectItem>
                     <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                   </SelectContent>
                 </Select>
