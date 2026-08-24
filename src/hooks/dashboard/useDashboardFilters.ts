@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { format, subDays } from "date-fns";
+import { format, startOfMonth, subDays } from "date-fns";
 import { getDashboardDateRange } from "@/api/routes/get-dashboard-daterange";
 
-export type DatePreset = "lastWithData" | "90d" | "allTime" | "custom";
+export type DatePreset = "currentMonth" | "60d" | "90d" | "allTime" | "custom";
 
 const PRESET_KEY = "dashboard_date_preset";
 
@@ -13,9 +13,11 @@ interface Filters {
 }
 
 export function useDashboardFilters() {
-  const [preset, setPresetState] = useState<DatePreset>(
-    () => (localStorage.getItem(PRESET_KEY) as DatePreset) || "lastWithData"
-  );
+  const validPresets: DatePreset[] = ["currentMonth", "60d", "90d", "allTime", "custom"];
+  const [preset, setPresetState] = useState<DatePreset>(() => {
+    const stored = localStorage.getItem(PRESET_KEY) as DatePreset | null;
+    return stored && validPresets.includes(stored) ? stored : "currentMonth";
+  });
   const [lastBetDate, setLastBetDate] = useState<string | null>(null);
   const [firstBetDate, setFirstBetDate] = useState<string | null>(null);
   const [hasNoBets, setHasNoBets] = useState(false);
@@ -23,7 +25,7 @@ export function useDashboardFilters() {
 
   const [filters, setFiltersState] = useState<Filters>({
     houseId: undefined,
-    startDate: format(subDays(new Date(), 90), "yyyy-MM-dd"),
+    startDate: format(startOfMonth(new Date()), "yyyy-MM-dd"),
     endDate: format(new Date(), "yyyy-MM-dd"),
   });
 
@@ -33,29 +35,34 @@ export function useDashboardFilters() {
         setFirstBetDate(firstBetDate);
         setLastBetDate(lastBetDate);
         setHasNoBets(!lastBetDate);
-
-        const anchor = lastBetDate ? new Date(lastBetDate) : new Date();
-        applyPreset(preset, anchor);
+        applyPreset(preset);
       })
       .catch(() => {
-        applyPreset(preset, new Date());
+        applyPreset(preset);
       })
       .finally(() => setReady(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function applyPreset(p: DatePreset, anchor: Date) {
-    if (p === "90d" || p === "lastWithData") {
+  function applyPreset(p: DatePreset) {
+    const today = new Date();
+    if (p === "currentMonth") {
       setFiltersState((prev) => ({
         ...prev,
-        startDate: format(subDays(anchor, 90), "yyyy-MM-dd"),
-        endDate: format(anchor, "yyyy-MM-dd"),
+        startDate: format(startOfMonth(today), "yyyy-MM-dd"),
+        endDate: format(today, "yyyy-MM-dd"),
+      }));
+    } else if (p === "60d" || p === "90d") {
+      setFiltersState((prev) => ({
+        ...prev,
+        startDate: format(subDays(today, p === "60d" ? 60 : 90), "yyyy-MM-dd"),
+        endDate: format(today, "yyyy-MM-dd"),
       }));
     } else if (p === "allTime") {
       setFiltersState((prev) => ({
         ...prev,
         startDate: "2000-01-01",
-        endDate: format(new Date(), "yyyy-MM-dd"),
+        endDate: format(today, "yyyy-MM-dd"),
       }));
     }
   }
@@ -63,7 +70,7 @@ export function useDashboardFilters() {
   const setPreset = (p: DatePreset) => {
     setPresetState(p);
     localStorage.setItem(PRESET_KEY, p);
-    applyPreset(p, lastBetDate ? new Date(lastBetDate) : new Date());
+    applyPreset(p);
   };
 
   const setCustomRange = (startDate: string, endDate: string) => {

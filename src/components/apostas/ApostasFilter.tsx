@@ -17,6 +17,8 @@ interface ApostasFilterProps {
   onExportCsv?: () => void;
   className?: string;
   isLoading?: boolean;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 const statusLabels: Record<string, string> = {
@@ -40,10 +42,12 @@ export function ApostasFilter({
   onExportCsv,
   className,
   isLoading = false,
+  initialDateFrom = "",
+  initialDateTo = "",
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(initialDateFrom);
+  const [dateTo, setDateTo] = useState(initialDateTo);
   const [status, setStatus] = useState("0");
   const [houseId, setHouseId] = useState("0");
 
