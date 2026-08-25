@@ -84,11 +84,11 @@ export function ApostasFilter({
           />
         </div>
 
-        <DateField value={dateFrom} onChange={(v) => { setDateFrom(v); onDateFromChange?.(v); }} className="w-[150px]" disabled={isLoading} />
-        <DateField value={dateTo} onChange={(v) => { setDateTo(v); onDateToChange?.(v); }} className="w-[150px]" disabled={isLoading} />
+        <DateField value={dateFrom} onChange={(v) => { setDateFrom(v); onDateFromChange?.(v); }} className="w-auto flex-1 min-w-[120px] sm:flex-none sm:w-[150px]" disabled={isLoading} />
+        <DateField value={dateTo} onChange={(v) => { setDateTo(v); onDateToChange?.(v); }} className="w-auto flex-1 min-w-[120px] sm:flex-none sm:w-[150px]" disabled={isLoading} />
 
         <Select value={status} onValueChange={(v) => { setStatus(v); onFilterStatus?.(v); }} disabled={isLoading}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-auto flex-1 min-w-[130px] sm:flex-none sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="0">Todos os status</SelectItem>
             <SelectItem value="9">Pendente</SelectItem>
@@ -102,7 +102,7 @@ export function ApostasFilter({
         </Select>
 
         <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Casa" /></SelectTrigger>
+          <SelectTrigger className="w-auto flex-1 min-w-[130px] sm:flex-none sm:w-[160px]"><SelectValue placeholder="Casa" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="0">Todas as casas</SelectItem>
             {houses.map((h) => (
@@ -112,7 +112,7 @@ export function ApostasFilter({
         </Select>
 
         {onExportCsv && (
-          <Button variant="ghost" onClick={onExportCsv} className="ml-auto gap-2">
+          <Button variant="ghost" size="sm" onClick={onExportCsv} className="w-full sm:w-auto sm:ml-auto gap-2">
             <DownloadSimple size={16} /> Exportar CSV
           </Button>
         )}

@@ -21,10 +21,12 @@ import { getAllHouses } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CaretLeft, CaretRight, Plus, Trash, ArrowClockwise } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Plus, Trash, ArrowClockwise, CaretDown } from "@phosphor-icons/react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ApostasPage() {
+  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const [apostas, setApostas] = useState<BetItem[]>([]);
   const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
@@ -53,10 +55,10 @@ export default function ApostasPage() {
     getAllHouses().then((data) => setHouses(data.map((h) => ({ id: h.id, name: h.name })))).catch(() => undefined);
   }, []);
 
-  const fetchFilteredBets = async () => {
+  const fetchFilteredBets = async (pageArg: number, append: boolean) => {
     setLoading(true);
     try {
-      const params: any = { page, perPage };
+      const params: any = { page: pageArg, perPage };
       if (statusFilter) params.resultId = statusFilter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
@@ -64,9 +66,10 @@ export default function ApostasPage() {
       const response: PaginatedBetsResponseDto = await fetchBets(params);
       let data = Array.isArray(response?.data) ? response.data : [];
       if (houseFilter) data = data.filter((b) => b.houseId === houseFilter);
-      setApostas(data);
+      setApostas((prev) => (append ? [...prev, ...data] : data));
       setTotalPages(response?.totalPages || 1);
       setTotal(response?.total || 0);
+      setPage(pageArg);
     } finally {
       setLoading(false);
     }
@@ -74,12 +77,13 @@ export default function ApostasPage() {
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(fetchFilteredBets, 300);
+    searchTimeout.current = setTimeout(() => fetchFilteredBets(1, false), 300);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, statusFilter, houseFilter, startDate, endDate, page, perPage]);
+  }, [searchTerm, statusFilter, houseFilter, startDate, endDate]);
 
-  const reload = () => fetchFilteredBets();
+  const reload = () => fetchFilteredBets(1, false);
+  const handleLoadMore = () => fetchFilteredBets(page + 1, true);
 
   const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
@@ -259,13 +263,23 @@ export default function ApostasPage() {
             showCheckboxes
           />
 
+          {isMobile ? (
+            apostas.length > 0 && page < totalPages && (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loading} className="gap-2">
+                  <CaretDown size={14} />
+                  Carregar mais ({apostas.length}/{total})
+                </Button>
+              </div>
+            )
+          ) : (
           <div className="flex items-center justify-between pt-2">
             <p className="text-[12.5px] opacity-45">
               {apostas.length > 0 ? `${(page - 1) * perPage + 1}–${(page - 1) * perPage + apostas.length}` : "0"} de {total}
             </p>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => page > 1 && setPage(page - 1)}
+                onClick={() => page > 1 && fetchFilteredBets(page - 1, false)}
                 disabled={page <= 1}
                 className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-foreground/[0.07] disabled:opacity-35"
               >
@@ -275,7 +289,7 @@ export default function ApostasPage() {
                 <span key={p} className="flex items-center">
                   {i > 0 && pageWindow[i - 1] !== p - 1 && <span className="px-1 opacity-35 text-xs">…</span>}
                   <button
-                    onClick={() => setPage(p)}
+                    onClick={() => fetchFilteredBets(p, false)}
                     className="w-8 h-8 rounded-md text-[13px]"
                     style={
                       p === page
@@ -288,7 +302,7 @@ export default function ApostasPage() {
                 </span>
               ))}
               <button
-                onClick={() => page < totalPages && setPage(page + 1)}
+                onClick={() => page < totalPages && fetchFilteredBets(page + 1, false)}
                 disabled={page >= totalPages}
                 className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-foreground/[0.07] disabled:opacity-35"
               >
@@ -296,9 +310,10 @@ export default function ApostasPage() {
               </button>
             </div>
           </div>
+          )}
         </div>
 
-        <ApostaFormModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} onApostaAdded={() => { setCreateModalOpen(false); setPage(1); reload(); }} />
+        <ApostaFormModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} onApostaAdded={() => { setCreateModalOpen(false); reload(); }} />
         {editAposta && (
           <EditApostaModal
             aposta={editAposta}

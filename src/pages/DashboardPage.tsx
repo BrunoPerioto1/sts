@@ -11,11 +11,40 @@ import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/useDashb
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { getBets, type BetItem } from "@/api/routes/get-bets";
 import { Spinner } from "@/components/ui/spinner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+function RecentBetRow({ bet }: { bet: BetItem }) {
+  const profit = bet.profit != null ? Number(bet.profit) : null;
+  const date = new Date(bet.betTime);
+  return (
+    <div className="bg-card rounded-md p-3 flex flex-col gap-2" style={{ boxShadow: "var(--shadow-sm)" }}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-[13.5px] leading-snug truncate">{bet.game}</p>
+        <span
+          className={cn(
+            "tabular-nums text-[13px] font-medium shrink-0 whitespace-nowrap",
+            profit == null ? "opacity-35" : profit >= 0 ? "text-positive" : "text-negative",
+          )}
+        >
+          {profit == null ? "—" : `${profit >= 0 ? "+" : ""}R$ ${profit.toFixed(2)}`}
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-[11.5px] opacity-60">
+        <span>
+          {date.toLocaleDateString("pt-BR")} {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        </span>
+        <span>{bet.houseName ?? "—"} · odd {Number(bet.odd).toFixed(2)} · R$ {Number(bet.stake).toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
 
 function DashboardPageContent() {
   const { filters, preset, setPreset, setCustomRange, setHouseId, hasNoBets, ready } = useDashboardFilters();
   const { houses, metrics, dailyData, loading, reload } = useDashboardData(filters);
   const [recentBets, setRecentBets] = useState<BetItem[]>([]);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!ready) return;
@@ -82,39 +111,47 @@ function DashboardPageContent() {
         </div>
         {recentBets.length === 0 ? (
           <p className="text-[12.5px] opacity-55 py-6 text-center">Nenhuma aposta neste período.</p>
+        ) : isMobile ? (
+          <div className="space-y-3">
+            {recentBets.map((bet) => (
+              <RecentBetRow key={bet.id} bet={bet} />
+            ))}
+          </div>
         ) : (
-          <table className="table w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Data</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Evento</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Casa</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Odd</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Stake</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Retorno</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentBets.map((bet) => {
-                const profit = bet.profit != null ? Number(bet.profit) : null;
-                return (
-                  <tr key={bet.id} className="hover:bg-foreground/[0.04]">
-                    <td className="py-2 opacity-60 whitespace-nowrap">
-                      {new Date(bet.betTime).toLocaleDateString("pt-BR")}{" "}
-                      {new Date(bet.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </td>
-                    <td className="py-2">{bet.game}</td>
-                    <td className="py-2 opacity-80">{bet.houseName ?? "—"}</td>
-                    <td className="py-2 text-right tabular-nums">{Number(bet.odd).toFixed(2)}</td>
-                    <td className="py-2 text-right tabular-nums">R$ {Number(bet.stake).toFixed(2)}</td>
-                    <td className={`py-2 text-right tabular-nums ${profit == null ? "opacity-35" : profit >= 0 ? "text-positive" : "text-negative"}`}>
-                      {profit == null ? "—" : `${profit >= 0 ? "+" : ""}R$ ${profit.toFixed(2)}`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="table w-full text-sm">
+              <thead>
+                <tr className="text-left">
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Data</th>
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Evento</th>
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Casa</th>
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Odd</th>
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Stake</th>
+                  <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Retorno</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentBets.map((bet) => {
+                  const profit = bet.profit != null ? Number(bet.profit) : null;
+                  return (
+                    <tr key={bet.id} className="hover:bg-foreground/[0.04]">
+                      <td className="py-2 opacity-60 whitespace-nowrap">
+                        {new Date(bet.betTime).toLocaleDateString("pt-BR")}{" "}
+                        {new Date(bet.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      <td className="py-2">{bet.game}</td>
+                      <td className="py-2 opacity-80">{bet.houseName ?? "—"}</td>
+                      <td className="py-2 text-right tabular-nums">{Number(bet.odd).toFixed(2)}</td>
+                      <td className="py-2 text-right tabular-nums">R$ {Number(bet.stake).toFixed(2)}</td>
+                      <td className={`py-2 text-right tabular-nums ${profit == null ? "opacity-35" : profit >= 0 ? "text-positive" : "text-negative"}`}>
+                        {profit == null ? "—" : `${profit >= 0 ? "+" : ""}R$ ${profit.toFixed(2)}`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

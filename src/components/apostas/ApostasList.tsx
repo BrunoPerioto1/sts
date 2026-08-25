@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DotsThreeOutline } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -79,16 +80,126 @@ function eventTextClass(text: string) {
   return "text-[14px]";
 }
 
-function ReturnValue({ aposta }: { aposta: BetItem }) {
+function ReturnValue({ aposta, className }: { aposta: BetItem; className?: string }) {
   const status = mapResultToStatus(aposta);
-  if (status === "pendente") return <span className="opacity-35 tabular-nums">—</span>;
+  if (status === "pendente") return <span className={cn("opacity-35 tabular-nums whitespace-nowrap", className)}>—</span>;
   if (status === "cancelada")
-    return <span className="opacity-55 tabular-nums">R$ {Number(aposta.stake ?? 0).toFixed(2)}</span>;
+    return <span className={cn("opacity-55 tabular-nums whitespace-nowrap", className)}>R$ {Number(aposta.stake ?? 0).toFixed(2)}</span>;
   const lucro = Number(aposta.profit ?? 0);
   return (
-    <span className={cn("tabular-nums font-medium", lucro >= 0 ? "text-positive" : "text-negative")}>
+    <span className={cn("tabular-nums font-medium whitespace-nowrap", lucro >= 0 ? "text-positive" : "text-negative", className)}>
       {lucro >= 0 ? "+" : ""}R$ {lucro.toFixed(2)}
     </span>
+  );
+}
+
+function ApostaDetailSheet({
+  aposta,
+  onClose,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onFinalize,
+}: {
+  aposta: BetItem | null;
+  onClose: () => void;
+  onEdit?: (a: BetItem) => void;
+  onDelete?: (id: number) => void;
+  onDuplicate?: (a: BetItem) => void;
+  onFinalize?: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
+}) {
+  const [cashoutOpen, setCashoutOpen] = useState(false);
+
+  if (!aposta) return null;
+  const status = mapResultToStatus(aposta);
+  const date = new Date(aposta.betTime);
+  const stake = Number(aposta.stake);
+  const profit = aposta.profit != null ? Number(aposta.profit) : null;
+  const ganho = profit != null ? stake + profit : null;
+
+  return (
+    <Sheet open={!!aposta} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="bottom" className="rounded-t-lg max-h-[85vh] overflow-y-auto space-y-4">
+        <SheetHeader>
+          <SheetTitle className="pr-6 text-left leading-snug">{aposta.game}</SheetTitle>
+        </SheetHeader>
+
+        <div className="flex items-center gap-2 text-[12.5px] opacity-60">
+          <span>{date.toLocaleDateString("pt-BR")} · {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 border border-border rounded-md p-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Cotação</p>
+            <p className="text-[14px] font-medium tabular-nums">{Number(aposta.odd).toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Valor</p>
+            <p className="text-[14px] font-medium tabular-nums">R$ {stake.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Ganho</p>
+            <p className="text-[14px] font-medium tabular-nums">{ganho != null ? `R$ ${ganho.toFixed(2)}` : "—"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Lucro</p>
+            <p className={cn("text-[14px] font-medium tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
+              {profit != null ? `${profit >= 0 ? "+" : ""}R$ ${profit.toFixed(2)}` : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1.5">Seleção</p>
+          <div className="flex items-start justify-between gap-2 border border-border rounded-md p-2.5">
+            <div className="min-w-0">
+              <p className="text-[13px] leading-snug">{aposta.market}</p>
+              {aposta.houseName && <p className="text-[11.5px] opacity-55">{aposta.houseName}</p>}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[12.5px] tabular-nums opacity-70 border border-border rounded-[5px] px-[8px] py-[2px]">
+                {Number(aposta.odd).toFixed(2)}
+              </span>
+              <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
+            </div>
+          </div>
+        </div>
+
+        {onFinalize && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1.5">Liquidar</p>
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.WON); onClose(); }}>Ganha</Button>
+              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.LOST); onClose(); }}>Perdida</Button>
+              <Button variant="outline" onClick={() => setCashoutOpen(true)}>Cashout</Button>
+              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.HALF_WON); onClose(); }}>Meia Ganha</Button>
+              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.HALF_LOST); onClose(); }}>Meia Perdida</Button>
+              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.CANCELED); onClose(); }}>Cancelada</Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          {onEdit && (
+            <Button variant="outline" onClick={() => { onEdit(aposta); onClose(); }}>Editar</Button>
+          )}
+          {onDuplicate && (
+            <Button variant="outline" onClick={() => { onDuplicate(aposta); onClose(); }}>Duplicar</Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" onClick={() => { onDelete(aposta.id); onClose(); }}>Excluir</Button>
+          )}
+        </div>
+
+        {onFinalize && (
+          <CashoutDialog
+            open={cashoutOpen}
+            onClose={() => setCashoutOpen(false)}
+            onConfirm={(value) => { onFinalize(aposta.id, ResultIdEnum.CASHOUT, value); onClose(); }}
+          />
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -218,6 +329,7 @@ export function ApostasList({
   isLoading = false,
 }: ApostasListProps) {
   const isMobile = useIsMobile();
+  const [detailAposta, setDetailAposta] = useState<BetItem | null>(null);
 
   if (isLoading) {
     return (
@@ -235,34 +347,54 @@ export function ApostasList({
 
   if (isMobile) {
     return (
-      <div className="space-y-2">
-        {apostas.map((aposta) => {
-          const status = mapResultToStatus(aposta);
-          return (
-            <div key={aposta.id} className="card bg-card rounded-md p-3 flex flex-col gap-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  {showCheckboxes && onSelectBet && (
-                    <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
-                  )}
+      <>
+        <div className="space-y-3">
+          {apostas.map((aposta) => {
+            const status = mapResultToStatus(aposta);
+            const time = new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+            return (
+              <div
+                key={aposta.id}
+                className="bg-card rounded-md p-3 flex flex-col gap-2 active:opacity-80"
+                style={{ boxShadow: "var(--shadow-sm)" }}
+                onClick={() => setDetailAposta(aposta)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {showCheckboxes && onSelectBet && (
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
+                      </span>
+                    )}
+                    <span className="text-[11px] opacity-50 tabular-nums shrink-0">{time}</span>
+                    {aposta.houseName && (
+                      <span className="text-[10.5px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">
+                        {aposta.houseName}
+                      </span>
+                    )}
+                  </div>
+                  <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
+                </div>
+                <div className="flex items-end justify-between gap-2">
                   <div className="min-w-0">
                     <p className={cn("font-medium truncate", eventTextClass(aposta.game))}>{aposta.game}</p>
-                    <p className="text-xs opacity-55 truncate">{aposta.market}</p>
+                    <p className="text-xs opacity-55 truncate">{aposta.market} · odd {Number(aposta.odd).toFixed(2)}</p>
                   </div>
+                  <ReturnValue aposta={aposta} className="text-[13.5px]" />
                 </div>
-                <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
               </div>
-              <div className="flex items-center justify-between text-[11.5px]">
-                <span className="opacity-60">{aposta.houseName} · odd {Number(aposta.odd).toFixed(2)}</span>
-                <ReturnValue aposta={aposta} />
-              </div>
-              <div className="flex justify-end">
-                <RowActions aposta={aposta} onEdit={onEdit} onDelete={onDelete} onDuplicate={onDuplicate} onFinalize={onFinalize} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+        <ApostaDetailSheet
+          aposta={detailAposta}
+          onClose={() => setDetailAposta(null)}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          onFinalize={onFinalize}
+        />
+      </>
     );
   }
 

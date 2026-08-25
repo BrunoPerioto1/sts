@@ -15,11 +15,11 @@ interface DashboardFilterProps {
 
 export function DashboardFilter({ houses, houseId, onHouseChange, startDate, endDate, onCustomRange }: DashboardFilterProps) {
   return (
-    <div className="flex flex-wrap items-end gap-5">
-      <div>
+    <div className="flex flex-wrap items-end gap-3 sm:gap-5">
+      <div className="w-full sm:w-[180px]">
         <Label className={fieldLabelClass}>Casa de aposta</Label>
         <Select value={houseId ? houseId.toString() : "all"} onValueChange={(v) => onHouseChange(v === "all" ? undefined : Number(v))}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Todas as casas" />
           </SelectTrigger>
           <SelectContent>
@@ -33,13 +33,13 @@ export function DashboardFilter({ houses, houseId, onHouseChange, startDate, end
         </Select>
       </div>
 
-      <div>
+      <div className="flex-1 min-w-[120px] sm:flex-none sm:w-[150px]">
         <Label className={fieldLabelClass}>De</Label>
-        <DateField value={startDate} onChange={(v) => onCustomRange(v, endDate)} className="w-[150px]" />
+        <DateField value={startDate} onChange={(v) => onCustomRange(v, endDate)} className="w-auto" />
       </div>
-      <div>
+      <div className="flex-1 min-w-[120px] sm:flex-none sm:w-[150px]">
         <Label className={fieldLabelClass}>Até</Label>
-        <DateField value={endDate} onChange={(v) => onCustomRange(startDate, v)} className="w-[150px]" />
+        <DateField value={endDate} onChange={(v) => onCustomRange(startDate, v)} className="w-auto" />
       </div>
     </div>
   );

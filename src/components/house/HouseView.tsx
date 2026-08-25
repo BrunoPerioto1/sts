@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function formatCurrency(value: string | number) {
   const num = typeof value === "string" ? parseFloat(value) : value;
@@ -20,6 +21,7 @@ function formatCurrency(value: string | number) {
 }
 
 export function CasasApostaView() {
+  const isMobile = useIsMobile();
   const [houses, setHouses] = useState<HouseBalanceDto[]>([]);
   const [metrics, setMetrics] = useState<HouseMetricsDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,10 @@ export function CasasApostaView() {
   const [onlyWithBalance, setOnlyWithBalance] = useState(false);
   const [sort, setSort] = useState<HouseSort>("balance");
   const [view, setView] = useState<"list" | "cards">("list");
+
+  useEffect(() => {
+    if (isMobile) setView("cards");
+  }, [isMobile]);
   const [selectedHouse, setSelectedHouse] = useState<HouseBalanceDto | null>(null);
 
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);

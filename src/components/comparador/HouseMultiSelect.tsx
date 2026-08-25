@@ -26,7 +26,11 @@ export function HouseMultiSelect({ options, selected, onChange }: HouseMultiSele
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-2 border-input bg-card text-foreground hover:border-foreground/45 hover:bg-card">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 w-full sm:w-auto border-input bg-card text-foreground hover:border-foreground/45 hover:bg-card"
+        >
           <Buildings size={14} className="opacity-60" />
           {label}
         </Button>

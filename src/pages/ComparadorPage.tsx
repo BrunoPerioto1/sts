@@ -8,6 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { HouseMultiSelect } from "@/components/comparador/HouseMultiSelect";
 import { Lightbulb, Trophy } from "@phosphor-icons/react";
 import { getHouseRanking, type HouseRankingItem } from "@/api/routes/get-house-ranking";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 type Metric = "roi" | "profit" | "hitRate";
 
@@ -40,6 +42,7 @@ function buildInsight(ranking: HouseRankingItem[]): string | null {
 }
 
 export default function ComparadorPage() {
+  const isMobile = useIsMobile();
   const [metric, setMetric] = useState<Metric>("roi");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -77,22 +80,23 @@ export default function ComparadorPage() {
     <MainLayout title="Comparador">
       <div className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="flex flex-wrap items-end gap-4">
-            <div>
+          <div className="flex flex-wrap items-end gap-3 sm:gap-4">
+            <div className="flex-1 min-w-[120px] sm:flex-none">
               <Label className={fieldLabelClass}>De</Label>
-              <DateField value={startDate} onChange={setStartDate} placeholder="Desde sempre" className="w-[150px]" />
+              <DateField value={startDate} onChange={setStartDate} placeholder="Desde sempre" className="w-auto sm:w-[150px]" />
             </div>
-            <div>
+            <div className="flex-1 min-w-[120px] sm:flex-none">
               <Label className={fieldLabelClass}>Até</Label>
-              <DateField value={endDate} onChange={setEndDate} placeholder="Hoje" className="w-[150px]" />
+              <DateField value={endDate} onChange={setEndDate} placeholder="Hoje" className="w-auto sm:w-[150px]" />
             </div>
-            <div>
+            <div className="w-full sm:w-auto">
               <Label className={fieldLabelClass}>Casas</Label>
               <HouseMultiSelect options={houseOptions} selected={selectedHouseIds} onChange={setSelectedHouseIds} />
             </div>
             {(startDate || endDate || selectedHouseIds.length > 0) && (
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => {
                   setStartDate("");
                   setEndDate("");
@@ -164,7 +168,42 @@ export default function ComparadorPage() {
           </div>
         )}
 
-        {sorted.length > 0 && (
+        {sorted.length > 0 && isMobile && (
+          <div className="space-y-3">
+            {sorted.map((h, i) => {
+              const roiPct = h.roi * 100;
+              return (
+                <div key={h.houseId} className="bg-card rounded-md p-3 flex flex-col gap-2" style={{ boxShadow: "var(--shadow-sm)" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] opacity-40 shrink-0">{i + 1}</span>
+                    <span className="font-medium truncate">{h.houseName}</span>
+                    <span className="text-[10.5px] opacity-55 ml-auto shrink-0">{h.settledBets} apostas</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <p className="text-[10px] uppercase opacity-55 mb-0.5">ROI</p>
+                      <p className={cn("text-[14px] font-medium tabular-nums", roiPct >= 0 ? "text-positive" : "text-negative")}>
+                        {roiPct.toFixed(1)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase opacity-55 mb-0.5">Lucro</p>
+                      <p className={cn("text-[14px] font-medium tabular-nums whitespace-nowrap", h.profit >= 0 ? "text-positive" : "text-negative")}>
+                        {h.profit >= 0 ? "+" : ""}{formatCurrency(h.profit)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase opacity-55 mb-0.5">Acerto</p>
+                      <p className="text-[14px] font-medium tabular-nums opacity-80">{(h.hitRate * 100).toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {sorted.length > 0 && !isMobile && (
           <div className="card elev-sm bg-card rounded-md p-[14px_16px] overflow-x-auto">
             <table className="table w-full text-sm">
               <thead>

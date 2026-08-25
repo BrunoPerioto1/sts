@@ -25,7 +25,7 @@ export function DateField({ value, onChange, placeholder = "Selecionar data", cl
           variant="outline"
           disabled={disabled}
           className={cn(
-            "min-h-[36px] w-full justify-start gap-2 border-input bg-card px-[10px] font-normal text-foreground hover:border-foreground/45 hover:bg-card",
+            "min-h-[32px] sm:min-h-[36px] w-full justify-start gap-2 border-input bg-card px-[10px] font-normal text-foreground hover:border-foreground/45 hover:bg-card",
             !value && "text-muted-foreground",
             className
           )}
