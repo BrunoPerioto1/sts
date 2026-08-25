@@ -140,9 +140,10 @@ export default function ApostasPage() {
   };
 
   const handleExportCsv = () => {
-    const header = ["Data", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"];
+    const header = ["Data", "Hora", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"];
     const rows = apostas.map((b) => [
       new Date(b.betTime).toLocaleDateString("pt-BR"),
+      new Date(b.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       b.game,
       b.market,
       b.houseName ?? "",

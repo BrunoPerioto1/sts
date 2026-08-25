@@ -99,7 +99,10 @@ function DashboardPageContent() {
                 const profit = bet.profit != null ? Number(bet.profit) : null;
                 return (
                   <tr key={bet.id} className="hover:bg-foreground/[0.04]">
-                    <td className="py-2 opacity-60">{new Date(bet.betTime).toLocaleDateString("pt-BR")}</td>
+                    <td className="py-2 opacity-60 whitespace-nowrap">
+                      {new Date(bet.betTime).toLocaleDateString("pt-BR")}{" "}
+                      {new Date(bet.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </td>
                     <td className="py-2">{bet.game}</td>
                     <td className="py-2 opacity-80">{bet.houseName ?? "—"}</td>
                     <td className="py-2 text-right tabular-nums">{Number(bet.odd).toFixed(2)}</td>

@@ -272,7 +272,7 @@ export function ApostasList({
         <thead>
           <tr className="text-left border-b border-border">
             {showCheckboxes && <th className="w-8"></th>}
-            <th className="py-2 pr-4 text-[11px] uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 88 }}>Data</th>
+            <th className="py-2 pr-4 text-[11px] uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 128 }}>Data</th>
             <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[220px]">Evento</th>
             <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[160px]">Mercado</th>
             <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Casa</th>
@@ -293,7 +293,10 @@ export function ApostasList({
                     <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
                   </td>
                 )}
-                <td className="py-2 pr-4 opacity-60 whitespace-nowrap">{new Date(aposta.betTime).toLocaleDateString("pt-BR")}</td>
+                <td className="py-2 pr-4 opacity-60 whitespace-nowrap">
+                  {new Date(aposta.betTime).toLocaleDateString("pt-BR")}{" "}
+                  <span className="opacity-60">{new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                </td>
                 <td className={cn("py-2 font-semibold", eventTextClass(aposta.game))}>{aposta.game}</td>
                 <td className="py-2 opacity-70 text-[12.5px]">{aposta.market}</td>
                 <td className="py-2 whitespace-nowrap">{aposta.houseName}</td>
