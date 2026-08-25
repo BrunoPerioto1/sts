@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { List } from "@phosphor-icons/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainLayoutProps {
@@ -14,7 +11,6 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, title, actions }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -27,28 +23,13 @@ export function MainLayout({ children, title, actions }: MainLayoutProps) {
     <div className="min-h-screen flex w-full bg-background">
       {!isMobile && <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />}
 
-      {isMobile && (
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetContent side="left" className="w-[280px] p-0 border-none">
-            <AppSidebar collapsed={false} setCollapsed={() => {}} onNavigate={() => setMobileMenuOpen(false)} />
-          </SheetContent>
-        </Sheet>
-      )}
-
       <main
         className="flex-1 w-full transition-[margin] duration-200"
         style={{ marginLeft: !isMobile ? (sidebarCollapsed ? "72px" : "248px") : "0" }}
       >
         <header className="border-b border-border sticky top-0 z-40 bg-background">
           <div className="flex items-center justify-between gap-4" style={{ padding: "16px 24px" }}>
-            <div className="flex items-center gap-3">
-              {isMobile && (
-                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)}>
-                  <List size={20} />
-                </Button>
-              )}
-              <h1 className="text-[19px] font-medium">{title}</h1>
-            </div>
+            <h1 className="text-[19px] font-medium">{title}</h1>
             {actions && <div className="flex items-center gap-2">{actions}</div>}
           </div>
         </header>
