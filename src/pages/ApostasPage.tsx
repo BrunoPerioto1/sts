@@ -21,6 +21,16 @@ import { getAllHouses } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CaretLeft, CaretRight, Plus, Trash, ArrowClockwise, CaretDown } from "@phosphor-icons/react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +44,7 @@ export default function ApostasPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedBets, setSelectedBets] = useState<number[]>([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [houseFilter, setHouseFilter] = useState<number | undefined>(() => {
     const fromUrl = searchParams.get("houseId");
@@ -87,6 +98,7 @@ export default function ApostasPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
+    setConfirmDeleteOpen(false);
     setLoading(true);
     try {
       await deleteMultipleBets(selectedBets);
@@ -97,6 +109,15 @@ export default function ApostasPage() {
       toast({ title: "Erro", description: e.message || "Falha ao excluir apostas", variant: "destructive" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Excluir mais de 2 apostas de uma vez pede confirmação antes; 1 ou 2, exclui direto.
+  const handleDeleteSelectedClick = () => {
+    if (selectedBets.length > 2) {
+      setConfirmDeleteOpen(true);
+    } else {
+      handleDeleteSelected();
     }
   };
 
@@ -232,7 +253,7 @@ export default function ApostasPage() {
                     <SelectItem value={String(ResultIdEnum.CANCELED)}>Cancelada</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="destructive" size="sm" onClick={handleDeleteSelected} disabled={loading} className="gap-2">
+                <Button variant="destructive" size="sm" onClick={handleDeleteSelectedClick} disabled={loading} className="gap-2">
                   <Trash size={14} /> Excluir selecionadas
                 </Button>
               </div>
@@ -322,6 +343,21 @@ export default function ApostasPage() {
             onApostaUpdated={() => { setEditModalOpen(false); setEditAposta(null); reload(); }}
           />
         )}
+
+        <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir {selectedBets.length} apostas?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você está prestes a excluir {selectedBets.length} apostas selecionadas. Essa ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteSelected}>Excluir</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </MainLayout>
   );
