@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { format, getISOWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
@@ -7,7 +7,7 @@ import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
-import { mapResultToStatus, statusVariant, statusLabel, ReturnValue, RowActions, ApostaDetailSheet } from "./ApostasList";
+import { mapResultToStatus, statusVariant, statusLabel, ReturnValue, RowActions, ApostaDetailSheet, type Status } from "./ApostasList";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import type { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
@@ -175,6 +175,32 @@ function BetRowDesktop({
   );
 }
 
+const stripColors: Record<Status, { bg: string; text: string; strike?: boolean }> = {
+  ganha: { bg: "bg-green-500", text: "text-zinc-950" },
+  meiaGanha: { bg: "bg-green-500/20", text: "text-green-300" },
+  perdida: { bg: "bg-red-500/20", text: "text-red-300" },
+  meiaPerdida: { bg: "bg-red-500/20", text: "text-red-300" },
+  pendente: { bg: "bg-accent/20", text: "text-accent" },
+  cancelada: { bg: "bg-neutral-500/20", text: "text-neutral-400", strike: true },
+  cashout: { bg: "bg-accent/20", text: "text-accent" },
+};
+
+function StatusStrip({ status }: { status: Status }) {
+  const s = stripColors[status];
+  return (
+    <div className={cn("absolute inset-y-0 right-0 w-[26px] rounded-r-lg flex items-center justify-center", s.bg)}>
+      <span
+        className={cn("text-[11px] font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
+        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+      >
+        {statusLabel[status]}
+      </span>
+    </div>
+  );
+}
+
+const betChipClass = "text-[11px] px-2 py-0.5 rounded-md border border-white/10 bg-foreground/[0.06] text-zinc-400 shrink-0";
+
 function BetCardMobile({
   aposta,
   onOpen,
@@ -198,38 +224,32 @@ function BetCardMobile({
   return (
     <div
       className={cn(
-        "rounded-lg p-3 flex flex-col gap-2 active:opacity-90 transition-shadow",
+        "relative overflow-hidden rounded-lg p-3 pr-9 flex flex-col gap-2 active:opacity-90 transition-shadow",
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)" }}
       onClick={handleClick}
       {...longPress}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          {selection.selectionMode && (
-            <span onClick={(e) => e.stopPropagation()}>
-              <Checkbox checked={isSelected} onCheckedChange={() => selection.toggle(aposta.id)} aria-label="Selecionar aposta" />
-            </span>
-          )}
-          <span className="text-[11px] opacity-50 tabular-nums shrink-0">{time}</span>
-          {aposta.houseName && (
-            <span className="text-[10.5px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">
-              {aposta.houseName}
-            </span>
-          )}
-        </div>
-        <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
+      <div className="flex items-center gap-1.5 min-w-0">
+        {selection.selectionMode && (
+          <span onClick={(e) => e.stopPropagation()}>
+            <Checkbox checked={isSelected} onCheckedChange={() => selection.toggle(aposta.id)} aria-label="Selecionar aposta" />
+          </span>
+        )}
+        <span className={betChipClass}>{time}</span>
+        <span className={betChipClass}>{Number(aposta.odd).toFixed(2)}</span>
+        {aposta.houseName && <span className={cn(betChipClass, "truncate")}>{aposta.houseName}</span>}
       </div>
 
-      <p className="font-medium text-[15px] truncate">{aposta.game}</p>
+      <p className="text-[15px] font-medium text-white truncate">{aposta.game}</p>
 
       <div className="flex items-end justify-between gap-2">
-        <p className="text-xs opacity-55 truncate min-w-0">
-          {aposta.market} · odd {Number(aposta.odd).toFixed(2)}
-        </p>
+        <p className="text-[13px] text-zinc-500 truncate min-w-0">{aposta.market}</p>
         <ReturnValue aposta={aposta} className="text-[13.5px] shrink-0" />
       </div>
+
+      <StatusStrip status={status} />
     </div>
   );
 }
@@ -245,6 +265,15 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     [groups]
   );
 
+  const toggleMonth = (key: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
@@ -257,6 +286,110 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
 
   if (apostas.length === 0) {
     return <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+  }
+
+  const detailSheet = (
+    <ApostaDetailSheet
+      aposta={detailAposta}
+      onClose={() => setDetailAposta(null)}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onDuplicate={onDuplicate}
+      onFinalize={onFinalize}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex flex-col">
+          {groups.map((month) => {
+            const isOpen = expanded.has(month.key);
+            const monthIds = month.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)));
+            const monthCheckState = groupCheckState(monthIds, selection.selected);
+            return (
+              <Fragment key={month.key}>
+                <div className="rounded-xl border border-border bg-card h-[52px] flex items-center gap-2 px-3.5 mt-3 first:mt-0 min-w-0">
+                  {selection.selectionMode && (
+                    <Checkbox
+                      checked={monthCheckState}
+                      onCheckedChange={() => selection.toggleMany(monthIds)}
+                      aria-label={`Selecionar todas as apostas de ${month.label}`}
+                      className="shrink-0"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => toggleMonth(month.key)}
+                    className="flex items-center gap-2 min-w-0 flex-1 text-left"
+                  >
+                    {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
+                    <span className="font-semibold text-[14px] truncate">{month.label}</span>
+                  </button>
+                  <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
+                    {formatSignedCurrency(month.total)}
+                  </span>
+                </div>
+
+                {isOpen &&
+                  month.weeks.map((week) => {
+                    const weekIds = week.days.flatMap((d) => d.bets.map((b) => b.id));
+                    const weekCheckState = groupCheckState(weekIds, selection.selected);
+                    return (
+                      <Fragment key={week.key}>
+                        <div className="flex items-center gap-2 mt-4 mb-2 min-w-0">
+                          {selection.selectionMode && (
+                            <Checkbox
+                              checked={weekCheckState}
+                              onCheckedChange={() => selection.toggleMany(weekIds)}
+                              aria-label={`Selecionar todas as apostas da ${week.label}`}
+                              className="shrink-0"
+                            />
+                          )}
+                          <span className="text-[11px] uppercase tracking-wider text-zinc-500 shrink-0">{week.label}</span>
+                          <span className={cn("ml-auto tabular-nums text-[13px] shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
+                            {formatSignedCurrency(week.total)}
+                          </span>
+                        </div>
+
+                        {week.days.map((day, i) => {
+                          const dayIds = day.bets.map((b) => b.id);
+                          const dayCheckState = groupCheckState(dayIds, selection.selected);
+                          const dayTotal = day.bets.reduce((sum, b) => sum + settledProfit(b), 0);
+                          return (
+                            <div key={day.key} className={cn("rounded-lg border border-border bg-card p-3 min-w-0", i > 0 && "mt-3")}>
+                              <div className="flex items-center gap-2 pb-2 min-w-0">
+                                {selection.selectionMode && (
+                                  <Checkbox
+                                    checked={dayCheckState}
+                                    onCheckedChange={() => selection.toggleMany(dayIds)}
+                                    aria-label={`Selecionar todas as apostas de ${day.label}`}
+                                    className="shrink-0"
+                                  />
+                                )}
+                                <span className="text-[13px] font-semibold truncate">{day.label}</span>
+                                <span className={cn("ml-auto tabular-nums text-[13px] font-medium shrink-0", dayTotal >= 0 ? "text-positive" : "text-negative")}>
+                                  {formatSignedCurrency(dayTotal)}
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {day.bets.map((bet) => (
+                                  <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+              </Fragment>
+            );
+          })}
+        </div>
+        {detailSheet}
+      </>
+    );
   }
 
   return (
@@ -279,21 +412,12 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                 )}
                 <button
                   type="button"
-                  onClick={() =>
-                    setExpanded((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(month.key)) next.delete(month.key);
-                      else next.add(month.key);
-                      return next;
-                    })
-                  }
+                  onClick={() => toggleMonth(month.key)}
                   className="flex items-center gap-2 min-w-0 flex-1 text-left"
                 >
                   {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
                   <span className="font-semibold text-[14px] truncate">{month.label}</span>
-                  {!isMobile && (
-                    <span className="text-[11px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
-                  )}
+                  <span className="text-[11px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
                 </button>
                 <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
                   {formatSignedCurrency(month.total)}
@@ -336,34 +460,24 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                                   />
                                 )}
                                 <span className="text-[13px] font-semibold truncate">{day.label}</span>
-                                {!isMobile && (
-                                  <span className="text-[10.5px] px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
-                                    {day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}
-                                  </span>
-                                )}
+                                <span className="text-[10.5px] px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
+                                  {day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}
+                                </span>
                               </div>
-                              {isMobile ? (
-                                <div className="space-y-2">
-                                  {day.bets.map((bet) => (
-                                    <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="min-w-0">
-                                  {day.bets.map((bet) => (
-                                    <BetRowDesktop
-                                      key={bet.id}
-                                      aposta={bet}
-                                      onEdit={onEdit}
-                                      onDelete={onDelete}
-                                      onDuplicate={onDuplicate}
-                                      onFinalize={onFinalize}
-                                      selection={selection}
-                                      orderedIds={orderedIds}
-                                    />
-                                  ))}
-                                </div>
-                              )}
+                              <div className="min-w-0">
+                                {day.bets.map((bet) => (
+                                  <BetRowDesktop
+                                    key={bet.id}
+                                    aposta={bet}
+                                    onEdit={onEdit}
+                                    onDelete={onDelete}
+                                    onDuplicate={onDuplicate}
+                                    onFinalize={onFinalize}
+                                    selection={selection}
+                                    orderedIds={orderedIds}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           );
                         })}
@@ -376,15 +490,7 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
           );
         })}
       </div>
-
-      <ApostaDetailSheet
-        aposta={detailAposta}
-        onClose={() => setDetailAposta(null)}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onDuplicate={onDuplicate}
-        onFinalize={onFinalize}
-      />
+      {detailSheet}
     </>
   );
 }

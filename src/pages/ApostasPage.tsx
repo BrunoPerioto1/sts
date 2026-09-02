@@ -37,7 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X, ArrowClockwise } from "@phosphor-icons/react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -226,6 +226,26 @@ export default function ApostasPage() {
     }
   };
 
+  // Exclusão em lote da seleção múltipla (Agrupado) — sem "desfazer" real: ao
+  // contrário do status, não há endpoint pra recriar apostas excluídas, então
+  // oferecer um botão de desfazer aqui seria enganoso.
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selection.selected);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      await deleteMultipleBets(ids);
+      selection.clear();
+      await reload();
+      toast({ title: `${ids.length} apostas excluídas` });
+    } catch (e) {
+      const description = e instanceof Error ? e.message : "Falha ao excluir apostas";
+      toast({ title: "Erro", description, variant: "destructive" });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const handleFinalize = async (id: number, resultId: ResultIdEnum, cashoutValue?: number) => {
     try {
       await finalizeBet(id, { resultId, cashoutValue });
@@ -327,6 +347,15 @@ export default function ApostasPage() {
             )}
             <button
               type="button"
+              onClick={() => reload()}
+              disabled={loading}
+              aria-label="Recarregar apostas"
+              className="p-2 text-zinc-400 hover:text-white disabled:opacity-45"
+            >
+              <ArrowClockwise size={19} className={cn(loading && "animate-spin")} />
+            </button>
+            <button
+              type="button"
               onClick={() => setMobileFilterOpen(true)}
               aria-label="Abrir filtros"
               className="p-2 text-zinc-400 hover:text-white"
@@ -377,7 +406,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => { setStatusFilter(pill.value); setPage(1); }}
               className={cn(
-                "shrink-0 h-[34px] px-4 rounded-full text-[13px] font-medium transition-colors",
+                "shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
                 isActive ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
               )}
             >
@@ -392,7 +421,12 @@ export default function ApostasPage() {
           <ApostasFilter {...filterProps} />
         </div>
 
-        <div className="card elev-sm bg-card rounded-md p-[14px_16px] space-y-3 min-w-0">
+        <div
+          className={cn(
+            "space-y-3 min-w-0",
+            !(isMobile && viewMode === "agrupado") && "card elev-sm bg-card rounded-md p-[14px_16px]"
+          )}
+        >
           {viewMode === "tabela" && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2">
@@ -574,6 +608,7 @@ export default function ApostasPage() {
         count={selection.selected.size}
         loading={bulkLoading}
         onSetStatus={handleBulkFinalize}
+        onDelete={handleBulkDelete}
         onCancel={selection.clear}
       />
     </MainLayout>
