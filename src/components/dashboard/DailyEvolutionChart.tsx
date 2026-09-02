@@ -9,7 +9,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import { format, startOfWeek, startOfMonth } from "date-fns";
+import { format, parseISO, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Segmented } from "@/components/ui/segmented";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -31,7 +31,7 @@ function groupData(data: DailyData[], grouping: Grouping) {
 
   const buckets = new Map<string, number>();
   for (const point of data) {
-    const d = new Date(point.date);
+    const d = parseISO(point.date);
     const key =
       grouping === "week"
         ? format(startOfWeek(d, { weekStartsOn: 1 }), "yyyy-MM-dd")
@@ -44,13 +44,13 @@ function groupData(data: DailyData[], grouping: Grouping) {
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
+  if (active && payload && payload.length && label) {
     const value = payload[0].value;
     const isPositive = value >= 0;
     return (
       <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-[12px]">
         <p className="opacity-70 mb-1">
-          {new Date(label).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+          {parseISO(label).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
         </p>
         <span className={isPositive ? "text-positive font-medium" : "text-negative font-medium"}>
           {isPositive ? "+" : ""}R$ {value.toFixed(2)}
@@ -92,7 +92,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
         />
       </div>
 
-      <div style={{ height: isMobile ? 180 : 212 }}>
+      <div style={{ height: isMobile ? 180 : 400 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={grouped} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={isMobile ? 4 : 8}>
             <XAxis
@@ -103,7 +103,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) =>
-                format(new Date(value), grouping === "month" ? "MMM" : "dd/MM", { locale: ptBR })
+                format(parseISO(value), grouping === "month" ? "MMM" : "dd/MM", { locale: ptBR })
               }
             />
             <YAxis

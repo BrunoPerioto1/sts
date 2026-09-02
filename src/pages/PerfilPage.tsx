@@ -13,7 +13,8 @@ import { getAllHouses } from "@/api/routes/get-houses";
 import { getBets } from "@/api/routes/get-bets";
 import { getTransactions } from "@/api/routes/get-transaction";
 import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
-import { TelegramLogo, DownloadSimple, Camera } from "@phosphor-icons/react";
+import { TelegramLogo, DownloadSimple, SignOut } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 
 function initialsOf(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -34,6 +35,7 @@ function downloadCsv(filename: string, header: string[], rows: (string | number)
 
 export default function PerfilPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState<string>("");
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -146,9 +148,6 @@ export default function PerfilPage() {
                   {me.createdAt ? ` · na plataforma desde ${new Date(me.createdAt).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}` : ""}
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="gap-2 shrink-0" disabled>
-                <Camera size={14} /> Trocar foto
-              </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -186,6 +185,7 @@ export default function PerfilPage() {
                 </div>
               ))}
             </div>
+            <p className="text-[11px] opacity-40 mt-3">Exporta todos os registros · separador ponto-e-vírgula (;)</p>
           </div>
         </div>
 
@@ -214,7 +214,7 @@ export default function PerfilPage() {
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <h3 className="text-base font-medium mb-2">Resumo da banca</h3>
             <div className="divide-y divide-border">
-              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Apostas registradas</span><span className="font-medium tabular-nums">{summary.totalBets}</span></div>
+              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Apostas</span><span className="font-medium tabular-nums">{summary.totalBets}</span></div>
               <div className="flex justify-between py-2 text-[13px]">
                 <span className="opacity-60">Lucro acumulado</span>
                 <span className={`font-medium tabular-nums ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
@@ -225,8 +225,15 @@ export default function PerfilPage() {
                 <span className="opacity-60">ROI histórico</span>
                 <span className={`font-medium tabular-nums ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>{(summary.roi * 100).toFixed(1)}%</span>
               </div>
-              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Casas cadastradas</span><span className="font-medium tabular-nums">{summary.totalHouses}</span></div>
+              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Casas</span><span className="font-medium tabular-nums">{summary.totalHouses}</span></div>
             </div>
+          </div>
+
+          <div className="card elev-sm bg-card rounded-md p-[16px]">
+            <h3 className="text-base font-medium mb-3">Sessão</h3>
+            <Button variant="outline" className="w-full gap-2" onClick={() => navigate("/logout")}>
+              <SignOut size={16} /> Sair da conta
+            </Button>
           </div>
         </div>
       </div>

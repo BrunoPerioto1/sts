@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border border-accent text-accent bg-transparent hover:bg-accent/10 active:bg-accent/20",
+          "border border-transparent bg-[var(--color-light)] text-[var(--color-onlight)] hover:bg-white active:opacity-90",
         destructive:
           "border border-negative text-negative bg-transparent hover:bg-negative/10",
         outline:

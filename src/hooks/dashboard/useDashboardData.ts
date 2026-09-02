@@ -1,5 +1,6 @@
 // src/pages/dashboard/hooks/useDashboardData.ts
 import { useEffect, useState } from "react";
+import { differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
 import {
   getDashboardMetrics,
   type DashboardMetrics,
@@ -16,22 +17,37 @@ interface Params {
   endDate: string;
 }
 
+const emptyMetrics: DashboardMetrics = {
+  totalBets: 0,
+  wonBets: 0,
+  lostBets: 0,
+  pendingBets: 0,
+  canceledBets: 0,
+  totalStaked: 0,
+  totalReturn: 0,
+  averageStake: 0,
+  averageOdd: 0,
+  totalProfit: 0,
+  roi: 0,
+  hitRate: 0,
+};
+
+// Período imediatamente anterior, com a mesma duração do período selecionado —
+// é o que os KPIs usam pra mostrar "vs. período anterior".
+function previousRange(startDate: string, endDate: string) {
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+  const days = differenceInCalendarDays(end, start) + 1;
+  return {
+    startDate: format(subDays(start, days), "yyyy-MM-dd"),
+    endDate: format(subDays(start, 1), "yyyy-MM-dd"),
+  };
+}
+
 export function useDashboardData(filters: Params) {
   const [houses, setHouses] = useState<HouseDto[]>([]);
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalBets: 0,
-    wonBets: 0,
-    lostBets: 0,
-    pendingBets: 0,
-    canceledBets: 0,
-    totalStaked: 0,
-    totalReturn: 0,
-    averageStake: 0,
-    averageOdd: 0,
-    totalProfit: 0,
-    roi: 0,
-    hitRate: 0,
-  });
+  const [metrics, setMetrics] = useState<DashboardMetrics>(emptyMetrics);
+  const [previousMetrics, setPreviousMetrics] = useState<DashboardMetrics>(emptyMetrics);
   const [dailyData, setDailyData] = useState<DailySummaryPoint[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -57,11 +73,14 @@ export function useDashboardData(filters: Params) {
         startDate: filters.startDate,
         endDate: filters.endDate,
       };
-      const [metricsData, daily] = await Promise.all([
+      const prev = previousRange(filters.startDate, filters.endDate);
+      const [metricsData, daily, previousMetricsData] = await Promise.all([
         getDashboardMetrics(params),
         getDashboardDailySummary(params),
+        getDashboardMetrics({ house_id: filters.houseId, startDate: prev.startDate, endDate: prev.endDate }).catch(() => emptyMetrics),
       ]);
       setMetrics(metricsData);
+      setPreviousMetrics(previousMetricsData);
       setDailyData(daily || []);
     } catch (err) {
       console.error("Erro ao carregar dados do dashboard:", err);
@@ -77,6 +96,7 @@ export function useDashboardData(filters: Params) {
   return {
     houses,
     metrics,
+    previousMetrics,
     dailyData,
     loading,
     reload: loadDashboardData,

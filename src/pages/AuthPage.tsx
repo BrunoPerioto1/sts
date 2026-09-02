@@ -24,23 +24,25 @@ const AuthPage = () => {
 
         <div className="max-w-lg">
           <h1 className="text-[38px] leading-[1.1] font-medium mb-4">
-            Suas apostas com cara de<br />demonstrativo financeiro.
+            Sua banca lida como<br />um demonstrativo.
           </h1>
           <p className="text-[15px] opacity-70 mb-9">
-            Registre entradas, concilie saldos em dezenas de casas e leia ROI de verdade — sem confetes, sem cassino.
+            Registre entradas, concilie saldos em dezenas de casas e leia ROI de verdade.
+            Sem confete, sem cassino, sem cor decorativa.
           </p>
+          <div className="hr-fade mb-6" style={{ marginLeft: 0, marginRight: "auto", width: "100%" }} />
           <div className="flex gap-9">
             <div>
-              <div className="text-[26px] font-medium text-positive">Multi-casas</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Concilie saldos em um só lugar</div>
+              <div className="text-[26px] font-medium text-positive">+R$ 4.812</div>
+              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Lucro acumulado</div>
             </div>
             <div>
-              <div className="text-[26px] font-medium">ROI real</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Sem números de cassino</div>
+              <div className="text-[26px] font-medium">1.284</div>
+              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Apostas</div>
             </div>
             <div>
-              <div className="text-[26px] font-medium">Telegram</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Registre por mensagem</div>
+              <div className="text-[26px] font-medium">84</div>
+              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Casas</div>
             </div>
           </div>
         </div>

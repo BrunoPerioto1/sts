@@ -1,135 +1,264 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
-import { DateField } from "@/components/ui/date-field";
+import { DateRangeField } from "@/components/ui/date-range-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusMultiSelect, STATUS_OPTIONS } from "./StatusMultiSelect";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface ApostasFilterProps {
   houses: { id: number; name: string }[];
   onSearch: (term: string) => void;
-  onFilterStatus?: (status: string) => void;
+  onFilterStatus?: (status: string[]) => void;
   onFilterHouse?: (houseId: string) => void;
-  onDateFromChange?: (date: string) => void;
-  onDateToChange?: (date: string) => void;
+  onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
   onExportCsv?: () => void;
   className?: string;
   isLoading?: boolean;
   initialDateFrom?: string;
   initialDateTo?: string;
+  initialSearchTerm?: string;
+  initialStatus?: string[];
+  initialHouseId?: string;
+  // "pill" é a barra horizontal compacta do desktop; "stacked" é a lista
+  // vertical de largura total usada dentro do drawer mobile.
+  variant?: "pill" | "stacked";
 }
 
-const statusLabels: Record<string, string> = {
-  "9": "Pendente",
-  "1": "Ganha",
-  "2": "Perdida",
-  "3": "Cancelada",
-  "4": "Meia Ganha",
-  "5": "Meia Perdida",
-  "6": "Cashout",
-};
+const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
+
+const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
 
 export function ApostasFilter({
   houses,
   onSearch,
   onFilterStatus,
   onFilterHouse,
-  onDateFromChange,
-  onDateToChange,
+  onDateRangeChange,
   onClearFilters,
   onExportCsv,
   className,
   isLoading = false,
   initialDateFrom = "",
   initialDateTo = "",
+  initialSearchTerm = "",
+  initialStatus = [],
+  initialHouseId = "0",
+  variant = "pill",
 }: ApostasFilterProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo);
-  const [status, setStatus] = useState("0");
-  const [houseId, setHouseId] = useState("0");
+  const [status, setStatus] = useState<string[]>(initialStatus);
+  const [houseId, setHouseId] = useState(initialHouseId);
 
-  const activeChips: { key: string; label: string; clear: () => void }[] = [];
-  if (searchTerm) activeChips.push({ key: "q", label: `Busca: ${searchTerm}`, clear: () => { setSearchTerm(""); onSearch(""); } });
-  if (status !== "0") activeChips.push({ key: "status", label: statusLabels[status] ?? status, clear: () => { setStatus("0"); onFilterStatus?.("0"); } });
+  const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
+  if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
+  if (dateFrom || dateTo) {
+    const fromLabel = dateFrom ? format(parseISO(dateFrom), "dd MMM", { locale: ptBR }) : null;
+    const toLabel = dateTo ? format(parseISO(dateTo), "dd MMM", { locale: ptBR }) : null;
+    activeChips.push({
+      key: "range",
+      label: fromLabel && toLabel ? `${fromLabel} – ${toLabel}` : fromLabel ? `De ${fromLabel}` : `Até ${toLabel}`,
+      clear: () => { setDateFrom(""); setDateTo(""); onDateRangeChange?.("", ""); },
+    });
+  }
+  // Chips de status vêm sólidas (é a seleção multi-select em si); as demais
+  // ficam com contorno — mesma distinção da referência de design.
+  for (const s of status) {
+    activeChips.push({
+      key: `status-${s}`,
+      label: statusLabels[s] ?? s,
+      solid: true,
+      clear: () => {
+        const next = status.filter((v) => v !== s);
+        setStatus(next);
+        onFilterStatus?.(next);
+      },
+    });
+  }
   if (houseId !== "0") {
     const houseName = houses.find((h) => h.id.toString() === houseId)?.name ?? houseId;
     activeChips.push({ key: "house", label: houseName, clear: () => { setHouseId("0"); onFilterHouse?.("0"); } });
   }
-  if (dateFrom) activeChips.push({ key: "from", label: `De ${dateFrom}`, clear: () => { setDateFrom(""); onDateFromChange?.(""); } });
-  if (dateTo) activeChips.push({ key: "to", label: `Até ${dateTo}`, clear: () => { setDateTo(""); onDateToChange?.(""); } });
 
   const handleClear = () => {
     setSearchTerm("");
     setDateFrom("");
     setDateTo("");
-    setStatus("0");
+    setStatus([]);
     setHouseId("0");
     onClearFilters?.();
   };
 
-  return (
-    <div className={cn("w-full space-y-2", className)}>
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full sm:w-[280px]">
-          <MagnifyingGlass size={14} className="absolute left-[10px] top-1/2 -translate-y-1/2 opacity-50" />
-          <Input
-            placeholder="Buscar apostas..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
-            className="pl-8"
+  if (variant === "stacked") {
+    const hasActiveFilters = !!searchTerm || !!dateFrom || !!dateTo || status.length > 0 || houseId !== "0";
+    return (
+      <div className={cn("w-full flex flex-col gap-4", className)}>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-zinc-500">Buscar</span>
+          <div className="relative">
+            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <Input
+              placeholder="Buscar apostas..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
+              disabled={isLoading}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-zinc-500">Período</span>
+          <DateRangeField
+            startDate={dateFrom}
+            endDate={dateTo}
+            onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
+            placeholder="Selecionar período"
             disabled={isLoading}
           />
         </div>
 
-        <DateField value={dateFrom} onChange={(v) => { setDateFrom(v); onDateFromChange?.(v); }} className="w-auto flex-1 min-w-[120px] sm:flex-none sm:w-[150px]" disabled={isLoading} />
-        <DateField value={dateTo} onChange={(v) => { setDateTo(v); onDateToChange?.(v); }} className="w-auto flex-1 min-w-[120px] sm:flex-none sm:w-[150px]" disabled={isLoading} />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-zinc-500">Status</span>
+          <StatusMultiSelect
+            selected={status}
+            onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
+            disabled={isLoading}
+            className="w-full justify-between min-h-[36px] rounded-md border border-input bg-card px-[10px] py-[6px] hover:border-foreground/45"
+          />
+        </div>
 
-        <Select value={status} onValueChange={(v) => { setStatus(v); onFilterStatus?.(v); }} disabled={isLoading}>
-          <SelectTrigger className="w-auto flex-1 min-w-[130px] sm:flex-none sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">Todos os status</SelectItem>
-            <SelectItem value="9">Pendente</SelectItem>
-            <SelectItem value="1">Ganha</SelectItem>
-            <SelectItem value="2">Perdida</SelectItem>
-            <SelectItem value="4">Meia Ganha</SelectItem>
-            <SelectItem value="5">Meia Perdida</SelectItem>
-            <SelectItem value="6">Cashout</SelectItem>
-            <SelectItem value="3">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
-          <SelectTrigger className="w-auto flex-1 min-w-[130px] sm:flex-none sm:w-[160px]"><SelectValue placeholder="Casa" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">Todas as casas</SelectItem>
-            {houses.map((h) => (
-              <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-zinc-500">Casa</span>
+          <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todas as casas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">Todas as casas</SelectItem>
+              {houses.map((h) => (
+                <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {onExportCsv && (
-          <Button variant="ghost" size="sm" onClick={onExportCsv} className="w-full sm:w-auto sm:ml-auto gap-2">
-            <DownloadSimple size={16} /> Exportar CSV
-          </Button>
+          <button
+            type="button"
+            onClick={onExportCsv}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 min-h-[36px] rounded-md border border-input text-[13px] text-zinc-300 hover:text-white hover:border-foreground/45 transition-colors disabled:opacity-45 disabled:pointer-events-none"
+          >
+            <DownloadSimple className="h-4 w-4" /> Exportar CSV
+          </button>
+        )}
+
+        {hasActiveFilters && (
+          <button type="button" onClick={handleClear} className="text-[13px] text-zinc-400 hover:text-white self-start">
+            Limpar filtros
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      <div className="h-11 rounded-xl border border-white/10 bg-white/[0.02] flex items-center overflow-x-auto">
+        <div className="flex items-center gap-2 px-3.5 flex-1 min-w-0">
+          <MagnifyingGlass className="h-4 w-4 text-zinc-500 shrink-0" />
+          <Input
+            placeholder="Buscar apostas..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
+            disabled={isLoading}
+            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-[13px] text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <DateRangeField
+            startDate={dateFrom}
+            endDate={dateTo}
+            onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
+            placeholder="Período"
+            disabled={isLoading}
+            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-[13px] text-white"
+            iconClassName="h-4 w-4 text-zinc-500 shrink-0"
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <StatusMultiSelect
+            selected={status}
+            onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
+            disabled={isLoading}
+            className="min-h-0 text-[13px]"
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
+            <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-[13px] text-white">
+              <span className="text-zinc-500 shrink-0">Casa</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">Todas</SelectItem>
+              {houses.map((h) => (
+                <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {onExportCsv && (
+          <>
+            {divider}
+            <button
+              type="button"
+              onClick={onExportCsv}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3.5 text-[13px] text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+            >
+              <DownloadSimple className="h-4 w-4" /> Exportar CSV
+            </button>
+          </>
         )}
       </div>
 
       {activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] opacity-45">Filtros ativos</span>
+          <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Filtros ativos</span>
           {activeChips.map((chip) => (
-            <span key={chip.key} className="tag border border-accent text-accent inline-flex items-center gap-1 rounded-[6px] px-[10px] py-[3px] text-[11px]">
+            <span
+              key={chip.key}
+              className={cn(
+                "h-7 inline-flex items-center gap-1 rounded-full px-3 text-[12px]",
+                chip.solid ? "bg-blue-600 text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
+              )}
+            >
               {chip.label}
               <button onClick={chip.clear} aria-label="Remover filtro">
-                <X size={11} />
+                <X className="h-3 w-3" />
               </button>
             </span>
           ))}
-          <button onClick={handleClear} className="text-[11px] text-accent hover:underline">Limpar tudo</button>
+          <button onClick={handleClear} className="text-[12px] text-zinc-500 hover:text-zinc-300 transition-colors">
+            Limpar tudo
+          </button>
         </div>
       )}
     </div>

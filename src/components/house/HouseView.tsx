@@ -3,16 +3,13 @@ import { HouseDetailsModal } from "./HouseDetailsModal";
 import { HouseListItem } from "./HouseListItem";
 import { HousesMetrics } from "./HouseMetrics";
 import { HousesSearch, type HouseSort } from "./HouseSearch";
-import { Buildings, Plus } from "@phosphor-icons/react";
-import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics, createHouse } from "@/api/routes/get-houses";
+import { Buildings } from "@phosphor-icons/react";
+import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics } from "@/api/routes/get-houses";
 import { useToast } from "@/hooks/use-toast";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 import { Segmented } from "@/components/ui/segmented";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 function formatCurrency(value: string | number) {
@@ -38,9 +35,6 @@ export function CasasApostaView() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isMovimentacaoModalOpen, setIsMovimentacaoModalOpen] = useState(false);
   const [isNovaTransacaoModalOpen, setIsNovaTransacaoModalOpen] = useState(false);
-  const [isNovaCasaOpen, setIsNovaCasaOpen] = useState(false);
-  const [novaCasaNome, setNovaCasaNome] = useState("");
-  const [creatingHouse, setCreatingHouse] = useState(false);
 
   const { toast } = useToast();
 
@@ -75,30 +69,13 @@ export function CasasApostaView() {
 
   const withBalanceCount = houses.filter((h) => Number(h.houseBalance) > 0).length;
 
-  const handleCreateHouse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!novaCasaNome.trim()) return;
-    setCreatingHouse(true);
-    try {
-      await createHouse(novaCasaNome.trim());
-      setNovaCasaNome("");
-      setIsNovaCasaOpen(false);
-      toast({ title: "Casa cadastrada" });
-      loadData();
-    } catch (e: any) {
-      toast({ title: "Erro", description: e?.response?.data?.message || "Falha ao cadastrar casa", variant: "destructive" });
-    } finally {
-      setCreatingHouse(false);
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs opacity-45">
           {houses.length} casas · {withBalanceCount} com saldo
         </p>
-        <div className="flex items-center gap-2">
+        {!isMobile && (
           <Segmented
             options={[
               { value: "list", label: "Lista" },
@@ -107,10 +84,7 @@ export function CasasApostaView() {
             value={view}
             onChange={(v) => setView(v as "list" | "cards")}
           />
-          <Button onClick={() => setIsNovaCasaOpen(true)} className="gap-2">
-            <Plus size={16} /> Nova casa
-          </Button>
-        </div>
+        )}
       </div>
 
       {metrics && <HousesMetrics metrics={metrics} formatCurrency={formatCurrency} isLoading={loading} />}
@@ -198,22 +172,6 @@ export function CasasApostaView() {
           />
         </>
       )}
-
-      <Dialog open={isNovaCasaOpen} onOpenChange={setIsNovaCasaOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Nova casa</DialogTitle></DialogHeader>
-          <form onSubmit={handleCreateHouse} className="flex flex-col gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Nome da casa</Label>
-              <Input value={novaCasaNome} onChange={(e) => setNovaCasaNome(e.target.value)} placeholder="Ex: Bet365" autoFocus />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsNovaCasaOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={creatingHouse}>{creatingHouse ? "Salvando…" : "Cadastrar"}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

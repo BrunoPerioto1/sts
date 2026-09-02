@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DotsThreeOutline } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 
@@ -33,9 +34,9 @@ interface ApostasListProps {
   isLoading?: boolean;
 }
 
-type Status = "ganha" | "perdida" | "pendente" | "cancelada" | "meiaGanha" | "meiaPerdida" | "cashout";
+export type Status = "ganha" | "perdida" | "pendente" | "cancelada" | "meiaGanha" | "meiaPerdida" | "cashout";
 
-function mapResultToStatus(aposta: BetItem): Status {
+export function mapResultToStatus(aposta: BetItem): Status {
   switch (aposta.resultId) {
     case ResultIdEnum.WON:
       return "ganha";
@@ -54,7 +55,7 @@ function mapResultToStatus(aposta: BetItem): Status {
   }
 }
 
-const statusVariant = {
+export const statusVariant = {
   ganha: "won",
   perdida: "lost",
   pendente: "pending",
@@ -64,7 +65,7 @@ const statusVariant = {
   cashout: "cashout",
 } as const;
 
-const statusLabel = {
+export const statusLabel = {
   ganha: "Ganha",
   perdida: "Perdida",
   pendente: "Pendente",
@@ -80,20 +81,20 @@ function eventTextClass(text: string) {
   return "text-[14px]";
 }
 
-function ReturnValue({ aposta, className }: { aposta: BetItem; className?: string }) {
+export function ReturnValue({ aposta, className }: { aposta: BetItem; className?: string }) {
   const status = mapResultToStatus(aposta);
   if (status === "pendente") return <span className={cn("opacity-35 tabular-nums whitespace-nowrap", className)}>—</span>;
   if (status === "cancelada")
-    return <span className={cn("opacity-55 tabular-nums whitespace-nowrap", className)}>R$ {Number(aposta.stake ?? 0).toFixed(2)}</span>;
+    return <span className={cn("opacity-55 tabular-nums whitespace-nowrap", className)}>{formatCurrency(Number(aposta.stake ?? 0))}</span>;
   const lucro = Number(aposta.profit ?? 0);
   return (
     <span className={cn("tabular-nums font-medium whitespace-nowrap", lucro >= 0 ? "text-positive" : "text-negative", className)}>
-      {lucro >= 0 ? "+" : ""}R$ {lucro.toFixed(2)}
+      {formatSignedCurrency(lucro)}
     </span>
   );
 }
 
-function ApostaDetailSheet({
+export function ApostaDetailSheet({
   aposta,
   onClose,
   onEdit,
@@ -135,16 +136,16 @@ function ApostaDetailSheet({
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Valor</p>
-            <p className="text-[14px] font-medium tabular-nums">R$ {stake.toFixed(2)}</p>
+            <p className="text-[14px] font-medium tabular-nums">{formatCurrency(stake)}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Ganho</p>
-            <p className="text-[14px] font-medium tabular-nums">{ganho != null ? `R$ ${ganho.toFixed(2)}` : "—"}</p>
+            <p className="text-[14px] font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Lucro</p>
             <p className={cn("text-[14px] font-medium tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
-              {profit != null ? `${profit >= 0 ? "+" : ""}R$ ${profit.toFixed(2)}` : "—"}
+              {profit != null ? formatSignedCurrency(profit) : "—"}
             </p>
           </div>
         </div>
@@ -250,7 +251,7 @@ function CashoutDialog({
   );
 }
 
-function RowActions({
+export function RowActions({
   aposta,
   onEdit,
   onDelete,
@@ -433,7 +434,7 @@ export function ApostasList({
                 <td className="py-2 opacity-70 text-[12.5px]">{aposta.market}</td>
                 <td className="py-2 whitespace-nowrap">{aposta.houseName}</td>
                 <td className="py-2 text-right tabular-nums whitespace-nowrap">{Number(aposta.odd).toFixed(2)}</td>
-                <td className="py-2 text-right tabular-nums whitespace-nowrap">R$ {Number(aposta.stake).toFixed(2)}</td>
+                <td className="py-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(Number(aposta.stake))}</td>
                 <td className="py-2 pl-4">
                   <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
                 </td>

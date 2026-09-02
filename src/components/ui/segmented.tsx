@@ -25,9 +25,9 @@ export function Segmented<T extends string>({ options, value, onChange, classNam
             className={cn(
               "px-3 py-[7px] text-[13px] whitespace-nowrap transition-colors",
               i > 0 && "border-l border-border",
-              active ? "text-accent" : "hover:bg-foreground/[0.07]"
+              active ? "text-[var(--color-onlight)]" : "hover:bg-foreground/[0.07]"
             )}
-            style={active ? { boxShadow: "inset 0 0 0 1px var(--color-accent)" } : undefined}
+            style={active ? { background: "var(--color-light)" } : undefined}
           >
             {opt.label}
           </button>

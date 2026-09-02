@@ -8,7 +8,6 @@ import NotFound from "./pages/NotFound";
 import { DashboardPage } from "./pages/DashboardPage";
 import ApostasPage from "./pages/ApostasPage";
 import { CasasPage } from "./pages/CasasPage";
-import ComparadorPage from "./pages/ComparadorPage";
 import PerfilPage from "./pages/PerfilPage";
 import { Navigate } from "react-router-dom";
 
@@ -27,7 +26,6 @@ const App = () => (
           <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
-          <Route path="/comparison" element={<RequireAuth><ComparadorPage /></RequireAuth>} />
           {}
           <Route path="/logout" element={<LogoutRoute />} />
           <Route path="*" element={<NotFound />} />

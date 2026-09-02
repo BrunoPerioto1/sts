@@ -6,7 +6,6 @@ import {
   SquaresFour,
   Receipt,
   Buildings,
-  Ranking,
   UserCircle,
   SignOut,
 } from "@phosphor-icons/react";
@@ -17,7 +16,6 @@ const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
   { id: "apostas", label: "Apostas", icon: Receipt, path: "/bets" },
   { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
-  { id: "comparador", label: "Comparador", icon: Ranking, path: "/comparison" },
   { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
 

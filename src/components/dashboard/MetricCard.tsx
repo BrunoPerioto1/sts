@@ -9,6 +9,7 @@ export function MetricCard({
   valueClass = "",
   className,
   sparkline,
+  delta,
 }: {
   title: string;
   value: string;
@@ -17,13 +18,14 @@ export function MetricCard({
   valueClass?: string;
   className?: string;
   sparkline?: number[];
+  delta?: { label: string; positive: boolean };
 }) {
   return (
     <div className={cn("card elev-sm bg-card rounded-md p-[12px_14px] sm:p-[14px_16px] flex flex-col gap-2 min-w-0", className)}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-accent">
+        <div className="flex items-center gap-2 opacity-70">
           {icon}
-          <h4 className="text-[10px] uppercase tracking-wide sm:tracking-widest opacity-70">{title}</h4>
+          <h4 className="text-[10px] uppercase tracking-wide sm:tracking-widest">{title}</h4>
         </div>
         {sparkline && sparkline.length > 0 && (
           <div className="w-[50px] h-[26px]">
@@ -45,6 +47,12 @@ export function MetricCard({
       >
         {value}
       </p>
+      {delta && (
+        <p className="text-[11px]">
+          <span className={delta.positive ? "text-positive font-medium" : "text-negative font-medium"}>{delta.label}</span>
+          <span className="opacity-45"> vs. período anterior</span>
+        </p>
+      )}
       {subtext && <p className="text-[11.5px] opacity-45">{subtext}</p>}
     </div>
   );

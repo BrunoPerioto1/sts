@@ -77,7 +77,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-xs">E-mail</Label>
+        <Label htmlFor="email" className="text-[11px] uppercase tracking-wide opacity-70">E-mail</Label>
         <Input
           id="email"
           type="email"
@@ -89,7 +89,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-xs">Senha</Label>
+        <Label htmlFor="password" className="text-[11px] uppercase tracking-wide opacity-70">Senha</Label>
         <div className="relative">
           <Input
             id="password"

@@ -26,6 +26,18 @@ function formatCurrency(value: string | number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
 }
 
+function formatMovementDate(iso: string) {
+  const date = new Date(iso);
+  const now = new Date();
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const sameDay = date.toDateString() === now.toDateString();
+  if (sameDay) return `hoje, ${time}`;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `ontem, ${time}`;
+  return `${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}, ${time}`;
+}
+
 export function HouseListItem({ house, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
   const profit = Number(house.totalBetProfit);
 
@@ -47,7 +59,7 @@ export function HouseListItem({ house, onViewDetails, onOpenHistory, onNewTransa
       </td>
       <td className="py-2 text-right tabular-nums opacity-60">{house.totalBets}</td>
       <td className="py-2 text-[12.5px] opacity-55">
-        {house.lastMovementAt ? new Date(house.lastMovementAt).toLocaleDateString("pt-BR") : "—"}
+        {house.lastMovementAt ? formatMovementDate(house.lastMovementAt) : "—"}
       </td>
       <td className="py-2 text-right">
         <DropdownMenu>
