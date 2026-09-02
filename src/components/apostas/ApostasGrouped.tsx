@@ -180,9 +180,9 @@ const stripColors: Record<Status, { bg: string; text: string; strike?: boolean }
   meiaGanha: { bg: "bg-green-500/20", text: "text-green-300" },
   perdida: { bg: "bg-red-500/20", text: "text-red-300" },
   meiaPerdida: { bg: "bg-red-500/20", text: "text-red-300" },
-  pendente: { bg: "bg-accent/20", text: "text-accent" },
+  pendente: { bg: "bg-accent-800", text: "text-accent-100" },
   cancelada: { bg: "bg-neutral-500/20", text: "text-neutral-400", strike: true },
-  cashout: { bg: "bg-accent/20", text: "text-accent" },
+  cashout: { bg: "bg-accent-700", text: "text-accent-100" },
 };
 
 function StatusStrip({ status }: { status: Status }) {
