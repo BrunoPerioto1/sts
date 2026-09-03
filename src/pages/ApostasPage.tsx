@@ -73,7 +73,11 @@ export default function ApostasPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedBets, setSelectedBets] = useState<number[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  // ?status=9 — usado pelo card do dashboard pra cair já filtrado nas pendentes.
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => {
+    const fromUrl = searchParams.get("status");
+    return fromUrl ? fromUrl.split(",") : [];
+  });
   const [houseIds, setHouseIds] = useState<number[]>(() => {
     const fromUrl = searchParams.get("houseId");
     return fromUrl ? [Number(fromUrl)] : [];

@@ -17,6 +17,9 @@ interface MainLayoutProps {
   // Header mobile totalmente à parte (voltar/título/ícone), pra telas que não
   // cabem no padrão título+ações genérico em telas estreitas.
   mobileHeader?: React.ReactNode;
+  // Mobile sem header e sem padding no corpo — a tela desenha de ponta a ponta
+  // (Dashboard, onde o próprio conteúdo já é o "card" da tela toda).
+  mobileFullBleed?: boolean;
 }
 
 export function MainLayout({
@@ -30,6 +33,7 @@ export function MainLayout({
   titleClassName = "text-[19px] font-medium shrink-0",
   subtitleClassName = "text-[12.5px] opacity-50 truncate",
   mobileHeader,
+  mobileFullBleed = false,
 }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isMobile = useIsMobile();
@@ -48,7 +52,13 @@ export function MainLayout({
         className="flex-1 w-full min-w-0 transition-[margin] duration-200"
         style={{ marginLeft: !isMobile ? (sidebarCollapsed ? "72px" : "248px") : "0" }}
       >
-        <header className={cn("sticky top-0 z-40 bg-background", !hideHeaderBorder && "border-b border-border")}>
+        <header
+          className={cn(
+            "sticky top-0 z-40 bg-background",
+            !hideHeaderBorder && "border-b border-border",
+            isMobile && mobileFullBleed && "hidden"
+          )}
+        >
           {isMobile && mobileHeader ? (
             <div style={{ padding: "12px 16px" }}>{mobileHeader}</div>
           ) : (
@@ -62,7 +72,7 @@ export function MainLayout({
           )}
         </header>
 
-        <div className="p-4 md:p-6 pb-24 md:pb-6 min-w-0">{children}</div>
+        <div className={cn("min-w-0", isMobile && mobileFullBleed ? "pb-24" : "p-4 md:p-6 pb-24 md:pb-6")}>{children}</div>
       </main>
 
       {isMobile && !hideBottomNav && <BottomNav />}

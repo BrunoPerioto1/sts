@@ -1,15 +1,14 @@
-import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarSlash, CalendarBlank } from "@phosphor-icons/react";
+import { CalendarSlash } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
+import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MainMetrics } from "@/components/dashboard/MainMetrics";
 import { Segmented } from "@/components/ui/segmented";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { Button } from "@/components/ui/button";
-import { PeriodCalendarSheet } from "@/components/apostas/PeriodCalendarSheet";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/useDashboardFilters";
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -23,6 +22,9 @@ interface DashboardPageContentProps {
   metrics: DashboardMetrics;
   previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
+  // Em telas estreitas o corpo do dashboard é outro (card único do mobile);
+  // os estados de carregando/sem apostas continuam sendo os mesmos.
+  mobileView?: React.ReactNode;
 }
 
 function DashboardPageContent({
@@ -31,6 +33,7 @@ function DashboardPageContent({
   metrics,
   previousMetrics,
   dailyData,
+  mobileView,
 }: DashboardPageContentProps) {
   if (!ready) {
     return (
@@ -55,6 +58,8 @@ function DashboardPageContent({
     );
   }
 
+  if (mobileView) return <>{mobileView}</>;
+
   return (
     <div className="space-y-7">
       <DailyEvolutionChart data={dailyData} />
@@ -66,8 +71,7 @@ function DashboardPageContent({
 
 export function DashboardPage() {
   const isMobile = useIsMobile();
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const { filters, preset, setPreset, setCustomRange, hasNoBets, ready } = useDashboardFilters();
+  const { filters, preset, setPreset, setCustomRange, firstBetDate, hasNoBets, ready } = useDashboardFilters();
   const { metrics, previousMetrics, dailyData } = useDashboardData(filters);
 
   const rangeLabel =
@@ -98,34 +102,13 @@ export function DashboardPage() {
     </>
   );
 
-  const mobileHeaderControls = (
-    <>
-      {segmentedControl}
-      <Button
-        type="button"
-        variant="outline"
-        aria-label="Selecionar período"
-        onClick={() => setCalendarOpen(true)}
-        className="min-h-[32px] sm:min-h-[36px] px-0 w-9 sm:w-10 justify-center border-input bg-card hover:border-foreground/45 hover:bg-card"
-      >
-        <CalendarBlank className="h-4 w-4 opacity-70 shrink-0" />
-      </Button>
-    </>
-  );
-
   return (
     <MainLayout
       title="Dashboard"
       subtitle={rangeLabel}
-      mobileHeader={
-        <div className="flex flex-col gap-3">
-          <div>
-            <h1 className="text-[19px] font-semibold">Dashboard</h1>
-            {rangeLabel && <span className="text-[12.5px] opacity-50">{rangeLabel}</span>}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">{mobileHeaderControls}</div>
-        </div>
-      }
+      // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
+      // ("Resultado" + chip de período), então não há header.
+      mobileFullBleed={isMobile}
       actions={desktopHeaderControls}
     >
       <DashboardPageContent
@@ -134,18 +117,21 @@ export function DashboardPage() {
         metrics={metrics}
         previousMetrics={previousMetrics}
         dailyData={dailyData}
+        mobileView={
+          isMobile ? (
+            <DashboardMobileView
+              filters={filters}
+              preset={preset}
+              firstBetDate={firstBetDate}
+              metrics={metrics}
+              previousMetrics={previousMetrics}
+              dailyData={dailyData}
+              onPresetChange={setPreset}
+              onCustomRange={setCustomRange}
+            />
+          ) : undefined
+        }
       />
-
-      {isMobile && (
-        <PeriodCalendarSheet
-          nested={false}
-          open={calendarOpen}
-          onOpenChange={setCalendarOpen}
-          from={filters.startDate}
-          to={filters.endDate}
-          onApply={(from, to) => setCustomRange(from, to)}
-        />
-      )}
     </MainLayout>
   );
 }

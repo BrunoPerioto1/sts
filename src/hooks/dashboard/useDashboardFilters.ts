@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { format, startOfMonth, subDays } from "date-fns";
+import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
 import { getDashboardDateRange } from "@/api/routes/get-dashboard-daterange";
 
-export type DatePreset = "currentMonth" | "60d" | "90d" | "allTime" | "custom";
+export type DatePreset = "7d" | "14d" | "currentMonth" | "lastMonth" | "60d" | "90d" | "allTime" | "custom";
 
 const PRESET_KEY = "dashboard_date_preset";
 
@@ -13,7 +13,7 @@ interface Filters {
 }
 
 export function useDashboardFilters() {
-  const validPresets: DatePreset[] = ["currentMonth", "60d", "90d", "allTime", "custom"];
+  const validPresets: DatePreset[] = ["7d", "14d", "currentMonth", "lastMonth", "60d", "90d", "allTime", "custom"];
   const [preset, setPresetState] = useState<DatePreset>(() => {
     const stored = localStorage.getItem(PRESET_KEY) as DatePreset | null;
     return stored && validPresets.includes(stored) ? stored : "currentMonth";
@@ -35,7 +35,7 @@ export function useDashboardFilters() {
         setFirstBetDate(firstBetDate);
         setLastBetDate(lastBetDate);
         setHasNoBets(!lastBetDate);
-        applyPreset(preset);
+        applyPreset(preset, firstBetDate);
       })
       .catch(() => {
         applyPreset(preset);
@@ -44,26 +44,29 @@ export function useDashboardFilters() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function applyPreset(p: DatePreset) {
+  // firstDate: passado direto pelo fetch inicial, quando o estado firstBetDate
+  // ainda não foi comitado (setState é assíncrono).
+  function applyPreset(p: DatePreset, firstDate?: string | null) {
     const today = new Date();
-    if (p === "currentMonth") {
+    const setRange = (start: Date | string, end: Date | string = today) =>
       setFiltersState((prev) => ({
         ...prev,
-        startDate: format(startOfMonth(today), "yyyy-MM-dd"),
-        endDate: format(today, "yyyy-MM-dd"),
+        startDate: typeof start === "string" ? start : format(start, "yyyy-MM-dd"),
+        endDate: typeof end === "string" ? end : format(end, "yyyy-MM-dd"),
       }));
+
+    if (p === "7d" || p === "14d") {
+      // Intervalo inclusivo nas duas pontas: 7 dias = hoje + os 6 anteriores.
+      setRange(subDays(today, p === "7d" ? 6 : 13));
+    } else if (p === "currentMonth") {
+      setRange(startOfMonth(today));
+    } else if (p === "lastMonth") {
+      const lastMonth = subMonths(today, 1);
+      setRange(startOfMonth(lastMonth), endOfMonth(lastMonth));
     } else if (p === "60d" || p === "90d") {
-      setFiltersState((prev) => ({
-        ...prev,
-        startDate: format(subDays(today, p === "60d" ? 60 : 90), "yyyy-MM-dd"),
-        endDate: format(today, "yyyy-MM-dd"),
-      }));
+      setRange(subDays(today, p === "60d" ? 60 : 90));
     } else if (p === "allTime") {
-      setFiltersState((prev) => ({
-        ...prev,
-        startDate: "2000-01-01",
-        endDate: format(today, "yyyy-MM-dd"),
-      }));
+      setRange(firstDate ?? firstBetDate ?? "2000-01-01");
     }
   }
 
