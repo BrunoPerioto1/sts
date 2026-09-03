@@ -186,9 +186,9 @@ export default function ApostasPage() {
     }
   };
 
-  // Excluir mais de 2 apostas de uma vez pede confirmação antes; 1 ou 2, exclui direto.
+  // Excluir mais de 1 aposta de uma vez pede confirmação antes; 1, exclui direto.
   const handleDeleteSelectedClick = () => {
-    if (selectedBets.length > 2) {
+    if (selectedBets.length > 1) {
       setConfirmDeleteOpen(true);
     } else {
       handleDeleteSelected();
