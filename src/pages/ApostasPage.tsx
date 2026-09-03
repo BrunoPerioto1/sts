@@ -188,7 +188,7 @@ export default function ApostasPage() {
 
   // Excluir mais de 1 aposta de uma vez pede confirmação antes; 1, exclui direto.
   const handleDeleteSelectedClick = () => {
-    if (selectedBets.length > 1) {
+    if (selectedBets.length > 2) {
       setConfirmDeleteOpen(true);
     } else {
       handleDeleteSelected();
