@@ -1,10 +1,8 @@
 // src/pages/dashboard/hooks/useDashboardData.ts
 import { useEffect, useState } from "react";
 import { differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
-import {
-  getDashboardMetrics,
-  type DashboardMetrics,
-} from "@/api/routes/get-dashboard-metrics";
+import { type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
+import { getDashboardMetricsComparison } from "@/api/routes/get-dashboard-metrics-comparison";
 import {
   getDashboardDailySummary,
   type DailySummaryPoint,
@@ -74,13 +72,18 @@ export function useDashboardData(filters: Params) {
         endDate: filters.endDate,
       };
       const prev = previousRange(filters.startDate, filters.endDate);
-      const [metricsData, daily, previousMetricsData] = await Promise.all([
-        getDashboardMetrics(params),
+      const [comparison, daily] = await Promise.all([
+        getDashboardMetricsComparison({
+          houseId: filters.houseId,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          previousStartDate: prev.startDate,
+          previousEndDate: prev.endDate,
+        }).catch(() => ({ current: emptyMetrics, previous: emptyMetrics })),
         getDashboardDailySummary(params),
-        getDashboardMetrics({ house_id: filters.houseId, startDate: prev.startDate, endDate: prev.endDate }).catch(() => emptyMetrics),
       ]);
-      setMetrics(metricsData);
-      setPreviousMetrics(previousMetricsData);
+      setMetrics(comparison.current);
+      setPreviousMetrics(comparison.previous);
       setDailyData(daily || []);
     } catch (err) {
       console.error("Erro ao carregar dados do dashboard:", err);
