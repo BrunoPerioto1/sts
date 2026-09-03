@@ -70,6 +70,8 @@ export interface BetFilterDto {
   startDate?: string | Date;
   endDate?: string | Date;
   resultId?: number;
+  resultIds?: number[];
+  houseIds?: number[];
   q?: string;
   page?: number;
   perPage?: number;
@@ -85,6 +87,11 @@ export async function getBets(params?: BetFilterDto) {
   const queryParams: Record<string, any> = { ...params };
   if (queryParams.startDate) queryParams.startDate = new Date(queryParams.startDate).toISOString();
   if (queryParams.endDate) queryParams.endDate = new Date(queryParams.endDate).toISOString();
+  // API espera lista separada por vírgula (independe de como axios serializaria um array).
+  if (queryParams.resultIds?.length) queryParams.resultIds = queryParams.resultIds.join(',');
+  else delete queryParams.resultIds;
+  if (queryParams.houseIds?.length) queryParams.houseIds = queryParams.houseIds.join(',');
+  else delete queryParams.houseIds;
 
   const response = await api.bets.get<PaginatedBetsResponseDto>('', { params: queryParams });
   return response.data;

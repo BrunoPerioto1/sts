@@ -8,8 +8,11 @@ import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { BulkActionBar } from "@/components/apostas/BulkActionBar";
+import { MobileFiltersSheet } from "@/components/apostas/MobileFiltersSheet";
+import { MobileSearchToggle, MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
 import { cn } from "@/lib/utils";
+import type { ApostasFilterState, PeriodPreset } from "@/types/apostas-filters";
 import {
   getBets as fetchBets,
   type BetItem,
@@ -25,7 +28,6 @@ import { getAllHouses } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,20 +74,22 @@ export default function ApostasPage() {
   const [selectedBets, setSelectedBets] = useState<number[]>([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [houseFilter, setHouseFilter] = useState<number | undefined>(() => {
+  const [houseIds, setHouseIds] = useState<number[]>(() => {
     const fromUrl = searchParams.get("houseId");
-    return fromUrl ? Number(fromUrl) : undefined;
+    return fromUrl ? [Number(fromUrl)] : [];
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"agrupado" | "tabela">("agrupado");
   const [startDate, setStartDate] = useState(() => format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("mes");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage] = useState(30);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const selection = useBulkSelection();
 
@@ -110,17 +114,13 @@ export default function ApostasPage() {
     setLoading(true);
     try {
       const params: any = { page: pageArg, perPage };
-      // Backend só filtra por 1 resultId — com 1 status selecionado manda pro
-      // servidor (pagina certo); com 2+ busca tudo e filtra aqui (mesmo
-      // trade-off que houseFilter já aceita abaixo).
-      if (statusFilter.length === 1) params.resultId = statusFilter[0];
+      if (statusFilter.length > 0) params.resultIds = statusFilter.map(Number);
+      if (houseIds.length > 0) params.houseIds = houseIds;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       if (searchTerm) params.q = searchTerm;
       const response: PaginatedBetsResponseDto = await fetchBets(params);
-      let data = Array.isArray(response?.data) ? response.data : [];
-      if (houseFilter) data = data.filter((b) => b.houseId === houseFilter);
-      if (statusFilter.length > 1) data = data.filter((b) => statusFilter.includes(String(b.resultId)));
+      const data = Array.isArray(response?.data) ? response.data : [];
       setApostas((prev) => (append ? [...prev, ...data] : data));
       setTotalPages(response?.totalPages || 1);
       setTotal(response?.total || 0);
@@ -132,10 +132,10 @@ export default function ApostasPage() {
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => fetchFilteredBets(1, false), 300);
+    searchTimeout.current = setTimeout(() => fetchFilteredBets(1, false), 250);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, statusFilter, houseFilter, startDate, endDate]);
+  }, [searchTerm, statusFilter, houseIds, startDate, endDate]);
 
   const reload = () => fetchFilteredBets(1, false);
   const handleLoadMore = () => fetchFilteredBets(page + 1, true);
@@ -318,15 +318,27 @@ export default function ApostasPage() {
     initialDateTo: endDate,
     initialSearchTerm: searchTerm,
     initialStatus: statusFilter,
-    initialHouseId: houseFilter ? String(houseFilter) : "0",
+    // ApostasFilter (desktop) continua single-select — ponte pro houseIds[] interno.
+    initialHouseId: houseIds[0] ? String(houseIds[0]) : "0",
     onSearch: (term: string) => { setSearchTerm(term); setPage(1); },
     onFilterStatus: (status: string[]) => { setStatusFilter(status); setPage(1); },
-    onFilterHouse: (id: string) => { setHouseFilter(id === "0" ? undefined : Number(id)); setPage(1); },
-    onDateRangeChange: (from: string, to: string) => { setStartDate(from); setEndDate(to); setPage(1); },
-    onClearFilters: () => { setStartDate(""); setEndDate(""); setStatusFilter([]); setHouseFilter(undefined); setSearchTerm(""); setPage(1); },
+    onFilterHouse: (id: string) => { setHouseIds(id === "0" ? [] : [Number(id)]); setPage(1); },
+    onDateRangeChange: (from: string, to: string) => { setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPage(1); },
+    onClearFilters: () => {
+      setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
+      setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPage(1);
+    },
     onExportCsv: handleExportCsv,
     isLoading: loading,
   };
+
+  const mobileFilterValue: ApostasFilterState = {
+    period: { preset: periodPreset, from: startDate, to: endDate },
+    status: statusFilter,
+    houseIds,
+  };
+
+  const activeMobileFilterCount = [periodPreset !== "mes", statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
 
   return (
     <MainLayout
@@ -346,6 +358,7 @@ export default function ApostasPage() {
             <h1 className="text-[19px] font-semibold truncate">Apostas</h1>
           </div>
           <div className="flex items-center gap-1 -mr-2">
+            <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={() => setMobileSearchExpanded((v) => !v)} />
             {viewMode === "agrupado" && (
               <button
                 type="button"
@@ -369,9 +382,14 @@ export default function ApostasPage() {
               type="button"
               onClick={() => setMobileFilterOpen(true)}
               aria-label="Abrir filtros"
-              className="p-2 text-zinc-400 hover:text-white"
+              className="relative p-2 text-zinc-400 hover:text-white"
             >
               <SlidersHorizontal size={19} />
+              {activeMobileFilterCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-[9px] font-medium flex items-center justify-center">
+                  {activeMobileFilterCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -406,6 +424,16 @@ export default function ApostasPage() {
         </>
       }
     >
+      <div className="md:hidden">
+        <MobileSearchBar
+          value={searchTerm}
+          onChange={(term) => { setSearchTerm(term); setPage(1); }}
+          resultsCount={total}
+          open={mobileSearchExpanded}
+          onClose={() => setMobileSearchExpanded(false)}
+        />
+      </div>
+
       {/* Chips de status rápido — só mobile, substitui o multi-select da toolbar desktop */}
       <div className="flex md:hidden gap-2 overflow-x-auto pb-3 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {mobileStatusPills.map((pill) => {
@@ -428,9 +456,9 @@ export default function ApostasPage() {
       </div>
 
       <div className="space-y-4 min-w-0">
-        <div className="hidden md:block">
-          <ApostasFilter {...filterProps} />
-        </div>
+        {/* Breakpoint alinhado com o mobileHeader/sheets (isMobile, 640px) — antes
+            usava md: (768px) e deixava 640-767px sem nenhum filtro visível. */}
+        {!isMobile && <ApostasFilter {...filterProps} />}
 
         <div
           className={cn(
@@ -604,16 +632,20 @@ export default function ApostasPage() {
         <Plus size={22} weight="bold" />
       </button>
 
-      <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
-        <SheetContent side="right" className="w-[85vw] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Filtros</SheetTitle>
-          </SheetHeader>
-          <div className="mt-4">
-            <ApostasFilter {...filterProps} variant="stacked" />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <MobileFiltersSheet
+        open={mobileFilterOpen}
+        onOpenChange={setMobileFilterOpen}
+        value={mobileFilterValue}
+        houses={houses}
+        onApply={(next) => {
+          setPeriodPreset(next.period.preset);
+          setStartDate(next.period.from);
+          setEndDate(next.period.to);
+          setStatusFilter(next.status);
+          setHouseIds(next.houseIds);
+          setPage(1);
+        }}
+      />
 
       <BulkActionBar
         count={selection.selected.size}

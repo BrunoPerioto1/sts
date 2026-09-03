@@ -23,9 +23,6 @@ interface ApostasFilterProps {
   initialSearchTerm?: string;
   initialStatus?: string[];
   initialHouseId?: string;
-  // "pill" é a barra horizontal compacta do desktop; "stacked" é a lista
-  // vertical de largura total usada dentro do drawer mobile.
-  variant?: "pill" | "stacked";
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
@@ -47,7 +44,6 @@ export function ApostasFilter({
   initialSearchTerm = "",
   initialStatus = [],
   initialHouseId = "0",
-  variant = "pill",
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
@@ -93,80 +89,6 @@ export function ApostasFilter({
     setHouseId("0");
     onClearFilters?.();
   };
-
-  if (variant === "stacked") {
-    const hasActiveFilters = !!searchTerm || !!dateFrom || !!dateTo || status.length > 0 || houseId !== "0";
-    return (
-      <div className={cn("w-full flex flex-col gap-4", className)}>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-zinc-500">Buscar</span>
-          <div className="relative">
-            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <Input
-              placeholder="Buscar apostas..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
-              disabled={isLoading}
-              className="pl-9"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-zinc-500">Período</span>
-          <DateRangeField
-            startDate={dateFrom}
-            endDate={dateTo}
-            onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
-            placeholder="Selecionar período"
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-zinc-500">Status</span>
-          <StatusMultiSelect
-            selected={status}
-            onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
-            disabled={isLoading}
-            className="w-full justify-between min-h-[36px] rounded-md border border-input bg-card px-[10px] py-[6px] hover:border-foreground/45"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-zinc-500">Casa</span>
-          <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Todas as casas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">Todas as casas</SelectItem>
-              {houses.map((h) => (
-                <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {onExportCsv && (
-          <button
-            type="button"
-            onClick={onExportCsv}
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 min-h-[36px] rounded-md border border-input text-[13px] text-zinc-300 hover:text-white hover:border-foreground/45 transition-colors disabled:opacity-45 disabled:pointer-events-none"
-          >
-            <DownloadSimple className="h-4 w-4" /> Exportar CSV
-          </button>
-        )}
-
-        {hasActiveFilters && (
-          <button type="button" onClick={handleClear} className="text-[13px] text-zinc-400 hover:text-white self-start">
-            Limpar filtros
-          </button>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className={cn("w-full space-y-2", className)}>
