@@ -33,12 +33,18 @@ export function BottomSheet({
     // arrastar-pra-fechar, e no touch isso "come" o tap do botão de fechar
     // (e de qualquer outro controle perto do topo). Com handleOnly, só o
     // <Drawer.Handle> abaixo dispara o gesto de arrastar.
-    <Root open={open} onOpenChange={onOpenChange} shouldScaleBackground={!nested} handleOnly>
+    // repositionInputs desligado: o vaul tenta reposicionar o drawer via JS
+    // (bottom/height inline) quando um input recebe foco, mas isso conflita
+    // com o max-h-[88dvh] abaixo — o resultado era o teclado abrindo e o
+    // sheet "rasgando" do rodapé, com uma área preta enorme no meio. Como o
+    // corpo do sheet já é rolável (overflow-y-auto), o scroll nativo do
+    // browser já resolve o input saindo de trás do teclado sem essa lógica.
+    <Root open={open} onOpenChange={onOpenChange} shouldScaleBackground={!nested} handleOnly repositionInputs={false}>
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[88vh] flex-col rounded-t-2xl border-t border-white/10 bg-background outline-none",
+            "fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl border-t border-white/10 bg-background outline-none",
             contentClassName
           )}
         >

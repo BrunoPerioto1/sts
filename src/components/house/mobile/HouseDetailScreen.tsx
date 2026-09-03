@@ -32,7 +32,10 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div
+      className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
+      style={{ backgroundColor: "var(--color-bg)" }}
+    >
       <div className="flex items-center justify-between gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2 min-w-0">
           <button type="button" onClick={onBack} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
