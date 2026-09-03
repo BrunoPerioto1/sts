@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarSlash } from "@phosphor-icons/react";
+import { CalendarSlash, CalendarBlank } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -8,8 +9,10 @@ import { MainMetrics } from "@/components/dashboard/MainMetrics";
 import { Segmented } from "@/components/ui/segmented";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { Button } from "@/components/ui/button";
+import { PeriodCalendarSheet } from "@/components/apostas/PeriodCalendarSheet";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/useDashboardFilters";
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Spinner } from "@/components/ui/spinner";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -62,6 +65,8 @@ function DashboardPageContent({
 }
 
 export function DashboardPage() {
+  const isMobile = useIsMobile();
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { filters, preset, setPreset, setCustomRange, hasNoBets, ready } = useDashboardFilters();
   const { metrics, previousMetrics, dailyData } = useDashboardData(filters);
 
@@ -70,22 +75,41 @@ export function DashboardPage() {
       ? `${format(parseISO(filters.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(filters.endDate), "dd MMM", { locale: ptBR })}`
       : undefined;
 
-  const headerControls = (
+  const segmentedControl = (
+    <Segmented
+      options={[
+        { value: "currentMonth", label: "Mês atual" },
+        { value: "60d", label: "60 dias" },
+      ]}
+      value={preset as "currentMonth" | "60d"}
+      onChange={(v) => setPreset(v as DatePreset)}
+    />
+  );
+
+  const desktopHeaderControls = (
     <>
-      <Segmented
-        options={[
-          { value: "currentMonth", label: "Mês atual" },
-          { value: "60d", label: "60 dias" },
-        ]}
-        value={preset as "currentMonth" | "60d"}
-        onChange={(v) => setPreset(v as DatePreset)}
-      />
+      {segmentedControl}
       <DateRangeField
         startDate={filters.startDate}
         endDate={filters.endDate}
         onChange={(from, to) => setCustomRange(from, to)}
         iconOnly
       />
+    </>
+  );
+
+  const mobileHeaderControls = (
+    <>
+      {segmentedControl}
+      <Button
+        type="button"
+        variant="outline"
+        aria-label="Selecionar período"
+        onClick={() => setCalendarOpen(true)}
+        className="min-h-[32px] sm:min-h-[36px] px-0 w-9 sm:w-10 justify-center border-input bg-card hover:border-foreground/45 hover:bg-card"
+      >
+        <CalendarBlank className="h-4 w-4 opacity-70 shrink-0" />
+      </Button>
     </>
   );
 
@@ -99,10 +123,10 @@ export function DashboardPage() {
             <h1 className="text-[19px] font-semibold">Dashboard</h1>
             {rangeLabel && <span className="text-[12.5px] opacity-50">{rangeLabel}</span>}
           </div>
-          <div className="flex flex-wrap items-center gap-2">{headerControls}</div>
+          <div className="flex flex-wrap items-center gap-2">{mobileHeaderControls}</div>
         </div>
       }
-      actions={headerControls}
+      actions={desktopHeaderControls}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
@@ -111,6 +135,17 @@ export function DashboardPage() {
         previousMetrics={previousMetrics}
         dailyData={dailyData}
       />
+
+      {isMobile && (
+        <PeriodCalendarSheet
+          nested={false}
+          open={calendarOpen}
+          onOpenChange={setCalendarOpen}
+          from={filters.startDate}
+          to={filters.endDate}
+          onApply={(from, to) => setCustomRange(from, to)}
+        />
+      )}
     </MainLayout>
   );
 }

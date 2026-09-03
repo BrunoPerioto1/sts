@@ -13,11 +13,15 @@ interface PeriodCalendarSheetProps {
   from: string;
   to: string;
   onApply: (from: string, to: string) => void;
+  // true (default) = aberto de dentro de outro sheet (MobileFiltersSheet),
+  // usa Drawer.NestedRoot. Passe false quando for o sheet raiz (ex.: aberto
+  // direto de um botão no header, sem nenhum drawer por baixo).
+  nested?: boolean;
 }
 
 // Sheet do período personalizado — sem chips de atalho (Mês atual/60 dias/90
 // dias), esse sheet já É o "personalizado".
-export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply }: PeriodCalendarSheetProps) {
+export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply, nested = true }: PeriodCalendarSheetProps) {
   const [range, setRange] = useState<DateRange | undefined>(undefined);
   const [activeField, setActiveField] = useState<"from" | "to">("from");
 
@@ -45,7 +49,7 @@ export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply }: P
 
   return (
     <BottomSheet
-      nested
+      nested={nested}
       open={open}
       onOpenChange={onOpenChange}
       title="Período"

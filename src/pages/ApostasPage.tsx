@@ -113,18 +113,39 @@ export default function ApostasPage() {
     selection.clear();
     setLoading(true);
     try {
-      const params: any = { page: pageArg, perPage };
-      if (statusFilter.length > 0) params.resultIds = statusFilter.map(Number);
-      if (houseIds.length > 0) params.houseIds = houseIds;
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
-      if (searchTerm) params.q = searchTerm;
-      const response: PaginatedBetsResponseDto = await fetchBets(params);
-      const data = Array.isArray(response?.data) ? response.data : [];
-      setApostas((prev) => (append ? [...prev, ...data] : data));
-      setTotalPages(response?.totalPages || 1);
-      setTotal(response?.total || 0);
-      setPage(pageArg);
+      const baseParams: any = {};
+      if (statusFilter.length > 0) baseParams.resultIds = statusFilter.map(Number);
+      if (houseIds.length > 0) baseParams.houseIds = houseIds;
+      if (startDate) baseParams.startDate = startDate;
+      if (endDate) baseParams.endDate = endDate;
+      if (searchTerm) baseParams.q = searchTerm;
+
+      if (viewMode === "agrupado") {
+        // Os totais de mês/semana/dia do Agrupado somam o array `apostas`
+        // inteiro — com paginação normal (30 por página) eles ficavam errados,
+        // batendo só com o que já tinha carregado na tela. Busca tudo que bate
+        // com o filtro (todas as páginas, em paralelo) em vez de paginar aqui.
+        const first = await fetchBets({ ...baseParams, page: 1, perPage: 1000 });
+        let data = Array.isArray(first?.data) ? first.data : [];
+        const pagesTotal = first?.totalPages ?? 1;
+        if (pagesTotal > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: pagesTotal - 1 }, (_, i) => fetchBets({ ...baseParams, page: i + 2, perPage: 1000 }))
+          );
+          for (const r of rest) data = data.concat(Array.isArray(r?.data) ? r.data : []);
+        }
+        setApostas(data);
+        setTotalPages(1);
+        setTotal(first?.total ?? data.length);
+        setPage(1);
+      } else {
+        const response: PaginatedBetsResponseDto = await fetchBets({ ...baseParams, page: pageArg, perPage });
+        const data = Array.isArray(response?.data) ? response.data : [];
+        setApostas((prev) => (append ? [...prev, ...data] : data));
+        setTotalPages(response?.totalPages || 1);
+        setTotal(response?.total || 0);
+        setPage(pageArg);
+      }
     } finally {
       setLoading(false);
     }
@@ -135,7 +156,7 @@ export default function ApostasPage() {
     searchTimeout.current = setTimeout(() => fetchFilteredBets(1, false), 250);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, statusFilter, houseIds, startDate, endDate]);
+  }, [searchTerm, statusFilter, houseIds, startDate, endDate, viewMode]);
 
   const reload = () => fetchFilteredBets(1, false);
   const handleLoadMore = () => fetchFilteredBets(page + 1, true);
