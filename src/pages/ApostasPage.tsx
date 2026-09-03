@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ToastAction } from "@/components/ui/toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,13 +37,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X, ArrowClockwise } from "@phosphor-icons/react";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast, Check, CheckCircle, ArrowCounterClockwise, Trash as TrashIcon, Copy } from "@/lib/action-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const statusLabelFor: Record<number, string> = {
   [ResultIdEnum.WON]: "Ganha",
   [ResultIdEnum.LOST]: "Perdida",
   [ResultIdEnum.PENDING]: "Pendente",
+};
+
+// Verde/vermelho no toast de finalização em lote são reservados pro resultado
+// da aposta (spec Nocturne) — Pendente fica neutro.
+const statusWordClassFor: Record<number, string> = {
+  [ResultIdEnum.WON]: "text-[#4ADE80]",
+  [ResultIdEnum.LOST]: "text-[#F87171]",
 };
 
 const mobileStatusPills: { label: string; value: string[] }[] = [
@@ -81,7 +87,6 @@ export default function ApostasPage() {
   const [total, setTotal] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const { toast } = useToast();
   const selection = useBulkSelection();
 
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -148,9 +153,9 @@ export default function ApostasPage() {
       await deleteMultipleBets(selectedBets);
       setSelectedBets([]);
       await reload();
-      toast({ title: "Sucesso", description: "Apostas excluídas!" });
+      actionToast.success({ icon: TrashIcon, title: "Sucesso", description: "Apostas excluídas!" });
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message || "Falha ao excluir apostas", variant: "destructive" });
+      actionToast.error({ description: e.message || "Falha ao excluir apostas" });
     } finally {
       setLoading(false);
     }
@@ -172,9 +177,9 @@ export default function ApostasPage() {
       await finalizeMultipleBets({ betIds: selectedBets, resultId });
       await reload();
       setSelectedBets([]);
-      toast({ title: "Status atualizado", description: "Apostas alteradas!" });
+      actionToast.success({ icon: Check, title: "Status atualizado", description: "Apostas alteradas!" });
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message || "Falha ao atualizar status", variant: "destructive" });
+      actionToast.error({ description: e.message || "Falha ao atualizar status" });
     } finally {
       setLoading(false);
     }
@@ -206,12 +211,18 @@ export default function ApostasPage() {
           await Promise.all(previous.map((p) => finalizeBet(p.id, { resultId: p.resultId })));
         }
         await reload();
-        toast({ title: "Alteração desfeita" });
+        actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
       };
 
-      toast({
-        title: `${ids.length} apostas marcadas como ${statusLabelFor[resultId] ?? "atualizada"}`,
-        action: <ToastAction altText="Desfazer" onClick={() => { undo(); }}>Desfazer</ToastAction>,
+      actionToast.success({
+        icon: CheckCircle,
+        title: (
+          <>
+            {ids.length} apostas marcadas como{" "}
+            <span className={statusWordClassFor[resultId] ?? undefined}>{statusLabelFor[resultId] ?? "atualizada"}</span>
+          </>
+        ),
+        action: { label: "Desfazer", onClick: undo },
       });
       await reload();
     } catch (e) {
@@ -220,7 +231,7 @@ export default function ApostasPage() {
         return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName } : a;
       }));
       const description = e instanceof Error ? e.message : "Falha ao atualizar status";
-      toast({ title: "Erro", description, variant: "destructive" });
+      actionToast.error({ description });
     } finally {
       setBulkLoading(false);
     }
@@ -237,10 +248,10 @@ export default function ApostasPage() {
       await deleteMultipleBets(ids);
       selection.clear();
       await reload();
-      toast({ title: `${ids.length} apostas excluídas` });
+      actionToast.success({ icon: TrashIcon, title: `${ids.length} apostas excluídas` });
     } catch (e) {
       const description = e instanceof Error ? e.message : "Falha ao excluir apostas";
-      toast({ title: "Erro", description, variant: "destructive" });
+      actionToast.error({ description });
     } finally {
       setBulkLoading(false);
     }
@@ -250,9 +261,9 @@ export default function ApostasPage() {
     try {
       await finalizeBet(id, { resultId, cashoutValue });
       await reload();
-      toast({ title: "Aposta liquidada" });
+      actionToast.success({ icon: Check, title: "Aposta liquidada" });
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message || "Falha ao liquidar aposta", variant: "destructive" });
+      actionToast.error({ description: e.message || "Falha ao liquidar aposta" });
     }
   };
 
@@ -268,9 +279,9 @@ export default function ApostasPage() {
         betTime: new Date().toISOString(),
       });
       await reload();
-      toast({ title: "Aposta duplicada" });
+      actionToast.success({ icon: Copy, title: "Aposta duplicada" });
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message || "Falha ao duplicar aposta", variant: "destructive" });
+      actionToast.error({ description: e.message || "Falha ao duplicar aposta" });
     }
   };
 
@@ -472,9 +483,9 @@ export default function ApostasPage() {
                 try {
                   await deleteBet(id);
                   await reload();
-                  toast({ title: "Sucesso", description: "Aposta excluída!" });
+                  actionToast.success({ icon: TrashIcon, title: "Sucesso", description: "Aposta excluída!" });
                 } catch (e: any) {
-                  toast({ title: "Erro", description: e.message || "Falha ao excluir aposta", variant: "destructive" });
+                  actionToast.error({ description: e.message || "Falha ao excluir aposta" });
                 } finally {
                   setLoading(false);
                 }
@@ -493,9 +504,9 @@ export default function ApostasPage() {
                   await deleteBet(id);
                   setSelectedBets((prev) => prev.filter((betId) => betId !== id));
                   await reload();
-                  toast({ title: "Sucesso", description: "Aposta excluída!" });
+                  actionToast.success({ icon: TrashIcon, title: "Sucesso", description: "Aposta excluída!" });
                 } catch (e: any) {
-                  toast({ title: "Erro", description: e.message || "Falha ao excluir aposta", variant: "destructive" });
+                  actionToast.error({ description: e.message || "Falha ao excluir aposta" });
                 } finally {
                   setLoading(false);
                 }

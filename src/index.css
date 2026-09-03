@@ -185,3 +185,16 @@
     );
   }
 }
+
+/* Pilha do action-toast (src/lib/action-toast.tsx): o sonner já cuida de
+   posição/escala/swipe/timers via --toasts-before; aqui só sobrescrevemos a
+   opacidade pra bater com o degradê 100%/78%/55% do spec. */
+[data-sonner-toast] {
+  opacity: calc(1 - var(--toasts-before, 0) * 0.22) !important;
+}
+[data-sonner-toast][data-front="true"] {
+  opacity: 1 !important;
+}
+[data-sonner-toast][data-visible="false"] {
+  opacity: 0 !important;
+}
