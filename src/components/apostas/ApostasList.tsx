@@ -15,8 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { DotsThreeOutline } from "@phosphor-icons/react";
+import { BottomSheet } from "./BottomSheet";
+import { OptionBar } from "./OptionRow";
+import { STATUS_OPTIONS } from "./StatusMultiSelect";
+import { DotsThreeOutline, CheckCircle, PencilSimple, Copy, Trash } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -94,6 +96,145 @@ export function ReturnValue({ aposta, className }: { aposta: BetItem; className?
   );
 }
 
+const colorByResultId: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.color]));
+
+// Preview de lucro só pra exibir no LiquidarSheet antes de confirmar — o
+// cálculo real e autoritativo continua no backend (calculateProfit em
+// bet.utils.ts). Cashout não entra aqui: depende do valor que o usuário
+// informar, não dá pra prever.
+function previewProfit(resultId: ResultIdEnum, stake: number, odd: number): number {
+  switch (resultId) {
+    case ResultIdEnum.WON:
+      return stake * (odd - 1);
+    case ResultIdEnum.LOST:
+      return -stake;
+    case ResultIdEnum.HALF_WON:
+      return (stake * (odd - 1)) / 2;
+    case ResultIdEnum.HALF_LOST:
+      return -stake / 2;
+    case ResultIdEnum.CANCELED:
+    default:
+      return 0;
+  }
+}
+
+function LiquidarSheet({
+  open,
+  onOpenChange,
+  aposta,
+  onFinalize,
+  onDone,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  aposta: BetItem;
+  onFinalize: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
+  // Fecha o LiquidarSheet E o ApostaDetailSheet por trás — depois de liquidar
+  // volta pra listagem, mesmo comportamento de antes.
+  onDone: () => void;
+}) {
+  const [cashoutOpen, setCashoutOpen] = useState(false);
+  const stake = Number(aposta.stake);
+  const odd = Number(aposta.odd);
+
+  const finalize = (resultId: ResultIdEnum) => {
+    onFinalize(aposta.id, resultId);
+    onDone();
+  };
+
+  const rows: { resultId: ResultIdEnum; label: string; section: "RESULTADO" | "PARCIAL" }[] = [
+    { resultId: ResultIdEnum.WON, label: "Ganha", section: "RESULTADO" },
+    { resultId: ResultIdEnum.LOST, label: "Perdida", section: "RESULTADO" },
+    { resultId: ResultIdEnum.HALF_WON, label: "Meia ganha", section: "PARCIAL" },
+    { resultId: ResultIdEnum.HALF_LOST, label: "Meia perdida", section: "PARCIAL" },
+  ];
+
+  return (
+    <BottomSheet nested open={open} onOpenChange={onOpenChange} title="Liquidar">
+      <div className="pb-4 space-y-4">
+        <p className="text-[12.5px] text-zinc-500 -mt-1 truncate">
+          {aposta.game} · {formatCurrency(stake)} @ {odd.toFixed(2)}
+        </p>
+
+        {(["RESULTADO", "PARCIAL"] as const).map((section) => (
+          <div key={section}>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">{section}</p>
+            <div className="flex flex-col gap-1">
+              {rows
+                .filter((r) => r.section === section)
+                .map((r) => {
+                  const value = previewProfit(r.resultId, stake, odd);
+                  return (
+                    <button
+                      key={r.resultId}
+                      type="button"
+                      onClick={() => finalize(r.resultId)}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+                    >
+                      <OptionBar color={colorByResultId[String(r.resultId)]} />
+                      <span className="flex-1 text-[14px] text-white">{r.label}</span>
+                      <span className={cn("text-[13px] font-medium tabular-nums", value >= 0 ? "text-positive" : "text-negative")}>
+                        {formatSignedCurrency(value)}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        ))}
+
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">ENCERRAMENTO</p>
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => setCashoutOpen(true)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+            >
+              <OptionBar color={colorByResultId[String(ResultIdEnum.CASHOUT)]} />
+              <span className="flex-1 text-[14px] text-white">Cashout</span>
+              <span className="text-[13px] text-zinc-500">Informar valor</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => finalize(ResultIdEnum.CANCELED)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+            >
+              <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
+              <span className="flex-1 text-[14px] text-white">Cancelada</span>
+              <span className="text-[13px] font-medium tabular-nums text-zinc-300">{formatCurrency(0)}</span>
+            </button>
+          </div>
+        </div>
+
+        {mapResultToStatus(aposta) !== "pendente" && (
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">PENDENTE</p>
+            <button
+              type="button"
+              onClick={() => finalize(ResultIdEnum.PENDING)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+            >
+              <OptionBar color={colorByResultId[String(ResultIdEnum.PENDING)]} />
+              <span className="flex-1 text-[14px] text-white">Pendente</span>
+              <span className="text-[13px] text-zinc-500">Sem resultado</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <CashoutDialog
+        open={cashoutOpen}
+        onClose={() => setCashoutOpen(false)}
+        onConfirm={(value) => {
+          onFinalize(aposta.id, ResultIdEnum.CASHOUT, value);
+          onDone();
+        }}
+      />
+    </BottomSheet>
+  );
+}
+
 export function ApostaDetailSheet({
   aposta,
   onClose,
@@ -109,7 +250,7 @@ export function ApostaDetailSheet({
   onDuplicate?: (a: BetItem) => void;
   onFinalize?: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
 }) {
-  const [cashoutOpen, setCashoutOpen] = useState(false);
+  const [liquidarOpen, setLiquidarOpen] = useState(false);
 
   if (!aposta) return null;
   const status = mapResultToStatus(aposta);
@@ -119,17 +260,27 @@ export function ApostaDetailSheet({
   const ganho = profit != null ? stake + profit : null;
 
   return (
-    <Sheet open={!!aposta} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-lg max-h-[85vh] overflow-y-auto space-y-4">
-        <SheetHeader>
-          <SheetTitle className="pr-6 text-left leading-snug">{aposta.game}</SheetTitle>
-        </SheetHeader>
+    <BottomSheet
+      open={!!aposta}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+      title={<span className="truncate block max-w-[240px]">{aposta.game}</span>}
+    >
+      <div className="pb-4 space-y-4">
+        <p className="text-[12.5px] text-zinc-500 -mt-1">
+          {date.toLocaleDateString("pt-BR")} · {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          {aposta.houseName && ` · ${aposta.houseName}`}
+        </p>
 
-        <div className="flex items-center gap-2 text-[12.5px] opacity-60">
-          <span>{date.toLocaleDateString("pt-BR")} · {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>
+          <p className={cn("text-[26px] font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
+            {profit != null ? formatSignedCurrency(profit) : "—"}
+          </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 border border-border rounded-md p-3">
+        <div className="grid grid-cols-3 gap-2 border border-border rounded-md p-3">
           <div>
             <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Cotação</p>
             <p className="text-[14px] font-medium tabular-nums">{Number(aposta.odd).toFixed(2)}</p>
@@ -139,68 +290,78 @@ export function ApostaDetailSheet({
             <p className="text-[14px] font-medium tabular-nums">{formatCurrency(stake)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Ganho</p>
+            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Retorno</p>
             <p className="text-[14px] font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Lucro</p>
-            <p className={cn("text-[14px] font-medium tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
-              {profit != null ? formatSignedCurrency(profit) : "—"}
-            </p>
           </div>
         </div>
 
         <div>
           <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1.5">Seleção</p>
-          <div className="flex items-start justify-between gap-2 border border-border rounded-md p-2.5">
+          <div
+            className="flex items-start justify-between gap-2 rounded-md border-l-[3px] bg-card p-2.5"
+            style={{ borderLeftColor: colorByResultId[String(aposta.resultId)] }}
+          >
             <div className="min-w-0">
               <p className="text-[13px] leading-snug">{aposta.market}</p>
-              {aposta.houseName && <p className="text-[11.5px] opacity-55">{aposta.houseName}</p>}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[12.5px] tabular-nums opacity-70 border border-border rounded-[5px] px-[8px] py-[2px]">
+              <p className="text-[11.5px] opacity-55">
                 {Number(aposta.odd).toFixed(2)}
-              </span>
-              <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
+                {aposta.houseName && ` · ${aposta.houseName}`}
+              </p>
             </div>
+            <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
           </div>
         </div>
 
-        {onFinalize && (
-          <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1.5">Liquidar</p>
-            <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.WON); onClose(); }}>Ganha</Button>
-              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.LOST); onClose(); }}>Perdida</Button>
-              <Button variant="outline" onClick={() => setCashoutOpen(true)}>Cashout</Button>
-              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.HALF_WON); onClose(); }}>Meia Ganha</Button>
-              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.HALF_LOST); onClose(); }}>Meia Perdida</Button>
-              <Button variant="outline" onClick={() => { onFinalize(aposta.id, ResultIdEnum.CANCELED); onClose(); }}>Cancelada</Button>
-            </div>
+        <div className="flex flex-col gap-2 pt-1">
+          {onFinalize && (
+            <Button
+              className={cn(
+                "w-full min-h-[44px] gap-2 border-transparent text-white font-bold hover:opacity-90 active:opacity-90",
+                profit == null ? "bg-blue-600" : profit >= 0 ? "bg-green-600" : "bg-red-600"
+              )}
+              style={{ boxShadow: "var(--shadow-sm)" }}
+              onClick={() => setLiquidarOpen(true)}
+            >
+              <CheckCircle size={17} weight="fill" /> {status === "pendente" ? "Liquidar" : "Alterar liquidação"}
+            </Button>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            {onEdit && (
+              <Button variant="outline" className="gap-1.5" onClick={() => { onEdit(aposta); onClose(); }}>
+                <PencilSimple size={14} /> Editar
+              </Button>
+            )}
+            {onDuplicate && (
+              <Button variant="outline" className="gap-1.5" onClick={() => { onDuplicate(aposta); onClose(); }}>
+                <Copy size={14} /> Duplicar
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="outline"
+                className="gap-1.5 border-negative/40 text-negative hover:bg-negative/10 hover:text-negative"
+                onClick={() => { onDelete(aposta.id); onClose(); }}
+              >
+                <Trash size={14} /> Excluir
+              </Button>
+            )}
           </div>
-        )}
-
-        <div className="grid grid-cols-3 gap-2 pt-1">
-          {onEdit && (
-            <Button variant="outline" onClick={() => { onEdit(aposta); onClose(); }}>Editar</Button>
-          )}
-          {onDuplicate && (
-            <Button variant="outline" onClick={() => { onDuplicate(aposta); onClose(); }}>Duplicar</Button>
-          )}
-          {onDelete && (
-            <Button variant="destructive" onClick={() => { onDelete(aposta.id); onClose(); }}>Excluir</Button>
-          )}
         </div>
+      </div>
 
-        {onFinalize && (
-          <CashoutDialog
-            open={cashoutOpen}
-            onClose={() => setCashoutOpen(false)}
-            onConfirm={(value) => { onFinalize(aposta.id, ResultIdEnum.CASHOUT, value); onClose(); }}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+      {onFinalize && (
+        <LiquidarSheet
+          open={liquidarOpen}
+          onOpenChange={setLiquidarOpen}
+          aposta={aposta}
+          onFinalize={onFinalize}
+          onDone={() => {
+            setLiquidarOpen(false);
+            onClose();
+          }}
+        />
+      )}
+    </BottomSheet>
   );
 }
 

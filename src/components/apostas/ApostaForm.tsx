@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
-import { getAllHouses } from "@/api/routes/get-houses";
+import { type BetItem } from "@/api/routes/get-bets";
+import { useApostaForm } from "@/hooks/apostas/useApostaForm";
 
 interface ApostaFormProps {
   onApostaAdded: (aposta: BetItem) => void;
@@ -14,79 +12,11 @@ interface ApostaFormProps {
 }
 
 export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: ApostaFormProps) {
-  const { toast } = useToast();
-  const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    game: initialData?.game || "",
-    market: initialData?.market || "",
-    odd: initialData?.odd?.toString() || "",
-    stake: initialData?.stake?.toString() || "",
-    houseId: (initialData as any)?.houseId ?? undefined as number | undefined,
-    sport: initialData?.sport || "Futebol",
+  const { formData, setFormData, houses, submitting, potentialReturn, handleSubmit } = useApostaForm({
+    onApostaAdded,
+    initialData,
+    isEditing,
   });
-
-  useEffect(() => {
-    getAllHouses()
-      .then((data) => {
-        const normalized = data.map((h: any) => ({ id: Number(h.id), name: h.name }));
-        setHouses(normalized);
-        if ((initialData as any)?.houseId) {
-          const match = normalized.find((h) => h.id === (initialData as any).houseId);
-          if (match) setFormData((prev) => ({ ...prev, houseId: match.id }));
-        }
-      })
-      .catch(() => undefined);
-  }, [initialData]);
-
-  const potentialReturn = useMemo(() => {
-    const odd = parseFloat(formData.odd.replace(",", "."));
-    const stake = parseFloat(formData.stake.replace(",", "."));
-    if (!Number.isFinite(odd) || !Number.isFinite(stake) || odd <= 0 || stake <= 0) return null;
-    return { total: odd * stake, profit: odd * stake - stake };
-  }, [formData.odd, formData.stake]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.game || !formData.market || !formData.odd || !formData.stake || !formData.houseId) {
-      toast({ title: "Erro", description: "Preencha todos os campos obrigatórios", variant: "destructive" });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      if (isEditing && initialData?.id) {
-        const payload: any = {
-          game: formData.game,
-          market: formData.market,
-          odd: parseFloat(formData.odd),
-          stake: parseFloat(formData.stake),
-          sport: formData.sport,
-          houseId: formData.houseId,
-        };
-        const updated = await updateBetRoute(initialData.id, payload);
-        onApostaAdded(updated);
-      } else {
-        const payload = {
-          game: formData.game,
-          stake: parseFloat(formData.stake),
-          odd: parseFloat(formData.odd),
-          houseId: formData.houseId,
-          market: formData.market,
-          sport: formData.sport,
-          betTime: new Date().toISOString(),
-        };
-        const created = await createBetRoute(payload);
-        onApostaAdded(created);
-      }
-      toast({ title: "Sucesso", description: isEditing ? "Aposta atualizada com sucesso!" : "Aposta registrada com sucesso!" });
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">

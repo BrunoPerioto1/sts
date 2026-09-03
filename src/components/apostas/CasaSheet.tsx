@@ -59,9 +59,13 @@ interface CasaSheetProps {
   houses: { id: number; name: string }[];
   houseIds: number[];
   onChange: (next: number[]) => void;
+  // false = seleção única (usado no form de aposta): tocar já seleciona e
+  // fecha o sheet, sem rodapé de Aplicar. Default true preserva o
+  // comportamento de filtro (multi-seleção + Aplicar).
+  multiple?: boolean;
 }
 
-export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange }: CasaSheetProps) {
+export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, multiple = true }: CasaSheetProps) {
   const [search, setSearch] = useState("");
   const [balances, setBalances] = useState<Record<number, number>>({});
   const [recentIds, setRecentIds] = useState<number[]>([]);
@@ -82,6 +86,12 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange }: Ca
   }, [open]);
 
   const toggle = (id: number) => {
+    if (!multiple) {
+      onChange([id]);
+      pushRecentHouseIds([id]);
+      onOpenChange(false);
+      return;
+    }
     onChange(houseIds.includes(id) ? houseIds.filter((v) => v !== id) : [...houseIds, id]);
   };
 
@@ -104,9 +114,11 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange }: Ca
       onOpenChange={onOpenChange}
       title="Casa"
       footer={
-        <Button className="w-full min-h-[44px]" onClick={handleApply}>
-          {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
-        </Button>
+        multiple ? (
+          <Button className="w-full min-h-[44px]" onClick={handleApply}>
+            {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
+          </Button>
+        ) : undefined
       }
     >
       <div className="sticky top-0 -mx-4 px-4 pb-2 pt-1 bg-background z-10">
