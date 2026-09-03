@@ -5,6 +5,8 @@ export interface UpdateMeParams {
   username?: string;
   email?: string;
   fullName?: string;
+  stake?: number;
+  minPercentFilter?: number;
 }
 
 export async function patchMe(data: UpdateMeParams): Promise<MeResponse> {

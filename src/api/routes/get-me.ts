@@ -8,6 +8,8 @@ export type MeResponse = {
   roleId: number;
   createdAt?: string | null;
   telegramUserId?: number | null;
+  stake?: string | number | null;
+  minPercentFilter?: string | number | null;
 };
 
 export async function getMe(): Promise<MeResponse> {
