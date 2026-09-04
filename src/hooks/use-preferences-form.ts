@@ -3,7 +3,7 @@ import type { MeResponse } from "@/api/routes/get-me";
 import { patchMe } from "@/api/routes/patch-me";
 import { parsePtBrNumber } from "@/lib/format";
 import { getErrorMessage } from "@/lib/api-error";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 
 export const THRESHOLD_MIN = 0.01;
 export const THRESHOLD_MAX = 5;
@@ -14,7 +14,6 @@ export function toPtBr(value: number): string {
 }
 
 export function usePreferencesForm(me: MeResponse | null, onSaved: (me: MeResponse) => void) {
-  const { toast } = useToast();
   const [stakeInput, setStakeInput] = useState(me?.stake != null ? toPtBr(Number(me.stake)) : "");
   const [thresholdInput, setThresholdInput] = useState(
     me?.minPercentFilter != null ? toPtBr(Number(me.minPercentFilter)) : toPtBr(THRESHOLD_DEFAULT)
@@ -49,9 +48,9 @@ export function usePreferencesForm(me: MeResponse | null, onSaved: (me: MeRespon
       const updated = await patchMe(payload);
       resetFrom(updated);
       onSaved(updated);
-      toast({ title: "Preferências salvas" });
+      actionToast.success({ title: "Preferências salvas" });
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao salvar."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao salvar.") });
     } finally {
       setSaving(false);
     }

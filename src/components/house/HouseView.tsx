@@ -5,7 +5,7 @@ import { HousesMetrics } from "./HouseMetrics";
 import { HousesSearch, type HouseSort } from "./HouseSearch";
 import { Buildings } from "@phosphor-icons/react";
 import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics } from "@/api/routes/get-houses";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 import { Segmented } from "@/components/ui/segmented";
@@ -36,7 +36,6 @@ export function CasasApostaView() {
   const [isMovimentacaoModalOpen, setIsMovimentacaoModalOpen] = useState(false);
   const [isNovaTransacaoModalOpen, setIsNovaTransacaoModalOpen] = useState(false);
 
-  const { toast } = useToast();
 
   const loadData = async () => {
     try {
@@ -45,7 +44,7 @@ export function CasasApostaView() {
       setHouses(housesData);
       setMetrics(metricsData);
     } catch {
-      toast({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas.", variant: "destructive" });
+      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { PreferencesFields } from "@/components/perfil/PreferencesFields";
@@ -49,7 +49,6 @@ function preferencesSummary(me: MeResponse): string {
 }
 
 export default function PerfilPage() {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [linking, setLinking] = useState(false);
@@ -90,9 +89,9 @@ export default function PerfilPage() {
       const res = await postTelegramLinkCode();
       setCode(res.code);
       try { await navigator.clipboard.writeText(res.code); } catch { /* clipboard write is best-effort */ }
-      toast({ title: "Código gerado", description: `Use no bot: /vincular ${res.code}` });
+      actionToast.success({ title: "Código gerado", description: `Use no bot: /vincular ${res.code}` });
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao gerar código."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao gerar código.") });
     } finally {
       setLinking(false);
     }
@@ -101,10 +100,10 @@ export default function PerfilPage() {
   const handleUnlinkTelegram = async () => {
     try {
       await postUnlinkTelegram();
-      toast({ title: "Telegram desvinculado" });
+      actionToast.success({ title: "Telegram desvinculado" });
       loadMe();
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao desvincular."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
     }
   };
 
@@ -113,9 +112,9 @@ export default function PerfilPage() {
     try {
       const updated = await patchMe(form);
       setMe(updated);
-      toast({ title: "Perfil atualizado" });
+      actionToast.success({ title: "Perfil atualizado" });
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao salvar."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao salvar.") });
     } finally {
       setSaving(false);
     }

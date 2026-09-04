@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { Eye, EyeSlash, ArrowRight } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { postLogin } from "@/api/routes/post-login";
@@ -16,7 +16,6 @@ interface LoginFormProps {
 const REMEMBERED_EMAIL_KEY = "remembered_email";
 
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
-  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     e.preventDefault();
 
     if (!loginData.email || !loginData.password) {
-      toast({ title: "Erro", description: "Por favor, preencha todos os campos.", variant: "destructive" });
+      actionToast.error({ description: "Por favor, preencha todos os campos." });
       return;
     }
 
@@ -63,7 +62,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       navigate("/dashboard");
     } catch (err: any) {
       const description = err?.response?.data?.message || "Credenciais inválidas.";
-      toast({ title: "Erro", description, variant: "destructive" });
+      actionToast.error({ description });
     } finally {
       setSubmitting(false);
     }

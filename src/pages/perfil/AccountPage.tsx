@@ -5,14 +5,13 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { getMe, type MeResponse } from "@/api/routes/get-me";
 import { patchMe } from "@/api/routes/patch-me";
 import { getErrorMessage } from "@/lib/api-error";
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [form, setForm] = useState({ username: "", email: "" });
   const [saving, setSaving] = useState(false);
@@ -29,9 +28,9 @@ export default function AccountPage() {
     try {
       const updated = await patchMe(form);
       setMe(updated);
-      toast({ title: "Dados atualizados" });
+      actionToast.success({ title: "Dados atualizados" });
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao salvar."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao salvar.") });
     } finally {
       setSaving(false);
     }

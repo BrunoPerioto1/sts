@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowsDownUp, Buildings, MagnifyingGlass } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics } from "@/api/routes/get-houses";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HouseRowMobile } from "./HouseRowMobile";
@@ -29,7 +29,6 @@ interface CasasMobileViewProps {
 
 export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [houses, setHouses] = useState<HouseBalanceDto[]>([]);
   const [metrics, setMetrics] = useState<HouseMetricsDto | null>(null);
@@ -53,7 +52,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
       setMetrics(metricsData);
       setStack((prev) => prev.map((s) => ({ ...s, house: housesData.find((h) => h.houseId === s.house.houseId) ?? s.house })));
     } catch {
-      toast({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas.", variant: "destructive" });
+      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
     } finally {
       setLoading(false);
     }
@@ -204,7 +203,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         onSuccess={async () => {
           setNovaMovHouse(null);
           await loadData();
-          toast({ title: "Movimentação registrada" });
+          actionToast.success({ title: "Movimentação registrada" });
         }}
       />
 

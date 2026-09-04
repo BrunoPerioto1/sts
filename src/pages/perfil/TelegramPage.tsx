@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CaretLeft, TelegramLogo } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { getMe, type MeResponse } from "@/api/routes/get-me";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
@@ -11,7 +11,6 @@ import { getErrorMessage } from "@/lib/api-error";
 
 export default function TelegramPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState<string>("");
@@ -30,9 +29,9 @@ export default function TelegramPage() {
       const res = await postTelegramLinkCode();
       setCode(res.code);
       try { await navigator.clipboard.writeText(res.code); } catch { /* clipboard write is best-effort */ }
-      toast({ title: "Código gerado", description: `Use no bot: /vincular ${res.code}` });
+      actionToast.success({ title: "Código gerado", description: `Use no bot: /vincular ${res.code}` });
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao gerar código."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao gerar código.") });
     } finally {
       setLinking(false);
     }
@@ -41,10 +40,10 @@ export default function TelegramPage() {
   const handleUnlinkTelegram = async () => {
     try {
       await postUnlinkTelegram();
-      toast({ title: "Telegram desvinculado" });
+      actionToast.success({ title: "Telegram desvinculado" });
       loadMe();
     } catch (error) {
-      toast({ title: "Erro", description: getErrorMessage(error, "Falha ao desvincular."), variant: "destructive" });
+      actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
     }
   };
 

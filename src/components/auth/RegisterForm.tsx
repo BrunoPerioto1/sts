@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast } from "@/lib/action-toast";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { postRegister } from "@/api/routes/post-register";
@@ -14,7 +14,6 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
-  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [registerData, setRegisterData] = useState({
@@ -30,19 +29,19 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     e.preventDefault();
 
     if (!registerData.nome || !registerData.email || !registerData.password) {
-      toast({ title: "Erro", description: "Por favor, preencha todos os campos obrigatórios.", variant: "destructive" });
+      actionToast.error({ description: "Por favor, preencha todos os campos obrigatórios." });
       return;
     }
     if (registerData.password !== registerData.confirmPassword) {
-      toast({ title: "Erro", description: "As senhas não coincidem.", variant: "destructive" });
+      actionToast.error({ description: "As senhas não coincidem." });
       return;
     }
     if (registerData.password.length < 6) {
-      toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      actionToast.error({ description: "A senha deve ter pelo menos 6 caracteres." });
       return;
     }
     if (!registerData.acceptTerms) {
-      toast({ title: "Erro", description: "Você deve aceitar os termos de uso.", variant: "destructive" });
+      actionToast.error({ description: "Você deve aceitar os termos de uso." });
       return;
     }
 
@@ -59,11 +58,11 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       const loginRes = await postLogin({ email: registerData.email, password: registerData.password });
       localStorage.setItem("token", loginRes.access_token);
 
-      toast({ title: "Conta criada!", description: "Bem-vindo ao SportsBet Manager!" });
+      actionToast.success({ title: "Conta criada!", description: "Bem-vindo ao SportsBet Manager!" });
       navigate("/dashboard");
     } catch (err: any) {
       const description = err?.response?.data?.message || "Falha ao criar conta.";
-      toast({ title: "Erro", description, variant: "destructive" });
+      actionToast.error({ description });
     } finally {
       setSubmitting(false);
     }
