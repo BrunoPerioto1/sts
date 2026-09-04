@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
 
@@ -31,6 +31,7 @@ export function useShell(): ShellContextValue {
  * JS. Assim a decisao acontece na pintura e nao existe frame intermediario.
  */
 export function AppShell() {
+  const { pathname } = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
 
@@ -58,7 +59,13 @@ export function AppShell() {
         </div>
 
         <main className="flex-1 w-full min-w-0 ml-0 sm:ml-[var(--sidebar-w)] transition-[margin] duration-200">
-          <Outlet />
+          {/* `key` no pathname existe so pra reiniciar a animacao: sem ela a
+              div permanece a mesma entre rotas e o CSS nunca redispara.
+              So entrada, sem saida — animar a saida obrigaria a esperar a tela
+              velha sumir antes de montar a nova, o que ai sim seria atraso. */}
+          <div key={pathname} className="animate-route-in">
+            <Outlet />
+          </div>
         </main>
 
         {!bottomNavHidden && <BottomNav />}
