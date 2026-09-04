@@ -59,7 +59,7 @@ export default function TelegramPage() {
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
-          <h1 className="text-[17px] font-semibold truncate">Telegram</h1>
+          <h1 className="text-base font-semibold truncate">Telegram</h1>
         </div>
       }
     >
@@ -69,11 +69,11 @@ export default function TelegramPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <TelegramLogo size={18} className="text-accent" />
-            <span className={`tag ml-auto text-[11px] px-[10px] py-[3px] rounded-[6px] ${isLinked ? "bg-positive/[0.16] text-positive" : "bg-neutral-800 text-neutral-100"}`}>
+            <span className={`tag ml-auto text-xs px-[10px] py-[3px] rounded-[6px] ${isLinked ? "bg-positive/[0.16] text-positive" : "bg-neutral-800 text-neutral-100"}`}>
               {isLinked ? "Vinculado" : "Não vinculado"}
             </span>
           </div>
-          <p className="text-[13px] text-zinc-500">Registre apostas por mensagem e receba o resumo do dia.</p>
+          <p className="text-sm text-zinc-500">Registre apostas por mensagem e receba o resumo do dia.</p>
 
           {isLinked ? (
             <Button variant="outline" size="sm" onClick={handleUnlinkTelegram}>Desvincular</Button>
@@ -82,7 +82,7 @@ export default function TelegramPage() {
               <Button size="sm" onClick={handleGenerateTelegramCode} disabled={linking}>
                 {linking ? "Gerando…" : "Vincular Telegram"}
               </Button>
-              {code && <p className="text-[13px]">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
+              {code && <p className="text-sm">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
             </div>
           )}
         </div>

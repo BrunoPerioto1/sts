@@ -31,12 +31,12 @@ export function HousesSearch({
         <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => onChange(e.target.value)} className="pl-8" disabled={isLoading} />
       </div>
 
-      <label className="flex items-center gap-2 text-[13px]">
+      <label className="flex items-center gap-2 text-sm">
         <Checkbox checked={onlyWithBalance} onCheckedChange={(v) => onOnlyWithBalanceChange(!!v)} disabled={isLoading} />
         Só com saldo
       </label>
 
-      <div className="flex items-center gap-2 text-[13px] opacity-70">
+      <div className="flex items-center gap-2 text-sm opacity-70">
         <span>Ordenar:</span>
         <Select value={sort} onValueChange={(v) => onSortChange(v as HouseSort)} disabled={isLoading}>
           <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>

@@ -72,7 +72,7 @@ export function BottomSheet({
 
           <div className="flex items-center justify-between gap-2 pl-4 pr-2 pb-3 pt-3">
             <div className="flex items-center gap-2 min-w-0">
-              <DrawerPrimitive.Title className="text-[17px] font-semibold truncate">
+              <DrawerPrimitive.Title className="text-base font-semibold truncate">
                 {title}
               </DrawerPrimitive.Title>
               {titleExtra}

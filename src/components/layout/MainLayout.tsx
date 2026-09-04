@@ -30,8 +30,8 @@ export function MainLayout({
   hideHeaderBorder = false,
   hideBottomNav = false,
   titleWrapperClassName = "flex items-baseline gap-3 min-w-0",
-  titleClassName = "text-[19px] font-medium shrink-0",
-  subtitleClassName = "text-[12.5px] opacity-50 truncate",
+  titleClassName = "text-lg font-medium shrink-0",
+  subtitleClassName = "text-sm opacity-50 truncate",
   mobileHeader,
   mobileFullBleed = false,
 }: MainLayoutProps) {

@@ -146,24 +146,24 @@ function BetRowDesktop({
         />
       </span>
 
-      <span className="text-[11.5px] tabular-nums opacity-50 shrink-0 w-[46px]">{time}</span>
+      <span className="text-xs tabular-nums opacity-50 shrink-0 w-[46px]">{time}</span>
 
       <div className="flex-1 min-w-0 flex items-center gap-2">
         {aposta.houseName && (
-          <span className="text-[10.5px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 whitespace-nowrap shrink-0">
+          <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 whitespace-nowrap shrink-0">
             {aposta.houseName}
           </span>
         )}
         <div className="min-w-0">
-          <p className="font-medium text-[13.5px] truncate">{aposta.game}</p>
-          <p className="text-[11.5px] opacity-55 truncate">{aposta.market}</p>
+          <p className="font-medium text-sm truncate">{aposta.game}</p>
+          <p className="text-xs opacity-55 truncate">{aposta.market}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <span className="text-right w-12 text-[13px] tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
-        <span className="text-right w-20 text-[13px] tabular-nums opacity-80 shrink-0">{formatCurrency(Number(aposta.stake))}</span>
-        <ReturnValue aposta={aposta} className="text-[13px] w-24 text-right shrink-0" />
+        <span className="text-right w-12 text-sm tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
+        <span className="text-right w-20 text-sm tabular-nums opacity-80 shrink-0">{formatCurrency(Number(aposta.stake))}</span>
+        <ReturnValue aposta={aposta} className="text-sm w-24 text-right shrink-0" />
       </div>
 
       <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
@@ -190,7 +190,7 @@ function StatusStrip({ status }: { status: Status }) {
   return (
     <div className={cn("absolute inset-y-0 right-0 w-[26px] rounded-r-lg flex items-center justify-center", s.bg)}>
       <span
-        className={cn("text-[11px] font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
+        className={cn("text-xs font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
         style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
       >
         {statusLabel[status]}
@@ -199,7 +199,7 @@ function StatusStrip({ status }: { status: Status }) {
   );
 }
 
-const betChipClass = "text-[11px] px-2 py-0.5 rounded-md border border-white/10 bg-foreground/[0.06] text-zinc-400 shrink-0";
+const betChipClass = "text-xs px-2 py-0.5 rounded-md border border-white/10 bg-foreground/[0.06] text-zinc-400 shrink-0";
 
 function BetCardMobile({
   aposta,
@@ -242,11 +242,11 @@ function BetCardMobile({
         {aposta.houseName && <span className={cn(betChipClass, "truncate")}>{aposta.houseName}</span>}
       </div>
 
-      <p className="text-[15px] font-medium text-white truncate">{aposta.game}</p>
+      <p className="text-base font-medium text-white truncate">{aposta.game}</p>
 
       <div className="flex items-end justify-between gap-2">
-        <p className="text-[13px] text-zinc-500 truncate min-w-0">{aposta.market}</p>
-        <ReturnValue aposta={aposta} className="text-[13.5px] shrink-0" />
+        <p className="text-sm text-zinc-500 truncate min-w-0">{aposta.market}</p>
+        <ReturnValue aposta={aposta} className="text-sm shrink-0" />
       </div>
 
       <StatusStrip status={status} />
@@ -291,7 +291,7 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
   }
 
   if (apostas.length === 0) {
-    return <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+    return <p className="text-center py-10 text-sm opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
   }
 
   const detailSheet = (
@@ -330,9 +330,9 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                     className="flex items-center gap-2 min-w-0 flex-1 text-left"
                   >
                     {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
-                    <span className="font-semibold text-[14px] truncate">{month.label}</span>
+                    <span className="font-semibold text-sm truncate">{month.label}</span>
                   </button>
-                  <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
+                  <span className={cn("tabular-nums text-sm font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
                     {formatSignedCurrency(month.total)}
                   </span>
                 </div>
@@ -352,8 +352,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                               className="shrink-0"
                             />
                           )}
-                          <span className="text-[11px] uppercase tracking-wider text-zinc-500 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-[13px] shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
+                          <span className="text-xs uppercase tracking-wider text-zinc-500 shrink-0">{week.label}</span>
+                          <span className={cn("ml-auto tabular-nums text-sm shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
                             {formatSignedCurrency(week.total)}
                           </span>
                         </div>
@@ -373,8 +373,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                                     className="shrink-0"
                                   />
                                 )}
-                                <span className="text-[13px] font-semibold truncate">{day.label}</span>
-                                <span className={cn("ml-auto tabular-nums text-[13px] font-medium shrink-0", dayTotal >= 0 ? "text-positive" : "text-negative")}>
+                                <span className="text-sm font-semibold truncate">{day.label}</span>
+                                <span className={cn("ml-auto tabular-nums text-sm font-medium shrink-0", dayTotal >= 0 ? "text-positive" : "text-negative")}>
                                   {formatSignedCurrency(dayTotal)}
                                 </span>
                               </div>
@@ -422,10 +422,10 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                   className="flex items-center gap-2 min-w-0 flex-1 text-left"
                 >
                   {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
-                  <span className="font-semibold text-[14px] truncate">{month.label}</span>
-                  <span className="text-[11px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
+                  <span className="font-semibold text-sm truncate">{month.label}</span>
+                  <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
                 </button>
-                <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
+                <span className={cn("tabular-nums text-sm font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
                   {formatSignedCurrency(month.total)}
                 </span>
               </div>
@@ -446,8 +446,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                               className="shrink-0"
                             />
                           )}
-                          <span className="text-[11px] uppercase tracking-wider opacity-45 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-[12px] shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
+                          <span className="text-xs uppercase tracking-wider opacity-45 shrink-0">{week.label}</span>
+                          <span className={cn("ml-auto tabular-nums text-xs shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
                             {formatSignedCurrency(week.total)}
                           </span>
                         </div>
@@ -465,8 +465,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                                     className="shrink-0"
                                   />
                                 )}
-                                <span className="text-[13px] font-semibold truncate">{day.label}</span>
-                                <span className="text-[10.5px] px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
+                                <span className="text-sm font-semibold truncate">{day.label}</span>
+                                <span className="text-xs px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
                                   {day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}
                                 </span>
                               </div>

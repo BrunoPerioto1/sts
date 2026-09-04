@@ -30,7 +30,7 @@ export default function PreferencesPage() {
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
-          <h1 className="text-[17px] font-semibold truncate">Preferências de aposta</h1>
+          <h1 className="text-base font-semibold truncate">Preferências de aposta</h1>
         </div>
       }
     >

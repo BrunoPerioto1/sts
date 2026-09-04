@@ -74,8 +74,8 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
           <CaretLeft size={20} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-[19px] font-semibold truncate">Histórico</h1>
-          <p className="text-[12.5px] text-zinc-500 truncate">
+          <h1 className="text-lg font-semibold truncate">Histórico</h1>
+          <p className="text-sm text-zinc-500 truncate">
             {house.houseName} · {transactions.length} movimentaç{transactions.length === 1 ? "ão" : "ões"}
           </p>
         </div>
@@ -84,12 +84,12 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
       <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-4">
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Entrou</p>
-            <p className="text-[19px] font-medium tabular-nums text-positive">{formatSignedCurrency(entrou)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Entrou</p>
+            <p className="text-lg font-medium tabular-nums text-positive">{formatSignedCurrency(entrou)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Saiu</p>
-            <p className="text-[19px] font-medium tabular-nums text-negative">{formatCurrency(saiu)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saiu</p>
+            <p className="text-lg font-medium tabular-nums text-negative">{formatCurrency(saiu)}</p>
           </div>
         </div>
 
@@ -101,18 +101,18 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
           </div>
         ) : error ? (
           <div
-            className="flex items-start gap-2 rounded-md p-3 text-[13px]"
+            className="flex items-start gap-2 rounded-md p-3 text-sm"
             style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-negative)" }}
           >
             <WarningCircle size={18} className="text-negative shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
         ) : groups.length === 0 ? (
-          <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma movimentação registrada</p>
+          <p className="text-center py-10 text-sm opacity-55">Nenhuma movimentação registrada</p>
         ) : (
           groups.map((g) => (
             <div key={g.day}>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">{g.day}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">{g.day}</p>
               <div className="flex flex-col gap-1">
                 {g.items.map((t) => {
                   const meta = TYPE_META[t.transactionType] ?? { label: t.transactionType, icon: SlidersHorizontal };
@@ -122,16 +122,16 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                     <div key={t.id} className="flex items-center gap-3 rounded-lg px-1 py-3 min-h-[56px]">
                       <Icon size={18} className="text-accent shrink-0" />
                       <span className="flex-1 min-w-0">
-                        <span className="block text-[15px] text-white truncate">{meta.label}</span>
-                        <span className="block text-[13px] text-zinc-500 truncate">
+                        <span className="block text-base text-white truncate">{meta.label}</span>
+                        <span className="block text-sm text-zinc-500 truncate">
                           {new Date(t.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className={`block text-[15px] font-medium tabular-nums ${value >= 0 ? "text-positive" : "text-negative"}`}>
+                        <span className={`block text-base font-medium tabular-nums ${value >= 0 ? "text-positive" : "text-negative"}`}>
                           {formatSignedCurrency(value)}
                         </span>
-                        <span className="block text-[13px] text-zinc-500 tabular-nums">{formatCurrency(t.runningBalance)}</span>
+                        <span className="block text-sm text-zinc-500 tabular-nums">{formatCurrency(t.runningBalance)}</span>
                       </span>
                     </div>
                   );

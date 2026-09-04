@@ -61,12 +61,12 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
 
       {potentialReturn && (
         <div
-          className="flex items-center justify-between rounded-md p-3 text-[13px]"
+          className="flex items-center justify-between rounded-md p-3 text-sm"
           style={{ background: "var(--color-bg)", boxShadow: "inset 2px 0 0 var(--color-accent)" }}
         >
           <span>
             Retorno potencial{" "}
-            <strong className="text-[20px] text-positive tabular-nums">R$ {potentialReturn.total.toFixed(2)}</strong>
+            <strong className="text-xl text-positive tabular-nums">R$ {potentialReturn.total.toFixed(2)}</strong>
           </span>
           <span className="opacity-70">Lucro se ganhar +R$ {potentialReturn.profit.toFixed(2)}</span>
         </div>

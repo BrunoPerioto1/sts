@@ -8,7 +8,7 @@ import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 
 function StatRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex items-center justify-between py-2.5 text-[13px]">
+    <div className="flex items-center justify-between py-2.5 text-sm">
       <span className="text-zinc-400">{label}</span>
       <span className={`font-medium tabular-nums ${valueClass ?? ""}`}>{value}</span>
     </div>
@@ -47,7 +47,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           <button type="button" onClick={onBack} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
-          <h1 className="text-[19px] font-semibold truncate">{house.houseName}</h1>
+          <h1 className="text-lg font-semibold truncate">{house.houseName}</h1>
         </div>
         <Badge variant={isProfit ? "won" : "lost"} className="shrink-0 uppercase">
           {isProfit ? "Lucro" : "Prejuízo"}
@@ -56,9 +56,9 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         <div>
-          <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Saldo atual</p>
-          <p className="text-[30px] font-semibold tabular-nums">{formatCurrency(Number(house.houseBalance))}</p>
-          <p className={`text-[13px] font-medium tabular-nums mt-0.5 ${isProfit ? "text-positive" : "text-negative"}`}>
+          <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo atual</p>
+          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(Number(house.houseBalance))}</p>
+          <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-positive" : "text-negative"}`}>
             {formatSignedCurrency(realBalance)} de lucro · ROI {roi.toFixed(1)}%
           </p>
         </div>

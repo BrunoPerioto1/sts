@@ -72,7 +72,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     <form onSubmit={handleRegister} className="w-full max-w-[360px] flex flex-col gap-[18px]">
       <div>
         <h1 className="text-2xl font-medium mb-1">Criar conta</h1>
-        <p className="text-[13px] opacity-60">Comece a registrar suas apostas</p>
+        <p className="text-sm opacity-60">Comece a registrar suas apostas</p>
       </div>
 
       <div className="space-y-2">

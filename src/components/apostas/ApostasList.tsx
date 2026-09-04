@@ -78,9 +78,9 @@ export const statusLabel = {
 };
 
 function eventTextClass(text: string) {
-  if (text.length > 70) return "text-[11.5px] leading-snug";
-  if (text.length > 45) return "text-[12.5px] leading-snug";
-  return "text-[14px]";
+  if (text.length > 70) return "text-xs leading-snug";
+  if (text.length > 45) return "text-sm leading-snug";
+  return "text-sm";
 }
 
 export function ReturnValue({ aposta, className }: { aposta: BetItem; className?: string }) {
@@ -152,13 +152,13 @@ function LiquidarSheet({
   return (
     <BottomSheet nested open={open} onOpenChange={onOpenChange} title="Liquidar">
       <div className="pb-4 space-y-4">
-        <p className="text-[12.5px] text-zinc-500 -mt-1 truncate">
+        <p className="text-sm text-zinc-500 -mt-1 truncate">
           {aposta.game} · {formatCurrency(stake)} @ {odd.toFixed(2)}
         </p>
 
         {(["RESULTADO", "PARCIAL"] as const).map((section) => (
           <div key={section}>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">{section}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">{section}</p>
             <div className="flex flex-col gap-1">
               {rows
                 .filter((r) => r.section === section)
@@ -172,8 +172,8 @@ function LiquidarSheet({
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
                     >
                       <OptionBar color={colorByResultId[String(r.resultId)]} />
-                      <span className="flex-1 text-[14px] text-white">{r.label}</span>
-                      <span className={cn("text-[13px] font-medium tabular-nums", value >= 0 ? "text-positive" : "text-negative")}>
+                      <span className="flex-1 text-sm text-white">{r.label}</span>
+                      <span className={cn("text-sm font-medium tabular-nums", value >= 0 ? "text-positive" : "text-negative")}>
                         {formatSignedCurrency(value)}
                       </span>
                     </button>
@@ -184,7 +184,7 @@ function LiquidarSheet({
         ))}
 
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">ENCERRAMENTO</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">ENCERRAMENTO</p>
           <div className="flex flex-col gap-1">
             <button
               type="button"
@@ -192,8 +192,8 @@ function LiquidarSheet({
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CASHOUT)]} />
-              <span className="flex-1 text-[14px] text-white">Cashout</span>
-              <span className="text-[13px] text-zinc-500">Informar valor</span>
+              <span className="flex-1 text-sm text-white">Cashout</span>
+              <span className="text-sm text-zinc-500">Informar valor</span>
             </button>
             <button
               type="button"
@@ -201,23 +201,23 @@ function LiquidarSheet({
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
-              <span className="flex-1 text-[14px] text-white">Cancelada</span>
-              <span className="text-[13px] font-medium tabular-nums text-zinc-300">{formatCurrency(0)}</span>
+              <span className="flex-1 text-sm text-white">Cancelada</span>
+              <span className="text-sm font-medium tabular-nums text-zinc-300">{formatCurrency(0)}</span>
             </button>
           </div>
         </div>
 
         {mapResultToStatus(aposta) !== "pendente" && (
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">PENDENTE</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">PENDENTE</p>
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.PENDING)}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.PENDING)]} />
-              <span className="flex-1 text-[14px] text-white">Pendente</span>
-              <span className="text-[13px] text-zinc-500">Sem resultado</span>
+              <span className="flex-1 text-sm text-white">Pendente</span>
+              <span className="text-sm text-zinc-500">Sem resultado</span>
             </button>
           </div>
         )}
@@ -287,7 +287,7 @@ function CashoutSheet({
       }
     >
       <div className="space-y-1.5 pb-4">
-        <Label htmlFor="cashout-value-mobile" className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+        <Label htmlFor="cashout-value-mobile" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
           Valor recebido (R$)
         </Label>
         <Input
@@ -338,42 +338,42 @@ export function ApostaDetailSheet({
       title={<span className="truncate block max-w-[240px]">{aposta.game}</span>}
     >
       <div className="pb-4 space-y-4">
-        <p className="text-[12.5px] text-zinc-500 -mt-1">
+        <p className="text-sm text-zinc-500 -mt-1">
           {date.toLocaleDateString("pt-BR")} · {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           {aposta.houseName && ` · ${aposta.houseName}`}
         </p>
 
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>
-          <p className={cn("text-[26px] font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
+          <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>
+          <p className={cn("text-2xl font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
             {profit != null ? formatSignedCurrency(profit) : "—"}
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-2 border border-border rounded-md p-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Cotação</p>
-            <p className="text-[14px] font-medium tabular-nums">{Number(aposta.odd).toFixed(2)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Cotação</p>
+            <p className="text-sm font-medium tabular-nums">{Number(aposta.odd).toFixed(2)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Valor</p>
-            <p className="text-[14px] font-medium tabular-nums">{formatCurrency(stake)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Valor</p>
+            <p className="text-sm font-medium tabular-nums">{formatCurrency(stake)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Retorno</p>
-            <p className="text-[14px] font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
+            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Retorno</p>
+            <p className="text-sm font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
           </div>
         </div>
 
         <div>
-          <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1.5">Seleção</p>
+          <p className="text-xs uppercase tracking-wide opacity-55 mb-1.5">Seleção</p>
           <div
             className="flex items-start justify-between gap-2 rounded-md border-l-[3px] bg-card p-2.5"
             style={{ borderLeftColor: colorByResultId[String(aposta.resultId)] }}
           >
             <div className="min-w-0">
-              <p className="text-[13px] leading-snug">{aposta.market}</p>
-              <p className="text-[11.5px] opacity-55">
+              <p className="text-sm leading-snug">{aposta.market}</p>
+              <p className="text-xs opacity-55">
                 {Number(aposta.odd).toFixed(2)}
                 {aposta.houseName && ` · ${aposta.houseName}`}
               </p>
@@ -580,7 +580,7 @@ export function ApostasList({
   }
 
   if (apostas.length === 0) {
-    return <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+    return <p className="text-center py-10 text-sm opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
   }
 
   if (isMobile) {
@@ -604,9 +604,9 @@ export function ApostasList({
                         <Checkbox checked={selectedBets.includes(aposta.id)} onCheckedChange={() => onSelectBet(aposta.id)} />
                       </span>
                     )}
-                    <span className="text-[11px] opacity-50 tabular-nums shrink-0">{time}</span>
+                    <span className="text-xs opacity-50 tabular-nums shrink-0">{time}</span>
                     {aposta.houseName && (
-                      <span className="text-[10.5px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">
+                      <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">
                         {aposta.houseName}
                       </span>
                     )}
@@ -618,7 +618,7 @@ export function ApostasList({
                     <p className={cn("font-medium truncate", eventTextClass(aposta.game))}>{aposta.game}</p>
                     <p className="text-xs opacity-55 truncate">{aposta.market} · odd {Number(aposta.odd).toFixed(2)}</p>
                   </div>
-                  <ReturnValue aposta={aposta} className="text-[13.5px]" />
+                  <ReturnValue aposta={aposta} className="text-sm" />
                 </div>
               </div>
             );
@@ -642,14 +642,14 @@ export function ApostasList({
         <thead>
           <tr className="text-left border-b border-border">
             {showCheckboxes && <th className="w-8"></th>}
-            <th className="py-2 pr-4 text-[11px] uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 128 }}>Data</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[220px]">Evento</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal min-w-[160px]">Mercado</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Casa</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Odd</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Stake</th>
-            <th className="py-2 pl-4 text-[11px] uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Status</th>
-            <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Retorno</th>
+            <th className="py-2 pr-4 text-xs uppercase tracking-wide opacity-60 font-normal" style={{ opacity: 0.6, width: 128 }}>Data</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal min-w-[220px]">Evento</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal min-w-[160px]">Mercado</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Casa</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Odd</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Stake</th>
+            <th className="py-2 pl-4 text-xs uppercase tracking-wide opacity-60 font-normal whitespace-nowrap">Status</th>
+            <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right whitespace-nowrap">Retorno</th>
             <th className="w-11"></th>
           </tr>
         </thead>
@@ -668,7 +668,7 @@ export function ApostasList({
                   <span className="opacity-60">{new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                 </td>
                 <td className={cn("py-2 font-semibold", eventTextClass(aposta.game))}>{aposta.game}</td>
-                <td className="py-2 opacity-70 text-[12.5px]">{aposta.market}</td>
+                <td className="py-2 opacity-70 text-sm">{aposta.market}</td>
                 <td className="py-2 whitespace-nowrap">{aposta.houseName}</td>
                 <td className="py-2 text-right tabular-nums whitespace-nowrap">{Number(aposta.odd).toFixed(2)}</td>
                 <td className="py-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(Number(aposta.stake))}</td>

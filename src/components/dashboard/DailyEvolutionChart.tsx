@@ -48,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const value = payload[0].value;
     const isPositive = value >= 0;
     return (
-      <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-[12px]">
+      <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-xs">
         <p className="opacity-70 mb-1">
           {parseISO(label).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
         </p>
@@ -79,7 +79,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div>
           <h3 className="text-base font-medium">Resultado diário</h3>
-          <p className="text-[11.5px] opacity-55">Lucro líquido por período selecionado</p>
+          <p className="text-xs opacity-55">Lucro líquido por período selecionado</p>
         </div>
         <Segmented
           options={[
@@ -99,7 +99,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
               dataKey="date"
               stroke="var(--color-text)"
               opacity={0.45}
-              fontSize={10}
+              fontSize={12}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) =>
@@ -109,7 +109,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
             <YAxis
               stroke="var(--color-text)"
               opacity={0.45}
-              fontSize={10}
+              fontSize={12}
               tickLine={false}
               axisLine={false}
               tickFormatter={formatAxisValue}
@@ -126,7 +126,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
         </ResponsiveContainer>
       </div>
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-[11px]">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-xs">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-[6px]">
             <span className="w-2 h-2 rounded-sm bg-positive inline-block" /> Período positivo

@@ -208,26 +208,26 @@ export function DashboardMobileView({
       <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0">
-            <h2 className="text-[19px] font-semibold">Resultado</h2>
-            <p className="text-[12.5px] text-zinc-500 truncate">
+            <h2 className="text-lg font-semibold">Resultado</h2>
+            <p className="text-sm text-zinc-500 truncate">
               {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setPeriodOpen(true)}
-            className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 text-[13px] text-zinc-300"
+            className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 text-sm text-zinc-300"
           >
             <CalendarBlank size={14} /> {PRESET_LABEL[preset]} <CaretDown size={12} />
           </button>
         </div>
 
         <div className="mt-6 shrink-0">
-          <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Lucro líquido</p>
-          <p className={cn("text-[32px] font-semibold tabular-nums leading-tight", toneClass[signedTone(profit)])}>
+          <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Lucro líquido</p>
+          <p className={cn("text-3xl font-semibold tabular-nums leading-tight", toneClass[signedTone(profit)])}>
             {formatSignedCurrency(profit)}
           </p>
-          <p className="text-[12.5px] text-zinc-500 mt-0.5">{daysSummary}</p>
+          <p className="text-sm text-zinc-500 mt-0.5">{daysSummary}</p>
         </div>
 
         <div className="mt-6 flex-1">
@@ -237,7 +237,7 @@ export function DashboardMobileView({
             <div className="rounded-lg bg-white/[0.03] p-3">
               <div className="flex items-start gap-2">
                 <ChartLine size={16} className="text-zinc-500 shrink-0 mt-0.5" />
-                <p className="text-[12.5px] text-zinc-400 leading-snug">
+                <p className="text-sm text-zinc-400 leading-snug">
                   {dailyData.length === 0
                     ? "Nenhum dia com resultado no período."
                     : dailyData.length === 1
@@ -250,7 +250,7 @@ export function DashboardMobileView({
                 <button
                   type="button"
                   onClick={() => onPresetChange("60d")}
-                  className="text-[12.5px] text-accent font-medium mt-2 ml-6"
+                  className="text-sm text-accent font-medium mt-2 ml-6"
                 >
                   Ampliar para 60 dias
                 </button>
@@ -265,12 +265,12 @@ export function DashboardMobileView({
               key={tile.label}
               className={cn("py-5", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}
             >
-              <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">{tile.label}</p>
-              <p className={cn("text-[19px] font-medium tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
+              <p className="text-xs uppercase tracking-wide opacity-55 mb-1">{tile.label}</p>
+              <p className={cn("text-lg font-medium tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
                 {tile.value}
               </p>
               {tile.sub && (
-                <p className={cn("text-[11.5px] tabular-nums mt-0.5", toneClass[tile.subTone ?? "muted"])}>{tile.sub}</p>
+                <p className={cn("text-xs tabular-nums mt-0.5", toneClass[tile.subTone ?? "muted"])}>{tile.sub}</p>
               )}
             </div>
           ))}

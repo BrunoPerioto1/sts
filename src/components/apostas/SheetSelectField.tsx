@@ -15,7 +15,7 @@ export function SheetSelectField({ summary, onOpen, className }: SheetSelectFiel
       type="button"
       onClick={onOpen}
       className={cn(
-        "flex w-full items-center justify-between gap-2 min-h-[44px] rounded-md border border-input bg-card px-[10px] py-[6px] text-[13px] hover:border-foreground/45 transition-colors",
+        "flex w-full items-center justify-between gap-2 min-h-[44px] rounded-md border border-input bg-card px-[10px] py-[6px] text-sm hover:border-foreground/45 transition-colors",
         className
       )}
     >

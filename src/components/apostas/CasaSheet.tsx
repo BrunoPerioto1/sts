@@ -45,7 +45,7 @@ function pushRecentHouseIds(ids: number[]) {
 function HouseAvatar({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-[11px] font-semibold text-white"
+      className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
       style={{ background: color }}
     >
       {initialsOf(name)}
@@ -145,7 +145,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
     >
       {!term && fallbackRecent.length > 0 && (
         <div className="pb-2">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
           <div className="flex flex-col gap-1">
             {fallbackRecent.map((h) => (
               <OptionRow
@@ -162,7 +162,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
       )}
 
       <div className="pb-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">
           {term ? `Todas · "${search}"` : "Todas"}
         </p>
         <div className="flex flex-col gap-1">
@@ -176,7 +176,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
               onToggle={() => toggle(h.id)}
             />
           ))}
-          {filtered.length === 0 && <p className="text-center py-6 text-[12.5px] text-zinc-500">Nenhuma casa encontrada.</p>}
+          {filtered.length === 0 && <p className="text-center py-6 text-sm text-zinc-500">Nenhuma casa encontrada.</p>}
         </div>
       </div>
     </BottomSheet>

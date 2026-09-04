@@ -19,8 +19,8 @@ function formatCurrency(value: string | number) {
 function Group({ kicker, children }: { kicker: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-widest text-accent mb-2">{kicker}</div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12.5px]">{children}</div>
+      <div className="text-xs uppercase tracking-widest text-accent mb-2">{kicker}</div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">{children}</div>
     </div>
   );
 }

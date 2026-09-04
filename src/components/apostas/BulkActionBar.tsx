@@ -53,7 +53,7 @@ function BulkActionButton({
       )}
     >
       {pending ? <CircleNotch size={16} className="animate-spin" /> : <Icon size={16} />}
-      <span className="text-[12px] font-medium">{label}</span>
+      <span className="text-xs font-medium">{label}</span>
     </button>
   );
 }
@@ -97,7 +97,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 min-w-0">
             <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
-            <span aria-live="polite" className="text-[15px] font-semibold text-white truncate">
+            <span aria-live="polite" className="text-base font-semibold text-white truncate">
               {count} selecionada{plural}
             </span>
           </div>
@@ -105,7 +105,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="shrink-0 h-8 px-4 rounded-lg text-[13px] text-zinc-300 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
+            className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
           >
             Cancelar
           </button>

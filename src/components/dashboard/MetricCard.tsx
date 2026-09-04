@@ -25,7 +25,7 @@ export function MetricCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 opacity-70">
           {icon}
-          <h4 className="text-[10px] uppercase tracking-wide sm:tracking-widest">{title}</h4>
+          <h4 className="text-xs uppercase tracking-wide sm:tracking-widest">{title}</h4>
         </div>
         {sparkline && sparkline.length > 0 && (
           <div className="w-[50px] h-[26px]">
@@ -42,18 +42,18 @@ export function MetricCard({
         )}
       </div>
       <p
-        className={cn("text-[19px] sm:text-[27px] font-medium tabular-nums whitespace-nowrap", valueClass)}
+        className={cn("text-lg sm:text-3xl font-medium tabular-nums whitespace-nowrap", valueClass)}
         style={{ letterSpacing: "-0.02em" }}
       >
         {value}
       </p>
       {delta && (
-        <p className="text-[11px]">
+        <p className="text-xs">
           <span className={delta.positive ? "text-positive font-medium" : "text-negative font-medium"}>{delta.label}</span>
           <span className="opacity-45"> vs. período anterior</span>
         </p>
       )}
-      {subtext && <p className="text-[11.5px] opacity-45">{subtext}</p>}
+      {subtext && <p className="text-xs opacity-45">{subtext}</p>}
     </div>
   );
 }

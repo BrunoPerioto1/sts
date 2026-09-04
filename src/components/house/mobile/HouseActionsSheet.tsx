@@ -38,7 +38,7 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
       }
     >
       <div className="pb-4">
-        <p className="text-[12.5px] text-zinc-500 -mt-1 mb-2">
+        <p className="text-sm text-zinc-500 -mt-1 mb-2">
           {formatCurrency(Number(house.houseBalance))} · {house.totalBets} aposta{Number(house.totalBets) === 1 ? "" : "s"}
         </p>
 
@@ -51,7 +51,7 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
             >
               <r.icon size={18} className="text-accent shrink-0" />
-              <span className="text-[14px] text-white">{r.label}</span>
+              <span className="text-sm text-white">{r.label}</span>
             </button>
           ))}
         </div>

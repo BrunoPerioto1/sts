@@ -110,8 +110,14 @@
     @apply border-border;
   }
 
+  /* Raiz em 100%: 1rem = 16px, igual ao padrao do browser. Antes estava em
+     115% (raiz 18.4px), o que empurrava a escala do Tailwind pra cima —
+     text-xs virava 13.8px — e obrigava todo tamanho "pequeno" a fugir pra px
+     cravado. Com 100%, os degraus caem em 12/14/16/18/20/24, que e a mesma
+     faixa que Material e HIG usam, e 1rem volta a ser previsivel no
+     espacamento tambem. */
   html {
-    font-size: 115%;
+    font-size: 100%;
   }
 
   body {

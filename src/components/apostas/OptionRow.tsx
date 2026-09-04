@@ -25,8 +25,8 @@ export function OptionRow({ leading, label, subtitle, selected, onToggle, classN
     >
       {leading}
       <span className="flex-1 min-w-0">
-        <span className="block text-[14px] text-white truncate">{label}</span>
-        {subtitle && <span className="block text-[12px] text-zinc-500 truncate">{subtitle}</span>}
+        <span className="block text-sm text-white truncate">{label}</span>
+        {subtitle && <span className="block text-xs text-zinc-500 truncate">{subtitle}</span>}
       </span>
       <span
         className={cn(

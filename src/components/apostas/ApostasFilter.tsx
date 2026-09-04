@@ -100,7 +100,7 @@ export function ApostasFilter({
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
             disabled={isLoading}
-            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-sm text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
           />
         </div>
 
@@ -113,7 +113,7 @@ export function ApostasFilter({
             onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
             placeholder="Período"
             disabled={isLoading}
-            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-[13px] text-white"
+            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-sm text-white"
             iconClassName="h-4 w-4 text-zinc-500 shrink-0"
           />
         </div>
@@ -125,7 +125,7 @@ export function ApostasFilter({
             selected={status}
             onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
             disabled={isLoading}
-            className="min-h-0 text-[13px]"
+            className="min-h-0 text-sm"
           />
         </div>
 
@@ -133,7 +133,7 @@ export function ApostasFilter({
 
         <div className="px-3.5 shrink-0">
           <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
-            <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-[13px] text-white">
+            <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-white">
               <span className="text-zinc-500 shrink-0">Casa</span>
               <SelectValue />
             </SelectTrigger>
@@ -153,7 +153,7 @@ export function ApostasFilter({
               type="button"
               onClick={onExportCsv}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3.5 text-[13px] text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+              className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
             >
               <DownloadSimple className="h-4 w-4" /> Exportar CSV
             </button>
@@ -163,12 +163,12 @@ export function ApostasFilter({
 
       {activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Filtros ativos</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">Filtros ativos</span>
           {activeChips.map((chip) => (
             <span
               key={chip.key}
               className={cn(
-                "h-7 inline-flex items-center gap-1 rounded-full px-3 text-[12px]",
+                "h-7 inline-flex items-center gap-1 rounded-full px-3 text-xs",
                 chip.solid ? "bg-blue-600 text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
               )}
             >
@@ -178,7 +178,7 @@ export function ApostasFilter({
               </button>
             </span>
           ))}
-          <button onClick={handleClear} className="text-[12px] text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button onClick={handleClear} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
             Limpar tudo
           </button>
         </div>

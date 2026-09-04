@@ -156,59 +156,59 @@ export default function PerfilPage() {
       <MainLayout
         title="Perfil"
         hideHeaderBorder
-        mobileHeader={<h1 className="text-[17px] font-semibold">Perfil</h1>}
+        mobileHeader={<h1 className="text-base font-semibold">Perfil</h1>}
       >
         <div className="flex flex-col min-h-[calc(100dvh-220px)] space-y-5">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-white text-zinc-900 flex items-center justify-center text-[17px] font-semibold shrink-0">
+            <div className="w-14 h-14 rounded-full bg-white text-zinc-900 flex items-center justify-center text-base font-semibold shrink-0">
               {initialsOf(me.username)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[17px] font-semibold text-white truncate">{me.username}</p>
-              <p className="text-[13px] text-zinc-500 truncate">{me.email}</p>
+              <p className="text-base font-semibold text-white truncate">{me.username}</p>
+              <p className="text-sm text-zinc-500 truncate">{me.email}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Apostas</p>
-              <p className="text-[20px] font-semibold text-white">{summary.totalBets.toLocaleString("pt-BR")}</p>
+              <p className="text-xs uppercase tracking-wider text-zinc-500">Apostas</p>
+              <p className="text-xl font-semibold text-white">{summary.totalBets.toLocaleString("pt-BR")}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Lucro acumulado</p>
-              <p className={`text-[20px] font-semibold ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
+              <p className="text-xs uppercase tracking-wider text-zinc-500">Lucro acumulado</p>
+              <p className={`text-xl font-semibold ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
                 {formatSignedCurrencyCompact(summary.totalProfit)}
               </p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">ROI histórico</p>
-              <p className={`text-[20px] font-semibold ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>
+              <p className="text-xs uppercase tracking-wider text-zinc-500">ROI histórico</p>
+              <p className={`text-xl font-semibold ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>
                 {(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
               </p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Casas</p>
-              <p className="text-[20px] font-semibold text-white">{summary.totalHouses.toLocaleString("pt-BR")}</p>
+              <p className="text-xs uppercase tracking-wider text-zinc-500">Casas</p>
+              <p className="text-xl font-semibold text-white">{summary.totalHouses.toLocaleString("pt-BR")}</p>
             </div>
           </div>
 
           <div className="rounded-xl border border-white/10 divide-y divide-white/[0.06]">
             <Link to="/profile/account" className="h-14 px-4 flex items-center gap-3">
               <IdentificationCard size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-[14px] text-white flex-1 min-w-0 truncate">Dados da conta</span>
-              <span className="text-[13px] text-zinc-500 truncate max-w-[40%]">{me.username}</span>
+              <span className="text-sm text-white flex-1 min-w-0 truncate">Dados da conta</span>
+              <span className="text-sm text-zinc-500 truncate max-w-[40%]">{me.username}</span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />
             </Link>
             <Link to="/profile/telegram" className="h-14 px-4 flex items-center gap-3">
               <TelegramLogo size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-[14px] text-white flex-1 min-w-0 truncate">Telegram</span>
-              <span className="text-[13px] text-zinc-500 truncate">{isLinked ? "Vinculado" : "Não vinculado"}</span>
+              <span className="text-sm text-white flex-1 min-w-0 truncate">Telegram</span>
+              <span className="text-sm text-zinc-500 truncate">{isLinked ? "Vinculado" : "Não vinculado"}</span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />
             </Link>
             <Link to="/profile/preferences" className="h-14 px-4 flex items-center gap-3">
               <SlidersHorizontal size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-[14px] text-white flex-1 min-w-0 truncate">Preferências de aposta</span>
-              <span className="text-[13px] text-zinc-500 truncate max-w-[40%]">{preferencesSummary(me)}</span>
+              <span className="text-sm text-white flex-1 min-w-0 truncate">Preferências de aposta</span>
+              <span className="text-sm text-zinc-500 truncate max-w-[40%]">{preferencesSummary(me)}</span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />
             </Link>
           </div>
@@ -218,7 +218,7 @@ export default function PerfilPage() {
           <button
             type="button"
             onClick={() => navigate("/logout")}
-            className="w-full h-12 rounded-xl border border-white/10 bg-transparent flex items-center justify-center gap-2 text-[14px] text-white"
+            className="w-full h-12 rounded-xl border border-white/10 bg-transparent flex items-center justify-center gap-2 text-sm text-white"
           >
             <SignOut size={16} /> Sair da conta
           </button>
@@ -233,12 +233,12 @@ export default function PerfilPage() {
         <div className="flex flex-col gap-[14px]">
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-[19px] font-medium shrink-0">
+              <div className="w-14 h-14 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-lg font-medium shrink-0">
                 {initialsOf(me.username)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[19px] font-medium truncate">{me.username}</p>
-                <p className="text-[12.5px] opacity-55 truncate">
+                <p className="text-lg font-medium truncate">{me.username}</p>
+                <p className="text-sm opacity-55 truncate">
                   {me.email}
                   {me.createdAt ? ` · na plataforma desde ${new Date(me.createdAt).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}` : ""}
                 </p>
@@ -247,11 +247,11 @@ export default function PerfilPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase tracking-wider text-zinc-500">Nome</Label>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500">Nome</Label>
                 <Input value={form.username} onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase tracking-wider text-zinc-500">E-mail</Label>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500">E-mail</Label>
                 <Input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function PerfilPage() {
 
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <h3 className="text-base font-medium mb-1">Preferências de aposta</h3>
-            <p className="text-[12.5px] opacity-55 mb-3">Usadas pelo bot do Telegram ao calcular recomendações e notificações de sinal.</p>
+            <p className="text-sm opacity-55 mb-3">Usadas pelo bot do Telegram ao calcular recomendações e notificações de sinal.</p>
             <div className="grid grid-cols-2 gap-3">
               <PreferencesFields form={prefsForm} />
             </div>
@@ -276,7 +276,7 @@ export default function PerfilPage() {
 
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <h3 className="text-base font-medium mb-1">Exportar dados</h3>
-            <p className="text-[12.5px] opacity-55 mb-3">Baixe seus registros em CSV para planilha ou imposto de renda.</p>
+            <p className="text-sm opacity-55 mb-3">Baixe seus registros em CSV para planilha ou imposto de renda.</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
                 { label: "Apostas", sub: `${summary.totalBets.toLocaleString("pt-BR")} linhas`, onClick: exportBets },
@@ -284,15 +284,15 @@ export default function PerfilPage() {
                 { label: "Resumo mensal", sub: "por mês", onClick: exportMonthly },
               ].map((block) => (
                 <div key={block.label} className="rounded-md p-[14px] flex flex-col gap-2" style={{ background: "var(--color-bg)" }}>
-                  <span className="text-[13.5px] font-medium">{block.label}</span>
-                  <span className="text-[11.5px] opacity-55">{block.sub}</span>
+                  <span className="text-sm font-medium">{block.label}</span>
+                  <span className="text-xs opacity-55">{block.sub}</span>
                   <Button size="sm" variant="outline" className="gap-2 self-start" onClick={block.onClick}>
                     <DownloadSimple size={14} /> Baixar CSV
                   </Button>
                 </div>
               ))}
             </div>
-            <p className="text-[11px] opacity-40 mt-3">Exporta todos os registros · separador ponto-e-vírgula (;)</p>
+            <p className="text-xs opacity-40 mt-3">Exporta todos os registros · separador ponto-e-vírgula (;)</p>
           </div>
         </div>
 
@@ -301,11 +301,11 @@ export default function PerfilPage() {
             <div className="flex items-center gap-2 mb-1">
               <TelegramLogo size={18} className="text-accent" />
               <h3 className="text-base font-medium">Telegram</h3>
-              <span className={`tag ml-auto text-[11px] px-[10px] py-[3px] rounded-[6px] ${isLinked ? "bg-positive/[0.16] text-positive" : "bg-neutral-800 text-neutral-100"}`}>
+              <span className={`tag ml-auto text-xs px-[10px] py-[3px] rounded-[6px] ${isLinked ? "bg-positive/[0.16] text-positive" : "bg-neutral-800 text-neutral-100"}`}>
                 {isLinked ? "Vinculado" : "Não vinculado"}
               </span>
             </div>
-            <p className="text-[12.5px] opacity-55 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
+            <p className="text-sm opacity-55 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
             {isLinked ? (
               <Button variant="outline" size="sm" onClick={handleUnlinkTelegram}>Desvincular</Button>
             ) : (
@@ -313,7 +313,7 @@ export default function PerfilPage() {
                 <Button size="sm" onClick={handleGenerateTelegramCode} disabled={linking}>
                   {linking ? "Gerando…" : "Vincular Telegram"}
                 </Button>
-                {code && <p className="text-[12.5px]">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
+                {code && <p className="text-sm">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
               </div>
             )}
           </div>
@@ -321,20 +321,20 @@ export default function PerfilPage() {
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <h3 className="text-base font-medium mb-2">Resumo da banca</h3>
             <div className="divide-y divide-border">
-              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Apostas</span><span className="font-medium tabular-nums">{summary.totalBets.toLocaleString("pt-BR")}</span></div>
-              <div className="flex justify-between py-2 text-[13px]">
+              <div className="flex justify-between py-2 text-sm"><span className="opacity-60">Apostas</span><span className="font-medium tabular-nums">{summary.totalBets.toLocaleString("pt-BR")}</span></div>
+              <div className="flex justify-between py-2 text-sm">
                 <span className="opacity-60">Lucro acumulado</span>
                 <span className={`font-medium tabular-nums ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
                   {formatSignedCurrency(summary.totalProfit)}
                 </span>
               </div>
-              <div className="flex justify-between py-2 text-[13px]">
+              <div className="flex justify-between py-2 text-sm">
                 <span className="opacity-60">ROI histórico</span>
                 <span className={`font-medium tabular-nums ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>
                   {(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                 </span>
               </div>
-              <div className="flex justify-between py-2 text-[13px]"><span className="opacity-60">Casas</span><span className="font-medium tabular-nums">{summary.totalHouses.toLocaleString("pt-BR")}</span></div>
+              <div className="flex justify-between py-2 text-sm"><span className="opacity-60">Casas</span><span className="font-medium tabular-nums">{summary.totalHouses.toLocaleString("pt-BR")}</span></div>
             </div>
           </div>
 

@@ -12,7 +12,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   if (!active || !payload?.length || !label) return null;
   const value = payload[0].value;
   return (
-    <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-[12px]">
+    <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-xs">
       <p className="opacity-70 mb-1">{format(parseISO(label), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
       <span className={value >= 0 ? "text-positive font-medium" : "text-negative font-medium"}>
         {formatSignedCurrency(value)}
@@ -38,7 +38,7 @@ export function ProfitBarChart({ data }: ProfitBarChartProps) {
             ticks={ticks}
             stroke="var(--color-text)"
             opacity={0.45}
-            fontSize={10}
+            fontSize={12}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => format(parseISO(value), "d MMM", { locale: ptBR })}

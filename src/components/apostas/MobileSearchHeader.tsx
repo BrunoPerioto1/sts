@@ -84,7 +84,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }
             }
           }}
           placeholder="Buscar apostas..."
-          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-sm text-white placeholder:text-zinc-500 outline-none"
+          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-white placeholder:text-zinc-500 outline-none"
         />
         <button
           type="button"
@@ -96,7 +96,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }
         </button>
       </div>
       {value && (
-        <p className="mt-1.5 pl-1 text-[11.5px] text-zinc-500 truncate">
+        <p className="mt-1.5 pl-1 text-xs text-zinc-500 truncate">
           {pinned
             ? `Busca fixada: "${value}" · ${resultsCount} resultado${resultsCount === 1 ? "" : "s"}`
             : `${resultsCount} resultado${resultsCount === 1 ? "" : "s"} · toque em Enter para fixar a busca`}

@@ -50,7 +50,7 @@ export default function AccountPage() {
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
-          <h1 className="text-[17px] font-semibold truncate">Dados da conta</h1>
+          <h1 className="text-base font-semibold truncate">Dados da conta</h1>
         </div>
       }
     >
@@ -60,11 +60,11 @@ export default function AccountPage() {
         <div className="flex flex-col min-h-[calc(100dvh-200px)]">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-wider text-zinc-500">Nome</Label>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500">Nome</Label>
               <Input value={form.username} onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-wider text-zinc-500">E-mail</Label>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500">E-mail</Label>
               <Input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
             </div>
           </div>

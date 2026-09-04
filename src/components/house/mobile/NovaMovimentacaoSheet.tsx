@@ -84,7 +84,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
       }}
       title="Nova movimentação"
       titleExtra={
-        <span className="text-[12px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">{house.houseName}</span>
+        <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">{house.houseName}</span>
       }
       footer={
         <Button
@@ -98,7 +98,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
     >
       <div className="pb-4 space-y-4">
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">Tipo</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">Tipo</p>
           <div className="inline-flex w-full overflow-hidden rounded-md border border-border">
             {types.map((t, i) => {
               const m = TYPE_META[t.name] ?? { label: t.name, icon: SlidersHorizontal };
@@ -109,7 +109,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
                   type="button"
                   onClick={() => setTypeId(t.id)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-[13px] whitespace-nowrap transition-colors",
+                    "flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-sm whitespace-nowrap transition-colors",
                     i > 0 && "border-l border-border",
                     active ? "text-white" : "text-zinc-400 hover:bg-white/[0.04]"
                   )}
@@ -124,9 +124,9 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
 
         <div>
           <div className="flex items-center justify-between px-1 pb-1.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Valor</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Valor</p>
             {numericValue > 0 && (
-              <p className="text-[11.5px] text-zinc-500">Saldo passa a {formatCurrency(projectedBalance)}</p>
+              <p className="text-xs text-zinc-500">Saldo passa a {formatCurrency(projectedBalance)}</p>
             )}
           </div>
           <Input
@@ -134,7 +134,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             placeholder="0,00"
             value={cents > 0 ? centsToDisplay(cents) : ""}
             onChange={(e) => setCents(Number(e.target.value.replace(/\D/g, "")) || 0)}
-            className="text-[29px] font-semibold h-auto py-2 tabular-nums"
+            className="text-3xl font-semibold h-auto py-2 tabular-nums"
           />
           <div className="flex gap-2 pt-2">
             {QUICK_AMOUNTS.map((amount) => (
@@ -142,7 +142,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
                 key={amount}
                 type="button"
                 onClick={() => addAmount(amount)}
-                className="px-3 py-1.5 rounded-full text-[12.5px] font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
+                className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
               >
                 +{amount}
               </button>
@@ -150,7 +150,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             <button
               type="button"
               onClick={useFullBalance}
-              className="px-3 py-1.5 rounded-full text-[12.5px] font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
+              className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
             >
               Tudo
             </button>

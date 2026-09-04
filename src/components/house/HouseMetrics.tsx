@@ -27,11 +27,11 @@ export function HousesMetrics({ metrics, formatCurrency, isLoading = false }: Ho
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       {blocks.map((b) => (
         <div key={b.label} className="bg-sidebar rounded-md p-[12px_14px]">
-          <div className="text-[10px] uppercase tracking-wide opacity-55 mb-1">{b.label}</div>
+          <div className="text-xs uppercase tracking-wide opacity-55 mb-1">{b.label}</div>
           {isLoading ? (
             <div className="h-5 w-16 rounded bg-foreground/10 animate-pulse" />
           ) : (
-            <div className={`text-[19px] font-medium tabular-nums ${b.valueClass ?? ""}`}>{b.value}</div>
+            <div className={`text-lg font-medium tabular-nums ${b.valueClass ?? ""}`}>{b.value}</div>
           )}
         </div>
       ))}

@@ -92,26 +92,26 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
     <div className="space-y-4">
       {metrics && (
         <div>
-          <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Saldo total</p>
+          <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo total</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[28px] font-semibold tabular-nums">{formatCurrency(metrics.totalBalance)}</span>
-            <span className={cn("text-[14px] font-medium tabular-nums", metrics.consolidatedProfit >= 0 ? "text-positive" : "text-negative")}>
+            <span className="text-3xl font-semibold tabular-nums">{formatCurrency(metrics.totalBalance)}</span>
+            <span className={cn("text-sm font-medium tabular-nums", metrics.consolidatedProfit >= 0 ? "text-positive" : "text-negative")}>
               {formatSignedCurrency(metrics.consolidatedProfit)}
             </span>
           </div>
 
           <div className="grid grid-cols-3 divide-x divide-border border-t border-border mt-3 pt-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Depositado</p>
-              <p className="text-[15px] font-medium tabular-nums">{formatCurrency(metrics.totalDeposit)}</p>
+              <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Depositado</p>
+              <p className="text-base font-medium tabular-nums">{formatCurrency(metrics.totalDeposit)}</p>
             </div>
             <div className="pl-3">
-              <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Sacado</p>
-              <p className="text-[15px] font-medium tabular-nums">{formatCurrency(metrics.totalWithdrawal)}</p>
+              <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Sacado</p>
+              <p className="text-base font-medium tabular-nums">{formatCurrency(metrics.totalWithdrawal)}</p>
             </div>
             <div className="pl-3">
-              <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Negativas</p>
-              <p className={cn("text-[15px] font-medium tabular-nums", metrics.negativeHouses > 0 && "text-negative")}>
+              <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Negativas</p>
+              <p className={cn("text-base font-medium tabular-nums", metrics.negativeHouses > 0 && "text-negative")}>
                 {metrics.negativeHouses}
               </p>
             </div>
@@ -129,7 +129,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
           type="button"
           onClick={() => setOnlyWithBalance((v) => !v)}
           className={cn(
-            "shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
+            "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
             onlyWithBalance ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
           )}
         >
@@ -139,7 +139,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
           type="button"
           onClick={() => setOnlyNegative((v) => !v)}
           className={cn(
-            "shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
+            "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
             onlyNegative ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
           )}
         >
@@ -148,7 +148,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         <button
           type="button"
           onClick={() => setSortSheetOpen(true)}
-          className="shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto"
+          className="shrink-0 h-8 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto"
         >
           <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
         </button>
@@ -164,7 +164,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
           <Buildings size={30} className="opacity-35 mb-3" />
           <h3 className="text-base font-medium mb-1">Nenhuma casa encontrada</h3>
-          <p className="text-[12.5px] opacity-55 text-center px-6">
+          <p className="text-sm opacity-55 text-center px-6">
             {searchTerm ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
           </p>
         </div>

@@ -72,11 +72,11 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     <form onSubmit={handleLogin} className="w-full max-w-[360px] flex flex-col gap-[18px]">
       <div>
         <h1 className="text-2xl font-medium mb-1">Entrar</h1>
-        <p className="text-[13px] opacity-60">Acesse sua banca</p>
+        <p className="text-sm opacity-60">Acesse sua banca</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-[11px] uppercase tracking-wide opacity-70">E-mail</Label>
+        <Label htmlFor="email" className="text-xs uppercase tracking-wide opacity-70">E-mail</Label>
         <Input
           id="email"
           type="email"
@@ -88,7 +88,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-[11px] uppercase tracking-wide opacity-70">Senha</Label>
+        <Label htmlFor="password" className="text-xs uppercase tracking-wide opacity-70">Senha</Label>
         <div className="relative">
           <Input
             id="password"

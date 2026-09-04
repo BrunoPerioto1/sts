@@ -28,7 +28,7 @@ export function StatusSheet({ open, onOpenChange, selected, onChange }: StatusSh
           <button
             type="button"
             onClick={() => onChange([])}
-            className="text-[13px] text-zinc-400 hover:text-white min-h-[44px] px-1"
+            className="text-sm text-zinc-400 hover:text-white min-h-[44px] px-1"
           >
             Limpar
           </button>

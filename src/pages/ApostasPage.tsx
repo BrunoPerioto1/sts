@@ -369,14 +369,14 @@ export default function ApostasPage() {
       title="Apostas"
       subtitle={`${total.toLocaleString("pt-BR")} registros`}
       titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
-      titleClassName="text-[26px] font-semibold tracking-tight shrink-0"
-      subtitleClassName="text-[13px] text-zinc-500 truncate"
+      titleClassName="text-2xl font-semibold tracking-tight shrink-0"
+      subtitleClassName="text-sm text-zinc-500 truncate"
       hideHeaderBorder
       hideBottomNav={selection.selectionMode}
       mobileHeader={
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-[19px] font-semibold truncate">Apostas</h1>
+            <h1 className="text-lg font-semibold truncate">Apostas</h1>
           </div>
           <div className="flex items-center gap-1 -mr-2">
             <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={() => setMobileSearchExpanded((v) => !v)} />
@@ -407,7 +407,7 @@ export default function ApostasPage() {
             >
               <SlidersHorizontal size={19} />
               {activeMobileFilterCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-[9px] font-medium flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
                   {activeMobileFilterCount}
                 </span>
               )}
@@ -422,7 +422,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => changeViewMode("agrupado")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 viewMode === "agrupado" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -432,7 +432,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => changeViewMode("tabela")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 viewMode === "tabela" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -466,7 +466,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => { setStatusFilter(pill.value); setPage(1); }}
               className={cn(
-                "shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
+                "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
                 isActive ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
               )}
             >
@@ -577,7 +577,7 @@ export default function ApostasPage() {
             )
           ) : (
           <div className="flex items-center justify-between pt-2">
-            <p className="text-[12.5px] opacity-45">
+            <p className="text-sm opacity-45">
               {apostas.length > 0 ? `${(page - 1) * perPage + 1}–${(page - 1) * perPage + apostas.length}` : "0"} de {total}
             </p>
             <div className="flex items-center gap-1">
@@ -593,7 +593,7 @@ export default function ApostasPage() {
                   {i > 0 && pageWindow[i - 1] !== p - 1 && <span className="px-1 opacity-35 text-xs">…</span>}
                   <button
                     onClick={() => fetchFilteredBets(p, false)}
-                    className="w-8 h-8 rounded-md text-[13px]"
+                    className="w-8 h-8 rounded-md text-sm"
                     style={
                       p === page
                         ? { boxShadow: "inset 0 0 0 1px var(--color-accent)", color: "var(--color-accent)" }

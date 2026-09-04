@@ -5,7 +5,7 @@ import { THRESHOLD_MAX, THRESHOLD_MIN, toPtBr, type usePreferencesForm } from "@
 
 type PreferencesFormState = ReturnType<typeof usePreferencesForm>;
 
-export function PreferencesFields({ form, labelClassName = "text-[10px] uppercase tracking-wider text-zinc-500" }: {
+export function PreferencesFields({ form, labelClassName = "text-xs uppercase tracking-wider text-zinc-500" }: {
   form: PreferencesFormState;
   labelClassName?: string;
 }) {
@@ -14,7 +14,7 @@ export function PreferencesFields({ form, labelClassName = "text-[10px] uppercas
       <div className="space-y-1.5">
         <Label className={labelClassName}>Stake padrão</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-zinc-500 pointer-events-none">R$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none">R$</span>
           <Input
             inputMode="decimal"
             placeholder="100,00"
@@ -23,8 +23,8 @@ export function PreferencesFields({ form, labelClassName = "text-[10px] uppercas
             onChange={(e) => form.setStakeInput(e.target.value)}
           />
         </div>
-        {form.stakeError && <p className="text-[12px] text-negative">{form.stakeError}</p>}
-        <p className="text-[12px] text-zinc-500">Valor padrão usado ao registrar uma nova aposta.</p>
+        {form.stakeError && <p className="text-xs text-negative">{form.stakeError}</p>}
+        <p className="text-xs text-zinc-500">Valor padrão usado ao registrar uma nova aposta.</p>
       </div>
 
       <div className="space-y-1.5">
@@ -36,7 +36,7 @@ export function PreferencesFields({ form, labelClassName = "text-[10px] uppercas
             value={form.thresholdInput}
             onChange={(e) => form.setThresholdInput(e.target.value)}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-zinc-500 pointer-events-none">%</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none">%</span>
         </div>
         <Slider
           value={[form.sliderValue]}
@@ -47,9 +47,9 @@ export function PreferencesFields({ form, labelClassName = "text-[10px] uppercas
           className="py-1"
         />
         {form.thresholdError ? (
-          <p className="text-[12px] text-negative">{form.thresholdError}</p>
+          <p className="text-xs text-negative">{form.thresholdError}</p>
         ) : (
-          <p className="text-[12px] text-zinc-500">Só recebe notificação do bot quando o sinal indicar stake acima desta porcentagem da banca.</p>
+          <p className="text-xs text-zinc-500">Só recebe notificação do bot quando o sinal indicar stake acima desta porcentagem da banca.</p>
         )}
       </div>
     </>

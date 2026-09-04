@@ -61,20 +61,20 @@ export function HouseRowMobile({ house, onTap, onLongPress }: HouseRowMobileProp
       className="flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-white/[0.04] transition-colors"
     >
       <span
-        className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-[11px] font-semibold text-white"
+        className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
         style={{ background: colorForHouse(house.houseId) }}
       >
         {initialsOf(house.houseName)}
       </span>
 
       <span className="flex-1 min-w-0">
-        <span className="block text-[14px] font-medium truncate">{house.houseName}</span>
-        <span className="block text-[12px] text-zinc-500 truncate">{betsSubtitle(house)}</span>
+        <span className="block text-sm font-medium truncate">{house.houseName}</span>
+        <span className="block text-xs text-zinc-500 truncate">{betsSubtitle(house)}</span>
       </span>
 
       <span className="shrink-0 text-right">
-        <span className="block text-[14px] font-medium tabular-nums">{formatCurrency(Number(house.houseBalance))}</span>
-        <span className={cn("block text-[12px] tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
+        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Number(house.houseBalance))}</span>
+        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
           {formatSignedCurrency(profit)}
         </span>
       </span>

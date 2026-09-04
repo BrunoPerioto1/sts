@@ -48,7 +48,7 @@ function DashboardPageContent({
       <div className="flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
         <CalendarSlash size={30} className="opacity-35 mb-3" />
         <h3 className="text-base font-medium mb-1">Nenhuma aposta registrada ainda</h3>
-        <p className="text-[12.5px] opacity-60 max-w-sm mb-4">
+        <p className="text-sm opacity-60 max-w-sm mb-4">
           Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas.
         </p>
         <Button asChild>

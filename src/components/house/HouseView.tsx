@@ -102,7 +102,7 @@ export function CasasApostaView() {
         <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
           <Buildings size={30} className="opacity-35 mb-3" />
           <h3 className="text-base font-medium mb-1">Nenhuma casa encontrada</h3>
-          <p className="text-[12.5px] opacity-55">
+          <p className="text-sm opacity-55">
             {searchTerm ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
           </p>
         </div>
@@ -111,13 +111,13 @@ export function CasasApostaView() {
           <table className="table w-full text-sm">
             <thead>
               <tr className="text-left border-b border-border">
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Casa</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Saldo</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Depositado</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Sacado</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Lucro</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Apostas</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Última mov.</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal">Casa</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Saldo</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Depositado</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Sacado</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Lucro</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Apostas</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal">Última mov.</th>
                 <th className="w-11"></th>
               </tr>
             </thead>
@@ -141,8 +141,8 @@ export function CasasApostaView() {
             return (
               <div key={house.houseId} className="card elev-sm bg-card rounded-md p-[14px_16px] flex flex-col gap-2">
                 <p className="font-medium">{house.houseName}</p>
-                <p className="text-[22px] font-medium tabular-nums">{formatCurrency(house.houseBalance)}</p>
-                <p className={`text-[12.5px] tabular-nums ${profit >= 0 ? "text-positive" : "text-negative"}`}>
+                <p className="text-2xl font-medium tabular-nums">{formatCurrency(house.houseBalance)}</p>
+                <p className={`text-sm tabular-nums ${profit >= 0 ? "text-positive" : "text-negative"}`}>
                   {profit >= 0 ? "+" : ""}{formatCurrency(profit)} · {house.totalBets} apostas
                 </p>
                 <div className="flex gap-2 mt-1">

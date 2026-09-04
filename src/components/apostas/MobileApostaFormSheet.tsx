@@ -8,7 +8,7 @@ import { formatCurrency } from "@/lib/format";
 import { useApostaForm } from "@/hooks/apostas/useApostaForm";
 import { type BetItem } from "@/api/routes/get-bets";
 
-const fieldLabel = "text-[10px] font-medium uppercase tracking-wider text-zinc-500";
+const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-500";
 
 interface MobileApostaFormSheetProps {
   open: boolean;
@@ -112,11 +112,11 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           >
             <div>
               <p className={fieldLabel}>Retorno potencial</p>
-              <p className="text-[20px] font-semibold tabular-nums text-white">{formatCurrency(potentialReturn.total)}</p>
+              <p className="text-xl font-semibold tabular-nums text-white">{formatCurrency(potentialReturn.total)}</p>
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-[20px] font-semibold tabular-nums text-positive">+{formatCurrency(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-positive">+{formatCurrency(potentialReturn.profit)}</p>
             </div>
           </div>
         )}

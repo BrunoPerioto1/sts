@@ -100,7 +100,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-2 rounded-lg py-2 text-[13px] transition-colors",
+                "flex items-center gap-2 rounded-lg py-2 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-[10px]"
               )}
               style={{
@@ -139,13 +139,13 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
             collapsed ? "justify-center px-0" : "px-1"
           )}
         >
-          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-[11px] font-medium shrink-0">
+          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-xs font-medium shrink-0">
             {user ? initialsOf(user.username) : "?"}
           </div>
           {!collapsed && (
             <div className="text-left overflow-hidden flex-1">
               <div className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
-              <div className="text-[10px] opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
+              <div className="text-xs opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
             </div>
           )}
           {!collapsed && <SignOut size={16} className="opacity-55 shrink-0" />}

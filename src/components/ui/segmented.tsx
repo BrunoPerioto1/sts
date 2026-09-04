@@ -23,7 +23,7 @@ export function Segmented<T extends string>({ options, value, onChange, classNam
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "px-3 py-[7px] text-[13px] whitespace-nowrap transition-colors",
+              "px-3 py-[7px] text-sm whitespace-nowrap transition-colors",
               i > 0 && "border-l border-border",
               active ? "text-[var(--color-onlight)]" : "hover:bg-foreground/[0.07]"
             )}

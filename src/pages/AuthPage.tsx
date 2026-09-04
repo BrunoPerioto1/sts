@@ -23,26 +23,26 @@ const AuthPage = () => {
         </div>
 
         <div className="max-w-lg">
-          <h1 className="text-[38px] leading-[1.1] font-medium mb-4">
+          <h1 className="text-4xl leading-[1.1] font-medium mb-4">
             Sua banca lida como<br />um demonstrativo.
           </h1>
-          <p className="text-[15px] opacity-70 mb-9">
+          <p className="text-base opacity-70 mb-9">
             Registre entradas, concilie saldos em dezenas de casas e leia ROI de verdade.
             Sem confete, sem cassino, sem cor decorativa.
           </p>
           <div className="hr-fade mb-6" style={{ marginLeft: 0, marginRight: "auto", width: "100%" }} />
           <div className="flex gap-9">
             <div>
-              <div className="text-[26px] font-medium text-positive">+R$ 4.812</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Lucro acumulado</div>
+              <div className="text-2xl font-medium text-positive">+R$ 4.812</div>
+              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Lucro acumulado</div>
             </div>
             <div>
-              <div className="text-[26px] font-medium">1.284</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Apostas</div>
+              <div className="text-2xl font-medium">1.284</div>
+              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Apostas</div>
             </div>
             <div>
-              <div className="text-[26px] font-medium">84</div>
-              <div className="text-[11px] uppercase tracking-wide opacity-55 mt-1">Casas</div>
+              <div className="text-2xl font-medium">84</div>
+              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Casas</div>
             </div>
           </div>
         </div>

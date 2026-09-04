@@ -27,7 +27,7 @@ export function BottomNav() {
             style={{ color: isActive ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 50%, transparent)" }}
           >
             <Icon size={19} weight={isActive ? "fill" : "regular"} />
-            <span className="text-[10px]">{item.label}</span>
+            <span className="text-xs">{item.label}</span>
           </NavLink>
         );
       })}
