@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow } from "./OptionRow";
@@ -69,7 +69,6 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
   const [search, setSearch] = useState("");
   const [balances, setBalances] = useState<Record<number, number>>({});
   const [recentIds, setRecentIds] = useState<number[]>([]);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -81,8 +80,9 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
         setBalances(map);
       })
       .catch(() => undefined);
-    const t = setTimeout(() => searchRef.current?.focus(), 50);
-    return () => clearTimeout(t);
+    // Sem autofocus na busca de proposito: no mobile o teclado subia junto com
+    // o sheet e comia metade da lista — pra escolher uma casa o toque na lista
+    // resolve. Quem quer filtrar toca no campo e ai sim abre o teclado.
   }, [open]);
 
   const toggle = (id: number) => {
@@ -117,7 +117,6 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
         <div className="relative">
           <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            ref={searchRef}
             placeholder="Buscar casa"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
