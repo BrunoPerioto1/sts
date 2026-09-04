@@ -50,7 +50,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         position: isInDrawer ? "relative" : "fixed",
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
-        height: "100vh",
+        height: "100dvh",
         padding: "18px 12px",
         zIndex: isInDrawer ? "auto" : 50,
       }}

@@ -205,7 +205,7 @@ export function DashboardMobileView({
     <>
       {/* Ocupa a altura útil da tela (viewport menos a bottom nav) e distribui
           os blocos na vertical, em vez de amontoar tudo no topo. */}
-      <div className="min-h-[calc(100vh-96px)] px-4 pt-4 flex flex-col">
+      <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0">
             <h2 className="text-[19px] font-semibold">Resultado</h2>

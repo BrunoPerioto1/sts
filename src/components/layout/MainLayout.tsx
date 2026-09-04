@@ -45,7 +45,7 @@ export function MainLayout({
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
+    <div className="min-h-dvh flex w-full bg-background overflow-x-hidden">
       {!isMobile && <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />}
 
       <main

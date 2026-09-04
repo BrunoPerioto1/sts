@@ -7,7 +7,7 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-[1.05fr_1fr]">
+    <div className="min-h-dvh grid lg:grid-cols-[1.05fr_1fr]">
       <div
         className="relative hidden lg:flex flex-col justify-between p-14 overflow-hidden"
         style={{

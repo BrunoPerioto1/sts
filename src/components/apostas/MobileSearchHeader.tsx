@@ -84,7 +84,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }
             }
           }}
           placeholder="Buscar apostas..."
-          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-[13px] text-white placeholder:text-zinc-500 outline-none"
+          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-sm text-white placeholder:text-zinc-500 outline-none"
         />
         <button
           type="button"

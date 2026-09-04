@@ -100,7 +100,7 @@ export function ApostasFilter({
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
             disabled={isLoading}
-            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-[13px] text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-sm text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
           />
         </div>
 
