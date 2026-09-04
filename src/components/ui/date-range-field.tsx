@@ -35,7 +35,7 @@ export function DateRangeField({
     : undefined;
 
   // Estado à parte pro que está sendo escolhido no popover — só vira o range
-  // "de verdade" (via onChange) quando as duas pontas existirem; clicar só o
+  // "de verdade" (vidadaa onChange) quando as duas pontas existirem; clicar só o
   // início não pode propagar um endDate vazio pro resto do app.
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<DateRange | undefined>(committedRange);
