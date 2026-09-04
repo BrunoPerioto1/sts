@@ -4,7 +4,9 @@ import { HouseListItem } from "./HouseListItem";
 import { HousesMetrics } from "./HouseMetrics";
 import { HousesSearch, type HouseSort } from "./HouseSearch";
 import { Buildings } from "@phosphor-icons/react";
-import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics } from "@/api/routes/get-houses";
+import { HouseBalanceDto } from "@/api/routes/get-houses";
+import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
+import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
@@ -17,11 +19,20 @@ function formatCurrency(value: string | number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
 }
 
+// Referencia estavel: `?? []` inline criaria array novo a cada render e
+// invalidaria o useMemo que depende de `houses`.
+const EMPTY_HOUSES: HouseBalanceDto[] = [];
+
 export function CasasApostaView() {
   const isMobile = useIsMobile();
-  const [houses, setHouses] = useState<HouseBalanceDto[]>([]);
-  const [metrics, setMetrics] = useState<HouseMetricsDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const balancesQuery = useHouseBalances();
+  const metricsQuery = useHouseMetrics();
+  const invalidate = useInvalidateBetData();
+
+  const houses = balancesQuery.data ?? EMPTY_HOUSES;
+  const metrics = metricsQuery.data ?? null;
+  const loading = balancesQuery.isPending || metricsQuery.isPending;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [onlyWithBalance, setOnlyWithBalance] = useState(false);
   const [sort, setSort] = useState<HouseSort>("balance");
@@ -37,23 +48,11 @@ export function CasasApostaView() {
   const [isNovaTransacaoModalOpen, setIsNovaTransacaoModalOpen] = useState(false);
 
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [housesData, metricsData] = await Promise.all([getHouseBalances(), getHouseMetrics()]);
-      setHouses(housesData);
-      setMetrics(metricsData);
-    } catch {
-      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (balancesQuery.isError || metricsQuery.isError) {
+      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
+    }
+  }, [balancesQuery.isError, metricsQuery.isError]);
 
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -166,7 +165,7 @@ export function CasasApostaView() {
           <MovimentacaoModal isOpen={isMovimentacaoModalOpen} onClose={() => setIsMovimentacaoModalOpen(false)} casaNome={selectedHouse.houseName} houseId={selectedHouse.houseId} />
           <NovaTransacaoModal
             isOpen={isNovaTransacaoModalOpen}
-            onClose={() => { setIsNovaTransacaoModalOpen(false); loadData(); }}
+            onClose={() => { setIsNovaTransacaoModalOpen(false); invalidate(); }}
             houseId={selectedHouse.houseId}
           />
         </>

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
@@ -9,7 +8,7 @@ import {
   UserCircle,
   SignOut,
 } from "@phosphor-icons/react";
-import { getMe } from "@/api/routes/get-me";
+import { useMe } from "@/hooks/queries/use-me";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
@@ -34,13 +33,7 @@ function initialsOf(name: string) {
 export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavigate }: AppSidebarProps) {
   const location = useLocation();
   const isInDrawer = !!onNavigate;
-  const [user, setUser] = useState<{ username: string; email: string } | null>(null);
-
-  useEffect(() => {
-    getMe()
-      .then((me) => setUser({ username: me.username, email: me.email }))
-      .catch(() => setUser(null));
-  }, []);
+  const { me: user } = useMe();
 
   return (
     <div

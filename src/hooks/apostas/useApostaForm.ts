@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { actionToast, Check } from "@/lib/action-toast";
 import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
-import { getAllHouses } from "@/api/routes/get-houses";
+import { useHouses } from "@/hooks/queries/use-houses";
+import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 
 export interface ApostaFormData {
   game: string;
@@ -22,7 +23,8 @@ interface UseApostaFormArgs {
 // bottom sheet mobile (MobileApostaFormSheet.tsx) — mesma validação e mesmo
 // payload pros dois, só a apresentação muda.
 export function useApostaForm({ onApostaAdded, initialData, isEditing = false }: UseApostaFormArgs) {
-  const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
+  const houses = useHouses();
+  const invalidate = useInvalidateBetData();
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<ApostaFormData>({
     game: initialData?.game || "",
@@ -33,18 +35,16 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
     sport: initialData?.sport || "Futebol",
   });
 
+  // Reaplica a casa da aposta em edicao quando ela aparece na lista — o
+  // formData e inicializado uma vez so, entao trocar de aposta com o hook ja
+  // montado nao atualizaria o select sozinho.
   useEffect(() => {
-    getAllHouses()
-      .then((data) => {
-        const normalized = data.map((h) => ({ id: Number(h.id), name: h.name }));
-        setHouses(normalized);
-        if (initialData?.houseId) {
-          const match = normalized.find((h) => h.id === initialData.houseId);
-          if (match) setFormData((prev) => ({ ...prev, houseId: match.id }));
-        }
-      })
-      .catch(() => undefined);
-  }, [initialData]);
+    const houseId = initialData?.houseId;
+    if (!houseId) return;
+    if (houses.some((h) => h.id === houseId)) {
+      setFormData((prev) => ({ ...prev, houseId }));
+    }
+  }, [initialData, houses]);
 
   const potentialReturn = useMemo(() => {
     const odd = parseFloat(formData.odd.replace(",", "."));
@@ -87,6 +87,9 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
         const created = await createBetRoute(payload);
         onApostaAdded(created);
       }
+      // Aposta nova/editada muda lista, saldo da casa e metricas do dashboard —
+      // sem isso as outras telas ficariam com o numero velho ate o cache expirar.
+      invalidate();
       actionToast.success({ icon: Check, title: isEditing ? "Aposta atualizada" : "Aposta registrada" });
     } catch (e) {
       const description = e instanceof Error ? e.message : "Falha ao salvar aposta";

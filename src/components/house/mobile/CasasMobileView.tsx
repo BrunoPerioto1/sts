@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowsDownUp, Buildings, MagnifyingGlass } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
-import { HouseBalanceDto, HouseMetricsDto, getHouseBalances, getHouseMetrics } from "@/api/routes/get-houses";
+import { HouseBalanceDto } from "@/api/routes/get-houses";
+import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
+import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,6 +16,10 @@ import { HouseDetailScreen } from "./HouseDetailScreen";
 import { HouseHistoryScreen } from "./HouseHistoryScreen";
 
 type StackEntry = { kind: "detail" | "history"; house: HouseBalanceDto };
+
+// Referencia estavel: `?? []` inline criaria array novo a cada render e
+// invalidaria os useMemo que dependem de `houses`.
+const EMPTY_HOUSES: HouseBalanceDto[] = [];
 
 const SORT_LABEL: Record<HouseSortMobile, string> = {
   balance: "Saldo",
@@ -30,9 +36,13 @@ interface CasasMobileViewProps {
 export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   const navigate = useNavigate();
 
-  const [houses, setHouses] = useState<HouseBalanceDto[]>([]);
-  const [metrics, setMetrics] = useState<HouseMetricsDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const balancesQuery = useHouseBalances();
+  const metricsQuery = useHouseMetrics();
+  const invalidate = useInvalidateBetData();
+
+  const houses = balancesQuery.data ?? EMPTY_HOUSES;
+  const metrics = metricsQuery.data ?? null;
+  const loading = balancesQuery.isPending || metricsQuery.isPending;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [onlyWithBalance, setOnlyWithBalance] = useState(false);
@@ -44,24 +54,11 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   const [novaMovHouse, setNovaMovHouse] = useState<HouseBalanceDto | null>(null);
   const [stack, setStack] = useState<StackEntry[]>([]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [housesData, metricsData] = await Promise.all([getHouseBalances(), getHouseMetrics()]);
-      setHouses(housesData);
-      setMetrics(metricsData);
-      setStack((prev) => prev.map((s) => ({ ...s, house: housesData.find((h) => h.houseId === s.house.houseId) ?? s.house })));
-    } catch {
-      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (balancesQuery.isError || metricsQuery.isError) {
+      actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
+    }
+  }, [balancesQuery.isError, metricsQuery.isError]);
 
   useEffect(() => {
     onCountChange?.(houses.length);
@@ -87,6 +84,9 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   const pushHistory = (house: HouseBalanceDto) => setStack((prev) => [...prev, { kind: "history", house }]);
   const popStack = () => setStack((prev) => prev.slice(0, -1));
   const current = stack[stack.length - 1];
+  // A tela empilhada guarda a casa de quando foi aberta; relê da lista atual
+  // pra ela refletir uma movimentação feita por cima dela.
+  const currentHouse = current ? (houses.find((h) => h.houseId === current.house.houseId) ?? current.house) : null;
 
   return (
     <div className="space-y-4">
@@ -200,23 +200,23 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
       <NovaMovimentacaoSheet
         house={novaMovHouse}
         onClose={() => setNovaMovHouse(null)}
-        onSuccess={async () => {
+        onSuccess={() => {
           setNovaMovHouse(null);
-          await loadData();
+          invalidate();
           actionToast.success({ title: "Movimentação registrada" });
         }}
       />
 
-      {current?.kind === "detail" && (
+      {current?.kind === "detail" && currentHouse && (
         <HouseDetailScreen
-          house={current.house}
+          house={currentHouse}
           onBack={popStack}
           onNewTransaction={setNovaMovHouse}
           onOpenHistory={pushHistory}
         />
       )}
 
-      {current?.kind === "history" && <HouseHistoryScreen house={current.house} onBack={popStack} />}
+      {current?.kind === "history" && currentHouse && <HouseHistoryScreen house={currentHouse} onBack={popStack} />}
     </div>
   );
 }

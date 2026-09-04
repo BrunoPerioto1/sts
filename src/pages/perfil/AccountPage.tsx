@@ -6,22 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { actionToast } from "@/lib/action-toast";
-import { getMe, type MeResponse } from "@/api/routes/get-me";
 import { patchMe } from "@/api/routes/patch-me";
+import { useMe } from "@/hooks/queries/use-me";
 import { getErrorMessage } from "@/lib/api-error";
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const { me, setMe } = useMe();
   const [form, setForm] = useState({ username: "", email: "" });
   const [saving, setSaving] = useState(false);
 
+  // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    getMe().then((data) => {
-      setMe(data);
-      setForm({ username: data.username, email: data.email });
-    }).catch(() => undefined);
-  }, []);
+    if (me) setForm({ username: me.username, email: me.email });
+  }, [me]);
 
   const handleSave = async () => {
     setSaving(true);

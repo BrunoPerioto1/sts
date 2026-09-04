@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow } from "./OptionRow";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getHouseBalances } from "@/api/routes/get-houses";
+import { useHouseBalances } from "@/hooks/queries/use-houses";
 
 const RECENT_HOUSES_KEY = "apostas:recent-houses";
 const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
@@ -67,19 +67,20 @@ interface CasaSheetProps {
 
 export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, multiple = true }: CasaSheetProps) {
   const [search, setSearch] = useState("");
-  const [balances, setBalances] = useState<Record<number, number>>({});
   const [recentIds, setRecentIds] = useState<number[]>([]);
+
+  // Compartilhado com a tela de Casas: abrir o sheet nao refaz a requisicao se
+  // ela ja estiver no cache.
+  const { data: balanceRows } = useHouseBalances();
+  const balances = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const r of balanceRows ?? []) map[r.houseId] = Number(r.totalBets);
+    return map;
+  }, [balanceRows]);
 
   useEffect(() => {
     if (!open) return;
     setRecentIds(readRecentHouseIds());
-    getHouseBalances()
-      .then((rows) => {
-        const map: Record<number, number> = {};
-        for (const r of rows) map[r.houseId] = Number(r.totalBets);
-        setBalances(map);
-      })
-      .catch(() => undefined);
     // Sem autofocus na busca de proposito: no mobile o teclado subia junto com
     // o sheet e comia metade da lista — pra escolher uma casa o toque na lista
     // resolve. Quem quer filtrar toca no campo e ai sim abre o teclado.

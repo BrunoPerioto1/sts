@@ -1,27 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft, TelegramLogo } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { actionToast } from "@/lib/action-toast";
-import { getMe, type MeResponse } from "@/api/routes/get-me";
+import { useMe } from "@/hooks/queries/use-me";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import { getErrorMessage } from "@/lib/api-error";
 
 export default function TelegramPage() {
   const navigate = useNavigate();
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const { me, reloadMe } = useMe();
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState<string>("");
-
-  const loadMe = () => {
-    getMe().then(setMe).catch(() => undefined);
-  };
-
-  useEffect(() => {
-    loadMe();
-  }, []);
 
   const handleGenerateTelegramCode = async () => {
     try {
@@ -41,7 +33,7 @@ export default function TelegramPage() {
     try {
       await postUnlinkTelegram();
       actionToast.success({ title: "Telegram desvinculado" });
-      loadMe();
+      reloadMe();
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
     }

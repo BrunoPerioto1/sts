@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,11 @@ import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { PreferencesFields } from "@/components/perfil/PreferencesFields";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
-import { getMe, type MeResponse } from "@/api/routes/get-me";
+import { type MeResponse } from "@/api/routes/get-me";
 import { patchMe } from "@/api/routes/patch-me";
 import { getDashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import { getAllHouses } from "@/api/routes/get-houses";
+import { useMe } from "@/hooks/queries/use-me";
+import { useHouses } from "@/hooks/queries/use-houses";
 import { getBets } from "@/api/routes/get-bets";
 import { getTransactions } from "@/api/routes/get-transaction";
 import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
@@ -53,35 +55,34 @@ export default function PerfilPage() {
   const isMobile = useIsMobile();
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState<string>("");
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const { me, setMe, reloadMe } = useMe();
   const [form, setForm] = useState({ username: "", email: "" });
   const [saving, setSaving] = useState(false);
-  const [summary, setSummary] = useState({ totalBets: 0, totalProfit: 0, roi: 0, totalHouses: 0 });
 
   const prefsForm = usePreferencesForm(me, setMe);
 
-  const loadMe = () => {
-    getMe().then((data) => {
-      setMe(data);
-      setForm({ username: data.username, email: data.email });
-      prefsForm.resetFrom(data);
-    }).catch(() => undefined);
+  // Chave sob "dashboard" de proposito: e a mesma metrica que o dashboard
+  // mostra, entao uma aposta nova invalida as duas de uma vez.
+  const metricsQuery = useQuery({
+    queryKey: ["dashboard", "metrics", "all-time"],
+    queryFn: () => getDashboardMetrics({}),
+  });
+  const houses = useHouses();
+
+  const summary = {
+    totalBets: Number(metricsQuery.data?.totalBets ?? 0),
+    totalProfit: Number(metricsQuery.data?.totalProfit ?? 0),
+    roi: Number(metricsQuery.data?.roi ?? 0),
+    totalHouses: houses.length,
   };
 
+  // Hidrata os forms quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    loadMe();
-    Promise.all([getDashboardMetrics({}), getAllHouses()])
-      .then(([metrics, houses]) => {
-        setSummary({
-          totalBets: Number(metrics.totalBets),
-          totalProfit: Number(metrics.totalProfit),
-          roi: Number(metrics.roi),
-          totalHouses: houses.length,
-        });
-      })
-      .catch(() => undefined);
+    if (!me) return;
+    setForm({ username: me.username, email: me.email });
+    prefsForm.resetFrom(me);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [me]);
 
   const handleGenerateTelegramCode = async () => {
     try {
@@ -101,7 +102,7 @@ export default function PerfilPage() {
     try {
       await postUnlinkTelegram();
       actionToast.success({ title: "Telegram desvinculado" });
-      loadMe();
+      reloadMe();
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
     }

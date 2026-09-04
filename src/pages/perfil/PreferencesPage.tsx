@@ -1,24 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { getMe, type MeResponse } from "@/api/routes/get-me";
+import { useMe } from "@/hooks/queries/use-me";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { PreferencesFields } from "@/components/perfil/PreferencesFields";
 
 export default function PreferencesPage() {
   const navigate = useNavigate();
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const { me, setMe } = useMe();
   const form = usePreferencesForm(me, setMe);
 
+  // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    getMe().then((data) => {
-      setMe(data);
-      form.resetFrom(data);
-    }).catch(() => undefined);
+    if (me) form.resetFrom(me);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [me]);
 
   return (
     <MainLayout
