@@ -113,15 +113,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
       open={open}
       onOpenChange={onOpenChange}
       title="Casa"
-      footer={
-        multiple ? (
-          <Button className="w-full min-h-[44px]" onClick={handleApply}>
-            {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="sticky top-0 -mx-4 px-4 pb-2 pt-1 bg-background z-10">
+      subHeader={
         <div className="relative">
           <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
@@ -142,8 +134,15 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
             </button>
           )}
         </div>
-      </div>
-
+      }
+      footer={
+        multiple ? (
+          <Button className="w-full min-h-[44px]" onClick={handleApply}>
+            {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
+          </Button>
+        ) : undefined
+      }
+    >
       {!term && fallbackRecent.length > 0 && (
         <div className="pb-2">
           <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>

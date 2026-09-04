@@ -11,6 +11,9 @@ interface BottomSheetProps {
   nested?: boolean;
   title: React.ReactNode;
   titleExtra?: React.ReactNode;
+  // Faixa fixa logo abaixo do titulo, FORA da area rolavel — pra busca/filtro
+  // que precisa ficar parado enquanto a lista rola por baixo.
+  subHeader?: React.ReactNode;
   footer?: React.ReactNode;
   children: React.ReactNode;
   contentClassName?: string;
@@ -22,6 +25,7 @@ export function BottomSheet({
   nested = false,
   title,
   titleExtra,
+  subHeader,
   footer,
   children,
   contentClassName,
@@ -65,6 +69,8 @@ export function BottomSheet({
               <X size={18} />
             </DrawerPrimitive.Close>
           </div>
+
+          {subHeader && <div className="shrink-0 px-4 pb-2">{subHeader}</div>}
 
           <div className="flex-1 min-h-0 overflow-y-auto scroll-pb-16 px-4">{children}</div>
 

@@ -14,7 +14,19 @@ import TelegramPage from "./pages/perfil/TelegramPage";
 import PreferencesPage from "./pages/perfil/PreferencesPage";
 import { Navigate } from "react-router-dom";
 
-const queryClient = new QueryClient();
+// staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
+// so quando ele registra/edita uma aposta. Sem isso o padrao do react-query e
+// staleTime 0, que refaz a requisicao a cada montagem e a cada foco de aba.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

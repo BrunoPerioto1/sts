@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
@@ -60,7 +61,10 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
     else groups.push({ day: label, items: [t] });
   }
 
-  return (
+  // Mesmo motivo do HouseDetailScreen: overlay de tela cheia montado dentro de
+  // um container com `space-y-4`, que injetava margin-top: 1rem no elemento
+  // `fixed` e deixava a lista aparecer numa faixa no topo.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
@@ -137,6 +141,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
           ))
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

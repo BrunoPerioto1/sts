@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,12 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   const hitRate = totalBets > 0 ? (Number(house.wonBets) / totalBets) * 100 : 0;
   const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
 
-  return (
+  // Portal pro body: essa tela e um overlay de tela cheia, mas era montada
+  // dentro do <div className="space-y-4"> do CasasMobileView — e o space-y do
+  // Tailwind poe margin-top: 1rem em todo filho depois do primeiro, inclusive
+  // num elemento `fixed`. A margem empurrava o painel 1rem pra baixo e a lista
+  // de casas aparecia nessa faixa no topo.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
@@ -86,6 +92,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
