@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe, type MeResponse } from "@/api/routes/get-me";
 
-export const ME_KEY = ["me"] as const;
+const ME_KEY = ["me"] as const;
 
 // O usuario logado e pedido pela sidebar e por TODAS as telas de Perfil. Antes
 // cada uma chamava getMe() na montagem — trocar de aba refazia o GET. Com uma

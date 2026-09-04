@@ -3,10 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
 import { type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { getDashboardMetricsComparison } from "@/api/routes/get-dashboard-metrics-comparison";
-import {
-  getDashboardDailySummary,
-  type DailySummaryPoint,
-} from "@/api/routes/get-dashboard-daily";
+import { getDashboardDailySummary } from "@/api/routes/get-dashboard-daily";
 
 interface Params {
   houseId?: number;

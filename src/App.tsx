@@ -1,5 +1,4 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
@@ -29,25 +28,23 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
-          <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
-          <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
-          <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
-          <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
-          <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
-          {}
-          <Route path="/logout" element={<LogoutRoute />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <Sonner />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
+        <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+        <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
+        <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
+        <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
+        <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
+        {}
+        <Route path="/logout" element={<LogoutRoute />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

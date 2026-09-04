@@ -1,15 +1,5 @@
 import { api } from '../apiClient';
 
-export interface BetResultType {
-  id: number;
-  name: string;
-}
-
-export async function getBetResultTypes() {
-  const response = await api.bets.get<BetResultType[]>('/result-types');
-  return response.data;
-}
-
 export interface CreateBetDto {
   game: string;
   stake: number;

@@ -6,7 +6,6 @@ export interface HouseDto {
   active: boolean;
 }
 
-export type FindByIdDto = HouseDto;
 export type FindAllHousesDTO = HouseDto;
 
 export interface HouseMetricsDto {
@@ -52,20 +51,8 @@ export async function getHouseMetrics() {
   return response.data;
 }
 
-// GET /house/{id}
-export async function getHouseById(id: number) {
-  const response = await api.houses.get<FindByIdDto>(`/${id}`);
-  return response.data;
-}
-
 // GET /house
 export async function getAllHouses() {
   const response = await api.houses.get<FindAllHousesDTO[]>('/all');
-  return response.data;
-}
-
-// POST /house
-export async function createHouse(houseName: string) {
-  const response = await api.houses.post('', { houseName });
   return response.data;
 }

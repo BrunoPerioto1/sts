@@ -22,13 +22,6 @@ export interface TransactionTypeDto {
   name: string;
 }
 
-export enum TransactionTypeEnum {
-  DEPOSIT = 1,      // Depósito
-  WITHDRAWAL = 2,   // Saque
-  ADJUSTMENT = 3    // Ajuste
-}
-
-
 export async function getTransactionTypes(): Promise<TransactionTypeDto[]> {
   const response = await api.transactions.get<TransactionTypeDto[]>("/types");
   return response.data;

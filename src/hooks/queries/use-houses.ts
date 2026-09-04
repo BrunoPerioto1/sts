@@ -6,7 +6,7 @@ import {
   type FindAllHousesDTO,
 } from "@/api/routes/get-houses";
 
-export const HOUSES_KEY = ["houses"] as const;
+const HOUSES_KEY = ["houses"] as const;
 
 export interface HouseOption {
   id: number;

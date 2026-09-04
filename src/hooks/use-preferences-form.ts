@@ -7,7 +7,7 @@ import { actionToast } from "@/lib/action-toast";
 
 export const THRESHOLD_MIN = 0.01;
 export const THRESHOLD_MAX = 5;
-export const THRESHOLD_DEFAULT = 1;
+const THRESHOLD_DEFAULT = 1;
 
 export function toPtBr(value: number): string {
   return value.toFixed(2).replace(".", ",");
