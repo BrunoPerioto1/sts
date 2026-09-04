@@ -18,7 +18,7 @@ export function OptionRow({ leading, label, subtitle, selected, onToggle, classN
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[52px] text-left transition-colors",
+        "press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[52px] text-left",
         selected ? "bg-accent/[0.14]" : "hover:bg-white/[0.04]",
         className
       )}

@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { format, getISOWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -205,10 +206,12 @@ function BetCardMobile({
   aposta,
   onOpen,
   selection,
+  index = 0,
 }: {
   aposta: BetItem;
   onOpen: () => void;
   selection: Selection;
+  index?: number;
 }) {
   const status = mapResultToStatus(aposta);
   const time = new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -224,10 +227,10 @@ function BetCardMobile({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg p-3 pr-9 flex flex-col gap-2 active:opacity-90 transition-shadow",
+        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-9 flex flex-col gap-2",
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
-      style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)" }}
+      style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
       onClick={handleClick}
       {...longPress}
     >
@@ -284,7 +287,7 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
         {[38, 88, 72, 80, 56].map((w, i) => (
-          <div key={i} className="h-[10px] rounded" style={{ width: `${w}%`, background: "color-mix(in srgb, var(--color-text) 8%, transparent)" }} />
+          <div key={i} className="skeleton h-[10px] rounded" style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }} />
         ))}
       </div>
     );
@@ -379,8 +382,14 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                {day.bets.map((bet) => (
-                                  <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
+                                {day.bets.map((bet, betIndex) => (
+                                  <BetCardMobile
+                                    key={bet.id}
+                                    index={betIndex}
+                                    aposta={bet}
+                                    onOpen={() => setDetailAposta(bet)}
+                                    selection={selection}
+                                  />
                                 ))}
                               </div>
                             </div>

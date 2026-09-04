@@ -39,12 +39,12 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   // de casas aparecia nessa faixa no topo.
   return createPortal(
     <div
-      className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
+      className="animate-screen-in fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={onBack} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
+          <button type="button" onClick={onBack} aria-label="Voltar" className="press p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
           <h1 className="text-lg font-semibold truncate">{house.houseName}</h1>

@@ -106,7 +106,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
                   type="button"
                   onClick={() => setDraft((d) => ({ ...d, period: { preset: chip.value, ...periodRangeFor(chip.value) } }))}
                   className={cn(
-                    "h-9 px-3.5 rounded-full text-sm font-medium transition-colors min-h-[44px] flex items-center",
+                    "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
                     isActive ? "bg-accent text-white" : "border border-white/10 text-zinc-400"
                   )}
                 >

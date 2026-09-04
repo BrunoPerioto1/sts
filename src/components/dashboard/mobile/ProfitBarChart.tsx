@@ -45,7 +45,10 @@ export function ProfitBarChart({ data }: ProfitBarChartProps) {
           />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: "color-mix(in srgb, var(--color-text) 6%, transparent)" }} />
           <ReferenceLine y={0} stroke="var(--color-divider)" strokeWidth={1} />
-          <Bar dataKey="profitDay" radius={[2, 2, 0, 0]}>
+          {/* As barras crescem a partir da linha do zero. 650ms e o ponto em
+              que da pra ver a curva se formar sem atrasar a leitura; o padrao
+              do recharts (1500ms) parece lento numa tela pequena. */}
+          <Bar dataKey="profitDay" radius={[2, 2, 0, 0]} animationDuration={650} animationEasing="ease-out">
             {data.map((entry) => (
               <Cell key={entry.date} fill={entry.profitDay >= 0 ? "#4ade9e" : "#f0797e"} />
             ))}

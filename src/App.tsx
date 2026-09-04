@@ -1,6 +1,7 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppShell } from "./components/layout/AppShell";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -33,13 +34,18 @@ const App = () => (
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/login" element={<AuthPage />} />
-        <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-        <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
-        <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
-        <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
-        <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
-        <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
-        <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
+        {/* Layout route sem path: a casca (sidebar/bottom nav) monta uma vez
+            e as telas trocam dentro do <Outlet />. Antes cada pagina montava a
+            propria casca, entao ela remontava a cada navegacao. */}
+        <Route element={<AppShell />}>
+          <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
+          <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+          <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
+          <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
+          <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
+          <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
+        </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />
         <Route path="*" element={<NotFound />} />

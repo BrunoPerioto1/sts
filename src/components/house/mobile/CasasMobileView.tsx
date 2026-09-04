@@ -7,6 +7,8 @@ import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { stagger } from "@/lib/motion";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { cn } from "@/lib/utils";
 import { HouseRowMobile } from "./HouseRowMobile";
 import { SortSheet, type HouseSortMobile } from "./SortSheet";
@@ -91,10 +93,12 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   return (
     <div className="space-y-4">
       {metrics && (
-        <div>
+        <div className="animate-rise stagger" style={stagger(0)}>
           <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo total</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-3xl font-semibold tabular-nums">{formatCurrency(metrics.totalBalance)}</span>
+            <span className="text-3xl font-semibold tabular-nums">
+              <AnimatedNumber value={metrics.totalBalance} format={formatCurrency} />
+            </span>
             <span className={cn("text-sm font-medium tabular-nums", metrics.consolidatedProfit >= 0 ? "text-positive" : "text-negative")}>
               {formatSignedCurrency(metrics.consolidatedProfit)}
             </span>
@@ -119,17 +123,17 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         </div>
       )}
 
-      <div className="relative">
+      <div className="relative animate-rise stagger" style={stagger(1)}>
         <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
         <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 min-h-[44px]" disabled={loading} />
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
         <button
           type="button"
           onClick={() => setOnlyWithBalance((v) => !v)}
           className={cn(
-            "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+            "press shrink-0 h-8 px-3.5 rounded-full text-sm font-medium",
             onlyWithBalance ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
           )}
         >
@@ -139,7 +143,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
           type="button"
           onClick={() => setOnlyNegative((v) => !v)}
           className={cn(
-            "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+            "press shrink-0 h-8 px-3.5 rounded-full text-sm font-medium",
             onlyNegative ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
           )}
         >
@@ -148,7 +152,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         <button
           type="button"
           onClick={() => setSortSheetOpen(true)}
-          className="shrink-0 h-8 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto"
+          className="press shrink-0 h-8 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto"
         >
           <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
         </button>
@@ -157,11 +161,11 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
       {loading ? (
         <div className="space-y-1">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 rounded-md animate-pulse" style={{ background: "color-mix(in srgb, var(--color-text) 5%, transparent)" }} />
+            <div key={i} className="skeleton h-16 rounded-md" style={{ animationDelay: `${i * 90}ms` }} />
           ))}
         </div>
       ) : filteredHouses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
+        <div className="animate-rise flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
           <Buildings size={30} className="opacity-35 mb-3" />
           <h3 className="text-base font-medium mb-1">Nenhuma casa encontrada</h3>
           <p className="text-sm opacity-55 text-center px-6">
@@ -170,9 +174,10 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-border">
-          {filteredHouses.map((house) => (
+          {filteredHouses.map((house, index) => (
             <HouseRowMobile
               key={house.houseId}
+              index={index}
               house={house}
               onTap={() => pushDetail(house)}
               onLongPress={() => setActionsHouse(house)}

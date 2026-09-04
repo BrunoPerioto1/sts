@@ -169,7 +169,7 @@ function LiquidarSheet({
                       key={r.resultId}
                       type="button"
                       onClick={() => finalize(r.resultId)}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+                      className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
                     >
                       <OptionBar color={colorByResultId[String(r.resultId)]} />
                       <span className="flex-1 text-sm text-white">{r.label}</span>
@@ -189,7 +189,7 @@ function LiquidarSheet({
             <button
               type="button"
               onClick={() => setCashoutOpen(true)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CASHOUT)]} />
               <span className="flex-1 text-sm text-white">Cashout</span>
@@ -198,7 +198,7 @@ function LiquidarSheet({
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.CANCELED)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
               <span className="flex-1 text-sm text-white">Cancelada</span>
@@ -213,7 +213,7 @@ function LiquidarSheet({
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.PENDING)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04] transition-colors"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.PENDING)]} />
               <span className="flex-1 text-sm text-white">Pendente</span>

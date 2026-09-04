@@ -66,11 +66,11 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
   // `fixed` e deixava a lista aparecer numa faixa no topo.
   return createPortal(
     <div
-      className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
+      className="animate-screen-in fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
     >
       <div className="flex items-center gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
-        <button type="button" onClick={onBack} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
+        <button type="button" onClick={onBack} aria-label="Voltar" className="press p-1 -ml-1 text-zinc-400 hover:text-white">
           <CaretLeft size={20} />
         </button>
         <div className="min-w-0">

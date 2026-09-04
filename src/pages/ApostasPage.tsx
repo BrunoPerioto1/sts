@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X, ArrowClockwise } from "@phosphor-icons/react";
+import { tapHaptic } from "@/lib/haptics";
 import { actionToast, Check, CheckCircle, ArrowCounterClockwise, Trash as TrashIcon, Copy } from "@/lib/action-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -650,9 +651,12 @@ export default function ApostasPage() {
       {/* FAB mobile — substitui o botão "Nova aposta" do header em telas estreitas */}
       <button
         type="button"
-        onClick={() => setCreateModalOpen(true)}
+        onClick={() => {
+          tapHaptic();
+          setCreateModalOpen(true);
+        }}
         aria-label="Nova aposta"
-        className="md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-white text-zinc-900 flex items-center justify-center"
+        className="press animate-pop-in md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-white text-zinc-900 flex items-center justify-center"
         style={{ bottom: "calc(72px + env(safe-area-inset-bottom))", boxShadow: "var(--shadow-lg)" }}
       >
         <Plus size={22} weight="bold" />

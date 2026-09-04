@@ -4,6 +4,7 @@ import { CalendarSlash } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
+import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MainMetrics } from "@/components/dashboard/MainMetrics";
 import { Segmented } from "@/components/ui/segmented";
@@ -36,8 +37,12 @@ function DashboardPageContent({
   mobileView,
 }: DashboardPageContentProps) {
   if (!ready) {
-    return (
-      <div className="py-24">
+    // `mobileView` so vem preenchido em tela estreita — e o sinal de que o
+    // esqueleto certo e o do layout mobile, e nao o spinner generico.
+    return mobileView ? (
+      <DashboardMobileSkeleton />
+    ) : (
+      <div className="py-24 animate-fade-in">
         <Spinner label="Carregando dashboard…" />
       </div>
     );
@@ -45,7 +50,7 @@ function DashboardPageContent({
 
   if (ready && hasNoBets) {
     return (
-      <div className="flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
+      <div className="animate-rise flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
         <CalendarSlash size={30} className="opacity-35 mb-3" />
         <h3 className="text-base font-medium mb-1">Nenhuma aposta registrada ainda</h3>
         <p className="text-sm opacity-60 max-w-sm mb-4">
@@ -107,8 +112,9 @@ export function DashboardPage() {
       title="Dashboard"
       subtitle={rangeLabel}
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
-      // ("Resultado" + chip de período), então não há header.
-      mobileFullBleed={isMobile}
+      // ("Resultado" + chip de período), então não há header. Quem aplica isso
+      // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
+      mobileFullBleed
       actions={desktopHeaderControls}
     >
       <DashboardPageContent
