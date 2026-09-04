@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { actionToast, Check } from "@/lib/action-toast";
 import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
 import { getAllHouses } from "@/api/routes/get-houses";
 
@@ -22,7 +22,6 @@ interface UseApostaFormArgs {
 // bottom sheet mobile (MobileApostaFormSheet.tsx) — mesma validação e mesmo
 // payload pros dois, só a apresentação muda.
 export function useApostaForm({ onApostaAdded, initialData, isEditing = false }: UseApostaFormArgs) {
-  const { toast } = useToast();
   const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<ApostaFormData>({
@@ -58,7 +57,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
     e.preventDefault();
 
     if (!formData.game || !formData.market || !formData.odd || !formData.stake || !formData.houseId) {
-      toast({ title: "Erro", description: "Preencha todos os campos obrigatórios", variant: "destructive" });
+      actionToast.error({ description: "Preencha todos os campos obrigatórios" });
       return;
     }
 
@@ -88,10 +87,10 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
         const created = await createBetRoute(payload);
         onApostaAdded(created);
       }
-      toast({ title: "Sucesso", description: isEditing ? "Aposta atualizada com sucesso!" : "Aposta registrada com sucesso!" });
+      actionToast.success({ icon: Check, title: isEditing ? "Aposta atualizada" : "Aposta registrada" });
     } catch (e) {
       const description = e instanceof Error ? e.message : "Falha ao salvar aposta";
-      toast({ title: "Erro", description, variant: "destructive" });
+      actionToast.error({ description });
     } finally {
       setSubmitting(false);
     }

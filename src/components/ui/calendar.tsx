@@ -40,7 +40,11 @@ function Calendar({
         day_range_end: "day-range-end !rounded-l-none",
         day_selected:
           "bg-accent/[0.22] text-accent font-medium hover:bg-accent/[0.28] hover:text-accent focus:bg-accent/[0.28] focus:text-accent",
-        day_today: "text-accent font-semibold",
+        // "Hoje" NAO usa accent: o azul e a linguagem da selecao/intervalo, e
+        // marcar o dia atual com a mesma cor confundia o que da pra escolher.
+        // Fica so um ponto discreto sob o numero.
+        day_today:
+          "relative font-semibold after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-[3px] after:w-[3px] after:rounded-full after:bg-foreground after:opacity-40 aria-selected:after:hidden",
         day_outside: "day-outside text-muted-foreground opacity-30 aria-selected:opacity-40",
         day_disabled: "text-muted-foreground opacity-30",
         day_range_middle:

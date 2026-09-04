@@ -274,7 +274,13 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     });
   };
 
-  if (isLoading) {
+  // So mostra esqueleto quando NAO ha nada na tela ainda. Em recarga (editar,
+  // liquidar, mudar status) trocar a lista inteira por um esqueleto de poucas
+  // linhas desabava a altura da pagina, o browser prendia o scroll no novo
+  // maximo (~0) e a tela voltava pro topo. Mantendo a lista montada durante o
+  // refetch, a posicao do scroll fica onde estava — o spinner do header ja
+  // sinaliza o carregamento.
+  if (isLoading && apostas.length === 0) {
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
         {[38, 88, 72, 80, 56].map((w, i) => (

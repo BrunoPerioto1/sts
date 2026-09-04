@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { format, startOfMonth } from "date-fns";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasList } from "@/components/apostas/ApostasList";
@@ -64,7 +64,6 @@ const mobileStatusPills: { label: string; value: string[] }[] = [
 
 export default function ApostasPage() {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [apostas, setApostas] = useState<BetItem[]>([]);
   const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
@@ -377,9 +376,6 @@ export default function ApostasPage() {
       mobileHeader={
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
-              <CaretLeft size={20} />
-            </button>
             <h1 className="text-[19px] font-semibold truncate">Apostas</h1>
           </div>
           <div className="flex items-center gap-1 -mr-2">

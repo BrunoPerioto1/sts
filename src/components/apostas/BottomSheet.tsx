@@ -2,6 +2,7 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
 
 interface BottomSheetProps {
   open: boolean;
@@ -31,6 +32,11 @@ export function BottomSheet({
   contentClassName,
 }: BottomSheetProps) {
   const Root = nested ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root;
+  // Levanta a sheet acima do teclado. Sem isso ela fica ancorada no fundo do
+  // layout viewport, que no iOS nao encolhe — o teclado cobria o campo em foco
+  // e o resultado da busca. Nao usa `transform` de proposito: o vaul controla o
+  // transform do Content pro gesto de arrastar, e mexer nele brigaria com ele.
+  const keyboardInset = useKeyboardInset();
 
   return (
     // handleOnly: sem isso o vaul trata o conteúdo inteiro como área de
@@ -51,6 +57,16 @@ export function BottomSheet({
             "fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl border-t border-white/10 bg-background outline-none",
             contentClassName
           )}
+          style={
+            keyboardInset
+              ? {
+                  bottom: keyboardInset,
+                  // Com a sheet levantada, o teto de 88dvh deixaria de caber:
+                  // limita pelo espaco que sobrou acima do teclado.
+                  maxHeight: `calc((100dvh - ${keyboardInset}px) * 0.92)`,
+                }
+              : undefined
+          }
         >
           <DrawerPrimitive.Handle className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-full bg-white/15" />
 
@@ -72,7 +88,7 @@ export function BottomSheet({
 
           {subHeader && <div className="shrink-0 px-4 pb-2">{subHeader}</div>}
 
-          <div className="flex-1 min-h-0 overflow-y-auto scroll-pb-16 px-4">{children}</div>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-pb-16 px-4">{children}</div>
 
           {footer && (
             <div
