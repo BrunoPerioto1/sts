@@ -15,7 +15,7 @@ export function MobileSearchToggle({ expanded, onToggle }: MobileSearchTogglePro
       type="button"
       onClick={onToggle}
       aria-label={expanded ? "Fechar busca" : "Buscar apostas"}
-      className={cn("p-2 hover:text-white", expanded ? "text-accent" : "text-zinc-400")}
+      className={cn("h-11 w-11 flex items-center justify-center hover:text-white", expanded ? "text-accent" : "text-zinc-400")}
     >
       <MagnifyingGlass size={19} />
     </button>

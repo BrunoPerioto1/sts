@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format, getISOWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight, Clock } from "@phosphor-icons/react";
@@ -199,7 +199,7 @@ function StatusStrip({ status }: { status: Status }) {
 // pílula e não dava pra distinguir odd de casa de relance.
 // Todos em pílula pro relógio do horário (que é redondo) não brigar com cantos
 // quadrados ao lado.
-const timeChipClass = "inline-flex items-center gap-1 text-xs tabular-nums text-zinc-500 shrink-0";
+const timeChipClass = "inline-flex items-center gap-1 text-xs tabular-nums text-zinc-400 shrink-0";
 const oddChipClass = "text-xs px-2.5 py-0.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
 const houseChipClass = "text-xs px-2.5 py-0.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100 shrink-0";
 
@@ -237,6 +237,15 @@ function BetCardMobile({
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
+      role={selection.selectionMode ? "group" : "button"}
+      tabIndex={selection.selectionMode ? -1 : 0}
+      aria-label={`${aposta.game}, ${statusLabel[status]}`}
+      onKeyDown={(event) => {
+        if (!selection.selectionMode && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
       onClick={handleClick}
       {...longPress}
     >
@@ -256,7 +265,7 @@ function BetCardMobile({
       <p className="text-base font-medium text-white truncate">{aposta.game}</p>
 
       <div className="flex items-end justify-between gap-2">
-        <p className="text-sm text-zinc-500 truncate min-w-0">{aposta.market}</p>
+        <p className="text-sm text-zinc-400 truncate min-w-0">{aposta.market}</p>
         <ReturnValue aposta={aposta} className="text-sm shrink-0" />
       </div>
 
@@ -268,7 +277,7 @@ function BetCardMobile({
 export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection }: ApostasGroupedProps) {
   const isMobile = useIsMobile();
   const groups = useMemo(() => groupBets(apostas), [apostas]);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(groups[0] ? [groups[0].key] : []));
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [detailAposta, setDetailAposta] = useState<BetItem | null>(null);
 
   const orderedIds = useMemo(
@@ -276,13 +285,9 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     [groups]
   );
 
+  const isMonthOpen = (key: string) => expanded[key] ?? key === groups[0]?.key;
   const toggleMonth = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpanded((prev) => ({ ...prev, [key]: !(prev[key] ?? key === groups[0]?.key) }));
   };
 
   // So mostra esqueleto quando NAO ha nada na tela ainda. Em recarga (editar,
@@ -319,94 +324,50 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
   if (isMobile) {
     return (
       <>
-        <div className="flex flex-col">
+        <div className="space-y-5">
           {groups.map((month) => {
-            const isOpen = expanded.has(month.key);
-            const monthIds = month.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)));
-            const monthCheckState = groupCheckState(monthIds, selection.selected);
+            const monthIds = month.weeks.flatMap((week) => week.days.flatMap((day) => day.bets.map((bet) => bet.id)));
+            const isOpen = isMonthOpen(month.key);
             return (
-              <Fragment key={month.key}>
-                <div className="rounded-xl border border-border bg-card h-[52px] flex items-center gap-2 px-3.5 mt-3 first:mt-0 min-w-0">
+              <section key={month.key} className="space-y-3">
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
                   {selection.selectionMode && (
-                    <Checkbox
-                      checked={monthCheckState}
+                    <Checkbox checked={groupCheckState(monthIds, selection.selected)}
                       onCheckedChange={() => selection.toggleMany(monthIds)}
-                      aria-label={`Selecionar todas as apostas de ${month.label}`}
-                      className="shrink-0"
-                    />
+                      aria-label={`Selecionar todas as apostas de ${month.label}`} />
                   )}
-                  <button
-                    type="button"
-                    onClick={() => toggleMonth(month.key)}
-                    className="flex items-center gap-2 min-w-0 flex-1 text-left"
-                  >
-                    {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
+                  <button type="button" aria-expanded={isOpen} onClick={() => toggleMonth(month.key)}
+                    className="min-h-12 flex flex-1 items-center gap-2 min-w-0 text-left">
+                    {isOpen ? <CaretDown size={16} /> : <CaretRight size={16} />}
                     <span className="font-semibold text-sm truncate">{month.label}</span>
+                    <span className="text-xs text-zinc-400">{month.count}</span>
                   </button>
-                  <span className={cn("tabular-nums text-sm font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
-                    {formatSignedCurrency(month.total)}
-                  </span>
+                  <span className={cn("text-sm tabular-nums shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(month.total)}</span>
                 </div>
-
-                {isOpen &&
-                  month.weeks.map((week) => {
-                    const weekIds = week.days.flatMap((d) => d.bets.map((b) => b.id));
-                    const weekCheckState = groupCheckState(weekIds, selection.selected);
-                    return (
-                      <Fragment key={week.key}>
-                        <div className="flex items-center gap-2 mt-4 mb-2 min-w-0">
-                          {selection.selectionMode && (
-                            <Checkbox
-                              checked={weekCheckState}
-                              onCheckedChange={() => selection.toggleMany(weekIds)}
-                              aria-label={`Selecionar todas as apostas da ${week.label}`}
-                              className="shrink-0"
-                            />
-                          )}
-                          <span className="text-xs uppercase tracking-wider text-zinc-500 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-sm shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
-                            {formatSignedCurrency(week.total)}
-                          </span>
-                        </div>
-
-                        {week.days.map((day, i) => {
-                          const dayIds = day.bets.map((b) => b.id);
-                          const dayCheckState = groupCheckState(dayIds, selection.selected);
-                          const dayTotal = day.bets.reduce((sum, b) => sum + settledProfit(b), 0);
-                          return (
-                            <div key={day.key} className={cn("rounded-lg border border-border bg-card p-3 min-w-0", i > 0 && "mt-3")}>
-                              <div className="flex items-center gap-2 pb-2 min-w-0">
-                                {selection.selectionMode && (
-                                  <Checkbox
-                                    checked={dayCheckState}
-                                    onCheckedChange={() => selection.toggleMany(dayIds)}
-                                    aria-label={`Selecionar todas as apostas de ${day.label}`}
-                                    className="shrink-0"
-                                  />
-                                )}
-                                <span className="text-sm font-semibold truncate">{day.label}</span>
-                                <span className={cn("ml-auto tabular-nums text-sm font-medium shrink-0", dayTotal >= 0 ? "text-positive" : "text-negative")}>
-                                  {formatSignedCurrency(dayTotal)}
-                                </span>
-                              </div>
-                              <div className="space-y-2">
-                                {day.bets.map((bet, betIndex) => (
-                                  <BetCardMobile
-                                    key={bet.id}
-                                    index={betIndex}
-                                    aposta={bet}
-                                    onOpen={() => setDetailAposta(bet)}
-                                    selection={selection}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </Fragment>
-                    );
-                  })}
-              </Fragment>
+                {isOpen && month.weeks.flatMap((week) => week.days).map((day) => {
+            const dayIds = day.bets.map((bet) => bet.id);
+            const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);
+            return (
+              <section key={day.key} aria-label={day.label}>
+                <div className="flex items-center gap-2 pb-2">
+                  {selection.selectionMode && (
+                    <Checkbox checked={groupCheckState(dayIds, selection.selected)}
+                      onCheckedChange={() => selection.toggleMany(dayIds)}
+                      aria-label={`Selecionar todas as apostas de ${day.label}`} />
+                  )}
+                  <h2 className="text-sm font-medium">{format(new Date(day.bets[0].betTime), "dd MMM yyyy", { locale: ptBR })}</h2>
+                  <span className="text-xs text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
+                  <span className={cn("ml-auto text-sm tabular-nums", total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(total)}</span>
+                </div>
+                <div className="space-y-2">
+                  {day.bets.map((bet) => (
+                    <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
+                  ))}
+                </div>
+              </section>
+            );
+                })}
+              </section>
             );
           })}
         </div>
@@ -419,7 +380,7 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     <>
       <div className="space-y-3 min-w-0">
         {groups.map((month) => {
-          const isOpen = expanded.has(month.key);
+          const isOpen = isMonthOpen(month.key);
           const monthIds = month.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)));
           const monthCheckState = groupCheckState(monthIds, selection.selected);
           return (
@@ -450,24 +411,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
               {isOpen && (
                 <div className="px-[14px] pb-3 space-y-4 min-w-0">
                   {month.weeks.map((week) => {
-                    const weekIds = week.days.flatMap((d) => d.bets.map((b) => b.id));
-                    const weekCheckState = groupCheckState(weekIds, selection.selected);
                     return (
                       <div key={week.key} className="min-w-0">
-                        <div className="flex items-center gap-2 py-1.5 min-w-0">
-                          {selection.selectionMode && (
-                            <Checkbox
-                              checked={weekCheckState}
-                              onCheckedChange={() => selection.toggleMany(weekIds)}
-                              aria-label={`Selecionar todas as apostas da ${week.label}`}
-                              className="shrink-0"
-                            />
-                          )}
-                          <span className="text-xs uppercase tracking-wider opacity-45 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-xs shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
-                            {formatSignedCurrency(week.total)}
-                          </span>
-                        </div>
                         {week.days.map((day) => {
                           const dayIds = day.bets.map((b) => b.id);
                           const dayCheckState = groupCheckState(dayIds, selection.selected);

@@ -84,9 +84,9 @@ export default function ApostasPage() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"agrupado" | "tabela">("agrupado");
-  const [startDate, setStartDate] = useState(() => format(startOfMonth(new Date()), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("mes");
+  const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "mes");
   const [pageStart, setPageStart] = useState(1);
   const perPage = PER_PAGE;
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -466,10 +466,11 @@ export default function ApostasPage() {
           return (
             <button
               key={pill.label}
+              aria-pressed={isActive}
               type="button"
               onClick={() => { setStatusFilter(pill.value); setPageStart(1); }}
               className={cn(
-                "shrink-0 h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+                "shrink-0 h-11 px-3.5 rounded-full text-sm font-medium transition-colors",
                 isActive ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
               )}
             >

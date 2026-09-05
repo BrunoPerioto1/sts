@@ -20,6 +20,8 @@ import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 interface DashboardPageContentProps {
   hasNoBets: boolean;
   ready: boolean;
+  error: boolean;
+  onRetry: () => void;
   metrics: DashboardMetrics;
   previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
@@ -31,11 +33,19 @@ interface DashboardPageContentProps {
 function DashboardPageContent({
   hasNoBets,
   ready,
+  error,
+  onRetry,
   metrics,
   previousMetrics,
   dailyData,
   mobileView,
 }: DashboardPageContentProps) {
+  if (error) {
+    return <div role="alert" className="py-12 text-center space-y-4">
+      <p>Não foi possível carregar o dashboard.</p>
+      <Button onClick={onRetry}>Tentar novamente</Button>
+    </div>;
+  }
   if (!ready) {
     // `mobileView` so vem preenchido em tela estreita — e o sinal de que o
     // esqueleto certo e o do layout mobile, e nao o spinner generico.
@@ -77,7 +87,7 @@ function DashboardPageContent({
 export function DashboardPage() {
   const isMobile = useIsMobile();
   const { filters, preset, setPreset, setCustomRange, firstBetDate, hasNoBets, ready } = useDashboardFilters();
-  const { metrics, previousMetrics, dailyData } = useDashboardData(filters);
+  const { metrics, previousMetrics, dailyData, loading, error, reload } = useDashboardData(filters);
 
   const rangeLabel =
     ready && filters.startDate && filters.endDate
@@ -119,7 +129,9 @@ export function DashboardPage() {
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
-        ready={ready}
+        ready={ready && !loading}
+        error={error}
+        onRetry={reload}
         metrics={metrics}
         previousMetrics={previousMetrics}
         dailyData={dailyData}

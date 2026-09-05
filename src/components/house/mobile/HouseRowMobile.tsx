@@ -73,13 +73,13 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRo
 
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-medium truncate">{house.houseName}</span>
-        <span className="block text-xs text-zinc-500 truncate">{betsSubtitle(house)}</span>
+        <span className="block text-xs text-zinc-400 leading-snug">{betsSubtitle(house)}</span>
       </span>
 
       <span className="shrink-0 text-right">
-        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Number(house.houseBalance))}</span>
+        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Number(house.realHouseBalance))}</span>
         <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
-          {formatSignedCurrency(profit)}
+          Lucro {formatSignedCurrency(profit)}
         </span>
       </span>
 

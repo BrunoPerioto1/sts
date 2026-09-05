@@ -78,6 +78,7 @@ export function useDashboardData(filters: Params) {
     previousMetrics: comparison.data?.previous ?? emptyMetrics,
     dailyData: daily.data ?? [],
     loading: comparison.isPending || daily.isPending,
+    error: comparison.isError || daily.isError,
     reload: () => {
       void comparison.refetch();
       void daily.refetch();

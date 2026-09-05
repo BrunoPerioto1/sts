@@ -27,9 +27,8 @@ const PRESET_LABEL: Record<DatePreset, string> = {
   custom: "Personalizado",
 };
 
-// O gráfico só conta uma história a partir de três dias liquidados; abaixo
-// disso o card mostra o aviso no lugar da curva.
-const MIN_DAYS_FOR_CHART = 3;
+// Barras também representam um único dia; vazio só quando não há dados.
+const MIN_DAYS_FOR_CHART = 1;
 
 type Tone = "positive" | "negative" | "muted";
 
@@ -44,7 +43,7 @@ interface Tile {
 const toneClass: Record<Tone, string> = {
   positive: "text-positive",
   negative: "text-negative",
-  muted: "text-zinc-500",
+  muted: "text-zinc-400",
 };
 
 function signedTone(value: number): Tone {
@@ -220,25 +219,25 @@ export function DashboardMobileView({
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       {/* Ocupa a altura útil da tela (viewport menos a bottom nav) e distribui
           os blocos na vertical, em vez de amontoar tudo no topo. */}
-      <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
+      <div className="px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
           <div className="min-w-0">
             <h2 className="text-2xl font-semibold tracking-tight">Resultado</h2>
-            <p className="text-sm text-zinc-500 truncate">
+            <p className="text-sm text-zinc-400 truncate">
               {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setPeriodOpen(true)}
-            className="press shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 text-sm text-zinc-300"
+            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-lg border border-white/10 text-sm text-zinc-300"
           >
             {PRESET_LABEL[preset]} <CaretDown size={12} />
           </button>
         </div>
 
         <div className="mt-6 shrink-0 animate-rise stagger" style={stagger(1)}>
-          <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Lucro líquido</p>
+          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Lucro líquido</p>
           {/* Numero-heroi da tela: conta ate o valor final. O `key` no periodo
               faz a contagem recomecar quando o usuario troca o filtro — sem
               ele o hook so interpolaria do valor antigo pro novo. */}
@@ -249,23 +248,18 @@ export function DashboardMobileView({
               format={formatSignedCurrency}
             />
           </p>
-          <p className="text-sm text-zinc-500 mt-0.5">{daysSummary}</p>
+          <p className="text-sm text-zinc-400 mt-0.5">{daysSummary}</p>
         </div>
 
-        <div className="mt-6 flex-1 animate-rise stagger" style={stagger(2)}>
+        <div className="mt-5 animate-rise stagger" style={stagger(2)}>
           {dailyData.length >= MIN_DAYS_FOR_CHART ? (
             <ProfitBarChart data={dailyData} />
           ) : (
             <div className="rounded-lg bg-white/[0.03] p-3">
               <div className="flex items-start gap-2">
-                <ChartLine size={16} className="text-zinc-500 shrink-0 mt-0.5" />
+                <ChartLine size={16} className="text-zinc-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-zinc-400 leading-snug">
-                  {dailyData.length === 0
-                    ? "Nenhum dia com resultado no período."
-                    : dailyData.length === 1
-                      ? "Um único dia com resultado não forma curva."
-                      : "Dois dias com resultado ainda não formam curva."}{" "}
-                  O gráfico aparece a partir de três dias liquidados no período.
+                  Nenhuma aposta no período. Experimente ampliar as datas.
                 </p>
               </div>
               {preset !== "60d" && preset !== "allTime" && (
@@ -292,7 +286,7 @@ export function DashboardMobileView({
               )}
               style={stagger(3 + i)}
             >
-              <p className="text-xs uppercase tracking-wide opacity-55 mb-1">{tile.label}</p>
+              <p className="text-xs uppercase tracking-wide opacity-75 mb-1">{tile.label}</p>
               <p className={cn("text-lg font-medium tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
                 {tile.value}
               </p>

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [loginData, setLoginData] = useState(() => {
     const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
@@ -74,6 +76,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     setError(null);
     try {
       const res = await postLogin({ email: loginData.email, password: loginData.password });
+      queryClient.clear();
       localStorage.setItem("token", res.access_token);
 
       if (loginData.rememberMe) {

@@ -1,17 +1,18 @@
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
-import { DashboardPage } from "./pages/DashboardPage";
-import ApostasPage from "./pages/ApostasPage";
-import { CasasPage } from "./pages/CasasPage";
-import PerfilPage from "./pages/PerfilPage";
-import AccountPage from "./pages/perfil/AccountPage";
-import PasswordPage from "./pages/perfil/PasswordPage";
-import TelegramPage from "./pages/perfil/TelegramPage";
-import PreferencesPage from "./pages/perfil/PreferencesPage";
+const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const ApostasPage = lazy(() => import("./pages/ApostasPage"));
+const CasasPage = lazy(() => import("./pages/CasasPage").then((m) => ({ default: m.CasasPage })));
+const PerfilPage = lazy(() => import("./pages/PerfilPage"));
+const AccountPage = lazy(() => import("./pages/perfil/AccountPage"));
+const PasswordPage = lazy(() => import("./pages/perfil/PasswordPage"));
+const TelegramPage = lazy(() => import("./pages/perfil/TelegramPage"));
+const PreferencesPage = lazy(() => import("./pages/perfil/PreferencesPage"));
 import { Navigate } from "react-router-dom";
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
@@ -63,12 +64,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  return <>{children}</>;
+  return <Suspense fallback={<div role="status" className="p-6 text-sm text-zinc-400">Carregando…</div>}>{children}</Suspense>;
 }
 
 function LogoutRoute() {
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
+    queryClient.clear();
     localStorage.removeItem('token');
-  }
+  }, []);
   return <Navigate to="/login" replace />;
 }

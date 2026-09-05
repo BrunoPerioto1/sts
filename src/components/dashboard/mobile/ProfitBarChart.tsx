@@ -30,9 +30,9 @@ export function ProfitBarChart({ data }: ProfitBarChartProps) {
       : data.map((d) => d.date);
 
   return (
-    <div className="h-[220px] -mx-1">
+    <div className="h-[180px] -mx-1">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap={3}>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap={3} accessibilityLayer>
           <XAxis
             dataKey="date"
             ticks={ticks}
@@ -48,7 +48,7 @@ export function ProfitBarChart({ data }: ProfitBarChartProps) {
           {/* As barras crescem a partir da linha do zero. 650ms e o ponto em
               que da pra ver a curva se formar sem atrasar a leitura; o padrao
               do recharts (1500ms) parece lento numa tela pequena. */}
-          <Bar dataKey="profitDay" radius={[2, 2, 0, 0]} animationDuration={650} animationEasing="ease-out">
+          <Bar dataKey="profitDay" maxBarSize={40} radius={[2, 2, 0, 0]} animationDuration={650} animationEasing="ease-out">
             {data.map((entry) => (
               <Cell key={entry.date} fill={entry.profitDay >= 0 ? "#4ade9e" : "#f0797e"} />
             ))}

@@ -27,7 +27,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
 
   const profit = Number(house.totalBetProfit);
   const realBalance = Number(house.realHouseBalance);
-  const isProfit = realBalance >= 0;
+  const isProfit = profit >= 0;
   const totalBets = Number(house.totalBets);
   const hitRate = totalBets > 0 ? (Number(house.wonBets) / totalBets) * 100 : 0;
   const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
@@ -44,7 +44,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={onBack} aria-label="Voltar" className="press p-1 -ml-1 text-zinc-400 hover:text-white">
+          <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
           <h1 className="text-lg font-semibold truncate">{house.houseName}</h1>
@@ -56,18 +56,19 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6">
         <div>
-          <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo atual</p>
-          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(Number(house.houseBalance))}</p>
+          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo atual</p>
+          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(realBalance)}</p>
           <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-positive" : "text-negative"}`}>
-            {formatSignedCurrency(realBalance)} de lucro · ROI {roi.toFixed(1)}%
+            {formatSignedCurrency(profit)} de lucro · ROI {roi.toFixed(1)}%
           </p>
         </div>
 
         <div className="mt-5 border-t border-border divide-y divide-border">
-          <StatRow label="Saldo real" value={formatCurrency(realBalance)} valueClass={isProfit ? "text-positive" : "text-negative"} />
+          <StatRow label="Saldo real" value={formatCurrency(realBalance)} valueClass={realBalance >= 0 ? "text-positive" : "text-negative"} />
           <StatRow label="Depósitos" value={formatCurrency(Number(house.totalDeposit))} />
           <StatRow label="Saques" value={formatCurrency(Number(house.totalWithdrawal))} />
-          <StatRow label="Apostas liquidadas" value={String(totalBets)} />
+          <StatRow label="Apostas encerradas" value={String(Math.max(0, totalBets - Number(house.pendingBets)))} />
+          <StatRow label="Apostas abertas" value={String(house.pendingBets)} />
           <StatRow label="Taxa de acerto" value={`${hitRate.toFixed(1)}%`} />
           <StatRow label="Lucro em apostas" value={formatCurrency(profit)} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
         </div>
@@ -84,7 +85,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           Nova movimentação
         </Button>
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="min-h-[44px]" onClick={() => navigate(`/bets?houseId=${house.houseId}`)}>
+          <Button variant="outline" className="min-h-[44px]" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
             Ver apostas
           </Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenHistory(house)}>

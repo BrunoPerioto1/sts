@@ -5,5 +5,5 @@ import type { CSSProperties } from "react";
  * a classe le `--i` e converte em atraso (ver src/index.css).
  */
 export function stagger(index: number): CSSProperties {
-  return { "--i": index } as CSSProperties;
+  return { "--i": Math.min(index, 5) } as CSSProperties;
 }
