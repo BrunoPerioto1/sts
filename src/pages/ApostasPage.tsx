@@ -31,16 +31,7 @@ import { betsQueryKey, useBetsQuery, PER_PAGE } from "@/hooks/apostas/use-bets-q
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal } from "@phosphor-icons/react";
 import { tapHaptic } from "@/lib/haptics";
 import { actionToast, Check, CheckCircle, ArrowCounterClockwise, Trash as TrashIcon, Copy } from "@/lib/action-toast";
@@ -638,20 +629,27 @@ export default function ApostasPage() {
           />
         )}
 
-        <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir {selectedBets.length} apostas?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Você está prestes a excluir {selectedBets.length} apostas selecionadas. Essa ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteSelected}>Excluir</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Mesmo padrao do sheet da selecao multipla: confirmacao sobe de
+            baixo em vez de abrir no meio da tela. */}
+        <BottomSheet
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title={`Excluir ${selectedBets.length} apostas?`}
+          footer={
+            <div className="flex flex-col gap-2">
+              <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleDeleteSelected}>
+                Excluir {selectedBets.length} apostas
+              </Button>
+              <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmDeleteOpen(false)}>
+                Cancelar
+              </Button>
+            </div>
+          }
+        >
+          <p className="pb-4 text-sm text-zinc-400">
+            As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
+          </p>
+        </BottomSheet>
       </div>
 
       {/* FAB mobile — substitui o botão "Nova aposta" do header em telas estreitas */}

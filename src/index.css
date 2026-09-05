@@ -305,6 +305,14 @@
       border-color var(--dur-fast) linear,
       color var(--dur-fast) linear;
     -webkit-tap-highlight-color: transparent;
+    /* Nao e ajuste do Safari: segurar o dedo em qualquer texto dispara a
+       selecao nativa do iOS, e num card com toque longo pra selecao multipla
+       isso significava pintar "CRB x America" de azul junto. Como todo `.press`
+       e um alvo de toque (card, linha, botao), selecionar o texto dele nunca e
+       a intencao. `touch-callout` mata junto o balao de "Copiar/Procurar". */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   .press:active {
     transform: scale(0.97);

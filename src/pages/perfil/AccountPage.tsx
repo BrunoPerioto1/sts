@@ -5,15 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { actionToast } from "@/lib/action-toast";
 import { patchMe } from "@/api/routes/patch-me";
@@ -128,38 +120,50 @@ export default function AccountPage() {
         </div>
       )}
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir a conta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apaga suas apostas, saldos de casas e movimentações. Não dá pra desfazer nem recuperar depois.
-              Digite <span className="text-foreground">{me?.email}</span> para confirmar.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <Input
-            value={confirmEmail}
-            onChange={(e) => setConfirmEmail(e.target.value)}
-            placeholder="seu@email.com"
-            className="min-h-[44px]"
-          />
-
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmEmail("")}>Cancelar</AlertDialogCancel>
-            {/* Fora do AlertDialogAction de propósito: aquele fecha o diálogo ao
-                clicar, e aqui o botão precisa continuar desabilitado até o
-                e-mail bater. */}
+      {/* Confirmacao no padrao do app: sheet de baixo pra cima. Digitar o
+          e-mail e' de proposito — excluir a conta apaga apostas, casas e
+          historico, entao um toque so nao basta. */}
+      <BottomSheet
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) setConfirmEmail("");
+        }}
+        title="Excluir a conta?"
+        footer={
+          <div className="flex flex-col gap-2">
             <Button
               variant="destructive"
+              className="w-full min-h-[48px] text-base"
               disabled={deleting || confirmEmail.trim().toLowerCase() !== me?.email.toLowerCase()}
               onClick={handleDelete}
             >
               {deleting ? "Excluindo…" : "Excluir para sempre"}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <div className="pb-4 flex flex-col gap-3">
+          <p className="text-sm text-zinc-400">
+            Apaga suas apostas, saldos de casas e movimentações. Não dá pra desfazer nem recuperar depois.
+          </p>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-normal text-zinc-400">
+              Digite <span className="text-foreground">{me?.email}</span> para confirmar
+            </Label>
+            <Input
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              placeholder="seu@email.com"
+              className="min-h-[48px] rounded-lg px-3.5"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      </BottomSheet>
     </MainLayout>
   );
 }

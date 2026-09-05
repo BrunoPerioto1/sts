@@ -1,15 +1,7 @@
-import { useEffect, useState, type ComponentType } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { BottomSheet } from "./BottomSheet";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch, type Icon } from "@phosphor-icons/react";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +26,7 @@ function BulkActionButton({
   pending,
   className,
 }: {
-  icon: ComponentType<{ size?: number; className?: string }>;
+  icon: Icon;
   ariaLabel: string;
   onClick: () => void;
   disabled?: boolean;
@@ -147,20 +139,28 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         </div>
       </div>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {count} aposta{plural}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você está prestes a excluir {count} aposta{plural} selecionada{plural}. Essa ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Confirmacao no mesmo padrao dos outros sheets do app: sobe de baixo,
+          na altura do polegar. O dialogo centralizado era o unico que ainda
+          aparecia no meio da tela. */}
+      <BottomSheet
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir ${count} aposta${plural}?`}
+        footer={
+          <div className="flex flex-col gap-2">
+            <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleConfirmDelete}>
+              Excluir {count} aposta{plural}
+            </Button>
+            <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <p className="pb-4 text-sm text-zinc-400">
+          As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
+        </p>
+      </BottomSheet>
     </>
   );
 }

@@ -10,7 +10,7 @@ import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 
-const BOT_HANDLE = "@sportsbetmgr_bot";
+const BOT_HANDLE = "@betbpbot";
 
 const BENEFITS = [
   { icon: ChatCircleDots, title: "Lançar em uma frase", text: "O bot entende casa, valor, mercado e odd de uma mensagem só." },
