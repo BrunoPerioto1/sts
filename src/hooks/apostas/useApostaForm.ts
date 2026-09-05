@@ -11,6 +11,13 @@ export interface ApostaFormData {
   stake: string;
   houseId: number | undefined;
   sport: string;
+  betTime: string;
+}
+
+function toLocalDateTime(value?: string | Date) {
+  const date = value ? new Date(value) : new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 interface UseApostaFormArgs {
@@ -33,6 +40,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
     stake: initialData?.stake?.toString() || "",
     houseId: initialData?.houseId,
     sport: initialData?.sport || "Futebol",
+    betTime: toLocalDateTime(initialData?.betTime),
   });
 
   // Reaplica a casa da aposta em edicao quando ela aparece na lista — o
@@ -71,6 +79,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
           stake: parseFloat(formData.stake),
           sport: formData.sport,
           houseId: formData.houseId,
+          betTime: new Date(formData.betTime).toISOString(),
         };
         const updated = await updateBetRoute(initialData.id, payload);
         onApostaAdded(updated);
@@ -82,7 +91,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
           houseId: formData.houseId,
           market: formData.market,
           sport: formData.sport,
-          betTime: new Date().toISOString(),
+          betTime: new Date(formData.betTime).toISOString(),
         };
         const created = await createBetRoute(payload);
         onApostaAdded(created);

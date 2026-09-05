@@ -126,6 +126,7 @@ export function DashboardMobileView({
 
   const profit = Number(metrics.totalProfit);
   const totalBets = Number(metrics.totalBets);
+  const settledBets = Number(metrics.settledBets ?? Math.max(0, totalBets - Number(metrics.pendingBets)));
   const wonBets = Number(metrics.wonBets);
   const roi = Number(metrics.roi) * 100;
   const hitRate = Number(metrics.hitRate) * 100;
@@ -195,7 +196,7 @@ export function DashboardMobileView({
       value: `${hitRate.toFixed(1)}%`,
       ...(hasPrevious
         ? { sub: ppDelta(hitRate, prevHitRate).label, subTone: ppDelta(hitRate, prevHitRate).tone }
-        : { sub: `${wonBets} de ${totalBets}`, subTone: "muted" as Tone }),
+        : { sub: `${wonBets} de ${settledBets} encerradas`, subTone: "muted" as Tone }),
     },
     {
       label: "Stake médio",

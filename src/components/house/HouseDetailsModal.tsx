@@ -39,8 +39,9 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
   if (!house) return null;
 
   const profit = Number(house.totalBetProfit);
-  const isProfit = Number(house.realHouseBalance) >= 0;
-  const hitRate = Number(house.totalBets) > 0 ? (Number(house.wonBets) / Number(house.totalBets)) * 100 : 0;
+  const isProfit = profit >= 0;
+  const settledBets = Number(house.settledBets ?? Math.max(0, Number(house.totalBets) - Number(house.pendingBets)));
+  const hitRate = settledBets > 0 ? (Number(house.wonBets) / settledBets) * 100 : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -69,7 +70,8 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
 
           <div className="space-y-5">
             <Group kicker="Apostas">
-              <Pair label="Liquidadas" value={String(house.totalBets)} />
+              <Pair label="Encerradas" value={String(settledBets)} />
+              <Pair label="Abertas" value={String(house.pendingBets)} />
               <Pair label="Taxa de acerto" value={`${hitRate.toFixed(1)}%`} />
               <Pair label="ROI" value={`${Number(house.totalStake) > 0 ? ((profit / Number(house.totalStake)) * 100).toFixed(1) : "0.0"}%`} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
               <Pair label="Lucro em apostas" value={formatCurrency(profit)} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />

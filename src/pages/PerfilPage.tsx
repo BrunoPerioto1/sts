@@ -75,6 +75,7 @@ export default function PerfilPage() {
 
   const summary = {
     totalBets: Number(metricsQuery.data?.totalBets ?? 0),
+    settledBets: Number(metricsQuery.data?.settledBets ?? 0),
     wonBets: Number(metricsQuery.data?.wonBets ?? 0),
     totalProfit: Number(metricsQuery.data?.totalProfit ?? 0),
     roi: Number(metricsQuery.data?.roi ?? 0),

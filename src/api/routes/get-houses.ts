@@ -21,6 +21,7 @@ export interface HouseBalanceDto {
   houseId: number;
   houseName: string;
   totalBets: string | number;
+  settledBets: string | number;
   totalStake: string | number;
   totalBetProfit: string | number;
   totalDeposit: string | number;

@@ -8,6 +8,7 @@ export interface DashboardQueryParams {
 
 export interface DashboardMetrics {
   totalBets: string | number;
+  settledBets: string | number;
   wonBets: string | number;
   lostBets: string | number;
   pendingBets: string | number;

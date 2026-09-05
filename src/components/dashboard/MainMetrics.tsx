@@ -63,7 +63,7 @@ export function MainMetrics({ metrics, previousMetrics }: MainMetricsProps) {
         icon={<Target size={15} />}
         value={`${hitRate.toFixed(1)}%`}
         delta={previousMetrics ? ppDelta(hitRate, prevHitRate) : undefined}
-        subtext={`${metrics.wonBets}/${metrics.totalBets} apostas`}
+        subtext={`${metrics.wonBets}/${metrics.settledBets} encerradas`}
       />
     </div>
   );

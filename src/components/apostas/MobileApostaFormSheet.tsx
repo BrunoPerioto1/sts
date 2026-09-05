@@ -86,6 +86,13 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           </div>
         </div>
 
+        {isEditing && (
+          <div className="space-y-1.5">
+            <label htmlFor="bet-betTime" className={fieldLabel}>Data e hora *</label>
+            <Input id="bet-betTime" type="datetime-local" value={formData.betTime} onChange={(e) => setFormData({ ...formData, betTime: e.target.value })} />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label htmlFor="bet-sport" className={fieldLabel}>Esporte</label>

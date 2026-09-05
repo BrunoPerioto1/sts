@@ -43,6 +43,13 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
           </Select>
         </div>
 
+        {isEditing && (
+          <div className="col-span-2 space-y-1.5">
+            <Label htmlFor="bet-time" className="text-xs">Data e hora *</Label>
+            <Input id="bet-time" type="datetime-local" value={formData.betTime} onChange={(e) => setFormData({ ...formData, betTime: e.target.value })} />
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <Label htmlFor="esporte" className="text-xs">Esporte</Label>
           <Input id="esporte" placeholder="Ex: futebol" value={formData.sport} onChange={(e) => setFormData({ ...formData, sport: e.target.value })} />

@@ -13,6 +13,7 @@ interface Params {
 
 const emptyMetrics: DashboardMetrics = {
   totalBets: 0,
+  settledBets: 0,
   wonBets: 0,
   lostBets: 0,
   pendingBets: 0,

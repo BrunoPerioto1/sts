@@ -29,7 +29,8 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   const realBalance = Number(house.realHouseBalance);
   const isProfit = profit >= 0;
   const totalBets = Number(house.totalBets);
-  const hitRate = totalBets > 0 ? (Number(house.wonBets) / totalBets) * 100 : 0;
+  const settledBets = Number(house.settledBets ?? Math.max(0, totalBets - Number(house.pendingBets)));
+  const hitRate = settledBets > 0 ? (Number(house.wonBets) / settledBets) * 100 : 0;
   const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
 
   // Portal pro body: essa tela e um overlay de tela cheia, mas era montada
@@ -67,7 +68,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           <StatRow label="Saldo real" value={formatCurrency(realBalance)} valueClass={realBalance >= 0 ? "text-positive" : "text-negative"} />
           <StatRow label="Depósitos" value={formatCurrency(Number(house.totalDeposit))} />
           <StatRow label="Saques" value={formatCurrency(Number(house.totalWithdrawal))} />
-          <StatRow label="Apostas encerradas" value={String(Math.max(0, totalBets - Number(house.pendingBets)))} />
+          <StatRow label="Apostas encerradas" value={String(settledBets)} />
           <StatRow label="Apostas abertas" value={String(house.pendingBets)} />
           <StatRow label="Taxa de acerto" value={`${hitRate.toFixed(1)}%`} />
           <StatRow label="Lucro em apostas" value={formatCurrency(profit)} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
