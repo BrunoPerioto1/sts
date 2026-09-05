@@ -15,12 +15,13 @@ import { type MeResponse } from "@/api/routes/get-me";
 import { patchMe } from "@/api/routes/patch-me";
 import { getDashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { useMe } from "@/hooks/queries/use-me";
-import { useHouses } from "@/hooks/queries/use-houses";
+import { useHouses, useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
 import { getBets } from "@/api/routes/get-bets";
 import { getTransactions } from "@/api/routes/get-transaction";
 import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
-import { formatCurrencyCompact, formatSignedCurrency, formatSignedCurrencyCompact } from "@/lib/format";
+import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
 import { getErrorMessage } from "@/lib/api-error";
+import { cn } from "@/lib/utils";
 import { TelegramLogo, DownloadSimple, SignOut, IdentificationCard, SlidersHorizontal, CaretRight } from "@phosphor-icons/react";
 
 function initialsOf(name: string) {
@@ -69,11 +70,18 @@ export default function PerfilPage() {
   });
   const houses = useHouses();
 
+  const balances = useHouseBalances();
+  const houseMetrics = useHouseMetrics();
+
   const summary = {
     totalBets: Number(metricsQuery.data?.totalBets ?? 0),
+    wonBets: Number(metricsQuery.data?.wonBets ?? 0),
     totalProfit: Number(metricsQuery.data?.totalProfit ?? 0),
     roi: Number(metricsQuery.data?.roi ?? 0),
+    hitRate: Number(metricsQuery.data?.hitRate ?? 0),
     totalHouses: houses.length,
+    housesWithBalance: (balances.data ?? []).filter((h) => Number(h.houseBalance) > 0).length,
+    bankroll: Number(houseMetrics.data?.totalBalance ?? 0),
   };
 
   // Hidrata os forms quando o usuario chega — do cache (instantaneo) ou da rede.
@@ -152,66 +160,102 @@ export default function PerfilPage() {
 
   const isLinked = !!me.telegramUserId;
 
+  // "desde março de 2025 · 18 meses" — a conta é a única data que temos de
+  // verdade; a data da primeira aposta exigiria outra chamada só pra isso.
+  const since = (() => {
+    if (!me.createdAt) return null;
+    const created = new Date(me.createdAt);
+    const months = Math.max(
+      1,
+      (new Date().getFullYear() - created.getFullYear()) * 12 + new Date().getMonth() - created.getMonth()
+    );
+    const label = created.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+    return `desde ${label} · ${months} ${months === 1 ? "mês" : "meses"}`;
+  })();
+
+  const metricTiles = [
+    {
+      label: "Apostas",
+      value: summary.totalBets.toLocaleString("pt-BR"),
+      sub: `${summary.wonBets.toLocaleString("pt-BR")} ganhas`,
+    },
+    {
+      label: "ROI histórico",
+      value: `${(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+      tone: summary.roi >= 0 ? "text-positive" : "text-negative",
+      sub: `acerto ${(summary.hitRate * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
+    },
+    {
+      label: "Casas",
+      value: summary.totalHouses.toLocaleString("pt-BR"),
+      sub: `${summary.housesWithBalance} com saldo`,
+    },
+    {
+      label: "Banca",
+      value: formatCurrencyCompact(summary.bankroll),
+      sub: "distribuída",
+    },
+  ];
+
+  const settingsRows = [
+    { to: "/profile/account", icon: IdentificationCard, label: "Dados da conta", value: "Nome, e-mail e segurança" },
+    {
+      to: "/profile/telegram",
+      icon: TelegramLogo,
+      label: "Telegram",
+      value: isLinked ? "Vinculado" : "Não vinculado",
+      valueTone: isLinked ? "text-positive" : "text-accent",
+    },
+    { to: "/profile/preferences", icon: SlidersHorizontal, label: "Preferências de aposta", value: preferencesSummary(me) },
+  ];
+
   if (isMobile) {
     return (
       <MainLayout
         title="Perfil"
         hideHeaderBorder
-        mobileHeader={<h1 className="text-base font-semibold">Perfil</h1>}
+        mobileHeader={<h1 className="text-2xl font-semibold tracking-tight truncate">{me.username}</h1>}
       >
-        <div className="flex flex-col min-h-[calc(100dvh-220px)] space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-white text-zinc-900 flex items-center justify-center text-base font-semibold shrink-0">
-              {initialsOf(me.username)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-base font-semibold text-white truncate">{me.username}</p>
-              <p className="text-sm text-zinc-500 truncate">{me.email}</p>
-            </div>
+        <div className="flex flex-col min-h-[calc(100dvh-190px)] gap-6">
+          {/* Lucro acumulado é o número que resume a conta — os outros quatro
+              viram grade, como no dashboard. */}
+          <div>
+            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Lucro acumulado</p>
+            <p className={cn("text-3xl font-semibold tabular-nums leading-tight", summary.totalProfit >= 0 ? "text-positive" : "text-negative")}>
+              {formatSignedCurrency(summary.totalProfit)}
+            </p>
+            {since && <p className="text-sm text-zinc-500 mt-0.5">{since}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">Apostas</p>
-              <p className="text-xl font-semibold text-white">{summary.totalBets.toLocaleString("pt-BR")}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">Lucro acumulado</p>
-              <p className={`text-xl font-semibold ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
-                {formatSignedCurrencyCompact(summary.totalProfit)}
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">ROI histórico</p>
-              <p className={`text-xl font-semibold ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>
-                {(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">Casas</p>
-              <p className="text-xl font-semibold text-white">{summary.totalHouses.toLocaleString("pt-BR")}</p>
-            </div>
+          <div className="grid grid-cols-2">
+            {metricTiles.map((tile, i) => (
+              <div
+                key={tile.label}
+                className={cn("py-4", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}
+              >
+                <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">{tile.label}</p>
+                <p className={cn("text-xl font-semibold tabular-nums", tile.tone)}>{tile.value}</p>
+                {tile.sub && <p className="text-xs text-zinc-500 mt-0.5">{tile.sub}</p>}
+              </div>
+            ))}
           </div>
 
-          <div className="rounded-xl border border-white/10 divide-y divide-white/[0.06]">
-            <Link to="/profile/account" className="h-14 px-4 flex items-center gap-3">
-              <IdentificationCard size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-sm text-white flex-1 min-w-0 truncate">Dados da conta</span>
-              <span className="text-sm text-zinc-500 truncate max-w-[40%]">{me.username}</span>
-              <CaretRight size={16} className="text-zinc-500 shrink-0" />
-            </Link>
-            <Link to="/profile/telegram" className="h-14 px-4 flex items-center gap-3">
-              <TelegramLogo size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-sm text-white flex-1 min-w-0 truncate">Telegram</span>
-              <span className="text-sm text-zinc-500 truncate">{isLinked ? "Vinculado" : "Não vinculado"}</span>
-              <CaretRight size={16} className="text-zinc-500 shrink-0" />
-            </Link>
-            <Link to="/profile/preferences" className="h-14 px-4 flex items-center gap-3">
-              <SlidersHorizontal size={18} className="text-zinc-400 shrink-0" />
-              <span className="text-sm text-white flex-1 min-w-0 truncate">Preferências de aposta</span>
-              <span className="text-sm text-zinc-500 truncate max-w-[40%]">{preferencesSummary(me)}</span>
-              <CaretRight size={16} className="text-zinc-500 shrink-0" />
-            </Link>
+          <div>
+            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Ajustes</p>
+            <div className="flex flex-col divide-y divide-border border-y border-border">
+              {settingsRows.map((row) => (
+                <Link key={row.to} to={row.to} className="press h-14 flex items-center gap-3">
+                  <row.icon size={19} className="text-zinc-400 shrink-0" />
+                  {/* Nome inteiro em cima e valor embaixo: em uma linha só,
+                      "Preferências de aposta" era cortado no meio. */}
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm text-white truncate">{row.label}</span>
+                    <span className={cn("block text-xs truncate", row.valueTone ?? "text-zinc-500")}>{row.value}</span>
+                  </span>
+                  <CaretRight size={16} className="text-zinc-500 shrink-0" />
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="flex-1" />
@@ -219,7 +263,7 @@ export default function PerfilPage() {
           <button
             type="button"
             onClick={() => navigate("/logout")}
-            className="w-full h-12 rounded-xl border border-white/10 bg-transparent flex items-center justify-center gap-2 text-sm text-white"
+            className="press w-full h-12 rounded-xl border border-white/10 flex items-center justify-center gap-2 text-sm text-white"
           >
             <SignOut size={16} /> Sair da conta
           </button>

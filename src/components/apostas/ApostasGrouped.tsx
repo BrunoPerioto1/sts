@@ -177,38 +177,21 @@ function BetRowDesktop({
   );
 }
 
-const stripColors: Record<Status, { bg: string; text: string; strike?: boolean }> = {
-  ganha: { bg: "bg-green-500", text: "text-zinc-950" },
-  meiaGanha: { bg: "bg-green-500/20", text: "text-green-300" },
-  perdida: { bg: "bg-red-500/20", text: "text-red-300" },
-  meiaPerdida: { bg: "bg-red-500/20", text: "text-red-300" },
-  pendente: { bg: "bg-accent-800", text: "text-accent-100" },
-  cancelada: { bg: "bg-neutral-500/20", text: "text-neutral-400", strike: true },
-  cashout: { bg: "bg-accent-700", text: "text-accent-100" },
+const stripColors: Record<Status, string> = {
+  ganha: "bg-green-500",
+  meiaGanha: "bg-green-500/40",
+  perdida: "bg-red-500/60",
+  meiaPerdida: "bg-red-500/30",
+  pendente: "bg-accent-700",
+  cancelada: "bg-neutral-500/40",
+  cashout: "bg-accent-500",
 };
 
-// Em modo de seleção a faixa perde a legenda e vira só um filete de cor: o
-// texto vertical competia com os checkboxes e com a barra de ações em lote.
-function StatusStrip({ status, compact }: { status: Status; compact?: boolean }) {
-  const s = stripColors[status];
-  return (
-    <div
-      className={cn(
-        "absolute inset-y-0 right-0 rounded-r-lg flex items-center justify-center",
-        compact ? "w-[6px]" : "w-[26px]",
-        s.bg
-      )}
-    >
-      {!compact && (
-        <span
-          className={cn("text-xs font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
-          style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-        >
-          {statusLabel[status]}
-        </span>
-      )}
-    </div>
-  );
+// Só a cor: o nome do status aparecia em vertical na lateral e disputava a
+// atenção com o evento e o retorno, que são o que se lê no card. O detalhe
+// abre o status por escrito.
+function StatusStrip({ status }: { status: Status }) {
+  return <div className={cn("absolute inset-y-0 right-0 w-[6px] rounded-r-lg", stripColors[status])} />;
 }
 
 // Três pesos visuais pros metadados do card: hora é o mais apagado, odd é o
@@ -250,8 +233,7 @@ function BetCardMobile({
   return (
     <div
       className={cn(
-        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 flex flex-col gap-2",
-        selection.selectionMode ? "pr-4" : "pr-9",
+        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-4 flex flex-col gap-2",
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
@@ -278,7 +260,7 @@ function BetCardMobile({
         <ReturnValue aposta={aposta} className="text-sm shrink-0" />
       </div>
 
-      <StatusStrip status={status} compact={selection.selectionMode} />
+      <StatusStrip status={status} />
     </div>
   );
 }

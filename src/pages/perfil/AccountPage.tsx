@@ -1,12 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CaretLeft } from "@phosphor-icons/react";
+import { Link, useNavigate } from "react-router-dom";
+import { CaretLeft, CaretRight, Lock, Trash } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { actionToast } from "@/lib/action-toast";
 import { patchMe } from "@/api/routes/patch-me";
+import { deleteMe } from "@/api/routes/delete-me";
 import { useMe } from "@/hooks/queries/use-me";
 import { getErrorMessage } from "@/lib/api-error";
 
@@ -15,6 +26,9 @@ export default function AccountPage() {
   const { me, setMe } = useMe();
   const [form, setForm] = useState({ username: "", email: "" });
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
@@ -38,6 +52,18 @@ export default function AccountPage() {
     if (me) setForm({ username: me.username, email: me.email });
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteMe();
+      localStorage.removeItem("token");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      actionToast.error({ description: getErrorMessage(error, "Falha ao excluir a conta.") });
+      setDeleting(false);
+    }
+  };
+
   return (
     <MainLayout
       title="Dados da conta"
@@ -48,33 +74,92 @@ export default function AccountPage() {
           <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
             <CaretLeft size={20} />
           </button>
-          <h1 className="text-base font-semibold truncate">Dados da conta</h1>
+          <h1 className="text-lg font-semibold truncate">Dados da conta</h1>
         </div>
       }
     >
       {!me ? (
         <div className="opacity-55 text-sm">Carregando…</div>
       ) : (
-        <div className="flex flex-col min-h-[calc(100dvh-200px)]">
-          <div className="space-y-4">
+        // Sem `min-h` forçado: a tela termina onde o conteúdo termina e o
+        // rodapé encosta no último item, em vez de sobrar vazio no meio.
+        <div className="flex flex-col">
+          <div className="flex flex-col gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-zinc-500">Nome</Label>
-              <Input value={form.username} onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))} />
+              <Label className="text-sm font-normal text-zinc-400">Nome</Label>
+              <Input
+                className="min-h-[48px] rounded-lg px-3.5"
+                value={form.username}
+                onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-zinc-500">E-mail</Label>
-              <Input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+              <Label className="text-sm font-normal text-zinc-400">E-mail</Label>
+              <Input
+                className="min-h-[48px] rounded-lg px-3.5"
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              />
             </div>
           </div>
 
-          <div className="flex-1" />
+          <p className="text-xs uppercase tracking-wider text-zinc-500 mt-7 mb-2">Segurança</p>
+          <div className="flex flex-col divide-y divide-border border-y border-border">
+            <Link to="/profile/password" className="press h-14 flex items-center gap-3">
+              <Lock size={19} className="text-zinc-400 shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm text-white truncate">Alterar senha</span>
+                <span className="block text-xs text-zinc-500 truncate">pede a senha atual</span>
+              </span>
+              <CaretRight size={16} className="text-zinc-500 shrink-0" />
+            </Link>
 
-          <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-background border-t border-border flex gap-2" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
-            <Button variant="outline" className="flex-1" onClick={handleDiscard}>Descartar</Button>
-            <Button className="flex-1" onClick={handleSave} disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+            <button type="button" onClick={() => setConfirmOpen(true)} className="press h-14 flex items-center gap-3 text-left">
+              <Trash size={19} className="text-negative shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm text-negative truncate">Excluir conta</span>
+                <span className="block text-xs text-zinc-500 truncate">apaga apostas, casas e histórico</span>
+              </span>
+              <CaretRight size={16} className="text-zinc-500 shrink-0" />
+            </button>
           </div>
+
+          <ScreenFooter onSave={handleSave} onDiscard={handleDiscard} saving={saving} />
         </div>
       )}
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir a conta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apaga suas apostas, saldos de casas e movimentações. Não dá pra desfazer nem recuperar depois.
+              Digite <span className="text-foreground">{me?.email}</span> para confirmar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <Input
+            value={confirmEmail}
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            placeholder="seu@email.com"
+            className="min-h-[44px]"
+          />
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmEmail("")}>Cancelar</AlertDialogCancel>
+            {/* Fora do AlertDialogAction de propósito: aquele fecha o diálogo ao
+                clicar, e aqui o botão precisa continuar desabilitado até o
+                e-mail bater. */}
+            <Button
+              variant="destructive"
+              disabled={deleting || confirmEmail.trim().toLowerCase() !== me?.email.toLowerCase()}
+              onClick={handleDelete}
+            >
+              {deleting ? "Excluindo…" : "Excluir para sempre"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

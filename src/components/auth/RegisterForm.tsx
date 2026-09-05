@@ -1,51 +1,56 @@
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { AuthField } from "./AuthField";
 import { actionToast } from "@/lib/action-toast";
-import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 import { postRegister } from "@/api/routes/post-register";
 import { postLogin } from "@/api/routes/post-login";
+import { cn } from "@/lib/utils";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
+const MIN_PASSWORD = 6;
+
+// Três critérios, três barras: tamanho, número e um caractere fora de letra e
+// número. Não é medida de entropia — é o que a tela promete e o que o
+// formulário cobra.
+function passwordStrength(password: string) {
+  const checks = [password.length >= MIN_PASSWORD, /\d/.test(password), /[^A-Za-z0-9]/.test(password)];
+  const score = checks.filter(Boolean).length;
+  const label = password.length === 0 ? null : score <= 1 ? "Fraca" : score === 2 ? "Boa" : "Forte";
+  // Só o tamanho barra o cadastro — número e símbolo entram como força, não
+  // como exigência, pra não inventar regra que o backend não cobra.
+  return { score, label, meetsMinimum: checks[0] };
+}
+
+const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [registerData, setRegisterData] = useState({
-    nome: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false,
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [registerData, setRegisterData] = useState({ nome: "", email: "", password: "" });
   const navigate = useNavigate();
+
+  const strength = passwordStrength(registerData.password);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!registerData.nome || !registerData.email || !registerData.password) {
-      actionToast.error({ description: "Por favor, preencha todos os campos obrigatórios." });
+      setError("Preencha todos os campos.");
       return;
     }
-    if (registerData.password !== registerData.confirmPassword) {
-      actionToast.error({ description: "As senhas não coincidem." });
-      return;
-    }
-    if (registerData.password.length < 6) {
-      actionToast.error({ description: "A senha deve ter pelo menos 6 caracteres." });
-      return;
-    }
-    if (!registerData.acceptTerms) {
-      actionToast.error({ description: "Você deve aceitar os termos de uso." });
+    if (!strength.meetsMinimum) {
+      setError(`Use ${MIN_PASSWORD} caracteres ou mais.`);
       return;
     }
 
     setSubmitting(true);
+    setError(null);
     try {
       await postRegister({
         username: registerData.nome,
@@ -60,98 +65,104 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
       actionToast.success({ title: "Conta criada!", description: "Bem-vindo ao SportsBet Manager!" });
       navigate("/dashboard");
-    } catch (err: any) {
-      const description = err?.response?.data?.message || "Falha ao criar conta.";
-      actionToast.error({ description });
+    } catch (err) {
+      // class-validator devolve `message` como array quando mais de uma regra
+      // falha; a tela mostra a primeira.
+      const raw = axios.isAxiosError(err) ? err.response?.data?.message : null;
+      setError(Array.isArray(raw) ? raw[0] : (raw ?? "Falha ao criar conta."));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleRegister} className="w-full max-w-[360px] flex flex-col gap-[18px]">
+    <form onSubmit={handleRegister} className="w-full max-w-[380px] flex flex-col gap-5">
       <div>
-        <h1 className="text-2xl font-medium mb-1">Criar conta</h1>
-        <p className="text-sm opacity-60">Comece a registrar suas apostas</p>
+        <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Criar conta</h1>
+        <p className="text-sm text-zinc-500 mt-1">Três campos e você já registra a primeira aposta</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="nome" className="text-xs">Nome completo</Label>
-        <Input
-          id="nome"
-          type="text"
-          placeholder="Seu nome completo"
-          value={registerData.nome}
-          onChange={(e) => setRegisterData((prev) => ({ ...prev, nome: e.target.value }))}
+      <AuthField
+        id="nome"
+        label="Nome"
+        type="text"
+        autoComplete="name"
+        placeholder="Seu nome"
+        value={registerData.nome}
+        onChange={(e) => setRegisterData((prev) => ({ ...prev, nome: e.target.value }))}
+        required
+      />
+
+      <AuthField
+        id="email"
+        label="E-mail"
+        type="email"
+        autoComplete="email"
+        placeholder="seu@email.com"
+        value={registerData.email}
+        valid={isEmail(registerData.email)}
+        onChange={(e) => setRegisterData((prev) => ({ ...prev, email: e.target.value }))}
+        required
+      />
+
+      <div className="flex flex-col gap-2">
+        <AuthField
+          id="password"
+          label="Senha"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Sua senha"
+          value={registerData.password}
+          error={error}
+          hint={
+            strength.label && (
+              <span className={cn("text-sm", strength.score >= 2 ? "text-accent" : "text-zinc-500")}>
+                {strength.label}
+              </span>
+            )
+          }
+          onChange={(e) => {
+            setError(null);
+            setRegisterData((prev) => ({ ...prev, password: e.target.value }));
+          }}
           required
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-xs">E-mail</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="seu@email.com"
-          value={registerData.email}
-          onChange={(e) => setRegisterData((prev) => ({ ...prev, email: e.target.value }))}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-xs">Senha</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Mínimo 6 caracteres"
-            value={registerData.password}
-            onChange={(e) => setRegisterData((prev) => ({ ...prev, password: e.target.value }))}
-            required
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-[10px] top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground"
-            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-          >
-            {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-          </button>
+        <div className="flex gap-1.5" aria-hidden>
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-[3px] flex-1 rounded-full transition-colors",
+                i < strength.score ? "bg-accent" : "bg-white/10"
+              )}
+            />
+          ))}
         </div>
+        <p className="text-sm text-zinc-500">
+          {MIN_PASSWORD} caracteres ou mais. Toque no olho para conferir — não pedimos duas vezes.
+        </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-xs">Confirmar senha</Label>
-        <Input
-          id="confirmPassword"
-          type={showPassword ? "text" : "password"}
-          placeholder="Confirme sua senha"
-          value={registerData.confirmPassword}
-          onChange={(e) => setRegisterData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-          required
-        />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="terms"
-          checked={registerData.acceptTerms}
-          onCheckedChange={(checked) => setRegisterData((prev) => ({ ...prev, acceptTerms: checked as boolean }))}
-        />
-        <Label htmlFor="terms" className="text-sm font-normal">
-          Aceito os termos de uso e política de privacidade
-        </Label>
-      </div>
-
-      <Button type="submit" className="w-full min-h-[40px] mt-1" disabled={submitting}>
-        {submitting ? "Criando conta…" : "Criar conta"}
+      <Button type="submit" className="w-full min-h-[48px] text-base gap-2 bg-blue-600 text-white hover:bg-blue-600/90" disabled={submitting}>
+        {submitting ? (
+          <>
+            <CircleNotch size={18} className="animate-spin" /> Criando conta…
+          </>
+        ) : (
+          <>
+            Criar conta <ArrowRight size={18} />
+          </>
+        )}
       </Button>
 
-      <p className="text-center text-sm opacity-60">
+      <p className="text-center text-sm text-zinc-500">
+        Ao criar a conta você aceita os termos de uso e a política de privacidade.
+      </p>
+
+      <p className="text-center text-sm text-zinc-500">
         Já tem uma conta?{" "}
-        <button type="button" onClick={onSwitchToLogin} className="text-accent hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="text-accent underline underline-offset-4 hover:no-underline">
           Entrar
         </button>
       </p>

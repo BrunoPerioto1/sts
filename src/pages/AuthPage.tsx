@@ -52,7 +52,13 @@ const AuthPage = () => {
         </p>
       </div>
 
-      <div className="flex items-center justify-center bg-background p-6">
+      <div className="flex flex-col items-center justify-center gap-8 bg-background p-6">
+        <div className="lg:hidden w-full max-w-[380px]">
+          <div className="w-[38px] h-[38px] rounded-lg border border-accent flex items-center justify-center">
+            <ChartLineUp size={20} className="text-accent" />
+          </div>
+        </div>
+
         {isLogin ? (
           <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
         ) : (

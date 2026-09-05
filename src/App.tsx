@@ -9,6 +9,7 @@ import ApostasPage from "./pages/ApostasPage";
 import { CasasPage } from "./pages/CasasPage";
 import PerfilPage from "./pages/PerfilPage";
 import AccountPage from "./pages/perfil/AccountPage";
+import PasswordPage from "./pages/perfil/PasswordPage";
 import TelegramPage from "./pages/perfil/TelegramPage";
 import PreferencesPage from "./pages/perfil/PreferencesPage";
 import { Navigate } from "react-router-dom";
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
           <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+          <Route path="/profile/password" element={<RequireAuth><PasswordPage /></RequireAuth>} />
           <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
           <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
