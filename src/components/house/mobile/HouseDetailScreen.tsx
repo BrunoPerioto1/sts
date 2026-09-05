@@ -54,7 +54,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
         </Badge>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6">
         <div>
           <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo atual</p>
           <p className="text-3xl font-semibold tabular-nums">{formatCurrency(Number(house.houseBalance))}</p>

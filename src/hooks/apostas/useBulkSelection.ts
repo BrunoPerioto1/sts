@@ -1,17 +1,30 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useBulkSelection() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [lastId, setLastId] = useState<number | null>(null);
 
-  const enter = useCallback((id?: number) => {
+  // `id` obrigatório: o modo de seleção sempre começa com a aposta que o
+  // usuário tocou. Entrar vazio agora seria desfeito na hora pelo efeito abaixo.
+  const enter = useCallback((id: number) => {
     setSelectionMode(true);
-    if (id !== undefined) {
-      setSelected(new Set([id]));
-      setLastId(id);
-    }
+    setSelected(new Set([id]));
+    setLastId(id);
   }, []);
+
+  // Desmarcar a última aposta na mão sai do modo de seleção. Antes só o botão
+  // "Cancelar" saía: com 0 selecionadas a barra de ações some, então a tela
+  // ficava com os checkboxes abertos e nenhuma saída visível.
+  //
+  // Vale pra todo caminho que desmarca (item, dia, semana, mês), por isso mora
+  // aqui e não em cada `toggle`.
+  useEffect(() => {
+    if (selectionMode && selected.size === 0) {
+      setSelectionMode(false);
+      setLastId(null);
+    }
+  }, [selectionMode, selected]);
 
   const toggle = useCallback((id: number) => {
     setSelected((prev) => {

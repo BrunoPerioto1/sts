@@ -10,6 +10,8 @@ import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { stagger } from "@/lib/motion";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { cn } from "@/lib/utils";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { HouseRowMobile } from "./HouseRowMobile";
 import { SortSheet, type HouseSortMobile } from "./SortSheet";
 import { HouseActionsSheet } from "./HouseActionsSheet";
@@ -56,6 +58,11 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
   const [novaMovHouse, setNovaMovHouse] = useState<HouseBalanceDto | null>(null);
   const [stack, setStack] = useState<StackEntry[]>([]);
 
+  // Puxar do topo recarrega saldos e métricas — a tela não tem botão de
+  // recarregar e ficava só no cache até a próxima navegação. Desligado com uma
+  // tela empilhada por cima: lá quem rola é o painel, não a página.
+  const pull = usePullToRefresh(invalidate, stack.length === 0);
+
   useEffect(() => {
     if (balancesQuery.isError || metricsQuery.isError) {
       actionToast.error({ title: "Erro ao carregar dados", description: "Não foi possível carregar as informações das casas de apostas." });
@@ -92,6 +99,8 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
 
   return (
     <div className="space-y-4">
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
+
       {metrics && (
         <div className="animate-rise stagger" style={stagger(0)}>
           <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Saldo total</p>

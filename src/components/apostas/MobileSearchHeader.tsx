@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,9 @@ interface MobileSearchBarProps {
   resultsCount: number;
   open: boolean;
   onClose: () => void;
+  // Ref vem de fora: quem abre a busca precisa focar o input DENTRO do próprio
+  // gesto de toque (ver ApostasPage), senão o iOS não abre o teclado.
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 // Linha de busca renderizada no corpo da página (não no header) — aparece
@@ -35,18 +38,12 @@ interface MobileSearchBarProps {
 // só controla o mesmo `searchTerm`/onSearch que já dirige fetchFilteredBets
 // em ApostasPage — os resultados aparecem porque a listagem principal já
 // reage ao `q`.
-export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }: MobileSearchBarProps) {
+export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, inputRef }: MobileSearchBarProps) {
   const [pinned, setPinned] = useState(false);
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) {
-      setPinned(false);
-      return;
-    }
-    const t = setTimeout(() => inputRef.current?.focus(), 50);
-    return () => clearTimeout(t);
+    if (!open) setPinned(false);
   }, [open]);
 
   if (!open) return null;

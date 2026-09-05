@@ -28,7 +28,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function NovaTransacaoModal({ isOpen, onClose, houseId }: NovaTransacaoModalProps) {
-  const [novaMov, setNovaMov] = useState({ tipoId: 0, valor: "", descricao: "" });
+  const [novaMov, setNovaMov] = useState({ tipoId: 0, valor: "" });
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -51,8 +51,8 @@ export function NovaTransacaoModal({ isOpen, onClose, houseId }: NovaTransacaoMo
 
     setLoading(true);
     try {
-      await createTransaction({ houseId, transactionTypeId: novaMov.tipoId, value, description: novaMov.descricao || undefined });
-      setNovaMov({ tipoId: types[0]?.id || 0, valor: "", descricao: "" });
+      await createTransaction({ houseId, transactionTypeId: novaMov.tipoId, value });
+      setNovaMov({ tipoId: types[0]?.id || 0, valor: "" });
       onClose();
     } finally {
       setLoading(false);
@@ -89,11 +89,6 @@ export function NovaTransacaoModal({ isOpen, onClose, houseId }: NovaTransacaoMo
           <div className="space-y-1.5">
             <Label className="text-xs">Valor</Label>
             <Input placeholder="0,00" value={novaMov.valor} onChange={(e) => setNovaMov((prev) => ({ ...prev, valor: e.target.value }))} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Descrição (opcional)</Label>
-            <Input placeholder="Ex: Pix via app" value={novaMov.descricao} onChange={(e) => setNovaMov((prev) => ({ ...prev, descricao: e.target.value }))} />
           </div>
 
           <div className="flex gap-2 justify-end mt-1">

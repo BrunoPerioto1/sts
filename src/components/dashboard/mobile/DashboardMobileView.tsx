@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarBlank, CaretDown, ChartLine } from "@phosphor-icons/react";
+import { CaretDown, ChartLine } from "@phosphor-icons/react";
 import { getBets, ResultIdEnum, type BetItem } from "@/api/routes/get-bets";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -10,6 +10,9 @@ import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { PeriodSheet } from "./PeriodSheet";
 import { ProfitBarChart } from "./ProfitBarChart";
 
@@ -76,6 +79,15 @@ export function DashboardMobileView({
 }: DashboardMobileViewProps) {
   const [periodOpen, setPeriodOpen] = useState(false);
   const [bets, setBets] = useState<BetItem[]>([]);
+  const invalidate = useInvalidateBetData();
+  // A busca de apostas abaixo é um fetch solto (não passa pelo react-query),
+  // então o pull-to-refresh precisa mexer nela por fora: o nonce entra nas
+  // deps do efeito e o invalidate cuida do resto do dashboard.
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const pull = usePullToRefresh(async () => {
+    setRefreshNonce((n) => n + 1);
+    await invalidate();
+  });
 
   // Uma busca só por período: dela saem as pendentes (contagem + valor em
   // risco) e a maior sequência de ganhas, que não vêm nas métricas da API.
@@ -91,7 +103,7 @@ export function DashboardMobileView({
     return () => {
       cancelled = true;
     };
-  }, [filters.startDate, filters.endDate]);
+  }, [filters.startDate, filters.endDate, refreshNonce]);
 
   const { pendingCount, longestStreak } = useMemo(() => {
     const pending = bets.filter((b) => b.resultId === ResultIdEnum.PENDING);
@@ -205,12 +217,13 @@ export function DashboardMobileView({
 
   return (
     <>
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       {/* Ocupa a altura útil da tela (viewport menos a bottom nav) e distribui
           os blocos na vertical, em vez de amontoar tudo no topo. */}
       <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold">Resultado</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Resultado</h2>
             <p className="text-sm text-zinc-500 truncate">
               {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}
             </p>
@@ -220,7 +233,7 @@ export function DashboardMobileView({
             onClick={() => setPeriodOpen(true)}
             className="press shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 text-sm text-zinc-300"
           >
-            <CalendarBlank size={14} /> {PRESET_LABEL[preset]} <CaretDown size={12} />
+            {PRESET_LABEL[preset]} <CaretDown size={12} />
           </button>
         </div>
 

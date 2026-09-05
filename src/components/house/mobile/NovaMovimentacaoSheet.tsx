@@ -31,13 +31,11 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [typeId, setTypeId] = useState<number | null>(null);
   const [cents, setCents] = useState(0);
-  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!house) return;
     setCents(0);
-    setDescription("");
     getTransactionTypes()
       .then((txTypes) => {
         // Só depósito e saque: ajuste manual não é uma opção pro usuário aqui.
@@ -68,7 +66,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
     if (!typeId || !(numericValue > 0)) return;
     setLoading(true);
     try {
-      await createTransaction({ houseId: house.houseId, transactionTypeId: typeId, value: numericValue, description: description || undefined });
+      await createTransaction({ houseId: house.houseId, transactionTypeId: typeId, value: numericValue });
       onSuccess();
     } finally {
       setLoading(false);
@@ -156,8 +154,6 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             </button>
           </div>
         </div>
-
-        <Input placeholder="Ex: Pix via app" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
     </BottomSheet>
   );

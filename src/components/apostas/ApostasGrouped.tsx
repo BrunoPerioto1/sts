@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { format, getISOWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { CaretDown, CaretRight, Clock } from "@phosphor-icons/react";
 import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { mapResultToStatus, statusVariant, statusLabel, ReturnValue, RowActions, ApostaDetailSheet, type Status } from "./ApostasList";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { tapHaptic } from "@/lib/haptics";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import type { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
 
@@ -186,21 +187,38 @@ const stripColors: Record<Status, { bg: string; text: string; strike?: boolean }
   cashout: { bg: "bg-accent-700", text: "text-accent-100" },
 };
 
-function StatusStrip({ status }: { status: Status }) {
+// Em modo de seleção a faixa perde a legenda e vira só um filete de cor: o
+// texto vertical competia com os checkboxes e com a barra de ações em lote.
+function StatusStrip({ status, compact }: { status: Status; compact?: boolean }) {
   const s = stripColors[status];
   return (
-    <div className={cn("absolute inset-y-0 right-0 w-[26px] rounded-r-lg flex items-center justify-center", s.bg)}>
-      <span
-        className={cn("text-xs font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-      >
-        {statusLabel[status]}
-      </span>
+    <div
+      className={cn(
+        "absolute inset-y-0 right-0 rounded-r-lg flex items-center justify-center",
+        compact ? "w-[6px]" : "w-[26px]",
+        s.bg
+      )}
+    >
+      {!compact && (
+        <span
+          className={cn("text-xs font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
+          style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+        >
+          {statusLabel[status]}
+        </span>
+      )}
     </div>
   );
 }
 
-const betChipClass = "text-xs px-2 py-0.5 rounded-md border border-white/10 bg-foreground/[0.06] text-zinc-400 shrink-0";
+// Três pesos visuais pros metadados do card: hora é o mais apagado, odd é o
+// número em destaque e casa carrega o acento — antes os três usavam a mesma
+// pílula e não dava pra distinguir odd de casa de relance.
+// Todos em pílula pro relógio do horário (que é redondo) não brigar com cantos
+// quadrados ao lado.
+const timeChipClass = "inline-flex items-center gap-1 text-xs tabular-nums text-zinc-500 shrink-0";
+const oddChipClass = "text-xs px-2.5 py-0.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
+const houseChipClass = "text-xs px-2.5 py-0.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100 shrink-0";
 
 function BetCardMobile({
   aposta,
@@ -217,7 +235,12 @@ function BetCardMobile({
   const time = new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   const isSelected = selection.isSelected(aposta.id);
 
-  const longPress = useLongPress(() => selection.enter(aposta.id));
+  // Toque longo entra no modo de seleção já com esta aposta marcada — é o
+  // único caminho desde que o ícone saiu do header.
+  const longPress = useLongPress(() => {
+    tapHaptic();
+    selection.enter(aposta.id);
+  });
 
   const handleClick = () => {
     if (selection.selectionMode) selection.toggle(aposta.id);
@@ -227,7 +250,8 @@ function BetCardMobile({
   return (
     <div
       className={cn(
-        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-9 flex flex-col gap-2",
+        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 flex flex-col gap-2",
+        selection.selectionMode ? "pr-4" : "pr-9",
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
@@ -240,9 +264,11 @@ function BetCardMobile({
             <Checkbox checked={isSelected} onCheckedChange={() => selection.toggle(aposta.id)} aria-label="Selecionar aposta" />
           </span>
         )}
-        <span className={betChipClass}>{time}</span>
-        <span className={betChipClass}>{Number(aposta.odd).toFixed(2)}</span>
-        {aposta.houseName && <span className={cn(betChipClass, "truncate")}>{aposta.houseName}</span>}
+        <span className={timeChipClass}>
+          <Clock size={12} /> {time}
+        </span>
+        <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)}</span>
+        {aposta.houseName && <span className={cn(houseChipClass, "truncate")}>{aposta.houseName}</span>}
       </div>
 
       <p className="text-base font-medium text-white truncate">{aposta.game}</p>
@@ -252,7 +278,7 @@ function BetCardMobile({
         <ReturnValue aposta={aposta} className="text-sm shrink-0" />
       </div>
 
-      <StatusStrip status={status} />
+      <StatusStrip status={status} compact={selection.selectionMode} />
     </div>
   );
 }

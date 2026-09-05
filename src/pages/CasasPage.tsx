@@ -13,7 +13,7 @@ export function CasasPage() {
       title="Casas de Apostas"
       mobileHeader={
         <div className="flex items-baseline gap-2.5">
-          <h1 className="text-lg font-semibold">Casas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Casas</h1>
           <span className="text-sm text-zinc-500">{count}</span>
         </div>
       }

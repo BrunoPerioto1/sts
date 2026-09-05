@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { format, startOfMonth } from "date-fns";
@@ -40,10 +41,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X, ArrowClockwise } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal } from "@phosphor-icons/react";
 import { tapHaptic } from "@/lib/haptics";
 import { actionToast, Check, CheckCircle, ArrowCounterClockwise, Trash as TrashIcon, Copy } from "@/lib/action-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 
 const statusLabelFor: Record<number, string> = {
   [ResultIdEnum.WON]: "Ganha",
@@ -97,6 +100,7 @@ export default function ApostasPage() {
   const perPage = PER_PAGE;
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const selection = useBulkSelection();
 
@@ -161,10 +165,25 @@ export default function ApostasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection.selectionMode, selection.clear]);
 
+  // O input só existe depois que a busca abre, então o `focus()` precisa vir
+  // no MESMO gesto do toque — daí o flushSync, que monta a barra antes do
+  // handler terminar. Focar num efeito/timeout depois já está fora do gesto e
+  // o iOS ignora, abrindo o campo sem o teclado.
+  const toggleMobileSearch = () => {
+    if (mobileSearchExpanded) {
+      setMobileSearchExpanded(false);
+      return;
+    }
+    flushSync(() => setMobileSearchExpanded(true));
+    searchInputRef.current?.focus();
+  };
+
   // Toda mutação passa por aqui: invalida bets/houses/dashboard (as outras
   // telas leem do cache agora). A lista desta tela está montada, então o
   // próprio invalidate já a refaz.
   const reload = () => invalidate();
+  // Puxar do topo substitui o botao de recarregar que saiu do header mobile.
+  const pull = usePullToRefresh(reload, isMobile);
   const handleLoadMore = () => void betsQuery.fetchNextPage();
 
   const changeViewMode = (mode: "agrupado" | "tabela") => {
@@ -382,29 +401,13 @@ export default function ApostasPage() {
       mobileHeader={
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-lg font-semibold truncate">Apostas</h1>
+            <h1 className="text-2xl font-semibold tracking-tight truncate">Apostas</h1>
           </div>
+          {/* Seleção múltipla entra por toque longo/swipe no card e o refresh
+              por pull-to-refresh — os dois ícones saíram daqui pra deixar só
+              busca e filtro visíveis. */}
           <div className="flex items-center gap-1 -mr-2">
-            <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={() => setMobileSearchExpanded((v) => !v)} />
-            {viewMode === "agrupado" && (
-              <button
-                type="button"
-                onClick={() => (selection.selectionMode ? selection.clear() : selection.enter())}
-                aria-label={selection.selectionMode ? "Cancelar seleção" : "Selecionar apostas"}
-                className={cn("p-2 hover:text-white", selection.selectionMode ? "text-accent" : "text-zinc-400")}
-              >
-                {selection.selectionMode ? <X size={19} /> : <CheckSquare size={19} />}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => reload()}
-              disabled={refreshing}
-              aria-label="Recarregar apostas"
-              className="p-2 text-zinc-400 hover:text-white disabled:opacity-45"
-            >
-              <ArrowClockwise size={19} className={cn(refreshing && "animate-spin")} />
-            </button>
+            <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={toggleMobileSearch} />
             <button
               type="button"
               onClick={() => setMobileFilterOpen(true)}
@@ -451,6 +454,8 @@ export default function ApostasPage() {
         </>
       }
     >
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
+
       <div className="md:hidden">
         <MobileSearchBar
           value={searchTerm}
@@ -458,6 +463,7 @@ export default function ApostasPage() {
           resultsCount={total}
           open={mobileSearchExpanded}
           onClose={() => setMobileSearchExpanded(false)}
+          inputRef={searchInputRef}
         />
       </div>
 

@@ -123,6 +123,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    /* Desliga o pull-to-refresh nativo do Chrome Android: quem recarrega ao
+       puxar do topo agora e o usePullToRefresh, e os dois juntos disparariam
+       um recarregamento de pagina inteira por cima do refetch. */
+    overscroll-behavior-y: contain;
   }
 
   h1, h2, h3, h4, h5, h6 {
