@@ -84,6 +84,8 @@ export default function PerfilPage() {
     housesWithBalance: (balances.data ?? []).filter((h) => Number(h.houseBalance) > 0).length,
     bankroll: Number(houseMetrics.data?.totalBalance ?? 0),
   };
+  const metricsLoading = metricsQuery.isPending;
+  const metricsUnavailable = metricsLoading || metricsQuery.isError;
 
   // Hidrata os forms quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
@@ -222,8 +224,8 @@ export default function PerfilPage() {
               viram grade, como no dashboard. */}
           <div>
             <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Lucro acumulado</p>
-            <p className={cn("text-3xl font-semibold tabular-nums leading-tight", summary.totalProfit >= 0 ? "text-positive" : "text-negative")}>
-              {formatSignedCurrency(summary.totalProfit)}
+            <p className={cn("text-3xl font-semibold tabular-nums leading-tight", !metricsUnavailable && (summary.totalProfit >= 0 ? "text-positive" : "text-negative"))}>
+              {metricsLoading ? "Carregando…" : metricsQuery.isError ? "Indisponível" : formatSignedCurrency(summary.totalProfit)}
             </p>
             {since && <p className="text-sm text-zinc-500 mt-0.5">{since}</p>}
           </div>
@@ -235,7 +237,7 @@ export default function PerfilPage() {
                 className={cn("py-4", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}
               >
                 <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">{tile.label}</p>
-                <p className={cn("text-xl font-semibold tabular-nums", tile.tone)}>{tile.value}</p>
+                <p className={cn("text-xl font-semibold tabular-nums", !metricsUnavailable && tile.tone)}>{metricsUnavailable ? "—" : tile.value}</p>
                 {tile.sub && <p className="text-xs text-zinc-500 mt-0.5">{tile.sub}</p>}
               </div>
             ))}
