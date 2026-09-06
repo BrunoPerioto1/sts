@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CaretDown, ChartLine } from "@phosphor-icons/react";
+import { CalendarBlank, CaretDown, ChartLine, TrendUp, Target, Database, Clock, CreditCard, ChartBar, Trophy } from "@phosphor-icons/react";
 import { getBets, ResultIdEnum, type BetItem } from "@/api/routes/get-bets";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -36,6 +36,7 @@ interface Tile {
   label: string;
   value: string;
   valueTone?: Tone;
+  icon: typeof TrendUp;
 }
 
 const toneClass: Record<Tone, string> = {
@@ -143,51 +144,51 @@ export function DashboardMobileView({
             .join(" · ");
 
   const tiles: Tile[] = [
-    { label: "ROI", value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, valueTone: signedTone(roi) },
-    { label: "Taxa de acerto", value: `${hitRate.toFixed(1)}%` },
-    { label: "Apostas", value: String(totalBets) },
-    { label: "Pendentes", value: String(Number(metrics.pendingBets)) },
-    { label: "Total apostado", value: formatCurrencyCompact(Number(metrics.totalStaked)) },
-    { label: "Stake médio", value: formatCurrencyCompact(avgStake) },
-    { label: "Odd média", value: avgOdd.toFixed(2) },
-    { label: "Maior sequência", value: longestStreak > 0 ? `${longestStreak} ganha${longestStreak === 1 ? "" : "s"}` : "—" },
+    { label: "ROI", icon: TrendUp, value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, valueTone: signedTone(roi) },
+    { label: "Taxa de acerto", icon: Target, valueTone: "positive", value: `${hitRate.toFixed(1)}%` },
+    { label: "Apostas", icon: Database, value: String(totalBets) },
+    { label: "Pendentes", icon: Clock, value: String(Number(metrics.pendingBets)) },
+    { label: "Total apostado", icon: CreditCard, value: formatCurrencyCompact(Number(metrics.totalStaked)) },
+    { label: "Stake médio", icon: ChartBar, value: formatCurrencyCompact(avgStake) },
+    { label: "Odd média", icon: TrendUp, value: avgOdd.toFixed(2) },
+    { label: "Maior sequência", icon: Trophy, value: longestStreak > 0 ? `${longestStreak} ganha${longestStreak === 1 ? "" : "s"}` : "—" },
   ];
 
   return (
     <>
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
-      {/* Ocupa a altura útil da tela (viewport menos a bottom nav) e distribui
-          os blocos na vertical, em vez de amontoar tudo no topo. */}
-      <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
+      <div className="min-h-[calc(100dvh-96px)] px-4 pt-5 pb-6 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
           <div className="min-w-0">
-            <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
-            <p className="text-sm text-zinc-400 truncate">
-              {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}
+            <h2 className="text-[28px] leading-tight font-semibold tracking-tight">Dashboard</h2>
+            <p className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
+              <CalendarBlank size={17} className="shrink-0" aria-hidden="true" />
+              <span>
+              {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}</span>
             </p>
           </div>
           <button
             type="button"
             onClick={() => setPeriodOpen(true)}
-            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-lg border border-white/10 text-sm text-zinc-300"
+            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-xl border border-white/10 text-sm text-zinc-300"
           >
             {PRESET_LABEL[preset]} <CaretDown size={12} />
           </button>
         </div>
 
-        <div className="mt-6 shrink-0 animate-rise stagger" style={stagger(1)}>
+        <div className="mt-8 shrink-0 animate-rise stagger" style={stagger(1)}>
           <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Lucro líquido</p>
           {/* Numero-heroi da tela: conta ate o valor final. O `key` no periodo
               faz a contagem recomecar quando o usuario troca o filtro — sem
               ele o hook so interpolaria do valor antigo pro novo. */}
-          <p className={cn("text-3xl font-semibold tabular-nums leading-tight", toneClass[signedTone(profit)])}>
+          <p className={cn("text-[clamp(1.75rem,9vw,2.5rem)] font-semibold tabular-nums leading-tight tracking-tight", toneClass[signedTone(profit)])}>
             <AnimatedNumber
               key={`${filters.startDate}-${filters.endDate}`}
               value={profit}
               format={formatSignedCurrency}
             />
           </p>
-          <p className="text-sm text-zinc-400 mt-0.5">{daysSummary}</p>
+          <p className="text-sm text-zinc-400 mt-1">{daysSummary}</p>
         </div>
 
         <div className="mt-5 animate-rise stagger" style={stagger(2)}>
@@ -214,20 +215,22 @@ export function DashboardMobileView({
           )}
         </div>
 
-        <div className="grid grid-cols-2 auto-rows-fr gap-x-6 mt-4 flex-1">
+        <div className="grid grid-cols-2 auto-rows-fr gap-2.5 mt-6">
           {tiles.map((tile, i) => (
             <div
               key={tile.label}
               className={cn(
-                "flex flex-col justify-center py-3 animate-rise stagger",
-                i >= 2 && "border-t border-white/[0.06]"
+                "min-w-0 flex items-center gap-2 min-h-[76px] rounded-xl border border-white/[0.07] bg-white/[0.015] p-3 animate-rise stagger"
               )}
               style={stagger(3 + i)}
             >
-              <p className="text-[11px] uppercase tracking-wide text-zinc-400 mb-1">{tile.label}</p>
-              <p className={cn("text-xl font-semibold tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-zinc-400 max-[359px]:h-7 max-[359px]:w-7" aria-hidden="true"><tile.icon size={21} /></span>
+              <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wide text-zinc-400 mb-1">{tile.label}</p>
+              <p className={cn("text-lg leading-tight font-semibold tabular-nums break-words", tile.valueTone && toneClass[tile.valueTone])}>
                 {tile.value}
               </p>
+              </div>
 
             </div>
           ))}

@@ -1,4 +1,4 @@
-import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -21,8 +21,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   );
 }
 
-// Gráfico enxuto do card mobile: sem eixo Y, sem tooltip, só as barras e as
-// datas das pontas — a leitura fina fica na tela de apostas.
+// Escala automática mantém os valores reais do período, inclusive dias negativos.
 export function ProfitBarChart({ data }: ProfitBarChartProps) {
   const ticks =
     data.length > 2
@@ -32,13 +31,16 @@ export function ProfitBarChart({ data }: ProfitBarChartProps) {
   return (
     <div className="h-[180px] -mx-1">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap={3} accessibilityLayer>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap="20%" accessibilityLayer>
+          <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeDasharray="3 4" />
+          <YAxis width={36} tickCount={4} axisLine={false} tickLine={false} tick={{ fill: "var(--color-text)", opacity: 0.55, fontSize: 10 }} tickFormatter={(value: number) => value.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 })} />
           <XAxis
             dataKey="date"
             ticks={ticks}
             stroke="var(--color-text)"
             opacity={0.45}
-            fontSize={12}
+            fontSize={11}
+            minTickGap={24}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => format(parseISO(value), "d MMM", { locale: ptBR })}
