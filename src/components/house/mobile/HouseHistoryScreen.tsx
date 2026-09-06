@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
@@ -60,32 +61,35 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
     else groups.push({ day: label, items: [t] });
   }
 
-  return (
+  // Mesmo motivo do HouseDetailScreen: overlay de tela cheia montado dentro de
+  // um container com `space-y-4`, que injetava margin-top: 1rem no elemento
+  // `fixed` e deixava a lista aparecer numa faixa no topo.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
+      className="animate-screen-in fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
     >
       <div className="flex items-center gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
-        <button type="button" onClick={onBack} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
+        <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-white">
           <CaretLeft size={20} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-[19px] font-semibold truncate">Histórico</h1>
-          <p className="text-[12.5px] text-zinc-500 truncate">
+          <h1 className="text-lg font-semibold truncate">Histórico</h1>
+          <p className="text-sm text-zinc-400 truncate">
             {house.houseName} · {transactions.length} movimentaç{transactions.length === 1 ? "ão" : "ões"}
           </p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6 space-y-4">
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Entrou</p>
-            <p className="text-[19px] font-medium tabular-nums text-positive">{formatSignedCurrency(entrou)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Entrou</p>
+            <p className="text-lg font-medium tabular-nums text-positive">{formatSignedCurrency(entrou)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide opacity-55 mb-1">Saiu</p>
-            <p className="text-[19px] font-medium tabular-nums text-negative">{formatCurrency(saiu)}</p>
+            <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saiu</p>
+            <p className="text-lg font-medium tabular-nums text-negative">{formatCurrency(saiu)}</p>
           </div>
         </div>
 
@@ -97,18 +101,18 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
           </div>
         ) : error ? (
           <div
-            className="flex items-start gap-2 rounded-md p-3 text-[13px]"
+            className="flex items-start gap-2 rounded-md p-3 text-sm"
             style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-negative)" }}
           >
             <WarningCircle size={18} className="text-negative shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
         ) : groups.length === 0 ? (
-          <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma movimentação registrada</p>
+          <p className="text-center py-10 text-sm opacity-75">Nenhuma movimentação registrada</p>
         ) : (
           groups.map((g) => (
             <div key={g.day}>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">{g.day}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 px-1 pb-1.5">{g.day}</p>
               <div className="flex flex-col gap-1">
                 {g.items.map((t) => {
                   const meta = TYPE_META[t.transactionType] ?? { label: t.transactionType, icon: SlidersHorizontal };
@@ -118,16 +122,16 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                     <div key={t.id} className="flex items-center gap-3 rounded-lg px-1 py-3 min-h-[56px]">
                       <Icon size={18} className="text-accent shrink-0" />
                       <span className="flex-1 min-w-0">
-                        <span className="block text-[15px] text-white truncate">{meta.label}</span>
-                        <span className="block text-[13px] text-zinc-500 truncate">
+                        <span className="block text-base text-white truncate">{meta.label}</span>
+                        <span className="block text-sm text-zinc-400 truncate">
                           {new Date(t.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className={`block text-[15px] font-medium tabular-nums ${value >= 0 ? "text-positive" : "text-negative"}`}>
+                        <span className={`block text-base font-medium tabular-nums ${value >= 0 ? "text-positive" : "text-negative"}`}>
                           {formatSignedCurrency(value)}
                         </span>
-                        <span className="block text-[13px] text-zinc-500 tabular-nums">{formatCurrency(t.runningBalance)}</span>
+                        <span className="block text-sm text-zinc-400 tabular-nums">{formatCurrency(t.runningBalance)}</span>
                       </span>
                     </div>
                   );
@@ -137,6 +141,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
           ))
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

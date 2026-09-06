@@ -3,6 +3,7 @@ import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
@@ -32,9 +33,11 @@ interface HouseRowMobileProps {
   house: HouseBalanceDto;
   onTap: () => void;
   onLongPress: () => void;
+  /** Posicao na lista — define o degrau da cascata de entrada. */
+  index?: number;
 }
 
-export function HouseRowMobile({ house, onTap, onLongPress }: HouseRowMobileProps) {
+export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRowMobileProps) {
   const profit = Number(house.totalBetProfit);
   // O toque longo dispara onLongPress, mas o navegador ainda emite o click
   // logo depois (ao soltar o dedo) — sem essa flag, esse click "fantasma"
@@ -58,24 +61,25 @@ export function HouseRowMobile({ house, onTap, onLongPress }: HouseRowMobileProp
       type="button"
       onClick={handleClick}
       {...longPress}
-      className="flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-white/[0.04] transition-colors"
+      className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-white/[0.04]"
+      style={stagger(index)}
     >
       <span
-        className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-[11px] font-semibold text-white"
+        className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
         style={{ background: colorForHouse(house.houseId) }}
       >
         {initialsOf(house.houseName)}
       </span>
 
       <span className="flex-1 min-w-0">
-        <span className="block text-[14px] font-medium truncate">{house.houseName}</span>
-        <span className="block text-[12px] text-zinc-500 truncate">{betsSubtitle(house)}</span>
+        <span className="block text-sm font-medium truncate">{house.houseName}</span>
+        <span className="block text-xs text-zinc-400 leading-snug">{betsSubtitle(house)}</span>
       </span>
 
       <span className="shrink-0 text-right">
-        <span className="block text-[14px] font-medium tabular-nums">{formatCurrency(Number(house.houseBalance))}</span>
-        <span className={cn("block text-[12px] tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
-          {formatSignedCurrency(profit)}
+        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Number(house.realHouseBalance))}</span>
+        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
+          Lucro {formatSignedCurrency(profit)}
         </span>
       </span>
 

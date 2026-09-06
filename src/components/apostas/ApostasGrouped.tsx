@@ -1,7 +1,8 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format, getISOWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { CaretDown, CaretRight, Clock } from "@phosphor-icons/react";
+import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { mapResultToStatus, statusVariant, statusLabel, ReturnValue, RowActions, ApostaDetailSheet, type Status } from "./ApostasList";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { tapHaptic } from "@/lib/haptics";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import type { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
+import { ApostasMobileSkeleton } from "./ApostasMobileSkeleton";
 
 type Selection = ReturnType<typeof useBulkSelection>;
 
@@ -146,24 +149,24 @@ function BetRowDesktop({
         />
       </span>
 
-      <span className="text-[11.5px] tabular-nums opacity-50 shrink-0 w-[46px]">{time}</span>
+      <span className="text-xs tabular-nums opacity-50 shrink-0 w-[46px]">{time}</span>
 
       <div className="flex-1 min-w-0 flex items-center gap-2">
         {aposta.houseName && (
-          <span className="text-[10.5px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 whitespace-nowrap shrink-0">
+          <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 whitespace-nowrap shrink-0">
             {aposta.houseName}
           </span>
         )}
         <div className="min-w-0">
-          <p className="font-medium text-[13.5px] truncate">{aposta.game}</p>
-          <p className="text-[11.5px] opacity-55 truncate">{aposta.market}</p>
+          <p className="font-medium text-sm truncate">{aposta.game}</p>
+          <p className="text-xs opacity-55 truncate">{aposta.market}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <span className="text-right w-12 text-[13px] tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
-        <span className="text-right w-20 text-[13px] tabular-nums opacity-80 shrink-0">{formatCurrency(Number(aposta.stake))}</span>
-        <ReturnValue aposta={aposta} className="text-[13px] w-24 text-right shrink-0" />
+        <span className="text-right w-12 text-sm tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
+        <span className="text-right w-20 text-sm tabular-nums opacity-80 shrink-0">{formatCurrency(Number(aposta.stake))}</span>
+        <ReturnValue aposta={aposta} className="text-sm w-24 text-right shrink-0" />
       </div>
 
       <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
@@ -175,46 +178,49 @@ function BetRowDesktop({
   );
 }
 
-const stripColors: Record<Status, { bg: string; text: string; strike?: boolean }> = {
-  ganha: { bg: "bg-green-500", text: "text-zinc-950" },
-  meiaGanha: { bg: "bg-green-500/20", text: "text-green-300" },
-  perdida: { bg: "bg-red-500/20", text: "text-red-300" },
-  meiaPerdida: { bg: "bg-red-500/20", text: "text-red-300" },
-  pendente: { bg: "bg-accent-800", text: "text-accent-100" },
-  cancelada: { bg: "bg-neutral-500/20", text: "text-neutral-400", strike: true },
-  cashout: { bg: "bg-accent-700", text: "text-accent-100" },
+const stripColors: Record<Status, string> = {
+  ganha: "bg-green-500",
+  meiaGanha: "bg-green-500/40",
+  perdida: "bg-red-500/60",
+  meiaPerdida: "bg-red-500/30",
+  pendente: "bg-accent-700",
+  cancelada: "bg-neutral-500/40",
+  cashout: "bg-accent-500",
 };
 
+// Só a cor: o nome do status aparecia em vertical na lateral e disputava a
+// atenção com o evento e o retorno, que são o que se lê no card. O detalhe
+// abre o status por escrito.
 function StatusStrip({ status }: { status: Status }) {
-  const s = stripColors[status];
-  return (
-    <div className={cn("absolute inset-y-0 right-0 w-[26px] rounded-r-lg flex items-center justify-center", s.bg)}>
-      <span
-        className={cn("text-[11px] font-medium whitespace-nowrap", s.text, s.strike && "line-through")}
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-      >
-        {statusLabel[status]}
-      </span>
-    </div>
-  );
+  return <div className={cn("absolute inset-y-0 right-0 w-[6px] rounded-r-lg", stripColors[status])} />;
 }
 
-const betChipClass = "text-[11px] px-2 py-0.5 rounded-md border border-white/10 bg-foreground/[0.06] text-zinc-400 shrink-0";
+// Horário com contraste próprio para facilitar a leitura durante a rolagem.
+const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-white/15 bg-white/10 px-2.5 text-xs font-semibold tabular-nums text-white shrink-0";
+const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
+const houseChipClass = "inline-flex items-center min-w-0 h-6 text-xs leading-none px-2.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100";
 
 function BetCardMobile({
   aposta,
   onOpen,
   selection,
+  index = 0,
 }: {
   aposta: BetItem;
   onOpen: () => void;
   selection: Selection;
+  index?: number;
 }) {
   const status = mapResultToStatus(aposta);
   const time = new Date(aposta.betTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   const isSelected = selection.isSelected(aposta.id);
 
-  const longPress = useLongPress(() => selection.enter(aposta.id));
+  // Toque longo entra no modo de seleção já com esta aposta marcada — é o
+  // único caminho desde que o ícone saiu do header.
+  const longPress = useLongPress(() => {
+    tapHaptic();
+    selection.enter(aposta.id);
+  });
 
   const handleClick = () => {
     if (selection.selectionMode) selection.toggle(aposta.id);
@@ -224,10 +230,19 @@ function BetCardMobile({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg p-3 pr-9 flex flex-col gap-2 active:opacity-90 transition-shadow",
+        "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-4 flex flex-col gap-2",
         isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
       )}
-      style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)" }}
+      style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
+      role={selection.selectionMode ? "group" : "button"}
+      tabIndex={selection.selectionMode ? -1 : 0}
+      aria-label={`${aposta.game}, ${statusLabel[status]}`}
+      onKeyDown={(event) => {
+        if (!selection.selectionMode && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
       onClick={handleClick}
       {...longPress}
     >
@@ -237,16 +252,18 @@ function BetCardMobile({
             <Checkbox checked={isSelected} onCheckedChange={() => selection.toggle(aposta.id)} aria-label="Selecionar aposta" />
           </span>
         )}
-        <span className={betChipClass}>{time}</span>
-        <span className={betChipClass}>{Number(aposta.odd).toFixed(2)}</span>
-        {aposta.houseName && <span className={cn(betChipClass, "truncate")}>{aposta.houseName}</span>}
+        <span className={timeChipClass}>
+          <Clock size={12} weight="bold" /> {time}
+        </span>
+        <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)}</span>
+        {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}
       </div>
 
-      <p className="text-[15px] font-medium text-white truncate">{aposta.game}</p>
+      <p className="text-base font-medium text-white truncate">{aposta.game}</p>
 
       <div className="flex items-end justify-between gap-2">
-        <p className="text-[13px] text-zinc-500 truncate min-w-0">{aposta.market}</p>
-        <ReturnValue aposta={aposta} className="text-[13.5px] shrink-0" />
+        <p className="text-sm text-zinc-400 truncate min-w-0">{aposta.market}</p>
+        <ReturnValue aposta={aposta} className="text-sm shrink-0" />
       </div>
 
       <StatusStrip status={status} />
@@ -257,7 +274,7 @@ function BetCardMobile({
 export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection }: ApostasGroupedProps) {
   const isMobile = useIsMobile();
   const groups = useMemo(() => groupBets(apostas), [apostas]);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(groups[0] ? [groups[0].key] : []));
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [detailAposta, setDetailAposta] = useState<BetItem | null>(null);
 
   const orderedIds = useMemo(
@@ -265,27 +282,33 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     [groups]
   );
 
+  const isMonthOpen = (key: string) => expanded[key] ?? key === groups[0]?.key;
   const toggleMonth = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpanded((prev) => ({ ...prev, [key]: !(prev[key] ?? key === groups[0]?.key) }));
   };
 
-  if (isLoading) {
+  // So mostra esqueleto quando NAO ha nada na tela ainda. Em recarga (editar,
+  // liquidar, mudar status) trocar a lista inteira por um esqueleto de poucas
+  // linhas desabava a altura da pagina, o browser prendia o scroll no novo
+  // maximo (~0) e a tela voltava pro topo. Mantendo a lista montada durante o
+  // refetch, a posicao do scroll fica onde estava — o spinner do header ja
+  // sinaliza o carregamento.
+  if (isLoading && apostas.length === 0 && isMobile) {
+    return <ApostasMobileSkeleton />;
+  }
+
+  if (isLoading && apostas.length === 0) {
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
         {[38, 88, 72, 80, 56].map((w, i) => (
-          <div key={i} className="h-[10px] rounded" style={{ width: `${w}%`, background: "color-mix(in srgb, var(--color-text) 8%, transparent)" }} />
+          <div key={i} className="skeleton h-[10px] rounded" style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }} />
         ))}
       </div>
     );
   }
 
   if (apostas.length === 0) {
-    return <p className="text-center py-10 text-[12.5px] opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+    return <p className="text-center py-10 text-sm opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
   }
 
   const detailSheet = (
@@ -302,88 +325,50 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
   if (isMobile) {
     return (
       <>
-        <div className="flex flex-col">
+        <div className="space-y-5">
           {groups.map((month) => {
-            const isOpen = expanded.has(month.key);
-            const monthIds = month.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)));
-            const monthCheckState = groupCheckState(monthIds, selection.selected);
+            const monthIds = month.weeks.flatMap((week) => week.days.flatMap((day) => day.bets.map((bet) => bet.id)));
+            const isOpen = isMonthOpen(month.key);
             return (
-              <Fragment key={month.key}>
-                <div className="rounded-xl border border-border bg-card h-[52px] flex items-center gap-2 px-3.5 mt-3 first:mt-0 min-w-0">
+              <section key={month.key} className="space-y-3">
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
                   {selection.selectionMode && (
-                    <Checkbox
-                      checked={monthCheckState}
+                    <Checkbox checked={groupCheckState(monthIds, selection.selected)}
                       onCheckedChange={() => selection.toggleMany(monthIds)}
-                      aria-label={`Selecionar todas as apostas de ${month.label}`}
-                      className="shrink-0"
-                    />
+                      aria-label={`Selecionar todas as apostas de ${month.label}`} />
                   )}
-                  <button
-                    type="button"
-                    onClick={() => toggleMonth(month.key)}
-                    className="flex items-center gap-2 min-w-0 flex-1 text-left"
-                  >
-                    {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
-                    <span className="font-semibold text-[14px] truncate">{month.label}</span>
+                  <button type="button" aria-expanded={isOpen} onClick={() => toggleMonth(month.key)}
+                    className="min-h-12 flex flex-1 items-center gap-2 min-w-0 text-left">
+                    {isOpen ? <CaretDown size={16} /> : <CaretRight size={16} />}
+                    <span className="font-semibold text-lg truncate">{month.label}</span>
+                    <span className="text-xs font-normal text-zinc-400 shrink-0">{month.count}</span>
                   </button>
-                  <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
-                    {formatSignedCurrency(month.total)}
-                  </span>
+                  <span className={cn("text-sm tabular-nums shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(month.total)}</span>
                 </div>
-
-                {isOpen &&
-                  month.weeks.map((week) => {
-                    const weekIds = week.days.flatMap((d) => d.bets.map((b) => b.id));
-                    const weekCheckState = groupCheckState(weekIds, selection.selected);
-                    return (
-                      <Fragment key={week.key}>
-                        <div className="flex items-center gap-2 mt-4 mb-2 min-w-0">
-                          {selection.selectionMode && (
-                            <Checkbox
-                              checked={weekCheckState}
-                              onCheckedChange={() => selection.toggleMany(weekIds)}
-                              aria-label={`Selecionar todas as apostas da ${week.label}`}
-                              className="shrink-0"
-                            />
-                          )}
-                          <span className="text-[11px] uppercase tracking-wider text-zinc-500 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-[13px] shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
-                            {formatSignedCurrency(week.total)}
-                          </span>
-                        </div>
-
-                        {week.days.map((day, i) => {
-                          const dayIds = day.bets.map((b) => b.id);
-                          const dayCheckState = groupCheckState(dayIds, selection.selected);
-                          const dayTotal = day.bets.reduce((sum, b) => sum + settledProfit(b), 0);
-                          return (
-                            <div key={day.key} className={cn("rounded-lg border border-border bg-card p-3 min-w-0", i > 0 && "mt-3")}>
-                              <div className="flex items-center gap-2 pb-2 min-w-0">
-                                {selection.selectionMode && (
-                                  <Checkbox
-                                    checked={dayCheckState}
-                                    onCheckedChange={() => selection.toggleMany(dayIds)}
-                                    aria-label={`Selecionar todas as apostas de ${day.label}`}
-                                    className="shrink-0"
-                                  />
-                                )}
-                                <span className="text-[13px] font-semibold truncate">{day.label}</span>
-                                <span className={cn("ml-auto tabular-nums text-[13px] font-medium shrink-0", dayTotal >= 0 ? "text-positive" : "text-negative")}>
-                                  {formatSignedCurrency(dayTotal)}
-                                </span>
-                              </div>
-                              <div className="space-y-2">
-                                {day.bets.map((bet) => (
-                                  <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </Fragment>
-                    );
-                  })}
-              </Fragment>
+                {isOpen && month.weeks.flatMap((week) => week.days).map((day) => {
+            const dayIds = day.bets.map((bet) => bet.id);
+            const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);
+            return (
+              <section key={day.key} aria-label={day.label} className="ml-2 border-l border-white/[0.06] pl-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 min-h-8 py-1">
+                  {selection.selectionMode && (
+                    <Checkbox checked={groupCheckState(dayIds, selection.selected)}
+                      onCheckedChange={() => selection.toggleMany(dayIds)}
+                      aria-label={`Selecionar todas as apostas de ${day.label}`} />
+                  )}
+                  <h2 className="text-base font-medium text-zinc-300">{format(new Date(day.bets[0].betTime), "dd MMM yyyy", { locale: ptBR })}</h2>
+                  <span className="text-[11px] text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
+                  <span className={cn("ml-auto text-xs tabular-nums shrink-0", total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(total)}</span>
+                </div>
+                <div className="space-y-2">
+                  {day.bets.map((bet) => (
+                    <BetCardMobile key={bet.id} aposta={bet} onOpen={() => setDetailAposta(bet)} selection={selection} />
+                  ))}
+                </div>
+              </section>
+            );
+                })}
+              </section>
             );
           })}
         </div>
@@ -396,7 +381,7 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     <>
       <div className="space-y-3 min-w-0">
         {groups.map((month) => {
-          const isOpen = expanded.has(month.key);
+          const isOpen = isMonthOpen(month.key);
           const monthIds = month.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)));
           const monthCheckState = groupCheckState(monthIds, selection.selected);
           return (
@@ -416,10 +401,10 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                   className="flex items-center gap-2 min-w-0 flex-1 text-left"
                 >
                   {isOpen ? <CaretDown size={14} className="opacity-50 shrink-0" /> : <CaretRight size={14} className="opacity-50 shrink-0" />}
-                  <span className="font-semibold text-[14px] truncate">{month.label}</span>
-                  <span className="text-[11px] px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
+                  <span className="font-semibold text-sm truncate">{month.label}</span>
+                  <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 shrink-0">{month.count} apostas</span>
                 </button>
-                <span className={cn("tabular-nums text-[13.5px] font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
+                <span className={cn("tabular-nums text-sm font-medium shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>
                   {formatSignedCurrency(month.total)}
                 </span>
               </div>
@@ -427,24 +412,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
               {isOpen && (
                 <div className="px-[14px] pb-3 space-y-4 min-w-0">
                   {month.weeks.map((week) => {
-                    const weekIds = week.days.flatMap((d) => d.bets.map((b) => b.id));
-                    const weekCheckState = groupCheckState(weekIds, selection.selected);
                     return (
                       <div key={week.key} className="min-w-0">
-                        <div className="flex items-center gap-2 py-1.5 min-w-0">
-                          {selection.selectionMode && (
-                            <Checkbox
-                              checked={weekCheckState}
-                              onCheckedChange={() => selection.toggleMany(weekIds)}
-                              aria-label={`Selecionar todas as apostas da ${week.label}`}
-                              className="shrink-0"
-                            />
-                          )}
-                          <span className="text-[11px] uppercase tracking-wider opacity-45 shrink-0">{week.label}</span>
-                          <span className={cn("ml-auto tabular-nums text-[12px] shrink-0", week.total >= 0 ? "text-positive" : "text-negative")}>
-                            {formatSignedCurrency(week.total)}
-                          </span>
-                        </div>
                         {week.days.map((day) => {
                           const dayIds = day.bets.map((b) => b.id);
                           const dayCheckState = groupCheckState(dayIds, selection.selected);
@@ -459,8 +428,8 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
                                     className="shrink-0"
                                   />
                                 )}
-                                <span className="text-[13px] font-semibold truncate">{day.label}</span>
-                                <span className="text-[10.5px] px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
+                                <span className="text-sm font-semibold truncate">{day.label}</span>
+                                <span className="text-xs px-[7px] py-[1px] rounded-[5px] bg-foreground/[0.06] opacity-60 shrink-0">
                                   {day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}
                                 </span>
                               </div>

@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
 
-const SelectGroup = SelectPrimitive.Group
 
 const SelectValue = SelectPrimitive.Value
 
@@ -17,7 +16,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex min-h-[32px] sm:min-h-[36px] w-full items-center justify-between rounded-md border border-input bg-card px-[10px] py-[6px] text-[13px] sm:text-sm text-foreground hover:border-foreground/45 placeholder:text-muted-foreground focus:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-45 [&>span]:line-clamp-1",
+      "flex min-h-[32px] sm:min-h-[36px] w-full items-center justify-between rounded-md border border-input bg-card px-[10px] py-[6px] text-sm sm:text-sm text-foreground hover:border-foreground/45 placeholder:text-muted-foreground focus:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-45 [&>span]:line-clamp-1",
       className
     )}
     {...props}
@@ -97,17 +96,6 @@ const SelectContent = React.forwardRef<
 ))
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
-const SelectLabel = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Label>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
->(({ className, ...props }, ref) => (
-  <SelectPrimitive.Label
-    ref={ref}
-    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", className)}
-    {...props}
-  />
-))
-SelectLabel.displayName = SelectPrimitive.Label.displayName
 
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
@@ -132,27 +120,11 @@ const SelectItem = React.forwardRef<
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
-const SelectSeparator = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <SelectPrimitive.Separator
-    ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-muted", className)}
-    {...props}
-  />
-))
-SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
 export {
   Select,
-  SelectGroup,
   SelectValue,
   SelectTrigger,
   SelectContent,
-  SelectLabel,
   SelectItem,
-  SelectSeparator,
-  SelectScrollUpButton,
-  SelectScrollDownButton,
 }

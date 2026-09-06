@@ -1,5 +1,7 @@
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { format, startOfMonth } from "date-fns";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasList } from "@/components/apostas/ApostasList";
@@ -14,7 +16,6 @@ import { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
 import { cn } from "@/lib/utils";
 import type { ApostasFilterState, PeriodPreset } from "@/types/apostas-filters";
 import {
-  getBets as fetchBets,
   type BetItem,
   ResultIdEnum,
   deleteMultipleBets,
@@ -24,23 +25,19 @@ import {
   createBet,
   type PaginatedBetsResponseDto,
 } from "@/api/routes/get-bets";
-import { getAllHouses } from "@/api/routes/get-houses";
+import { useHouses } from "@/hooks/queries/use-houses";
+import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
+import { betsQueryKey, useBetsQuery, PER_PAGE } from "@/hooks/apostas/use-bets-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal, CheckSquare, X, ArrowClockwise } from "@phosphor-icons/react";
+import { BottomSheet } from "@/components/apostas/BottomSheet";
+import { CaretLeft, CaretRight, Plus, Trash, CaretDown, Stack, Table, SlidersHorizontal } from "@phosphor-icons/react";
+import { tapHaptic } from "@/lib/haptics";
 import { actionToast, Check, CheckCircle, ArrowCounterClockwise, Trash as TrashIcon, Copy } from "@/lib/action-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 
 const statusLabelFor: Record<number, string> = {
   [ResultIdEnum.WON]: "Ganha",
@@ -55,6 +52,9 @@ const statusWordClassFor: Record<number, string> = {
   [ResultIdEnum.LOST]: "text-[#F87171]",
 };
 
+// Referencia estavel pro useMemo de `apostas` enquanto a query nao respondeu.
+const EMPTY_PAGES: PaginatedBetsResponseDto[] = [];
+
 const mobileStatusPills: { label: string; value: string[] }[] = [
   { label: "Todas", value: [] },
   { label: "Ganhas", value: [String(ResultIdEnum.WON)] },
@@ -64,10 +64,10 @@ const mobileStatusPills: { label: string; value: string[] }[] = [
 
 export default function ApostasPage() {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [apostas, setApostas] = useState<BetItem[]>([]);
-  const [houses, setHouses] = useState<{ id: number; name: string }[]>([]);
+  const queryClient = useQueryClient();
+  const houses = useHouses();
+  const invalidate = useInvalidateBetData();
   const [editAposta, setEditAposta] = useState<BetItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -84,24 +84,67 @@ export default function ApostasPage() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"agrupado" | "tabela">("agrupado");
-  const [startDate, setStartDate] = useState(() => format(startOfMonth(new Date()), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("mes");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(30);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "mes");
+  const [pageStart, setPageStart] = useState(1);
+  const perPage = PER_PAGE;
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const selection = useBulkSelection();
 
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
-
+  // Só o texto da busca é debounced — os outros filtros (chip, sheet, período)
+  // são um toque só e podem bater na hora. Como o valor inicial já entra na
+  // chave, montar a tela não espera 250 ms pra começar a buscar.
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
   useEffect(() => {
-    getAllHouses().then((data) => setHouses(data.map((h) => ({ id: h.id, name: h.name })))).catch(() => undefined);
-  }, []);
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 250);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const filters = {
+    statusFilter,
+    houseIds,
+    startDate,
+    endDate,
+    searchTerm: debouncedSearch,
+    viewMode,
+    pageStart,
+  };
+  const betsQuery = useBetsQuery(filters);
+  const queryKey = betsQueryKey(filters);
+
+  const pages = betsQuery.data?.pages ?? EMPTY_PAGES;
+  const apostas = useMemo(() => pages.flatMap((p) => p.data ?? []), [pages]);
+  const total = pages[0]?.total ?? 0;
+  const totalPages = pages[0]?.totalPages ?? 1;
+  const page = pageStart + Math.max(0, pages.length - 1);
+  // `mutating` cobre a janela do próprio request de excluir/liquidar, antes do
+  // refetch começar — é o que mantém os botões desabilitados o tempo todo.
+  const [mutating, setMutating] = useState(false);
+  // isPending, não isFetching: com a lista já em cache a tela aparece pronta e
+  // a revalidação roda por baixo. Usar isFetching aqui traria o skeleton de
+  // volta a cada volta pra tela — exatamente o que o cache veio evitar.
+  const loading = betsQuery.isPending || mutating;
+  const refreshing = betsQuery.isFetching || mutating;
+
+  // Antes o fetch limpava a seleção; agora a query é declarativa, então limpa
+  // quando o conjunto exibido muda — trocar filtro com apostas marcadas
+  // deixaria marcada uma aposta que nem está mais na lista.
+  useEffect(() => {
+    selection.clear();
+    setSelectedBets([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, houseIds, startDate, endDate, debouncedSearch, viewMode]);
+
+  // Optimistic update da lista sem sair do cache do react-query.
+  const patchCachedBets = (fn: (b: BetItem) => BetItem) => {
+    queryClient.setQueryData<InfiniteData<PaginatedBetsResponseDto>>(queryKey, (old) =>
+      old ? { ...old, pages: old.pages.map((p) => ({ ...p, data: (p.data ?? []).map(fn) })) } : old
+    );
+  };
 
   useEffect(() => {
     if (!selection.selectionMode) return;
@@ -113,67 +156,39 @@ export default function ApostasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection.selectionMode, selection.clear]);
 
-  const fetchFilteredBets = async (pageArg: number, append: boolean) => {
-    selection.clear();
-    setLoading(true);
-    try {
-      const baseParams: any = {};
-      if (statusFilter.length > 0) baseParams.resultIds = statusFilter.map(Number);
-      if (houseIds.length > 0) baseParams.houseIds = houseIds;
-      if (startDate) baseParams.startDate = startDate;
-      if (endDate) baseParams.endDate = endDate;
-      if (searchTerm) baseParams.q = searchTerm;
-
-      if (viewMode === "agrupado") {
-        // Os totais de mês/semana/dia do Agrupado somam o array `apostas`
-        // inteiro — com paginação normal (30 por página) eles ficavam errados,
-        // batendo só com o que já tinha carregado na tela. Busca tudo que bate
-        // com o filtro (todas as páginas, em paralelo) em vez de paginar aqui.
-        const first = await fetchBets({ ...baseParams, page: 1, perPage: 1000 });
-        let data = Array.isArray(first?.data) ? first.data : [];
-        const pagesTotal = first?.totalPages ?? 1;
-        if (pagesTotal > 1) {
-          const rest = await Promise.all(
-            Array.from({ length: pagesTotal - 1 }, (_, i) => fetchBets({ ...baseParams, page: i + 2, perPage: 1000 }))
-          );
-          for (const r of rest) data = data.concat(Array.isArray(r?.data) ? r.data : []);
-        }
-        setApostas(data);
-        setTotalPages(1);
-        setTotal(first?.total ?? data.length);
-        setPage(1);
-      } else {
-        const response: PaginatedBetsResponseDto = await fetchBets({ ...baseParams, page: pageArg, perPage });
-        const data = Array.isArray(response?.data) ? response.data : [];
-        setApostas((prev) => (append ? [...prev, ...data] : data));
-        setTotalPages(response?.totalPages || 1);
-        setTotal(response?.total || 0);
-        setPage(pageArg);
-      }
-    } finally {
-      setLoading(false);
+  // O input só existe depois que a busca abre, então o `focus()` precisa vir
+  // no MESMO gesto do toque — daí o flushSync, que monta a barra antes do
+  // handler terminar. Focar num efeito/timeout depois já está fora do gesto e
+  // o iOS ignora, abrindo o campo sem o teclado.
+  const toggleMobileSearch = () => {
+    if (mobileSearchExpanded) {
+      setMobileSearchExpanded(false);
+      return;
     }
+    flushSync(() => setMobileSearchExpanded(true));
+    searchInputRef.current?.focus();
   };
 
-  useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => fetchFilteredBets(1, false), 250);
-    return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, statusFilter, houseIds, startDate, endDate, viewMode]);
-
-  const reload = () => fetchFilteredBets(1, false);
-  const handleLoadMore = () => fetchFilteredBets(page + 1, true);
+  // Toda mutação passa por aqui: invalida bets/houses/dashboard (as outras
+  // telas leem do cache agora). A lista desta tela está montada, então o
+  // próprio invalidate já a refaz.
+  const reload = () => invalidate();
+  // Puxar do topo substitui o botao de recarregar que saiu do header mobile.
+  const pull = usePullToRefresh(reload, isMobile);
+  const handleLoadMore = () => void betsQuery.fetchNextPage();
 
   const changeViewMode = (mode: "agrupado" | "tabela") => {
     selection.clear();
     setViewMode(mode);
+    // Agrupado não pagina; voltar pra ele vindo da página 3 da Tabela deixaria
+    // o rodapé contando "61–90 de N" sem nada pra paginar.
+    setPageStart(1);
   };
 
   const handleDeleteSelected = async () => {
     if (selectedBets.length === 0) return;
     setConfirmDeleteOpen(false);
-    setLoading(true);
+    setMutating(true);
     try {
       await deleteMultipleBets(selectedBets);
       setSelectedBets([]);
@@ -182,7 +197,7 @@ export default function ApostasPage() {
     } catch (e: any) {
       actionToast.error({ description: e.message || "Falha ao excluir apostas" });
     } finally {
-      setLoading(false);
+      setMutating(false);
     }
   };
 
@@ -197,7 +212,7 @@ export default function ApostasPage() {
 
   const handleBulkStatusChange = async (resultId: number) => {
     if (selectedBets.length === 0) return;
-    setLoading(true);
+    setMutating(true);
     try {
       await finalizeMultipleBets({ betIds: selectedBets, resultId });
       await reload();
@@ -206,7 +221,7 @@ export default function ApostasPage() {
     } catch (e: any) {
       actionToast.error({ description: e.message || "Falha ao atualizar status" });
     } finally {
-      setLoading(false);
+      setMutating(false);
     }
   };
 
@@ -222,7 +237,7 @@ export default function ApostasPage() {
       .filter((a) => ids.includes(a.id))
       .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName }));
 
-    setApostas((prev) => prev.map((a) => (ids.includes(a.id) ? { ...a, resultId, resultName: statusLabelFor[resultId] ?? a.resultName } : a)));
+    patchCachedBets((a) => (ids.includes(a.id) ? { ...a, resultId, resultName: statusLabelFor[resultId] ?? a.resultName } : a));
     setBulkLoading(true);
     try {
       await finalizeMultipleBets({ betIds: ids, resultId });
@@ -251,10 +266,10 @@ export default function ApostasPage() {
       });
       await reload();
     } catch (e) {
-      setApostas((prev) => prev.map((a) => {
+      patchCachedBets((a) => {
         const orig = previous.find((p) => p.id === a.id);
         return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName } : a;
-      }));
+      });
       const description = e instanceof Error ? e.message : "Falha ao atualizar status";
       actionToast.error({ description });
     } finally {
@@ -345,13 +360,13 @@ export default function ApostasPage() {
     initialStatus: statusFilter,
     // ApostasFilter (desktop) continua single-select — ponte pro houseIds[] interno.
     initialHouseId: houseIds[0] ? String(houseIds[0]) : "0",
-    onSearch: (term: string) => { setSearchTerm(term); setPage(1); },
-    onFilterStatus: (status: string[]) => { setStatusFilter(status); setPage(1); },
-    onFilterHouse: (id: string) => { setHouseIds(id === "0" ? [] : [Number(id)]); setPage(1); },
-    onDateRangeChange: (from: string, to: string) => { setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPage(1); },
+    onSearch: (term: string) => { setSearchTerm(term); setPageStart(1); },
+    onFilterStatus: (status: string[]) => { setStatusFilter(status); setPageStart(1); },
+    onFilterHouse: (id: string) => { setHouseIds(id === "0" ? [] : [Number(id)]); setPageStart(1); },
+    onDateRangeChange: (from: string, to: string) => { setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPageStart(1); },
     onClearFilters: () => {
       setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
-      setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPage(1);
+      setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPageStart(1);
     },
     onExportCsv: handleExportCsv,
     isLoading: loading,
@@ -370,48 +385,29 @@ export default function ApostasPage() {
       title="Apostas"
       subtitle={`${total.toLocaleString("pt-BR")} registros`}
       titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
-      titleClassName="text-[26px] font-semibold tracking-tight shrink-0"
-      subtitleClassName="text-[13px] text-zinc-500 truncate"
+      titleClassName="text-2xl font-semibold tracking-tight shrink-0"
+      subtitleClassName="text-sm text-zinc-500 truncate"
       hideHeaderBorder
       hideBottomNav={selection.selectionMode}
       mobileHeader={
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
-              <CaretLeft size={20} />
-            </button>
-            <h1 className="text-[19px] font-semibold truncate">Apostas</h1>
+            <h1 className="text-2xl font-semibold tracking-tight truncate">Apostas</h1>
           </div>
-          <div className="flex items-center gap-1 -mr-2">
-            <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={() => setMobileSearchExpanded((v) => !v)} />
-            {viewMode === "agrupado" && (
-              <button
-                type="button"
-                onClick={() => (selection.selectionMode ? selection.clear() : selection.enter())}
-                aria-label={selection.selectionMode ? "Cancelar seleção" : "Selecionar apostas"}
-                className={cn("p-2 hover:text-white", selection.selectionMode ? "text-accent" : "text-zinc-400")}
-              >
-                {selection.selectionMode ? <X size={19} /> : <CheckSquare size={19} />}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => reload()}
-              disabled={loading}
-              aria-label="Recarregar apostas"
-              className="p-2 text-zinc-400 hover:text-white disabled:opacity-45"
-            >
-              <ArrowClockwise size={19} className={cn(loading && "animate-spin")} />
-            </button>
+          {/* Seleção múltipla entra por toque longo/swipe no card e o refresh
+              por pull-to-refresh — os dois ícones saíram daqui pra deixar só
+              busca e filtro visíveis. */}
+          <div className="flex items-center gap-2">
+            <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={toggleMobileSearch} />
             <button
               type="button"
               onClick={() => setMobileFilterOpen(true)}
               aria-label="Abrir filtros"
-              className="relative p-2 text-zinc-400 hover:text-white"
+              className="press relative h-11 w-11 flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 hover:text-white"
             >
               <SlidersHorizontal size={19} />
               {activeMobileFilterCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-[9px] font-medium flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
                   {activeMobileFilterCount}
                 </span>
               )}
@@ -426,7 +422,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => changeViewMode("agrupado")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 viewMode === "agrupado" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -436,7 +432,7 @@ export default function ApostasPage() {
               type="button"
               onClick={() => changeViewMode("tabela")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                 viewMode === "tabela" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -449,13 +445,16 @@ export default function ApostasPage() {
         </>
       }
     >
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
+
       <div className="md:hidden">
         <MobileSearchBar
           value={searchTerm}
-          onChange={(term) => { setSearchTerm(term); setPage(1); }}
+          onChange={(term) => { setSearchTerm(term); setPageStart(1); }}
           resultsCount={total}
           open={mobileSearchExpanded}
           onClose={() => setMobileSearchExpanded(false)}
+          inputRef={searchInputRef}
         />
       </div>
 
@@ -467,10 +466,11 @@ export default function ApostasPage() {
           return (
             <button
               key={pill.label}
+              aria-pressed={isActive}
               type="button"
-              onClick={() => { setStatusFilter(pill.value); setPage(1); }}
+              onClick={() => { setStatusFilter(pill.value); setPageStart(1); }}
               className={cn(
-                "shrink-0 h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
+                "shrink-0 h-11 px-3.5 rounded-full text-sm font-medium transition-colors",
                 isActive ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
               )}
             >
@@ -532,7 +532,7 @@ export default function ApostasPage() {
               onDuplicate={handleDuplicate}
               onFinalize={handleFinalize}
               onDelete={async (id) => {
-                setLoading(true);
+                setMutating(true);
                 try {
                   await deleteBet(id);
                   await reload();
@@ -540,7 +540,7 @@ export default function ApostasPage() {
                 } catch (e: any) {
                   actionToast.error({ description: e.message || "Falha ao excluir aposta" });
                 } finally {
-                  setLoading(false);
+                  setMutating(false);
                 }
               }}
             />
@@ -552,7 +552,7 @@ export default function ApostasPage() {
               onDuplicate={handleDuplicate}
               onFinalize={handleFinalize}
               onDelete={async (id) => {
-                setLoading(true);
+                setMutating(true);
                 try {
                   await deleteBet(id);
                   setSelectedBets((prev) => prev.filter((betId) => betId !== id));
@@ -561,7 +561,7 @@ export default function ApostasPage() {
                 } catch (e: any) {
                   actionToast.error({ description: e.message || "Falha ao excluir aposta" });
                 } finally {
-                  setLoading(false);
+                  setMutating(false);
                 }
               }}
               selectedBets={selectedBets}
@@ -573,7 +573,7 @@ export default function ApostasPage() {
           {isMobile ? (
             apostas.length > 0 && page < totalPages && (
               <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loading} className="gap-2">
+                <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={refreshing} className="gap-2">
                   <CaretDown size={14} />
                   Carregar mais ({apostas.length}/{total})
                 </Button>
@@ -581,12 +581,12 @@ export default function ApostasPage() {
             )
           ) : (
           <div className="flex items-center justify-between pt-2">
-            <p className="text-[12.5px] opacity-45">
+            <p className="text-sm opacity-45">
               {apostas.length > 0 ? `${(page - 1) * perPage + 1}–${(page - 1) * perPage + apostas.length}` : "0"} de {total}
             </p>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => page > 1 && fetchFilteredBets(page - 1, false)}
+                onClick={() => page > 1 && setPageStart(page - 1)}
                 disabled={page <= 1}
                 className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-foreground/[0.07] disabled:opacity-35"
               >
@@ -596,8 +596,8 @@ export default function ApostasPage() {
                 <span key={p} className="flex items-center">
                   {i > 0 && pageWindow[i - 1] !== p - 1 && <span className="px-1 opacity-35 text-xs">…</span>}
                   <button
-                    onClick={() => fetchFilteredBets(p, false)}
-                    className="w-8 h-8 rounded-md text-[13px]"
+                    onClick={() => setPageStart(p)}
+                    className="w-8 h-8 rounded-md text-sm"
                     style={
                       p === page
                         ? { boxShadow: "inset 0 0 0 1px var(--color-accent)", color: "var(--color-accent)" }
@@ -609,7 +609,7 @@ export default function ApostasPage() {
                 </span>
               ))}
               <button
-                onClick={() => page < totalPages && fetchFilteredBets(page + 1, false)}
+                onClick={() => page < totalPages && setPageStart(page + 1)}
                 disabled={page >= totalPages}
                 className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-foreground/[0.07] disabled:opacity-35"
               >
@@ -630,28 +630,38 @@ export default function ApostasPage() {
           />
         )}
 
-        <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir {selectedBets.length} apostas?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Você está prestes a excluir {selectedBets.length} apostas selecionadas. Essa ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteSelected}>Excluir</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Mesmo padrao do sheet da selecao multipla: confirmacao sobe de
+            baixo em vez de abrir no meio da tela. */}
+        <BottomSheet
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title={`Excluir ${selectedBets.length} apostas?`}
+          footer={
+            <div className="flex flex-col gap-2">
+              <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleDeleteSelected}>
+                Excluir {selectedBets.length} apostas
+              </Button>
+              <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmDeleteOpen(false)}>
+                Cancelar
+              </Button>
+            </div>
+          }
+        >
+          <p className="pb-4 text-sm text-zinc-400">
+            As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
+          </p>
+        </BottomSheet>
       </div>
 
       {/* FAB mobile — substitui o botão "Nova aposta" do header em telas estreitas */}
       <button
         type="button"
-        onClick={() => setCreateModalOpen(true)}
+        onClick={() => {
+          tapHaptic();
+          setCreateModalOpen(true);
+        }}
         aria-label="Nova aposta"
-        className="md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-white text-zinc-900 flex items-center justify-center"
+        className="press animate-pop-in md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-white text-zinc-900 flex items-center justify-center"
         style={{ bottom: "calc(72px + env(safe-area-inset-bottom))", boxShadow: "var(--shadow-lg)" }}
       >
         <Plus size={22} weight="bold" />
@@ -668,7 +678,7 @@ export default function ApostasPage() {
           setEndDate(next.period.to);
           setStatusFilter(next.status);
           setHouseIds(next.houseIds);
-          setPage(1);
+          setPageStart(1);
         }}
       />
 

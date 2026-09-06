@@ -43,6 +43,13 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
           </Select>
         </div>
 
+        {isEditing && (
+          <div className="col-span-2 space-y-1.5">
+            <Label htmlFor="bet-time" className="text-xs">Data e hora *</Label>
+            <Input id="bet-time" type="datetime-local" value={formData.betTime} onChange={(e) => setFormData({ ...formData, betTime: e.target.value })} />
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <Label htmlFor="esporte" className="text-xs">Esporte</Label>
           <Input id="esporte" placeholder="Ex: futebol" value={formData.sport} onChange={(e) => setFormData({ ...formData, sport: e.target.value })} />
@@ -61,12 +68,12 @@ export function ApostaForm({ onApostaAdded, initialData, isEditing = false }: Ap
 
       {potentialReturn && (
         <div
-          className="flex items-center justify-between rounded-md p-3 text-[13px]"
+          className="flex items-center justify-between rounded-md p-3 text-sm"
           style={{ background: "var(--color-bg)", boxShadow: "inset 2px 0 0 var(--color-accent)" }}
         >
           <span>
             Retorno potencial{" "}
-            <strong className="text-[20px] text-positive tabular-nums">R$ {potentialReturn.total.toFixed(2)}</strong>
+            <strong className="text-xl text-positive tabular-nums">R$ {potentialReturn.total.toFixed(2)}</strong>
           </span>
           <span className="opacity-70">Lucro se ganhar +R$ {potentialReturn.profit.toFixed(2)}</span>
         </div>

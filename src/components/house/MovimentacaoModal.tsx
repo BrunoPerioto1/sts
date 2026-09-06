@@ -49,7 +49,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
           </div>
         ) : error ? (
           <div
-            className="flex items-start gap-2 rounded-md p-3 text-[13px]"
+            className="flex items-start gap-2 rounded-md p-3 text-sm"
             style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-negative)" }}
           >
             <WarningCircle size={18} className="text-negative shrink-0 mt-0.5" />
@@ -59,14 +59,14 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
             </div>
           </div>
         ) : movimentacoes.length === 0 ? (
-          <p className="text-center py-8 text-[12.5px] opacity-55">Nenhuma movimentação registrada</p>
+          <p className="text-center py-8 text-sm opacity-55">Nenhuma movimentação registrada</p>
         ) : (
           <table className="table w-full text-sm">
             <thead>
               <tr className="text-left border-b border-border">
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Data</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal">Tipo</th>
-                <th className="py-2 text-[11px] uppercase tracking-wide opacity-60 font-normal text-right">Valor</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal">Data</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal">Tipo</th>
+                <th className="py-2 text-xs uppercase tracking-wide opacity-60 font-normal text-right">Valor</th>
               </tr>
             </thead>
             <tbody>
@@ -77,12 +77,12 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
                   const Icon = meta.icon;
                   return (
                     <tr key={mov.id} className="border-b border-border hover:bg-foreground/[0.04]">
-                      <td className="py-2 opacity-70 text-[12.5px]">
+                      <td className="py-2 opacity-70 text-sm">
                         {new Date(mov.createdAt).toLocaleDateString("pt-BR")}{" "}
                         <span className="opacity-50">{new Date(mov.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                       </td>
                       <td className="py-2">
-                        <span className="inline-flex items-center gap-1.5 text-[12.5px]">
+                        <span className="inline-flex items-center gap-1.5 text-sm">
                           <Icon size={14} className="text-accent" /> {meta.label}
                         </span>
                       </td>

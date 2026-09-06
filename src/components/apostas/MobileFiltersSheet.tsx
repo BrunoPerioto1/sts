@@ -19,7 +19,7 @@ const PERIOD_CHIPS: { value: Exclude<PeriodPreset, "custom">; label: string }[] 
   { value: "tudo", label: "Tudo" },
 ];
 
-const sectionLabel = "text-[10px] font-medium uppercase tracking-wider text-zinc-500";
+const sectionLabel = "text-xs font-medium uppercase tracking-wider text-zinc-500";
 
 interface MobileFiltersSheetProps {
   open: boolean;
@@ -78,7 +78,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
       title="Filtros"
       titleExtra={
         activeCount > 0 && (
-          <span className="h-5 min-w-[20px] px-1 rounded-full bg-accent text-white text-[11px] font-medium flex items-center justify-center">
+          <span className="h-5 min-w-[20px] px-1 rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
             {activeCount}
           </span>
         )
@@ -106,7 +106,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
                   type="button"
                   onClick={() => setDraft((d) => ({ ...d, period: { preset: chip.value, ...periodRangeFor(chip.value) } }))}
                   className={cn(
-                    "h-9 px-3.5 rounded-full text-[13px] font-medium transition-colors min-h-[44px] flex items-center",
+                    "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
                     isActive ? "bg-accent text-white" : "border border-white/10 text-zinc-400"
                   )}
                 >
@@ -135,7 +135,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
             className="flex w-full items-center gap-2.5 min-h-[44px] rounded-md border border-input bg-card px-[10px] py-[8px] text-left"
           >
             <CalendarBlank className="h-4 w-4 text-zinc-500 shrink-0" />
-            <span className="flex-1 text-[13px] text-white truncate">{periodLabel}</span>
+            <span className="flex-1 text-sm text-white truncate">{periodLabel}</span>
             <CaretRight className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
           </button>
         </section>

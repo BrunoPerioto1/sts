@@ -4,6 +4,7 @@ import { CalendarSlash } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
+import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MainMetrics } from "@/components/dashboard/MainMetrics";
 import { Segmented } from "@/components/ui/segmented";
@@ -19,6 +20,8 @@ import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 interface DashboardPageContentProps {
   hasNoBets: boolean;
   ready: boolean;
+  error: boolean;
+  onRetry: () => void;
   metrics: DashboardMetrics;
   previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
@@ -30,14 +33,26 @@ interface DashboardPageContentProps {
 function DashboardPageContent({
   hasNoBets,
   ready,
+  error,
+  onRetry,
   metrics,
   previousMetrics,
   dailyData,
   mobileView,
 }: DashboardPageContentProps) {
+  if (error) {
+    return <div role="alert" className="py-12 text-center space-y-4">
+      <p>Não foi possível carregar o dashboard.</p>
+      <Button onClick={onRetry}>Tentar novamente</Button>
+    </div>;
+  }
   if (!ready) {
-    return (
-      <div className="py-24">
+    // `mobileView` so vem preenchido em tela estreita — e o sinal de que o
+    // esqueleto certo e o do layout mobile, e nao o spinner generico.
+    return mobileView ? (
+      <DashboardMobileSkeleton />
+    ) : (
+      <div className="py-24 animate-fade-in">
         <Spinner label="Carregando dashboard…" />
       </div>
     );
@@ -45,10 +60,10 @@ function DashboardPageContent({
 
   if (ready && hasNoBets) {
     return (
-      <div className="flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
+      <div className="animate-rise flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
         <CalendarSlash size={30} className="opacity-35 mb-3" />
         <h3 className="text-base font-medium mb-1">Nenhuma aposta registrada ainda</h3>
-        <p className="text-[12.5px] opacity-60 max-w-sm mb-4">
+        <p className="text-sm opacity-60 max-w-sm mb-4">
           Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas.
         </p>
         <Button asChild>
@@ -72,7 +87,7 @@ function DashboardPageContent({
 export function DashboardPage() {
   const isMobile = useIsMobile();
   const { filters, preset, setPreset, setCustomRange, firstBetDate, hasNoBets, ready } = useDashboardFilters();
-  const { metrics, previousMetrics, dailyData } = useDashboardData(filters);
+  const { metrics, previousMetrics, dailyData, loading, error, reload } = useDashboardData(filters);
 
   const rangeLabel =
     ready && filters.startDate && filters.endDate
@@ -107,13 +122,16 @@ export function DashboardPage() {
       title="Dashboard"
       subtitle={rangeLabel}
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
-      // ("Resultado" + chip de período), então não há header.
-      mobileFullBleed={isMobile}
+      // ("Resultado" + chip de período), então não há header. Quem aplica isso
+      // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
+      mobileFullBleed
       actions={desktopHeaderControls}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
-        ready={ready}
+        ready={ready && !loading}
+        error={error}
+        onRetry={reload}
         metrics={metrics}
         previousMetrics={previousMetrics}
         dailyData={dailyData}

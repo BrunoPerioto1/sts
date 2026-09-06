@@ -8,7 +8,7 @@ import { formatCurrency } from "@/lib/format";
 import { useApostaForm } from "@/hooks/apostas/useApostaForm";
 import { type BetItem } from "@/api/routes/get-bets";
 
-const fieldLabel = "text-[10px] font-medium uppercase tracking-wider text-zinc-500";
+const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-400";
 
 interface MobileApostaFormSheetProps {
   open: boolean;
@@ -44,19 +44,21 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
     >
       <form id="mobile-aposta-form" onSubmit={handleSubmit} className="flex flex-col gap-4 pb-4">
         <div className="space-y-1.5">
-          <span className={fieldLabel}>Evento *</span>
+          <label htmlFor="bet-game" className={fieldLabel}>Evento *</label>
           <Input
             placeholder="Ex: Palmeiras x Flamengo"
-            value={formData.game}
+            id="bet-game"
+              value={formData.game}
             onChange={(e) => setFormData({ ...formData, game: e.target.value })}
           />
         </div>
 
         <div className="space-y-1.5">
-          <span className={fieldLabel}>Mercado *</span>
+          <label htmlFor="bet-market" className={fieldLabel}>Mercado *</label>
           <Input
             placeholder="Ex: Mais de 2.5 gols"
-            value={formData.market}
+            id="bet-market"
+              value={formData.market}
             onChange={(e) => setFormData({ ...formData, market: e.target.value })}
           />
         </div>
@@ -67,38 +69,48 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
             <SheetSelectField
               summary={formData.houseId ? (houses.find((h) => h.id === formData.houseId)?.name ?? "Selecionar") : "Selecionar"}
               onOpen={() => setCasaOpen(true)}
-              className="min-h-[32px] sm:min-h-[36px]"
+              className="min-h-[44px] sm:min-h-[36px]"
             />
           </div>
           <div className="space-y-1.5">
-            <span className={fieldLabel}>Odd *</span>
+            <label htmlFor="bet-odd" className={fieldLabel}>Odd *</label>
             <Input
               type="number"
               step="0.01"
               inputMode="decimal"
               placeholder="Ex: 1,92"
+              id="bet-odd"
               value={formData.odd}
               onChange={(e) => setFormData({ ...formData, odd: e.target.value })}
             />
           </div>
         </div>
 
+        {isEditing && (
+          <div className="space-y-1.5">
+            <label htmlFor="bet-betTime" className={fieldLabel}>Data e hora *</label>
+            <Input id="bet-betTime" type="datetime-local" value={formData.betTime} onChange={(e) => setFormData({ ...formData, betTime: e.target.value })} />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <span className={fieldLabel}>Esporte</span>
+            <label htmlFor="bet-sport" className={fieldLabel}>Esporte</label>
             <Input
               placeholder="Ex: Futebol"
+              id="bet-sport"
               value={formData.sport}
               onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
             />
           </div>
           <div className="space-y-1.5">
-            <span className={fieldLabel}>Stake (R$) *</span>
+            <label htmlFor="bet-stake" className={fieldLabel}>Stake (R$) *</label>
             <Input
               type="number"
               step="0.01"
               inputMode="decimal"
               placeholder="Ex: 100,00"
+              id="bet-stake"
               value={formData.stake}
               onChange={(e) => setFormData({ ...formData, stake: e.target.value })}
             />
@@ -112,11 +124,11 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           >
             <div>
               <p className={fieldLabel}>Retorno potencial</p>
-              <p className="text-[20px] font-semibold tabular-nums text-white">{formatCurrency(potentialReturn.total)}</p>
+              <p className="text-xl font-semibold tabular-nums text-white">{formatCurrency(potentialReturn.total)}</p>
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-[20px] font-semibold tabular-nums text-positive">+{formatCurrency(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-positive">+{formatCurrency(potentialReturn.profit)}</p>
             </div>
           </div>
         )}

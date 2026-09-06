@@ -23,7 +23,7 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-3",
         caption: "flex justify-center items-center relative pb-3 mb-1 border-b border-border",
-        caption_label: "text-[13px] font-medium capitalize",
+        caption_label: "text-sm font-medium capitalize",
         nav: "flex items-center gap-1",
         nav_button:
           "h-6 w-6 flex items-center justify-center rounded-md opacity-55 hover:opacity-100 hover:bg-foreground/[0.08] transition-colors",
@@ -32,15 +32,19 @@ function Calendar({
         table: "w-full border-collapse",
         head_row: "flex",
         head_cell:
-          "text-muted-foreground w-9 font-normal text-[0.7rem] uppercase tracking-wide opacity-45 pb-1",
+          "text-muted-foreground w-9 font-normal text-xs uppercase tracking-wide opacity-45 pb-1",
         row: "flex w-full",
         cell: "h-9 w-9 text-center text-sm p-0 relative",
-        day: "h-9 w-9 p-0 text-[13px] font-normal text-foreground/85 rounded-md hover:bg-foreground/[0.08] transition-colors aria-selected:opacity-100",
+        day: "h-9 w-9 p-0 text-sm font-normal text-foreground/85 rounded-md hover:bg-foreground/[0.08] transition-colors aria-selected:opacity-100",
         day_range_start: "day-range-start !rounded-r-none",
         day_range_end: "day-range-end !rounded-l-none",
         day_selected:
           "bg-accent/[0.22] text-accent font-medium hover:bg-accent/[0.28] hover:text-accent focus:bg-accent/[0.28] focus:text-accent",
-        day_today: "text-accent font-semibold",
+        // "Hoje" NAO usa accent: o azul e a linguagem da selecao/intervalo, e
+        // marcar o dia atual com a mesma cor confundia o que da pra escolher.
+        // Fica so um ponto discreto sob o numero.
+        day_today:
+          "relative font-semibold after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-[3px] after:w-[3px] after:rounded-full after:bg-foreground after:opacity-40 aria-selected:after:hidden",
         day_outside: "day-outside text-muted-foreground opacity-30 aria-selected:opacity-40",
         day_disabled: "text-muted-foreground opacity-30",
         day_range_middle:

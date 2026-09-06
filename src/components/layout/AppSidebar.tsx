@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
@@ -9,7 +8,7 @@ import {
   UserCircle,
   SignOut,
 } from "@phosphor-icons/react";
-import { getMe } from "@/api/routes/get-me";
+import { useMe } from "@/hooks/queries/use-me";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
@@ -34,13 +33,7 @@ function initialsOf(name: string) {
 export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavigate }: AppSidebarProps) {
   const location = useLocation();
   const isInDrawer = !!onNavigate;
-  const [user, setUser] = useState<{ username: string; email: string } | null>(null);
-
-  useEffect(() => {
-    getMe()
-      .then((me) => setUser({ username: me.username, email: me.email }))
-      .catch(() => setUser(null));
-  }, []);
+  const { me: user } = useMe();
 
   return (
     <div
@@ -50,7 +43,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         position: isInDrawer ? "relative" : "fixed",
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
-        height: "100vh",
+        height: "100dvh",
         padding: "18px 12px",
         zIndex: isInDrawer ? "auto" : 50,
       }}
@@ -100,7 +93,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-2 rounded-lg py-2 text-[13px] transition-colors",
+                "flex items-center gap-2 rounded-lg py-2 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-[10px]"
               )}
               style={{
@@ -139,13 +132,13 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
             collapsed ? "justify-center px-0" : "px-1"
           )}
         >
-          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-[11px] font-medium shrink-0">
+          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-xs font-medium shrink-0">
             {user ? initialsOf(user.username) : "?"}
           </div>
           {!collapsed && (
             <div className="text-left overflow-hidden flex-1">
               <div className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
-              <div className="text-[10px] opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
+              <div className="text-xs opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
             </div>
           )}
           {!collapsed && <SignOut size={16} className="opacity-55 shrink-0" />}

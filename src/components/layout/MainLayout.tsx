@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
-import { AppSidebar } from "./AppSidebar";
-import { BottomNav } from "./BottomNav";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useLayoutEffect } from "react";
+import { useShell } from "./AppShell";
 import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
@@ -22,6 +20,14 @@ interface MainLayoutProps {
   mobileFullBleed?: boolean;
 }
 
+/**
+ * Header + respiro do corpo de uma tela. A casca (sidebar/bottom nav) NAO mora
+ * mais aqui: subiu pro <AppShell />, que fica acima do <Outlet /> e por isso
+ * sobrevive as navegacoes.
+ *
+ * Nenhuma decisao de layout passa por JS aqui — as duas versoes do header sao
+ * renderizadas e o `sm:` escolhe qual aparece.
+ */
 export function MainLayout({
   children,
   title,
@@ -30,52 +36,55 @@ export function MainLayout({
   hideHeaderBorder = false,
   hideBottomNav = false,
   titleWrapperClassName = "flex items-baseline gap-3 min-w-0",
-  titleClassName = "text-[19px] font-medium shrink-0",
-  subtitleClassName = "text-[12.5px] opacity-50 truncate",
+  titleClassName = "text-lg font-medium shrink-0",
+  subtitleClassName = "text-sm opacity-50 truncate",
   mobileHeader,
   mobileFullBleed = false,
 }: MainLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const isMobile = useIsMobile();
+  const { setBottomNavHidden } = useShell();
 
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarCollapsed(true);
-    }
-  }, [isMobile]);
+  // useLayoutEffect, nao useEffect: roda antes da pintura, entao a nav nunca
+  // chega a aparecer num quadro nas telas que a escondem (perfil/conta) nem a
+  // sumir com atraso ao entrar no modo de selecao.
+  useLayoutEffect(() => {
+    setBottomNavHidden(hideBottomNav);
+    return () => setBottomNavHidden(false);
+  }, [hideBottomNav, setBottomNavHidden]);
 
   return (
-    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
-      {!isMobile && <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />}
-
-      <main
-        className="flex-1 w-full min-w-0 transition-[margin] duration-200"
-        style={{ marginLeft: !isMobile ? (sidebarCollapsed ? "72px" : "248px") : "0" }}
+    <>
+      <header
+        className={cn(
+          "sticky top-0 z-40 bg-background",
+          !hideHeaderBorder && "border-b border-border",
+          mobileFullBleed && "hidden sm:block"
+        )}
       >
-        <header
-          className={cn(
-            "sticky top-0 z-40 bg-background",
-            !hideHeaderBorder && "border-b border-border",
-            isMobile && mobileFullBleed && "hidden"
-          )}
+        {mobileHeader && (
+          <div className="sm:hidden" style={{ padding: "12px 16px" }}>
+            {mobileHeader}
+          </div>
+        )}
+        <div
+          className={cn("items-center justify-between gap-4", mobileHeader ? "hidden sm:flex" : "flex")}
+          style={{ padding: "16px 24px" }}
         >
-          {isMobile && mobileHeader ? (
-            <div style={{ padding: "12px 16px" }}>{mobileHeader}</div>
-          ) : (
-            <div className="flex items-center justify-between gap-4" style={{ padding: "16px 24px" }}>
-              <div className={titleWrapperClassName}>
-                <h1 className={titleClassName}>{title}</h1>
-                {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
-              </div>
-              {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
-            </div>
-          )}
-        </header>
+          <div className={titleWrapperClassName}>
+            <h1 className={titleClassName}>{title}</h1>
+            {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
+          </div>
+          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        </div>
+      </header>
 
-        <div className={cn("min-w-0", isMobile && mobileFullBleed ? "pb-24" : "p-4 md:p-6 pb-24 md:pb-6")}>{children}</div>
-      </main>
-
-      {isMobile && !hideBottomNav && <BottomNav />}
-    </div>
+      <div
+        className={cn(
+          "min-w-0",
+          mobileFullBleed ? "pb-24 sm:p-4 sm:pb-24 md:p-6 md:pb-6" : "p-4 md:p-6 pb-24 md:pb-6"
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }

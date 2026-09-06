@@ -45,7 +45,7 @@ export function StatusMultiSelect({ selected, onChange, className, disabled }: S
           type="button"
           disabled={disabled}
           className={cn(
-            "flex items-center gap-1.5 text-[13px] disabled:opacity-45 disabled:cursor-not-allowed",
+            "flex items-center gap-1.5 text-sm disabled:opacity-45 disabled:cursor-not-allowed",
             className
           )}
         >

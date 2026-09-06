@@ -55,7 +55,7 @@ export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply, nes
       title="Período"
       footer={
         <div className="flex flex-col gap-3">
-          <p className="text-[12.5px] text-zinc-500">
+          <p className="text-sm text-zinc-500">
             {days > 0 ? `${days} dia${days > 1 ? "s" : ""}` : "Selecione o período"}
           </p>
           <Button className="w-full min-h-[44px]" disabled={!range?.from || !range?.to} onClick={handleApply}>
@@ -75,8 +75,8 @@ export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply, nes
               activeField === field ? "border-accent bg-accent/[0.1]" : "border-input bg-card"
             )}
           >
-            <span className="block text-[10px] uppercase tracking-wide text-zinc-500">{field === "from" ? "De" : "Até"}</span>
-            <span className="block text-[13px] text-white truncate">{fieldLabel(field === "from" ? range?.from : range?.to)}</span>
+            <span className="block text-xs uppercase tracking-wide text-zinc-500">{field === "from" ? "De" : "Até"}</span>
+            <span className="block text-sm text-white truncate">{fieldLabel(field === "from" ? range?.from : range?.to)}</span>
           </button>
         ))}
       </div>

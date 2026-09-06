@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow } from "./OptionRow";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getHouseBalances } from "@/api/routes/get-houses";
+import { useHouseBalances } from "@/hooks/queries/use-houses";
 
 const RECENT_HOUSES_KEY = "apostas:recent-houses";
 const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
@@ -45,7 +45,7 @@ function pushRecentHouseIds(ids: number[]) {
 function HouseAvatar({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-[11px] font-semibold text-white"
+      className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
       style={{ background: color }}
     >
       {initialsOf(name)}
@@ -67,22 +67,23 @@ interface CasaSheetProps {
 
 export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, multiple = true }: CasaSheetProps) {
   const [search, setSearch] = useState("");
-  const [balances, setBalances] = useState<Record<number, number>>({});
   const [recentIds, setRecentIds] = useState<number[]>([]);
-  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Compartilhado com a tela de Casas: abrir o sheet nao refaz a requisicao se
+  // ela ja estiver no cache.
+  const { data: balanceRows } = useHouseBalances();
+  const balances = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const r of balanceRows ?? []) map[r.houseId] = Number(r.totalBets);
+    return map;
+  }, [balanceRows]);
 
   useEffect(() => {
     if (!open) return;
     setRecentIds(readRecentHouseIds());
-    getHouseBalances()
-      .then((rows) => {
-        const map: Record<number, number> = {};
-        for (const r of rows) map[r.houseId] = Number(r.totalBets);
-        setBalances(map);
-      })
-      .catch(() => undefined);
-    const t = setTimeout(() => searchRef.current?.focus(), 50);
-    return () => clearTimeout(t);
+    // Sem autofocus na busca de proposito: no mobile o teclado subia junto com
+    // o sheet e comia metade da lista — pra escolher uma casa o toque na lista
+    // resolve. Quem quer filtrar toca no campo e ai sim abre o teclado.
   }, [open]);
 
   const toggle = (id: number) => {
@@ -113,19 +114,10 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
       open={open}
       onOpenChange={onOpenChange}
       title="Casa"
-      footer={
-        multiple ? (
-          <Button className="w-full min-h-[44px]" onClick={handleApply}>
-            {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="sticky top-0 -mx-4 px-4 pb-2 pt-1 bg-background z-10">
+      subHeader={
         <div className="relative">
           <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            ref={searchRef}
             placeholder="Buscar casa"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -142,11 +134,18 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
             </button>
           )}
         </div>
-      </div>
-
+      }
+      footer={
+        multiple ? (
+          <Button className="w-full min-h-[44px]" onClick={handleApply}>
+            {houseIds.length > 0 ? `Aplicar · ${houseIds.length} casas` : "Aplicar"}
+          </Button>
+        ) : undefined
+      }
+    >
       {!term && fallbackRecent.length > 0 && (
         <div className="pb-2">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
           <div className="flex flex-col gap-1">
             {fallbackRecent.map((h) => (
               <OptionRow
@@ -163,7 +162,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
       )}
 
       <div className="pb-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">
           {term ? `Todas · "${search}"` : "Todas"}
         </p>
         <div className="flex flex-col gap-1">
@@ -177,7 +176,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
               onToggle={() => toggle(h.id)}
             />
           ))}
-          {filtered.length === 0 && <p className="text-center py-6 text-[12.5px] text-zinc-500">Nenhuma casa encontrada.</p>}
+          {filtered.length === 0 && <p className="text-center py-6 text-sm text-zinc-500">Nenhuma casa encontrada.</p>}
         </div>
       </div>
     </BottomSheet>

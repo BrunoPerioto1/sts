@@ -45,7 +45,7 @@ export function HouseListItem({ house, onViewDetails, onOpenHistory, onNewTransa
     <tr className="border-b border-border hover:bg-foreground/[0.04]">
       <td className="py-2">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-[6px] bg-neutral-800 flex items-center justify-center text-[10px] shrink-0">
+          <div className="w-6 h-6 rounded-[6px] bg-neutral-800 flex items-center justify-center text-xs shrink-0">
             {initialsOf(house.houseName)}
           </div>
           <span className="font-medium">{house.houseName}</span>
@@ -58,7 +58,7 @@ export function HouseListItem({ house, onViewDetails, onOpenHistory, onNewTransa
         {profit >= 0 ? "+" : ""}{formatCurrency(profit)}
       </td>
       <td className="py-2 text-right tabular-nums opacity-60">{house.totalBets}</td>
-      <td className="py-2 text-[12.5px] opacity-55">
+      <td className="py-2 text-sm opacity-55">
         {house.lastMovementAt ? formatMovementDate(house.lastMovementAt) : "—"}
       </td>
       <td className="py-2 text-right">

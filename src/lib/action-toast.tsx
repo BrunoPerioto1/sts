@@ -65,13 +65,13 @@ function ActionToastCard({
         <Icon size={16} weight="bold" className={cn("sm:!w-[15px] sm:!h-[15px]", isError ? "text-[#F87171]" : "text-[#F2F2F3]")} />
       </span>
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className={cn("text-[14px] font-medium leading-tight sm:text-[13.5px]", isError ? "text-[#F87171]" : "text-[#F2F2F3]")}>
+        <p className={cn("text-sm font-medium leading-tight sm:text-sm", isError ? "text-[#F87171]" : "text-[#F2F2F3]")}>
           {title}
         </p>
         {description && (
           <p
             className={cn(
-              "mt-0.5 text-[13px] leading-snug sm:text-[12.5px]",
+              "mt-0.5 text-sm leading-snug sm:text-sm",
               isError ? "text-[rgba(242,242,243,0.6)]" : "text-[rgba(242,242,243,0.5)]"
             )}
           >
@@ -86,7 +86,7 @@ function ActionToastCard({
             onClose();
             action.onClick();
           }}
-          className="h-9 shrink-0 self-center rounded-lg border border-[rgba(242,242,243,0.22)] bg-transparent px-3 text-[12.5px] font-medium text-[rgba(242,242,243,0.9)] transition-colors hover:bg-[rgba(242,242,243,0.06)] sm:h-7"
+          className="h-9 shrink-0 self-center rounded-lg border border-[rgba(242,242,243,0.22)] bg-transparent px-3 text-sm font-medium text-[rgba(242,242,243,0.9)] transition-colors hover:bg-[rgba(242,242,243,0.06)] sm:h-7"
         >
           {action.label}
         </button>

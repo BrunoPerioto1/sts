@@ -1,15 +1,7 @@
-import { useEffect, useState, type ComponentType } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { BottomSheet } from "./BottomSheet";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch, type Icon } from "@phosphor-icons/react";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { cn } from "@/lib/utils";
 
@@ -23,17 +15,18 @@ interface BulkActionBarProps {
 
 type PendingAction = "won" | "lost" | "pending" | "delete" | null;
 
+// Só o símbolo: as quatro ações são reconhecíveis pelo ícone + cor e o texto
+// embaixo duplicava a informação num espaço apertado. `aria-label` continua
+// nomeando o botão pra leitor de tela.
 function BulkActionButton({
   icon: Icon,
-  label,
   ariaLabel,
   onClick,
   disabled,
   pending,
   className,
 }: {
-  icon: ComponentType<{ size?: number; className?: string }>;
-  label: string;
+  icon: Icon;
   ariaLabel: string;
   onClick: () => void;
   disabled?: boolean;
@@ -47,13 +40,12 @@ function BulkActionButton({
       disabled={disabled}
       aria-label={ariaLabel}
       className={cn(
-        "h-12 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors disabled:pointer-events-none",
+        "h-12 rounded-xl flex items-center justify-center transition-colors disabled:pointer-events-none",
         disabled && !pending && "opacity-40",
         className
       )}
     >
-      {pending ? <CircleNotch size={16} className="animate-spin" /> : <Icon size={16} />}
-      <span className="text-[12px] font-medium">{label}</span>
+      {pending ? <CircleNotch size={20} className="animate-spin" /> : <Icon size={20} />}
     </button>
   );
 }
@@ -97,7 +89,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 min-w-0">
             <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
-            <span aria-live="polite" className="text-[15px] font-semibold text-white truncate">
+            <span aria-live="polite" className="text-base font-semibold text-white truncate">
               {count} selecionada{plural}
             </span>
           </div>
@@ -105,7 +97,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="shrink-0 h-8 px-4 rounded-lg text-[13px] text-zinc-300 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
+            className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
           >
             Cancelar
           </button>
@@ -114,7 +106,6 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         <div className="grid grid-cols-4 gap-2">
           <BulkActionButton
             icon={CheckCircle}
-            label="Ganha"
             ariaLabel={`Marcar ${count} aposta${plural} como ganha`}
             onClick={() => handleStatus("won", ResultIdEnum.WON)}
             disabled={loading}
@@ -123,7 +114,6 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={XCircle}
-            label="Perdida"
             ariaLabel={`Marcar ${count} aposta${plural} como perdida`}
             onClick={() => handleStatus("lost", ResultIdEnum.LOST)}
             disabled={loading}
@@ -132,7 +122,6 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Clock}
-            label="Pendente"
             ariaLabel={`Marcar ${count} aposta${plural} como pendente`}
             onClick={() => handleStatus("pending", ResultIdEnum.PENDING)}
             disabled={loading}
@@ -141,7 +130,6 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Trash}
-            label="Excluir"
             ariaLabel={`Excluir ${count} aposta${plural}`}
             onClick={() => setConfirmOpen(true)}
             disabled={loading}
@@ -151,20 +139,28 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         </div>
       </div>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {count} aposta{plural}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você está prestes a excluir {count} aposta{plural} selecionada{plural}. Essa ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Confirmacao no mesmo padrao dos outros sheets do app: sobe de baixo,
+          na altura do polegar. O dialogo centralizado era o unico que ainda
+          aparecia no meio da tela. */}
+      <BottomSheet
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir ${count} aposta${plural}?`}
+        footer={
+          <div className="flex flex-col gap-2">
+            <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleConfirmDelete}>
+              Excluir {count} aposta{plural}
+            </Button>
+            <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <p className="pb-4 text-sm text-zinc-400">
+          As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
+        </p>
+      </BottomSheet>
     </>
   );
 }

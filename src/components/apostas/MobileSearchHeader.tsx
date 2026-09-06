@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ export function MobileSearchToggle({ expanded, onToggle }: MobileSearchTogglePro
       type="button"
       onClick={onToggle}
       aria-label={expanded ? "Fechar busca" : "Buscar apostas"}
-      className={cn("p-2 hover:text-white", expanded ? "text-accent" : "text-zinc-400")}
+      className={cn("press h-11 w-11 flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] hover:text-white", expanded ? "text-accent" : "text-zinc-300")}
     >
       <MagnifyingGlass size={19} />
     </button>
@@ -28,6 +28,9 @@ interface MobileSearchBarProps {
   resultsCount: number;
   open: boolean;
   onClose: () => void;
+  // Ref vem de fora: quem abre a busca precisa focar o input DENTRO do próprio
+  // gesto de toque (ver ApostasPage), senão o iOS não abre o teclado.
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 // Linha de busca renderizada no corpo da página (não no header) — aparece
@@ -35,18 +38,12 @@ interface MobileSearchBarProps {
 // só controla o mesmo `searchTerm`/onSearch que já dirige fetchFilteredBets
 // em ApostasPage — os resultados aparecem porque a listagem principal já
 // reage ao `q`.
-export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }: MobileSearchBarProps) {
+export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, inputRef }: MobileSearchBarProps) {
   const [pinned, setPinned] = useState(false);
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) {
-      setPinned(false);
-      return;
-    }
-    const t = setTimeout(() => inputRef.current?.focus(), 50);
-    return () => clearTimeout(t);
+    if (!open) setPinned(false);
   }, [open]);
 
   if (!open) return null;
@@ -84,7 +81,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }
             }
           }}
           placeholder="Buscar apostas..."
-          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-[13px] text-white placeholder:text-zinc-500 outline-none"
+          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-white placeholder:text-zinc-500 outline-none"
         />
         <button
           type="button"
@@ -96,7 +93,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose }
         </button>
       </div>
       {value && (
-        <p className="mt-1.5 pl-1 text-[11.5px] text-zinc-500 truncate">
+        <p className="mt-1.5 pl-1 text-xs text-zinc-500 truncate">
           {pinned
             ? `Busca fixada: "${value}" · ${resultsCount} resultado${resultsCount === 1 ? "" : "s"}`
             : `${resultsCount} resultado${resultsCount === 1 ? "" : "s"} · toque em Enter para fixar a busca`}

@@ -8,6 +8,7 @@ export type MeResponse = {
   roleId: number;
   createdAt?: string | null;
   telegramUserId?: number | null;
+  telegramLinkedAt?: string | null;
   stake?: string | number | null;
   minPercentFilter?: string | number | null;
 };

@@ -110,13 +110,23 @@
     @apply border-border;
   }
 
+  /* Raiz em 100%: 1rem = 16px, igual ao padrao do browser. Antes estava em
+     115% (raiz 18.4px), o que empurrava a escala do Tailwind pra cima —
+     text-xs virava 13.8px — e obrigava todo tamanho "pequeno" a fugir pra px
+     cravado. Com 100%, os degraus caem em 12/14/16/18/20/24, que e a mesma
+     faixa que Material e HIG usam, e 1rem volta a ser previsivel no
+     espacamento tambem. */
   html {
-    font-size: 115%;
+    font-size: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    /* Desliga o pull-to-refresh nativo do Chrome Android: quem recarrega ao
+       puxar do topo agora e o usePullToRefresh, e os dois juntos disparariam
+       um recarregamento de pagina inteira por cima do refetch. */
+    overscroll-behavior-y: contain;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -197,4 +207,148 @@
 }
 [data-sonner-toast][data-visible="false"] {
   opacity: 0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Camada de movimento (mobile-first)
+
+   Tres regras que valem pra tudo aqui:
+   1. Movimento curto e uma curva so — `--ease-out-soft` desacelera rapido no
+      fim, que e o que faz um toque parecer resposta e nao animacao.
+   2. Entrada sempre com `backwards`: sem isso o elemento pisca no estado final
+      antes do delay do stagger comecar.
+   3. Nada disso e decorativo o bastante pra ignorar acessibilidade — o bloco
+      `prefers-reduced-motion` no fim zera tudo.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.35, 0.64, 1);
+    --dur-fast: 130ms;
+    /* Transicao de rota: curta de proposito. Como so a ENTRADA e animada (nao
+       ha saida), o conteudo novo ja esta pintado no primeiro frame e isso aqui
+       so tira o corte seco — nao e espera. */
+    --dur-route: 140ms;
+    --dur-base: 240ms;
+    --dur-slow: 420ms;
+  }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.86); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes screen-in {
+  from { opacity: 0.6; transform: translate3d(14%, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes shimmer {
+  from { background-position: -180% 0; }
+  to { background-position: 180% 0; }
+}
+
+@keyframes value-flash {
+  0% { opacity: 0.35; transform: translate3d(0, 4px, 0); }
+  100% { opacity: 1; transform: none; }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: rise var(--dur-slow) var(--ease-out-soft) backwards;
+  }
+  .animate-fade-in {
+    animation: fade-in var(--dur-base) var(--ease-out-soft) backwards;
+  }
+  .animate-pop-in {
+    animation: pop-in var(--dur-base) var(--ease-spring) backwards;
+  }
+  .animate-route-in {
+    animation: fade-in var(--dur-route) var(--ease-out-soft);
+  }
+  .animate-value {
+    animation: value-flash var(--dur-base) var(--ease-out-soft);
+  }
+  /* Tela empilhada (detalhe de casa, historico): entra deslizando da direita,
+     como um push de navegacao nativo. */
+  .animate-screen-in {
+    animation: screen-in var(--dur-base) var(--ease-out-soft);
+  }
+
+  /* Cascata: cada item declara `style={{ '--i': index }}` e sai um degrau
+     depois do anterior. O teto de 12 degraus evita que o item 40 de uma lista
+     longa fique meio segundo esperando pra aparecer. */
+  .stagger {
+    animation-delay: calc(min(var(--i, 0), 12) * 40ms);
+  }
+
+  /* Resposta ao toque: o dedo cobre o elemento, entao o feedback tem que ser
+     na geometria (encolher), nao so na cor. */
+  .press {
+    /* Inclui as propriedades do `transition-colors` do Tailwind de proposito:
+       `.press` vem depois no arquivo e sobrescreveria a transicao de cor dos
+       componentes que ja usavam aquela classe. */
+    transition:
+      transform var(--dur-fast) var(--ease-out-soft),
+      background-color var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
+      color var(--dur-fast) linear;
+    -webkit-tap-highlight-color: transparent;
+    /* Nao e ajuste do Safari: segurar o dedo em qualquer texto dispara a
+       selecao nativa do iOS, e num card com toque longo pra selecao multipla
+       isso significava pintar "CRB x America" de azul junto. Como todo `.press`
+       e um alvo de toque (card, linha, botao), selecionar o texto dele nunca e
+       a intencao. `touch-callout` mata junto o balao de "Copiar/Procurar". */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  .press-sm:active {
+    transform: scale(0.985);
+  }
+
+  /* Esqueleto com brilho passando: comunica "carregando" melhor que o pulse
+     chapado, que a distancia parece conteudo piscando. */
+  .skeleton {
+    background-color: color-mix(in srgb, var(--color-text) 5%, transparent);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-text) 7%, transparent) 50%,
+      transparent 100%
+    );
+    background-size: 180% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-fade-in,
+  .animate-route-in,
+  .animate-pop-in,
+  .animate-value,
+  .animate-screen-in,
+  .skeleton {
+    animation: none !important;
+  }
+  .press:active,
+  .press-sm:active {
+    transform: none;
+  }
 }

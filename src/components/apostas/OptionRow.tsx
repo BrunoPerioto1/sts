@@ -18,15 +18,15 @@ export function OptionRow({ leading, label, subtitle, selected, onToggle, classN
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[52px] text-left transition-colors",
+        "press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[52px] text-left",
         selected ? "bg-accent/[0.14]" : "hover:bg-white/[0.04]",
         className
       )}
     >
       {leading}
       <span className="flex-1 min-w-0">
-        <span className="block text-[14px] text-white truncate">{label}</span>
-        {subtitle && <span className="block text-[12px] text-zinc-500 truncate">{subtitle}</span>}
+        <span className="block text-sm text-white truncate">{label}</span>
+        {subtitle && <span className="block text-xs text-zinc-500 truncate">{subtitle}</span>}
       </span>
       <span
         className={cn(
