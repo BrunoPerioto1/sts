@@ -1,6 +1,6 @@
 /**
  * Esqueleto com a MESMA geometria do DashboardMobileView (titulo + chip de
- * periodo, valor grande, grafico, grade 2x3). Trocar o spinner por isso tira o
+ * periodo, valor grande, grafico, grade 2x4). Trocar o spinner por isso tira o
  * salto de layout quando os dados chegam: os blocos ja estao no lugar e so
  * ganham conteudo.
  */
@@ -21,22 +21,21 @@ export function DashboardMobileSkeleton() {
         <div className="skeleton h-4 w-52 rounded" style={{ animationDelay: "160ms" }} />
       </div>
 
-      <div className="mt-6 flex-1">
+      <div className="mt-5">
         <div className="skeleton h-[220px] rounded-lg" style={{ animationDelay: "120ms" }} />
       </div>
 
-      <div className="grid grid-cols-2 mt-6 shrink-0">
-        {Array.from({ length: 6 }, (_, i) => (
+      <div className="grid grid-cols-2 auto-rows-fr gap-x-6 mt-4 flex-1">
+        {Array.from({ length: 8 }, (_, i) => (
           <div
             key={i}
             className={[
-              "py-5 space-y-2",
-              i % 2 === 1 ? "border-l border-border pl-4" : "",
-              i >= 2 ? "border-t border-border" : "",
+              "flex flex-col justify-center py-3 space-y-2",
+              i >= 2 ? "border-t border-white/[0.06]" : "",
             ].join(" ")}
           >
             <div className="skeleton h-3 w-20 rounded" style={{ animationDelay: `${i * 60}ms` }} />
-            <div className="skeleton h-5 w-16 rounded" style={{ animationDelay: `${i * 60 + 40}ms` }} />
+            <div className="skeleton h-7 w-16 rounded" style={{ animationDelay: `${i * 60 + 40}ms` }} />
           </div>
         ))}
       </div>

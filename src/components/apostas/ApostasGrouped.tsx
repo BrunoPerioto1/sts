@@ -195,14 +195,10 @@ function StatusStrip({ status }: { status: Status }) {
   return <div className={cn("absolute inset-y-0 right-0 w-[6px] rounded-r-lg", stripColors[status])} />;
 }
 
-// Três pesos visuais pros metadados do card: hora é o mais apagado, odd é o
-// número em destaque e casa carrega o acento — antes os três usavam a mesma
-// pílula e não dava pra distinguir odd de casa de relance.
-// Todos em pílula pro relógio do horário (que é redondo) não brigar com cantos
-// quadrados ao lado.
-const timeChipClass = "inline-flex items-center gap-1 text-xs tabular-nums text-zinc-400 shrink-0";
-const oddChipClass = "text-xs px-2.5 py-0.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
-const houseChipClass = "text-xs px-2.5 py-0.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100 shrink-0";
+// Horário com contraste próprio para facilitar a leitura durante a rolagem.
+const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-white/15 bg-white/10 px-2.5 text-xs font-semibold tabular-nums text-white shrink-0";
+const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
+const houseChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100 shrink-0";
 
 function BetCardMobile({
   aposta,
@@ -257,7 +253,7 @@ function BetCardMobile({
           </span>
         )}
         <span className={timeChipClass}>
-          <Clock size={12} /> {time}
+          <Clock size={12} weight="bold" /> {time}
         </span>
         <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)}</span>
         {aposta.houseName && <span className={cn(houseChipClass, "truncate")}>{aposta.houseName}</span>}
@@ -354,13 +350,13 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
             const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);
             return (
               <section key={day.key} aria-label={day.label}>
-                <div className="flex items-center gap-2 pb-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3 mt-5 min-h-14 border-l-4 border-accent rounded-r-lg bg-white/[0.06] px-3 py-3">
                   {selection.selectionMode && (
                     <Checkbox checked={groupCheckState(dayIds, selection.selected)}
                       onCheckedChange={() => selection.toggleMany(dayIds)}
                       aria-label={`Selecionar todas as apostas de ${day.label}`} />
                   )}
-                  <h2 className="text-sm font-medium">{format(new Date(day.bets[0].betTime), "dd MMM yyyy", { locale: ptBR })}</h2>
+                  <h2 className="text-lg font-bold tracking-tight text-white">{format(new Date(day.bets[0].betTime), "dd MMM yyyy", { locale: ptBR })}</h2>
                   <span className="text-xs text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
                   <span className={cn("ml-auto text-sm tabular-nums", total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(total)}</span>
                 </div>

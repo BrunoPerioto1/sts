@@ -36,8 +36,6 @@ interface Tile {
   label: string;
   value: string;
   valueTone?: Tone;
-  sub?: string;
-  subTone?: Tone;
 }
 
 const toneClass: Record<Tone, string> = {
@@ -48,11 +46,6 @@ const toneClass: Record<Tone, string> = {
 
 function signedTone(value: number): Tone {
   return value >= 0 ? "positive" : "negative";
-}
-
-function ppDelta(current: number, previous: number) {
-  const diff = current - previous;
-  return { label: `${diff >= 0 ? "+" : "−"}${Math.abs(diff).toFixed(1)} p.p.`, tone: signedTone(diff) };
 }
 
 interface DashboardMobileViewProps {
@@ -71,7 +64,6 @@ export function DashboardMobileView({
   preset,
   firstBetDate,
   metrics,
-  previousMetrics,
   dailyData,
   onPresetChange,
   onCustomRange,
@@ -88,8 +80,7 @@ export function DashboardMobileView({
     await invalidate();
   });
 
-  // Uma busca só por período: dela saem as pendentes (contagem + valor em
-  // risco) e a maior sequência de ganhas, que não vêm nas métricas da API.
+  // A maior sequência de ganhas ainda depende da lista de apostas do período.
   useEffect(() => {
     let cancelled = false;
     getBets({ startDate: filters.startDate, endDate: filters.endDate, perPage: 1000 })
@@ -104,8 +95,7 @@ export function DashboardMobileView({
     };
   }, [filters.startDate, filters.endDate, refreshNonce]);
 
-  const { pendingCount, longestStreak } = useMemo(() => {
-    const pending = bets.filter((b) => b.resultId === ResultIdEnum.PENDING);
+  const longestStreak = useMemo(() => {
     const settled = [...bets]
       .filter((b) => b.resultId !== ResultIdEnum.PENDING)
       .sort((a, b) => new Date(a.betTime).getTime() - new Date(b.betTime).getTime());
@@ -121,24 +111,15 @@ export function DashboardMobileView({
       }
     }
 
-    return { pendingCount: pending.length, longestStreak: best };
+    return best;
   }, [bets]);
 
   const profit = Number(metrics.totalProfit);
   const totalBets = Number(metrics.totalBets);
-  const settledBets = Number(metrics.settledBets ?? Math.max(0, totalBets - Number(metrics.pendingBets)));
-  const wonBets = Number(metrics.wonBets);
   const roi = Number(metrics.roi) * 100;
   const hitRate = Number(metrics.hitRate) * 100;
   const avgOdd = Number(metrics.averageOdd);
   const avgStake = Number(metrics.averageStake);
-
-  const prevTotalBets = Number(previousMetrics.totalBets);
-  const hasPrevious = prevTotalBets > 0;
-  const prevRoi = Number(previousMetrics.roi) * 100;
-  const prevHitRate = Number(previousMetrics.hitRate) * 100;
-  const prevAvgOdd = Number(previousMetrics.averageOdd);
-  const prevAvgStake = Number(previousMetrics.averageStake);
 
   const days = differenceInCalendarDays(parseISO(filters.endDate), parseISO(filters.startDate)) + 1;
   const shortDate = (iso: string) => format(parseISO(iso), "d MMM", { locale: ptBR });
@@ -161,58 +142,15 @@ export function DashboardMobileView({
             .filter(Boolean)
             .join(" · ");
 
-  const oddDelta = avgOdd - prevAvgOdd;
-  const betsDelta = totalBets - prevTotalBets;
-  const stakeDelta = avgStake - prevAvgStake;
-  const stakeStable = prevAvgStake > 0 && Math.abs(stakeDelta) / prevAvgStake < 0.05;
-
   const tiles: Tile[] = [
-    {
-      label: "ROI",
-      value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`,
-      valueTone: signedTone(roi),
-      ...(hasPrevious
-        ? { sub: ppDelta(roi, prevRoi).label, subTone: ppDelta(roi, prevRoi).tone }
-        : { sub: totalBets === 1 ? "1 aposta só" : `${totalBets} apostas`, subTone: "muted" as Tone }),
-    },
-    {
-      label: "Odd média",
-      value: avgOdd.toFixed(2),
-      ...(hasPrevious
-        ? { sub: `${oddDelta >= 0 ? "+" : "−"}${Math.abs(oddDelta).toFixed(2)}`, subTone: signedTone(oddDelta) }
-        : totalBets > 0 && totalBets < 5
-          ? { sub: "amostra baixa", subTone: "negative" as Tone }
-          : {}),
-    },
-    {
-      label: "Apostas",
-      value: String(totalBets),
-      ...(hasPrevious
-        ? { sub: `${betsDelta >= 0 ? "+" : "−"}${Math.abs(betsDelta)} vs. anterior`, subTone: signedTone(betsDelta) }
-        : { sub: `${pendingCount} pendente${pendingCount === 1 ? "" : "s"}`, subTone: "muted" as Tone }),
-    },
-    {
-      label: "Taxa de acerto",
-      value: `${hitRate.toFixed(1)}%`,
-      ...(hasPrevious
-        ? { sub: ppDelta(hitRate, prevHitRate).label, subTone: ppDelta(hitRate, prevHitRate).tone }
-        : { sub: `${wonBets} de ${settledBets} encerradas`, subTone: "muted" as Tone }),
-    },
-    {
-      label: "Stake médio",
-      value: formatCurrencyCompact(avgStake),
-      ...(hasPrevious
-        ? stakeStable
-          ? { sub: "estável", subTone: "muted" as Tone }
-          : { sub: `${stakeDelta >= 0 ? "+" : "−"}${formatCurrencyCompact(Math.abs(stakeDelta))}`, subTone: signedTone(stakeDelta) }
-        : {}),
-    },
-    {
-      label: "Maior sequência",
-      value: longestStreak > 0 ? `${longestStreak} ganha${longestStreak === 1 ? "" : "s"}` : "—",
-      sub: "no período",
-      subTone: "muted",
-    },
+    { label: "ROI", value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, valueTone: signedTone(roi) },
+    { label: "Taxa de acerto", value: `${hitRate.toFixed(1)}%` },
+    { label: "Apostas", value: String(totalBets) },
+    { label: "Pendentes", value: String(Number(metrics.pendingBets)) },
+    { label: "Total apostado", value: formatCurrencyCompact(Number(metrics.totalStaked)) },
+    { label: "Stake médio", value: formatCurrencyCompact(avgStake) },
+    { label: "Odd média", value: avgOdd.toFixed(2) },
+    { label: "Maior sequência", value: longestStreak > 0 ? `${longestStreak} ganha${longestStreak === 1 ? "" : "s"}` : "—" },
   ];
 
   return (
@@ -220,7 +158,7 @@ export function DashboardMobileView({
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       {/* Ocupa a altura útil da tela (viewport menos a bottom nav) e distribui
           os blocos na vertical, em vez de amontoar tudo no topo. */}
-      <div className="px-4 pt-4 flex flex-col">
+      <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
           <div className="min-w-0">
             <h2 className="text-2xl font-semibold tracking-tight">Resultado</h2>
@@ -276,24 +214,21 @@ export function DashboardMobileView({
           )}
         </div>
 
-        <div className="grid grid-cols-2 mt-6 shrink-0">
+        <div className="grid grid-cols-2 auto-rows-fr gap-x-6 mt-4 flex-1">
           {tiles.map((tile, i) => (
             <div
               key={tile.label}
               className={cn(
-                "py-5 animate-rise stagger",
-                i % 2 === 1 && "border-l border-border pl-4",
-                i >= 2 && "border-t border-border"
+                "flex flex-col justify-center py-3 animate-rise stagger",
+                i >= 2 && "border-t border-white/[0.06]"
               )}
               style={stagger(3 + i)}
             >
-              <p className="text-xs uppercase tracking-wide opacity-75 mb-1">{tile.label}</p>
-              <p className={cn("text-lg font-medium tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
+              <p className="text-[11px] uppercase tracking-wide text-zinc-400 mb-1">{tile.label}</p>
+              <p className={cn("text-xl font-semibold tabular-nums", tile.valueTone && toneClass[tile.valueTone])}>
                 {tile.value}
               </p>
-              {tile.sub && (
-                <p className={cn("text-xs tabular-nums mt-0.5", toneClass[tile.subTone ?? "muted"])}>{tile.sub}</p>
-              )}
+
             </div>
           ))}
         </div>
