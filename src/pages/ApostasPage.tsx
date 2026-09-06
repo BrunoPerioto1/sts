@@ -397,13 +397,13 @@ export default function ApostasPage() {
           {/* Seleção múltipla entra por toque longo/swipe no card e o refresh
               por pull-to-refresh — os dois ícones saíram daqui pra deixar só
               busca e filtro visíveis. */}
-          <div className="flex items-center gap-1 -mr-2">
+          <div className="flex items-center gap-2">
             <MobileSearchToggle expanded={mobileSearchExpanded} onToggle={toggleMobileSearch} />
             <button
               type="button"
               onClick={() => setMobileFilterOpen(true)}
               aria-label="Abrir filtros"
-              className="relative p-2 text-zinc-400 hover:text-white"
+              className="press relative h-11 w-11 flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 hover:text-white"
             >
               <SlidersHorizontal size={19} />
               {activeMobileFilterCount > 0 && (

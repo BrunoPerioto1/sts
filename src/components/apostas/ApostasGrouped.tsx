@@ -198,7 +198,7 @@ function StatusStrip({ status }: { status: Status }) {
 // Horário com contraste próprio para facilitar a leitura durante a rolagem.
 const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-white/15 bg-white/10 px-2.5 text-xs font-semibold tabular-nums text-white shrink-0";
 const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
-const houseChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100 shrink-0";
+const houseChipClass = "inline-flex items-center min-w-0 h-6 text-xs leading-none px-2.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100";
 
 function BetCardMobile({
   aposta,
@@ -256,7 +256,7 @@ function BetCardMobile({
           <Clock size={12} weight="bold" /> {time}
         </span>
         <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)}</span>
-        {aposta.houseName && <span className={cn(houseChipClass, "truncate")}>{aposta.houseName}</span>}
+        {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}
       </div>
 
       <p className="text-base font-medium text-white truncate">{aposta.game}</p>
