@@ -46,7 +46,7 @@ function preferencesSummary(me: MeResponse): string {
   const filter = me.minPercentFilter != null ? Number(me.minPercentFilter) : null;
   if (stake == null && filter == null) return "Não configurado";
   const parts: string[] = [];
-  if (stake != null) parts.push(formatCurrencyCompact(stake));
+  if (stake != null) parts.push(`Banca ${formatCurrencyCompact(stake)}`);
   if (filter != null) parts.push(`${filter.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`);
   return parts.join(" · ");
 }

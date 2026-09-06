@@ -6,16 +6,11 @@ import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { useMe } from "@/hooks/queries/use-me";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { PreferencesFields } from "@/components/perfil/PreferencesFields";
-import { useHouseMetrics } from "@/hooks/queries/use-houses";
 
 export default function PreferencesPage() {
   const navigate = useNavigate();
   const { me, setMe } = useMe();
   const form = usePreferencesForm(me, setMe);
-  // A banca real é o que transforma "2,05%" em "R$ 1.212" — sem ela o filtro é
-  // um número solto que ninguém sabe estimar.
-  const houseMetrics = useHouseMetrics();
-
   // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
     if (me) form.resetFrom(me);
@@ -41,7 +36,7 @@ export default function PreferencesPage() {
       ) : (
         <div className="flex flex-col">
           <div className="flex flex-col gap-7">
-            <PreferencesFields form={form} bankroll={Number(houseMetrics.data?.totalBalance ?? 0)} />
+            <PreferencesFields form={form} />
           </div>
 
           <ScreenFooter onSave={form.handleSave} onDiscard={form.handleDiscard} saving={form.saving} disabled={!form.canSave} />

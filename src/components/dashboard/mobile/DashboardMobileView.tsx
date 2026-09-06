@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarBlank, CaretDown, ChartLine, TrendUp, Target, Database, Clock, CreditCard, ChartBar, Trophy } from "@phosphor-icons/react";
-import { getBets, ResultIdEnum, type BetItem } from "@/api/routes/get-bets";
+import { CalendarBlank, CaretDown, ChartLine, TrendUp, Target, Database, Clock, CreditCard, ChartBar, Coins } from "@phosphor-icons/react";
+import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/useDashboardFilters";
@@ -70,50 +70,11 @@ export function DashboardMobileView({
   onCustomRange,
 }: DashboardMobileViewProps) {
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [bets, setBets] = useState<BetItem[]>([]);
+  const { me } = useMe();
   const invalidate = useInvalidateBetData();
-  // A busca de apostas abaixo é um fetch solto (não passa pelo react-query),
-  // então o pull-to-refresh precisa mexer nela por fora: o nonce entra nas
-  // deps do efeito e o invalidate cuida do resto do dashboard.
-  const [refreshNonce, setRefreshNonce] = useState(0);
-  const pull = usePullToRefresh(async () => {
-    setRefreshNonce((n) => n + 1);
-    await invalidate();
-  });
-
-  // A maior sequência de ganhas ainda depende da lista de apostas do período.
-  useEffect(() => {
-    let cancelled = false;
-    getBets({ startDate: filters.startDate, endDate: filters.endDate, perPage: 1000 })
-      .then((res) => {
-        if (!cancelled) setBets(Array.isArray(res?.data) ? res.data : []);
-      })
-      .catch(() => {
-        if (!cancelled) setBets([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [filters.startDate, filters.endDate, refreshNonce]);
-
-  const longestStreak = useMemo(() => {
-    const settled = [...bets]
-      .filter((b) => b.resultId !== ResultIdEnum.PENDING)
-      .sort((a, b) => new Date(a.betTime).getTime() - new Date(b.betTime).getTime());
-
-    let best = 0;
-    let run = 0;
-    for (const bet of settled) {
-      if (Number(bet.profit ?? 0) > 0) {
-        run += 1;
-        best = Math.max(best, run);
-      } else {
-        run = 0;
-      }
-    }
-
-    return best;
-  }, [bets]);
+  const pull = usePullToRefresh(invalidate);
+  const bankroll = Number(me?.stake ?? 0);
+  const unitValue = Number.isFinite(bankroll) && bankroll > 0 ? bankroll / 100 : null;
 
   const profit = Number(metrics.totalProfit);
   const totalBets = Number(metrics.totalBets);
@@ -145,13 +106,13 @@ export function DashboardMobileView({
 
   const tiles: Tile[] = [
     { label: "ROI", icon: TrendUp, value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, valueTone: signedTone(roi) },
-    { label: "Taxa de acerto", icon: Target, valueTone: "positive", value: `${hitRate.toFixed(1)}%` },
+    { label: "Unidades", icon: Coins, valueTone: "positive", value: unitValue != null ? `${(profit / unitValue).toLocaleString("pt-BR", { maximumFractionDigits: 2, signDisplay: "exceptZero" })} U` : "—" },
     { label: "Apostas", icon: Database, value: String(totalBets) },
     { label: "Pendentes", icon: Clock, value: String(Number(metrics.pendingBets)) },
     { label: "Total apostado", icon: CreditCard, value: formatCurrencyCompact(Number(metrics.totalStaked)) },
     { label: "Stake médio", icon: ChartBar, value: formatCurrencyCompact(avgStake) },
     { label: "Odd média", icon: TrendUp, value: avgOdd.toFixed(2) },
-    { label: "Maior sequência", icon: Trophy, value: longestStreak > 0 ? `${longestStreak} ganha${longestStreak === 1 ? "" : "s"}` : "—" },
+    { label: "Taxa de acerto", icon: Target, value: `${hitRate.toFixed(1)}%` },
   ];
 
   return (

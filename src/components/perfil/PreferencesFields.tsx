@@ -9,38 +9,37 @@ type PreferencesFormState = ReturnType<typeof usePreferencesForm>;
 
 export function PreferencesFields({
   form,
-  bankroll = 0,
   labelClassName = "text-sm font-normal text-zinc-400",
 }: {
   form: PreferencesFormState;
-  // Saldo somado das casas — usado só pra traduzir os percentuais em reais.
-  bankroll?: number;
   labelClassName?: string;
 }) {
   const stakeNum = parsePtBrNumber(form.stakeInput);
-  const stakeShare = bankroll > 0 && Number.isFinite(stakeNum) && stakeNum > 0 ? (stakeNum / bankroll) * 100 : null;
+  const bankroll = Number.isFinite(stakeNum) && stakeNum > 0 ? stakeNum : 0;
   const thresholdInReais = bankroll > 0 ? (form.sliderValue / 100) * bankroll : null;
 
   return (
     <>
       <div className="space-y-1.5">
-        <Label className={labelClassName}>Stake padrão</Label>
+        <Label className={labelClassName}>Banca</Label>
         <div className="relative">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base text-zinc-500 pointer-events-none">R$</span>
           <Input
-            inputMode="decimal"
-            placeholder="100,00"
+            inputMode="numeric"
+            placeholder="3.000,00"
             className="min-h-[52px] rounded-lg pl-11 text-xl font-medium tabular-nums"
-            value={form.stakeInput}
-            onChange={(e) => form.setStakeInput(e.target.value)}
+            value={form.stakeInput === "" ? "" : stakeNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, "");
+              form.setStakeInput(digits ? toPtBr(Number(digits) / 100) : "");
+            }}
           />
         </div>
         {form.stakeError ? (
           <p className="text-sm text-negative">{form.stakeError}</p>
         ) : (
           <p className="text-sm text-zinc-500">
-            Valor sugerido ao registrar uma aposta
-            {stakeShare != null && ` — ${stakeShare.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% da banca atual`}.
+            {bankroll > 0 ? `1 U = ${formatCurrency(bankroll / 100)} · 1% da banca.` : "Informe sua banca. Uma unidade (1 U) equivale a 1% desse valor."}
           </p>
         )}
       </div>
