@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarBlank, CaretDown, ChartLine, TrendUp, Target, Database, Clock, CreditCard, ChartBar, Coins } from "@phosphor-icons/react";
+import { CalendarBlank, CaretDown, ChartLine } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/useDashboardFilters";
-import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
+import { formatSignedCurrency } from "@/lib/format";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { stagger } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { DashboardKpiGrid } from "../DashboardKpiGrid";
+import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
@@ -29,25 +30,6 @@ const PRESET_LABEL: Record<DatePreset, string> = {
 
 // Barras também representam um único dia; vazio só quando não há dados.
 const MIN_DAYS_FOR_CHART = 1;
-
-type Tone = "positive" | "negative" | "muted";
-
-interface Tile {
-  label: string;
-  value: string;
-  valueTone?: Tone;
-  icon: typeof TrendUp;
-}
-
-const toneClass: Record<Tone, string> = {
-  positive: "text-positive",
-  negative: "text-negative",
-  muted: "text-zinc-400",
-};
-
-function signedTone(value: number): Tone {
-  return value >= 0 ? "positive" : "negative";
-}
 
 interface DashboardMobileViewProps {
   filters: { startDate: string; endDate: string };
@@ -73,15 +55,8 @@ export function DashboardMobileView({
   const { me } = useMe();
   const invalidate = useInvalidateBetData();
   const pull = usePullToRefresh(invalidate);
-  const bankroll = Number(me?.stake ?? 0);
-  const unitValue = Number.isFinite(bankroll) && bankroll > 0 ? bankroll / 100 : null;
-
+  const preferences = normalizeDashboardPreferences(me?.dashboardPreferences);
   const profit = Number(metrics.totalProfit);
-  const totalBets = Number(metrics.totalBets);
-  const roi = Number(metrics.roi) * 100;
-  const hitRate = Number(metrics.hitRate) * 100;
-  const avgOdd = Number(metrics.averageOdd);
-  const avgStake = Number(metrics.averageStake);
 
   const days = differenceInCalendarDays(parseISO(filters.endDate), parseISO(filters.startDate)) + 1;
   const shortDate = (iso: string) => format(parseISO(iso), "d MMM", { locale: ptBR });
@@ -103,17 +78,6 @@ export function DashboardMobileView({
           ]
             .filter(Boolean)
             .join(" · ");
-
-  const tiles: Tile[] = [
-    { label: "ROI", icon: TrendUp, value: `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, valueTone: signedTone(roi) },
-    { label: "Unidades", icon: Coins, valueTone: "positive", value: unitValue != null ? `${(profit / unitValue).toLocaleString("pt-BR", { maximumFractionDigits: 2, signDisplay: "exceptZero" })} U` : "—" },
-    { label: "Apostas", icon: Database, value: String(totalBets) },
-    { label: "Pendentes", icon: Clock, value: String(Number(metrics.pendingBets)) },
-    { label: "Total apostado", icon: CreditCard, value: formatCurrencyCompact(Number(metrics.totalStaked)) },
-    { label: "Stake médio", icon: ChartBar, value: formatCurrencyCompact(avgStake) },
-    { label: "Odd média", icon: TrendUp, value: avgOdd.toFixed(2) },
-    { label: "Taxa de acerto", icon: Target, value: `${hitRate.toFixed(1)}%` },
-  ];
 
   return (
     <>
@@ -142,7 +106,7 @@ export function DashboardMobileView({
           {/* Numero-heroi da tela: conta ate o valor final. O `key` no periodo
               faz a contagem recomecar quando o usuario troca o filtro — sem
               ele o hook so interpolaria do valor antigo pro novo. */}
-          <p className={cn("text-[clamp(1.75rem,9vw,2.5rem)] font-semibold tabular-nums leading-tight tracking-tight", toneClass[signedTone(profit)])}>
+          <p className="text-[clamp(1.75rem,9vw,2.5rem)] font-semibold tabular-nums leading-tight tracking-tight" style={{ color: performanceColor(profit, preferences.performanceColors) }}>
             <AnimatedNumber
               key={`${filters.startDate}-${filters.endDate}`}
               value={profit}
@@ -176,26 +140,7 @@ export function DashboardMobileView({
           )}
         </div>
 
-        <div className="grid grid-cols-2 auto-rows-fr gap-2.5 mt-6">
-          {tiles.map((tile, i) => (
-            <div
-              key={tile.label}
-              className={cn(
-                "min-w-0 flex items-center gap-2 min-h-[76px] rounded-xl border border-white/[0.07] bg-white/[0.015] p-3 animate-rise stagger"
-              )}
-              style={stagger(3 + i)}
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-zinc-400 max-[359px]:h-7 max-[359px]:w-7" aria-hidden="true"><tile.icon size={21} /></span>
-              <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-zinc-400 mb-1">{tile.label}</p>
-              <p className={cn("text-lg leading-tight font-semibold tabular-nums break-words", tile.valueTone && toneClass[tile.valueTone])}>
-                {tile.value}
-              </p>
-              </div>
-
-            </div>
-          ))}
-        </div>
+        <DashboardKpiGrid metrics={metrics} stake={Number(me?.stake ?? 0)} preferences={preferences} />
 
       </div>
 

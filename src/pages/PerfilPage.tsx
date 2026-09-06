@@ -22,7 +22,7 @@ import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
 import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
-import { TelegramLogo, DownloadSimple, SignOut, IdentificationCard, SlidersHorizontal, CaretRight } from "@phosphor-icons/react";
+import { TelegramLogo, DownloadSimple, SignOut, IdentificationCard, SlidersHorizontal, CaretRight, SquaresFour } from "@phosphor-icons/react";
 
 function initialsOf(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -211,6 +211,7 @@ export default function PerfilPage() {
   ];
 
   const settingsRows = [
+    { to: "/profile/dashboard", icon: SquaresFour, label: "Dashboard", value: "Indicadores, ícones e cores" },
     { to: "/profile/account", icon: IdentificationCard, label: "Dados da conta", value: "Nome, e-mail e segurança" },
     {
       to: "/profile/telegram",
@@ -300,6 +301,11 @@ export default function PerfilPage() {
 
   return (
     <MainLayout title="Perfil">
+      <Link to="/profile/dashboard" className="press flex items-center gap-3 card bg-card rounded-md p-4 mb-[14px]">
+        <SquaresFour size={20} className="text-zinc-400" />
+        <span className="flex-1"><span className="block text-sm">Dashboard</span><span className="block text-xs text-zinc-400">Indicadores, ícones e cores</span></span>
+        <CaretRight size={16} />
+      </Link>
       <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-[14px] items-start">
         <div className="flex flex-col gap-[14px]">
           <div className="card elev-sm bg-card rounded-md p-[16px]">

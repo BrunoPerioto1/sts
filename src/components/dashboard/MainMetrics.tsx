@@ -1,3 +1,7 @@
+import { useMe } from "@/hooks/queries/use-me";
+import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
+import { formatSignedCurrency } from "@/lib/format";
+import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { Wallet, Percent, Receipt, Target } from "@phosphor-icons/react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
@@ -24,6 +28,8 @@ function countDelta(current: number, previous: number): { label: string; positiv
 }
 
 export function MainMetrics({ metrics, previousMetrics }: MainMetricsProps) {
+  const { me } = useMe();
+  const preferences = normalizeDashboardPreferences(me?.dashboardPreferences);
   const profit = Number(metrics.totalProfit);
   const roi = Number(metrics.roi) * 100;
   const hitRate = Number(metrics.hitRate) * 100;
@@ -32,6 +38,13 @@ export function MainMetrics({ metrics, previousMetrics }: MainMetricsProps) {
   const prevRoi = previousMetrics ? Number(previousMetrics.roi) * 100 : 0;
   const prevHitRate = previousMetrics ? Number(previousMetrics.hitRate) * 100 : 0;
   const prevTotalBets = previousMetrics ? Number(previousMetrics.totalBets) : 0;
+
+  if (me?.dashboardPreferences != null) {
+    return <div className="space-y-[14px]">
+      <MetricCard title="Lucro no período" icon={<Wallet size={15} />} value={formatSignedCurrency(profit)} valueColor={performanceColor(profit, preferences.performanceColors)} subtext={`${metrics.wonBets} ganhas / ${metrics.lostBets} perdidas`} />
+      <DashboardKpiGrid metrics={metrics} stake={Number(me.stake ?? 0)} preferences={preferences} desktop />
+    </div>;
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px]">

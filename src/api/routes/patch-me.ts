@@ -1,7 +1,9 @@
+import type { DashboardPreferences } from "@/lib/dashboard-preferences";
 import { apiClient } from "../apiClient";
 import type { MeResponse } from "./get-me";
 
 export interface UpdateMeParams {
+  dashboardPreferences?: DashboardPreferences | null;
   username?: string;
   email?: string;
   fullName?: string;

@@ -13,6 +13,7 @@ const AccountPage = lazy(() => import("./pages/perfil/AccountPage"));
 const PasswordPage = lazy(() => import("./pages/perfil/PasswordPage"));
 const TelegramPage = lazy(() => import("./pages/perfil/TelegramPage"));
 const PreferencesPage = lazy(() => import("./pages/perfil/PreferencesPage"));
+const DashboardPreferencesPage = lazy(() => import("./pages/perfil/DashboardPreferencesPage"));
 import { Navigate } from "react-router-dom";
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/profile/password" element={<RequireAuth><PasswordPage /></RequireAuth>} />
           <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
           <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
+          <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
         </Route>

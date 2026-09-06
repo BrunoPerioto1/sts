@@ -1,6 +1,7 @@
 import { apiClient } from "../apiClient";
 
 export type MeResponse = {
+  dashboardPreferences?: unknown;
   id: number;
   username: string;
   email: string;

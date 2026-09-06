@@ -7,6 +7,8 @@ export function MetricCard({
   icon,
   subtext,
   valueClass = "",
+  valueColor,
+  columnSpan = 1,
   className,
   sparkline,
   delta,
@@ -16,12 +18,14 @@ export function MetricCard({
   icon: React.ReactNode;
   subtext?: string;
   valueClass?: string;
+  valueColor?: string;
+  columnSpan?: 1 | 2;
   className?: string;
   sparkline?: number[];
   delta?: { label: string; positive: boolean };
 }) {
   return (
-    <div className={cn("card elev-sm bg-card rounded-md p-[12px_14px] sm:p-[14px_16px] flex flex-col gap-2 min-w-0", className)}>
+    <div className={cn("card elev-sm bg-card rounded-md p-[12px_14px] sm:p-[14px_16px] flex flex-col gap-2 min-w-0", columnSpan === 2 && "col-span-2", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 opacity-70">
           {icon}
@@ -43,7 +47,7 @@ export function MetricCard({
       </div>
       <p
         className={cn("text-lg sm:text-3xl font-medium tabular-nums whitespace-nowrap", valueClass)}
-        style={{ letterSpacing: "-0.02em" }}
+        style={{ letterSpacing: "-0.02em", color: valueColor }}
       >
         {value}
       </p>
