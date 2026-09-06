@@ -327,7 +327,7 @@ export function ApostaDetailSheet({
   const date = new Date(aposta.betTime);
   const stake = Number(aposta.stake);
   const profit = aposta.profit != null ? Number(aposta.profit) : null;
-  const ganho = profit != null ? stake + profit : null;
+  const ganho = status !== "pendente" && profit != null ? stake + profit : null;
 
   return (
     <BottomSheet
@@ -359,7 +359,7 @@ export function ApostaDetailSheet({
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Valor</p>
             <p className="text-sm font-medium tabular-nums">{formatCurrency(stake)}</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Retorno</p>
             <p className="text-sm font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
           </div>

@@ -161,7 +161,7 @@ export function DashboardMobileView({
       <div className="min-h-[calc(100dvh-96px)] px-4 pt-4 flex flex-col">
         <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
           <div className="min-w-0">
-            <h2 className="text-2xl font-semibold tracking-tight">Resultado</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
             <p className="text-sm text-zinc-400 truncate">
               {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}
             </p>
