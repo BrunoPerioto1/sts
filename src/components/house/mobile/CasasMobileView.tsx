@@ -108,7 +108,15 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
     <div className="space-y-4">
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
-      {metrics && (
+      {loading ? (
+        <div className="space-y-2" aria-busy="true" aria-label="Carregando casas">
+          <div className="skeleton h-3 w-24 rounded" />
+          <div className="skeleton h-9 w-40 rounded-lg" style={{ animationDelay: "80ms" }} />
+          <div className="grid grid-cols-3 gap-3 border-t border-border mt-3 pt-3">
+            {[1, 2, 3].map((i) => <div key={i} className="space-y-2"><div className="skeleton h-3 w-16 rounded" /><div className="skeleton h-5 w-14 rounded" /></div>)}
+          </div>
+        </div>
+      ) : metrics && (
         <div className="animate-rise stagger" style={stagger(0)}>
           <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo total</p>
           <div className="flex items-baseline gap-2 flex-wrap">
@@ -139,42 +147,35 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
         </div>
       )}
 
-      <div className="relative animate-rise stagger" style={stagger(1)}>
-        <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-        <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 min-h-[44px]" disabled={loading} />
-      </div>
+      {loading ? (
+        <div className="space-y-3" aria-hidden="true">
+          <div className="skeleton h-11 rounded-md" style={{ animationDelay: "140ms" }} />
+          <div className="flex items-center gap-2">
+            <div className="skeleton h-11 w-28 rounded-full" style={{ animationDelay: "200ms" }} />
+            <div className="skeleton h-11 w-24 rounded-full" style={{ animationDelay: "260ms" }} />
+            <div className="skeleton h-11 w-24 rounded-full ml-auto" style={{ animationDelay: "320ms" }} />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="relative animate-rise stagger" style={stagger(1)}>
+            <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 min-h-[44px]" />
+          </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
-        <button
-          type="button"
-          aria-pressed={onlyWithBalance}
-          onClick={() => { setOnlyWithBalance((v) => !v); setOnlyNegative(false); }}
-          className={cn(
-            "press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium",
-            onlyWithBalance ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
-          )}
-        >
-          Com saldo {withBalanceCount}
-        </button>
-        <button
-          type="button"
-          aria-pressed={onlyNegative}
-          onClick={() => { setOnlyNegative((v) => !v); setOnlyWithBalance(false); }}
-          className={cn(
-            "press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium",
-            onlyNegative ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
-          )}
-        >
-          Negativas
-        </button>
-        <button
-          type="button"
-          onClick={() => setSortSheetOpen(true)}
-          className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto"
-        >
-          <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
-        </button>
-      </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
+            <button type="button" aria-pressed={onlyWithBalance} onClick={() => { setOnlyWithBalance((v) => !v); setOnlyNegative(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+              Com saldo {withBalanceCount}
+            </button>
+            <button type="button" aria-pressed={onlyNegative} onClick={() => { setOnlyNegative((v) => !v); setOnlyWithBalance(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+              Negativas
+            </button>
+            <button type="button" onClick={() => setSortSheetOpen(true)} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
+              <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
+            </button>
+          </div>
+        </>
+      )}
 
       {loading ? (
         <div className="space-y-1">

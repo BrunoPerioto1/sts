@@ -159,7 +159,17 @@ export default function PerfilPage() {
     downloadCsv("resumo-mensal.csv", ["Mês", "Apostas", "Lucro"], rows);
   };
 
-  if (!me) return <MainLayout title="Perfil"><div className="opacity-55 text-sm">Carregando…</div></MainLayout>;
+  if (!me) {
+    return (
+      <MainLayout title="Perfil" hideHeaderBorder={isMobile} mobileHeader={isMobile ? <div className="skeleton h-7 w-32 rounded" /> : undefined}>
+        <div className={cn("flex flex-col gap-6", isMobile ? "min-h-[calc(100dvh-190px)]" : "max-w-xl")} aria-busy="true" aria-label="Carregando perfil">
+          <div className="space-y-2"><div className="skeleton h-3 w-28 rounded" /><div className="skeleton h-9 w-44 rounded-lg" /><div className="skeleton h-4 w-52 rounded" /></div>
+          <div className="grid grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className={cn("py-4 space-y-2", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-5 w-16 rounded" /></div>)}</div>
+          <div className="border-y border-border divide-y divide-border">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-14 rounded-none" style={{ animationDelay: `${i * 90}ms` }} />)}</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const isLinked = !!me.telegramUserId;
 
@@ -213,6 +223,19 @@ export default function PerfilPage() {
   ];
 
   if (isMobile) {
+    if (!metricsQuery.isError && metricsLoading) {
+      return (
+        <MainLayout title="Perfil" hideHeaderBorder mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
+          <div className="flex flex-col min-h-[calc(100dvh-190px)] gap-6" aria-busy="true" aria-label="Carregando perfil">
+            <div className="space-y-2"><div className="skeleton h-3 w-28 rounded" /><div className="skeleton h-9 w-44 rounded-lg" /><div className="skeleton h-4 w-52 rounded" /></div>
+            <div className="grid grid-cols-2">
+              {Array.from({ length: 4 }, (_, i) => <div key={i} className={cn("py-4 space-y-2", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-5 w-16 rounded" /></div>)}
+            </div>
+            <div><div className="skeleton h-3 w-16 rounded mb-2" /><div className="border-y border-border divide-y divide-border">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-14 rounded-none" style={{ animationDelay: `${i * 90}ms` }} />)}</div></div>
+          </div>
+        </MainLayout>
+      );
+    }
     return (
       <MainLayout
         title="Perfil"

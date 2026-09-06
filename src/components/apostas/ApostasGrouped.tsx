@@ -13,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { tapHaptic } from "@/lib/haptics";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import type { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
+import { ApostasMobileSkeleton } from "./ApostasMobileSkeleton";
 
 type Selection = ReturnType<typeof useBulkSelection>;
 
@@ -296,6 +297,10 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
   // maximo (~0) e a tela voltava pro topo. Mantendo a lista montada durante o
   // refetch, a posicao do scroll fica onde estava — o spinner do header ja
   // sinaliza o carregamento.
+  if (isLoading && apostas.length === 0 && isMobile) {
+    return <ApostasMobileSkeleton />;
+  }
+
   if (isLoading && apostas.length === 0) {
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
