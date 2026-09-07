@@ -85,3 +85,5 @@ export function useBulkSelection() {
 
   return { selectionMode, selected, enter, toggle, toggleMany, selectRange, clear, isSelected };
 }
+
+export type BulkSelection = ReturnType<typeof useBulkSelection>;

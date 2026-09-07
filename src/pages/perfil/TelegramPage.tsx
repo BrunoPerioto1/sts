@@ -10,6 +10,7 @@ import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import { formatCountdown } from "@/lib/format";
 
 const BOT_HANDLE = "@betbpbot";
 
@@ -18,11 +19,6 @@ const BENEFITS = [
   { icon: Sun, title: "Resumo do dia", text: "Lucro, pendentes e ROI do dia todo às 21h." },
   { icon: Bell, title: "Sinais filtrados", text: "Só chega o que passa do seu filtro de banca." },
 ];
-
-function formatCountdown(ms: number) {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
-}
 
 export default function TelegramPage() {
   const navigate = useNavigate();

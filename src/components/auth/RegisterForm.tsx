@@ -1,82 +1,18 @@
-import { useState } from "react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
-import { actionToast } from "@/lib/action-toast";
 import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
-import { useNavigate } from "react-router-dom";
-import { postRegister } from "@/api/routes/post-register";
-import { postLogin } from "@/api/routes/post-login";
+import { MIN_PASSWORD, useRegisterForm } from "@/hooks/auth/use-register-form";
 import { cn } from "@/lib/utils";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
-const MIN_PASSWORD = 6;
-
-// Três critérios, três barras: tamanho, número e um caractere fora de letra e
-// número. Não é medida de entropia — é o que a tela promete e o que o
-// formulário cobra.
-function passwordStrength(password: string) {
-  const checks = [password.length >= MIN_PASSWORD, /\d/.test(password), /[^A-Za-z0-9]/.test(password)];
-  const score = checks.filter(Boolean).length;
-  const label = password.length === 0 ? null : score <= 1 ? "Fraca" : score === 2 ? "Boa" : "Forte";
-  // Só o tamanho barra o cadastro — número e símbolo entram como força, não
-  // como exigência, pra não inventar regra que o backend não cobra.
-  return { score, label, meetsMinimum: checks[0] };
-}
-
-const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
-
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [registerData, setRegisterData] = useState({ nome: "", email: "", password: "" });
-  const navigate = useNavigate();
-
-  const strength = passwordStrength(registerData.password);
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!registerData.nome || !registerData.email || !registerData.password) {
-      setError("Preencha todos os campos.");
-      return;
-    }
-    if (!strength.meetsMinimum) {
-      setError(`Use ${MIN_PASSWORD} caracteres ou mais.`);
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-    try {
-      await postRegister({
-        username: registerData.nome,
-        email: registerData.email,
-        password: registerData.password,
-        roleId: 1,
-        fullName: registerData.nome,
-      });
-
-      const loginRes = await postLogin({ email: registerData.email, password: registerData.password });
-      localStorage.setItem("token", loginRes.access_token);
-
-      actionToast.success({ title: "Conta criada!", description: "Bem-vindo ao SportsBet Manager!" });
-      navigate("/dashboard");
-    } catch (err) {
-      // class-validator devolve `message` como array quando mais de uma regra
-      // falha; a tela mostra a primeira.
-      const raw = axios.isAxiosError(err) ? err.response?.data?.message : null;
-      setError(Array.isArray(raw) ? raw[0] : (raw ?? "Falha ao criar conta."));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { data, setData, error, setError, submitting, strength, emailValid, submit } = useRegisterForm();
 
   return (
-    <form onSubmit={handleRegister} className="w-full max-w-[380px] flex flex-col gap-5">
+    <form onSubmit={submit} className="w-full max-w-[380px] flex flex-col gap-5">
       <div>
         <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Criar conta</h1>
         <p className="text-sm text-zinc-500 mt-1">Três campos e você já registra a primeira aposta</p>
@@ -88,8 +24,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         type="text"
         autoComplete="name"
         placeholder="Seu nome"
-        value={registerData.nome}
-        onChange={(e) => setRegisterData((prev) => ({ ...prev, nome: e.target.value }))}
+        value={data.nome}
+        onChange={(e) => setData((prev) => ({ ...prev, nome: e.target.value }))}
         required
       />
 
@@ -99,9 +35,9 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         type="email"
         autoComplete="email"
         placeholder="seu@email.com"
-        value={registerData.email}
-        valid={isEmail(registerData.email)}
-        onChange={(e) => setRegisterData((prev) => ({ ...prev, email: e.target.value }))}
+        value={data.email}
+        valid={emailValid}
+        onChange={(e) => setData((prev) => ({ ...prev, email: e.target.value }))}
         required
       />
 
@@ -112,7 +48,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           type="password"
           autoComplete="new-password"
           placeholder="Sua senha"
-          value={registerData.password}
+          value={data.password}
           error={error}
           hint={
             strength.label && (
@@ -123,7 +59,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           }
           onChange={(e) => {
             setError(null);
-            setRegisterData((prev) => ({ ...prev, password: e.target.value }));
+            setData((prev) => ({ ...prev, password: e.target.value }));
           }}
           required
         />

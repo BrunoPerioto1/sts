@@ -5,7 +5,7 @@ import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { OptionRow } from "@/components/apostas/OptionRow";
 import { PeriodCalendarSheet } from "@/components/apostas/PeriodCalendarSheet";
 import { Button } from "@/components/ui/button";
-import type { DatePreset } from "@/hooks/dashboard/useDashboardFilters";
+import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 
 type SheetPreset = Extract<DatePreset, "7d" | "14d" | "currentMonth" | "lastMonth" | "60d" | "allTime">;
 

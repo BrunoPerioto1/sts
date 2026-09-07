@@ -1,6 +1,6 @@
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow, OptionBar } from "./OptionRow";
-import { STATUS_OPTIONS } from "./StatusMultiSelect";
+import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { Button } from "@/components/ui/button";
 
 interface StatusSheetProps {

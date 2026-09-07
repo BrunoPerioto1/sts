@@ -13,6 +13,7 @@ import { patchMe } from "@/api/routes/patch-me";
 import { deleteMe } from "@/api/routes/delete-me";
 import { useMe } from "@/hooks/queries/use-me";
 import { getErrorMessage } from "@/lib/api-error";
+import { clearToken } from "@/lib/auth-session";
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function AccountPage() {
     setDeleting(true);
     try {
       await deleteMe();
-      localStorage.removeItem("token");
+      clearToken();
       navigate("/login", { replace: true });
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao excluir a conta.") });

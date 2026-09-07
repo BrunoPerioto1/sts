@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatCurrency, formatDate, formatTime } from "@/lib/format";
 
 interface MovimentacaoModalProps {
   isOpen: boolean;
@@ -31,9 +32,6 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
       .catch(() => setError("Não foi possível carregar o histórico."))
       .finally(() => setIsLoading(false));
   }, [isOpen, houseId]);
-
-  const formatCurrency = (value: number | string) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -79,8 +77,8 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
                   return (
                     <tr key={mov.id} className="border-b border-border hover:bg-foreground/[0.04]">
                       <td className="py-2 opacity-70 text-sm">
-                        {new Date(mov.createdAt).toLocaleDateString("pt-BR")}{" "}
-                        <span className="opacity-50">{new Date(mov.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        {formatDate(mov.createdAt)}{" "}
+                        <span className="opacity-50">{formatTime(mov.createdAt)}</span>
                       </td>
                       <td className="py-2">
                         <span className="inline-flex items-center gap-1.5 text-sm">

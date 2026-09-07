@@ -1,5 +1,7 @@
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+// Aceita string porque o backend devolve decimais como string (numeric do
+// Postgres) — as telas de casa passavam o valor cru.
+export function formatCurrency(value: number | string): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value));
 }
 
 // Intl já coloca o sinal de negativo antes do "R$" sozinho — só falta o "+" no positivo.
@@ -19,4 +21,27 @@ export function formatSignedCurrencyCompact(value: number): string {
 // Aceita tanto vírgula quanto ponto como separador decimal na digitação.
 export function parsePtBrNumber(raw: string): number {
   return Number(raw.trim().replace(",", "."));
+}
+
+// dd/mm/aaaa e hh:mm — os dois formatos que a lista, o detalhe e o histórico
+// repetem. Variações com mês por extenso continuam inline, são de uma tela só.
+export function formatDate(value: string | number | Date): string {
+  return new Date(value).toLocaleDateString("pt-BR");
+}
+
+export function formatTime(value: string | number | Date): string {
+  return new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+// Iniciais de nome de usuário/casa pro avatar redondo.
+export function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+// mm:ss pro tempo que falta (bloqueio de login, validade do código do Telegram).
+export function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }

@@ -6,18 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CaretDown } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-
-// Cor da barra usada no StatusSheet mobile (o dropdown desktop abaixo só usa
-// value/label).
-const STATUS_OPTIONS: { value: string; label: string; color: string }[] = [
-  { value: "9", label: "Pendente", color: "var(--color-neutral-300)" },
-  { value: "1", label: "Ganha", color: "var(--color-positive)" },
-  { value: "2", label: "Perdida", color: "var(--color-negative)" },
-  { value: "4", label: "Meia Ganha", color: "color-mix(in srgb, var(--color-positive) 55%, white)" },
-  { value: "5", label: "Meia Perdida", color: "color-mix(in srgb, var(--color-negative) 55%, white)" },
-  { value: "6", label: "Cashout", color: "var(--color-accent)" },
-  { value: "3", label: "Cancelada", color: "#71717a" },
-];
+import { STATUS_OPTIONS } from "@/lib/bet-status";
 
 interface StatusMultiSelectProps {
   selected: string[];
@@ -69,5 +58,3 @@ export function StatusMultiSelect({ selected, onChange, className, disabled }: S
     </DropdownMenu>
   );
 }
-
-export { STATUS_OPTIONS };

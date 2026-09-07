@@ -14,11 +14,7 @@ import { MovimentacaoModal } from "./MovimentacaoModal";
 import { Segmented } from "@/components/ui/segmented";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-function formatCurrency(value: string | number) {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
-}
+import { formatCurrency } from "@/lib/format";
 
 // Referencia estavel: `?? []` inline criaria array novo a cada render e
 // invalidaria o useMemo que depende de `houses`.

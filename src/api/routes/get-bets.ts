@@ -1,4 +1,5 @@
 import { api } from '../apiClient';
+import { unwrap } from '../request';
 
 export interface CreateBetDto {
   game: string;
@@ -10,14 +11,8 @@ export interface CreateBetDto {
   betTime?: string;
 }
 
-export async function createBet(bet: CreateBetDto) {
-  try {
-    const response = await api.bets.post('', bet);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
-  
+export function createBet(bet: CreateBetDto) {
+  return unwrap(api.bets.post('', bet));
 }
 
 export interface UpdateApostaDto {
@@ -31,13 +26,8 @@ export interface UpdateApostaDto {
   betTime?: string;
 }
 
-export async function updateBet(id: number, bet: UpdateApostaDto) {
-  try {
-    const response = await api.bets.put(`/${id}`, bet);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
+export function updateBet(id: number, bet: UpdateApostaDto) {
+  return unwrap(api.bets.put(`/${id}`, bet));
 }
 export interface BetItem {
   id: number;
@@ -74,14 +64,13 @@ export interface PaginatedBetsResponseDto {
 }
 
 export async function getBets(params?: BetFilterDto) {
-  const queryParams: Record<string, any> = { ...params };
-  if (queryParams.startDate) queryParams.startDate = new Date(queryParams.startDate).toISOString();
-  if (queryParams.endDate) queryParams.endDate = new Date(queryParams.endDate).toISOString();
+  const { startDate, endDate, resultIds, houseIds, ...rest } = params ?? {};
+  const queryParams: Record<string, string | number | undefined> = { ...rest };
+  if (startDate) queryParams.startDate = new Date(startDate).toISOString();
+  if (endDate) queryParams.endDate = new Date(endDate).toISOString();
   // API espera lista separada por vírgula (independe de como axios serializaria um array).
-  if (queryParams.resultIds?.length) queryParams.resultIds = queryParams.resultIds.join(',');
-  else delete queryParams.resultIds;
-  if (queryParams.houseIds?.length) queryParams.houseIds = queryParams.houseIds.join(',');
-  else delete queryParams.houseIds;
+  if (resultIds?.length) queryParams.resultIds = resultIds.join(',');
+  if (houseIds?.length) queryParams.houseIds = houseIds.join(',');
 
   const response = await api.bets.get<PaginatedBetsResponseDto>('', { params: queryParams });
   return response.data;
@@ -109,45 +98,25 @@ export interface FinalizarMultiplasDto {
 }
 
 // Finalizar aposta individual: /bets/finalize/{id}
-export async function finalizeBet(id: number, data: FinalizarApostaDto) {
-  try {
-    const response = await api.bets.put(`/finalize/${id}`, data);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
+export function finalizeBet(id: number, data: FinalizarApostaDto) {
+  return unwrap(api.bets.put(`/finalize/${id}`, data));
 }
 
 // Finalizar múltiplas apostas: /bets/finalize-multiple
-export async function finalizeMultipleBets(data: FinalizarMultiplasDto) {
-  try {
-    const response = await api.bets.put('/finalize-multiple', data);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
+export function finalizeMultipleBets(data: FinalizarMultiplasDto) {
+  return unwrap(api.bets.put('/finalize-multiple', data));
 }
 
 
 // Deletar múltiplas apostas: /bets/delete-multiple
-export async function deleteMultipleBets(betIds: number[]) {
-  try {
-    const response = await api.bets.delete('/delete-multiple', { data: { betIds } });
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
+export function deleteMultipleBets(betIds: number[]) {
+  return unwrap(api.bets.delete('/delete-multiple', { data: { betIds } }));
 }
 
 
 // Deletar aposta individual: /bets/{id}
-export async function deleteBet(id: number) {
-  try {
-    const response = await api.bets.delete(`/${id}`);
-    return response.data;
-  } catch (e: any) {
-    throw new Error(`${e?.message || e}`);
-  }
+export function deleteBet(id: number) {
+  return unwrap(api.bets.delete(`/${id}`));
 }
 
 

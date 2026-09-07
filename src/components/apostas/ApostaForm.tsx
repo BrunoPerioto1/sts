@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type BetItem } from "@/api/routes/get-bets";
-import { useApostaForm } from "@/hooks/apostas/useApostaForm";
+import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 
 interface ApostaFormProps {
   onApostaAdded: (aposta: BetItem) => void;

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { DotsThreeOutline } from "@phosphor-icons/react";
+import { initialsOf, formatCurrency, formatTime } from "@/lib/format";
 
 interface HouseListItemProps {
   house: HouseBalanceDto;
@@ -15,21 +16,10 @@ interface HouseListItemProps {
   onNewTransaction?: (house: HouseBalanceDto) => void;
 }
 
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
-function formatCurrency(value: string | number) {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
-}
-
 function formatMovementDate(iso: string) {
   const date = new Date(iso);
   const now = new Date();
-  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const time = formatTime(date);
   const sameDay = date.toDateString() === now.toDateString();
   if (sameDay) return `hoje, ${time}`;
   const yesterday = new Date(now);

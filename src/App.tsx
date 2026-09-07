@@ -16,6 +16,7 @@ const PreferencesPage = lazy(() => import("./pages/perfil/PreferencesPage"));
 const DashboardPreferencesPage = lazy(() => import("./pages/perfil/DashboardPreferencesPage"));
 import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clearToken, getToken } from '@/lib/auth-session';
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
 // so quando ele registra/edita uma aposta. Sem isso o padrao do react-query e
@@ -74,7 +75,7 @@ function RouteFallback() {
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = typeof window !== 'undefined' ? getToken() : null;
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -84,7 +85,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function LogoutRoute() {
   useEffect(() => {
     queryClient.clear();
-    localStorage.removeItem('token');
+    clearToken();
   }, []);
   return <Navigate to="/login" replace />;
 }

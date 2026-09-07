@@ -6,7 +6,7 @@ import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
-import { useApostaForm } from "@/hooks/apostas/useApostaForm";
+import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 import { type BetItem } from "@/api/routes/get-bets";
 
 const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-400";

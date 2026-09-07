@@ -3,17 +3,13 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/format";
 
 interface HouseDetailsModalProps {
   house: HouseBalanceDto | null;
   isOpen: boolean;
   onClose: () => void;
   onNewTransaction?: (house: HouseBalanceDto) => void;
-}
-
-function formatCurrency(value: string | number) {
-  const num = typeof value === "string" ? parseFloat(value) : value;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num);
 }
 
 function Group({ kicker, children }: { kicker: string; children: React.ReactNode }) {

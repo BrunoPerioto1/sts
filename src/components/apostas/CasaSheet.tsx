@@ -5,15 +5,10 @@ import { OptionRow } from "./OptionRow";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useHouseBalances } from "@/hooks/queries/use-houses";
+import { initialsOf } from "@/lib/format";
 
 const RECENT_HOUSES_KEY = "apostas:recent-houses";
 const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
-
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
 
 function colorForHouse(id: number) {
   return AVATAR_PALETTE[id % AVATAR_PALETTE.length];

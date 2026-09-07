@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
 import { EmptyState } from "@/components/ui/empty-state";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> = {
@@ -125,7 +125,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                       <span className="flex-1 min-w-0">
                         <span className="block text-base text-white truncate">{meta.label}</span>
                         <span className="block text-sm text-zinc-400 truncate">
-                          {new Date(t.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          {formatTime(t.createdAt)}
                         </span>
                       </span>
                       <span className="shrink-0 text-right">

@@ -9,6 +9,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import { format, parseISO, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Segmented } from "@/components/ui/segmented";
@@ -45,9 +46,9 @@ function groupData(data: DailyData[], grouping: Grouping) {
     .map(([date, profitDay]) => ({ date, profitDay }));
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length && label) {
-    const value = payload[0].value;
+    const value = Number(payload[0].value);
     const isPositive = value >= 0;
     return (
       <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-xs">

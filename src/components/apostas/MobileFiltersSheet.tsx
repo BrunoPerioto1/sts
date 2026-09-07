@@ -7,7 +7,7 @@ import { SheetSelectField } from "./SheetSelectField";
 import { StatusSheet } from "./StatusSheet";
 import { CasaSheet } from "./CasaSheet";
 import { PeriodCalendarSheet } from "./PeriodCalendarSheet";
-import { STATUS_OPTIONS } from "./StatusMultiSelect";
+import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { defaultPeriod, periodRangeFor, type ApostasFilterState, type PeriodPreset } from "@/types/apostas-filters";

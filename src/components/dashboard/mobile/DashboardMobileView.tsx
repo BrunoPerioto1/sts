@@ -5,7 +5,7 @@ import { CalendarBlank, CaretDown, ChartLine } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
-import type { DatePreset } from "@/hooks/dashboard/useDashboardFilters";
+import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { formatSignedCurrency } from "@/lib/format";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { stagger } from "@/lib/motion";

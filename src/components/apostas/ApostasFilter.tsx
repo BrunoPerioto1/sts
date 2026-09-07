@@ -4,7 +4,8 @@ import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StatusMultiSelect, STATUS_OPTIONS } from "./StatusMultiSelect";
+import { StatusMultiSelect } from "./StatusMultiSelect";
+import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
