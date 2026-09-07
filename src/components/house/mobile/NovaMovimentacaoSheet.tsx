@@ -86,7 +86,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
       }
       footer={
         <Button
-          className="w-full min-h-[44px] bg-blue-600 text-white font-bold hover:opacity-90 active:opacity-90"
+          className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
           disabled={loading || !(numericValue > 0)}
           onClick={handleSubmit}
         >

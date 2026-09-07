@@ -352,6 +352,15 @@ export default function ApostasPage() {
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2
   );
 
+  // Filtro ativo = qualquer coisa fora do estado inicial; o vazio da lista usa
+  // isso pra decidir entre "limpe os filtros" e "registre a primeira aposta".
+  const hasFilters =
+    statusFilter.length > 0 || houseIds.length > 0 || searchTerm !== "" || periodPreset !== "tudo";
+  const clearFilters = () => {
+    setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
+    setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPageStart(1);
+  };
+
   const filterProps = {
     houses,
     initialDateFrom: startDate,
@@ -364,10 +373,7 @@ export default function ApostasPage() {
     onFilterStatus: (status: string[]) => { setStatusFilter(status); setPageStart(1); },
     onFilterHouse: (id: string) => { setHouseIds(id === "0" ? [] : [Number(id)]); setPageStart(1); },
     onDateRangeChange: (from: string, to: string) => { setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPageStart(1); },
-    onClearFilters: () => {
-      setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
-      setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPageStart(1);
-    },
+    onClearFilters: clearFilters,
     onExportCsv: handleExportCsv,
     isLoading: loading,
   };
@@ -471,7 +477,7 @@ export default function ApostasPage() {
               onClick={() => { setStatusFilter(pill.value); setPageStart(1); }}
               className={cn(
                 "shrink-0 h-11 px-3.5 rounded-full text-sm font-medium transition-colors",
-                isActive ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400"
+                isActive ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400"
               )}
             >
               {pill.label}
@@ -527,6 +533,8 @@ export default function ApostasPage() {
             <ApostasGrouped
               apostas={apostas}
               isLoading={loading}
+              hasFilters={hasFilters}
+              onClearFilters={clearFilters}
               selection={selection}
               onEdit={(a) => { setEditAposta(a); setEditModalOpen(true); }}
               onDuplicate={handleDuplicate}
@@ -548,6 +556,8 @@ export default function ApostasPage() {
             <ApostasList
               apostas={apostas}
               isLoading={loading}
+              hasFilters={hasFilters}
+              onClearFilters={clearFilters}
               onEdit={(a) => { setEditAposta(a); setEditModalOpen(true); }}
               onDuplicate={handleDuplicate}
               onFinalize={handleFinalize}

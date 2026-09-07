@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { ArrowsDownUp, Buildings, MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowsDownUp, Buildings, MagnifyingGlass, WarningCircle } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
@@ -103,6 +106,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
     else setSearchParams({}, { replace: true });
   };
   const currentHouse = houses.find((h) => h.houseId === panelHouseId);
+  const hasHouseFilters = !!searchTerm || onlyNegative || onlyWithBalance;
 
   return (
     <div className="space-y-4">
@@ -164,10 +168,10 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
-            <button type="button" aria-pressed={onlyWithBalance} onClick={() => { setOnlyWithBalance((v) => !v); setOnlyNegative(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+            <button type="button" aria-pressed={onlyWithBalance} onClick={() => { setOnlyWithBalance((v) => !v); setOnlyNegative(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
               Com saldo {withBalanceCount}
             </button>
-            <button type="button" aria-pressed={onlyNegative} onClick={() => { setOnlyNegative((v) => !v); setOnlyWithBalance(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-blue-600 text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+            <button type="button" aria-pressed={onlyNegative} onClick={() => { setOnlyNegative((v) => !v); setOnlyWithBalance(false); }} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
               Negativas
             </button>
             <button type="button" onClick={() => setSortSheetOpen(true)} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
@@ -178,27 +182,30 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
       )}
 
       {loading ? (
-        <div className="space-y-1">
+        <div className="space-y-1" aria-busy="true" aria-label="Carregando casas">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="skeleton h-16 rounded-md" style={{ animationDelay: `${i * 90}ms` }} />
+            <Skeleton key={i} className="h-16 rounded-md" delay={i * 90} />
           ))}
         </div>
       ) : balancesQuery.isError || metricsQuery.isError ? (
-        <div role="alert" className="py-8 text-center space-y-3">
-          <p>Não foi possível carregar as casas.</p>
-          <button className="min-h-11 px-4 text-accent" onClick={() => invalidate()}>Tentar novamente</button>
+        <div role="alert">
+          <EmptyState
+            bare
+            icon={<WarningCircle size={28} />}
+            title="Não foi possível carregar as casas"
+            description="Verifique sua conexão e tente de novo."
+            action={<Button variant="outline" onClick={() => invalidate()}>Tentar novamente</Button>}
+          />
         </div>
       ) : filteredHouses.length === 0 ? (
-        <div className="animate-rise flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
-          <Buildings size={30} className="opacity-35 mb-3" />
-          <h3 className="text-base font-medium mb-1">Nenhuma casa encontrada</h3>
-          <p className="text-sm opacity-75 text-center px-6">
-            {searchTerm || onlyNegative || onlyWithBalance ? "Nenhuma casa corresponde aos filtros aplicados." : "Nenhuma casa com apostas ou movimentações ainda."}
-          </p>
-          {(searchTerm || onlyNegative || onlyWithBalance) && (
-            <button className="min-h-11 px-4 mt-2 text-accent" onClick={() => { setSearchTerm(""); setOnlyNegative(false); setOnlyWithBalance(false); }}>Limpar filtros</button>
-          )}
-        </div>
+        <EmptyState
+          icon={<Buildings size={30} />}
+          title="Nenhuma casa encontrada"
+          description={hasHouseFilters ? "Nenhuma casa corresponde aos filtros aplicados." : "Nenhuma casa com apostas ou movimentações ainda."}
+          action={hasHouseFilters ? (
+            <Button variant="outline" onClick={() => { setSearchTerm(""); setOnlyNegative(false); setOnlyWithBalance(false); }}>Limpar filtros</Button>
+          ) : undefined}
+        />
       ) : (
         <div className="flex flex-col divide-y divide-border">
           {filteredHouses.map((house, index) => (

@@ -20,7 +20,7 @@ export function ScreenFooter({ onSave, onDiscard, saving, disabled, saveLabel = 
       style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
     >
       <Button
-        className="flex-1 min-h-[48px] bg-blue-600 text-white font-semibold hover:bg-blue-600/90"
+        className="flex-1 min-h-[48px] bg-accent text-white font-semibold hover:bg-accent/90"
         onClick={onSave}
         disabled={disabled || saving}
       >

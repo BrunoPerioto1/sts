@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft, ChatCircleDots, CircleNotch, Clock, PaperPlaneTilt, Sun, Bell } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { actionToast } from "@/lib/action-toast";
 import { useMe } from "@/hooks/queries/use-me";
@@ -115,7 +116,7 @@ export default function TelegramPage() {
       }
     >
       {!me ? (
-        <div className="opacity-55 text-sm">Carregando…</div>
+        <FormSkeleton fields={2} />
       ) : code ? (
         <div className="flex flex-col gap-5">
           <p className="text-sm text-zinc-400">
@@ -231,7 +232,7 @@ export default function TelegramPage() {
           </div>
 
           <Button
-            className="w-full min-h-[48px] bg-blue-600 text-white font-semibold hover:bg-blue-600/90"
+            className="w-full min-h-[48px] bg-accent text-white font-semibold hover:bg-accent/90"
             onClick={generateCode}
             disabled={linking}
           >

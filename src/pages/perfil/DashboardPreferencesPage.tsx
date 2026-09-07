@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, CaretLeft, CaretRight, DotsSixVertical } from "@pho
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { DashboardKpiCard } from "@/components/dashboard/DashboardKpiCard";
@@ -74,7 +75,15 @@ export default function DashboardPreferencesPage() {
   }>
     <div className="max-w-xl space-y-7 pb-6">
       <p className="text-sm text-zinc-400">Escolha os indicadores, ordem, ícones e aparência do seu Dashboard.</p>
-      {!me ? <div role="status" className="space-y-3"><p>Carregando preferências…</p><Button variant="outline" onClick={reloadMe}>Tentar novamente</Button></div> : <>
+      {!me ? <div role="status" aria-label="Carregando preferências" className="space-y-4">
+        <Skeleton className="h-5 w-32" />
+        <div className="border-y border-border divide-y divide-border">
+          {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-14 rounded-none" delay={i * 90} />)}
+        </div>
+        {/* Retry discreto: antes o botão "Tentar novamente" aparecia no
+            carregamento normal e fazia parecer que algo tinha falhado. */}
+        <Button variant="ghost" size="sm" className="text-zinc-400" onClick={reloadMe}>Recarregar</Button>
+      </div> : <>
         <section aria-labelledby="indicators-title">
           <h2 id="indicators-title" className="text-base font-semibold">Indicadores</h2>
           <p className="text-sm text-zinc-400 mt-1">Escolha quais informações aparecem no Dashboard.</p>

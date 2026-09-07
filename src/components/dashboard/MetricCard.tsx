@@ -46,7 +46,7 @@ export function MetricCard({
         )}
       </div>
       <p
-        className={cn("text-lg sm:text-3xl font-medium tabular-nums whitespace-nowrap", valueClass)}
+        className={cn("text-lg sm:text-3xl font-semibold tabular-nums whitespace-nowrap", valueClass)}
         style={{ letterSpacing: "-0.02em", color: valueColor }}
       >
         {value}
@@ -54,10 +54,10 @@ export function MetricCard({
       {delta && (
         <p className="text-xs">
           <span className={delta.positive ? "text-positive font-medium" : "text-negative font-medium"}>{delta.label}</span>
-          <span className="opacity-45"> vs. período anterior</span>
+          <span className="opacity-60"> vs. período anterior</span>
         </p>
       )}
-      {subtext && <p className="text-xs opacity-45">{subtext}</p>}
+      {subtext && <p className="text-xs opacity-60">{subtext}</p>}
     </div>
   );
 }

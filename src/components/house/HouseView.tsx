@@ -3,6 +3,7 @@ import { HouseDetailsModal } from "./HouseDetailsModal";
 import { HouseListItem } from "./HouseListItem";
 import { HousesMetrics } from "./HouseMetrics";
 import { HousesSearch, type HouseSort } from "./HouseSearch";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Buildings } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
@@ -98,13 +99,11 @@ export function CasasApostaView() {
       />
 
       {filteredHouses.length === 0 && !loading ? (
-        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-md">
-          <Buildings size={30} className="opacity-35 mb-3" />
-          <h3 className="text-base font-medium mb-1">Nenhuma casa encontrada</h3>
-          <p className="text-sm opacity-55">
-            {searchTerm ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
-          </p>
-        </div>
+        <EmptyState
+          icon={<Buildings size={30} />}
+          title="Nenhuma casa encontrada"
+          description={searchTerm ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
+        />
       ) : view === "list" ? (
         <div className="card elev-sm bg-card rounded-md p-[14px_16px] overflow-x-auto">
           <table className="table w-full text-sm">

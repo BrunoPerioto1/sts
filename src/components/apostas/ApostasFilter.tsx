@@ -169,7 +169,7 @@ export function ApostasFilter({
               key={chip.key}
               className={cn(
                 "h-7 inline-flex items-center gap-1 rounded-full px-3 text-xs",
-                chip.solid ? "bg-blue-600 text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
+                chip.solid ? "bg-accent text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
               )}
             >
               {chip.label}

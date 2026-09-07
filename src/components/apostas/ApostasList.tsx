@@ -12,6 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Receipt } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,6 +37,8 @@ interface ApostasListProps {
   onSelectBet?: (betId: number) => void;
   showCheckboxes?: boolean;
   isLoading?: boolean;
+  hasFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export type Status = "ganha" | "perdida" | "pendente" | "cancelada" | "meiaGanha" | "meiaPerdida" | "cashout";
@@ -271,7 +276,7 @@ function CashoutSheet({
       footer={
         <div className="flex flex-col gap-2">
           <Button
-            className="w-full min-h-[44px] bg-blue-600 text-white font-bold hover:opacity-90 active:opacity-90"
+            className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
             disabled={!valid}
             onClick={() => {
               onConfirm(numeric);
@@ -387,7 +392,7 @@ export function ApostaDetailSheet({
             <Button
               className={cn(
                 "w-full min-h-[44px] gap-2 border-transparent text-white font-bold hover:opacity-90 active:opacity-90",
-                profit == null ? "bg-blue-600" : profit >= 0 ? "bg-green-600" : "bg-red-600"
+                profit == null ? "bg-accent" : profit >= 0 ? "bg-green-600" : "bg-red-600"
               )}
               style={{ boxShadow: "var(--shadow-sm)" }}
               onClick={() => setLiquidarOpen(true)}
@@ -559,6 +564,8 @@ export function ApostasList({
   onSelectBet,
   showCheckboxes = false,
   isLoading = false,
+  hasFilters = false,
+  onClearFilters,
 }: ApostasListProps) {
   const isMobile = useIsMobile();
   const [detailAposta, setDetailAposta] = useState<BetItem | null>(null);
@@ -573,14 +580,14 @@ export function ApostasList({
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
         {[38, 88, 72, 80, 56].map((w, i) => (
-          <div key={i} className="h-[10px] rounded" style={{ width: `${w}%`, background: "color-mix(in srgb, var(--color-text) 8%, transparent)" }} />
+          <Skeleton key={i} className="h-[10px]" style={{ width: `${w}%` }} delay={i * 90} />
         ))}
       </div>
     );
   }
 
   if (apostas.length === 0) {
-    return <p className="text-center py-10 text-sm opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+    return <ApostasEmpty hasFilters={hasFilters} onClearFilters={onClearFilters} />;
   }
 
   if (isMobile) {
@@ -687,5 +694,29 @@ export function ApostasList({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/**
+ * Vazio das duas visões de aposta. Com filtro ativo oferece a saída (limpar);
+ * sem filtro nenhum, o que falta é a primeira aposta — dizer "critérios de
+ * busca" nesse caso era confuso, porque não havia busca alguma.
+ */
+export function ApostasEmpty({ hasFilters, onClearFilters }: { hasFilters?: boolean; onClearFilters?: () => void }) {
+  return (
+    <EmptyState
+      icon={<Receipt size={30} />}
+      title={hasFilters ? "Nenhuma aposta encontrada" : "Nenhuma aposta registrada ainda"}
+      description={
+        hasFilters
+          ? "Nenhuma aposta corresponde aos filtros aplicados."
+          : "Registre sua primeira aposta pelo Telegram ou pelo botão de nova aposta."
+      }
+      action={
+        hasFilters && onClearFilters ? (
+          <Button variant="outline" onClick={onClearFilters}>Limpar filtros</Button>
+        ) : undefined
+      }
+    />
   );
 }

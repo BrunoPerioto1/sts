@@ -22,6 +22,8 @@ import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
 import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PerfilSkeleton } from "@/components/perfil/PerfilSkeleton";
 import { TelegramLogo, DownloadSimple, SignOut, IdentificationCard, SlidersHorizontal, CaretRight, SquaresFour } from "@phosphor-icons/react";
 
 function initialsOf(name: string) {
@@ -162,11 +164,7 @@ export default function PerfilPage() {
   if (!me) {
     return (
       <MainLayout title="Perfil" hideHeaderBorder={isMobile} mobileHeader={isMobile ? <div className="skeleton h-7 w-32 rounded" /> : undefined}>
-        <div className={cn("flex flex-col gap-6", isMobile ? "min-h-[calc(100dvh-190px)]" : "max-w-xl")} aria-busy="true" aria-label="Carregando perfil">
-          <div className="space-y-2"><div className="skeleton h-3 w-28 rounded" /><div className="skeleton h-9 w-44 rounded-lg" /><div className="skeleton h-4 w-52 rounded" /></div>
-          <div className="grid grid-cols-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className={cn("py-4 space-y-2", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-5 w-16 rounded" /></div>)}</div>
-          <div className="border-y border-border divide-y divide-border">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-14 rounded-none" style={{ animationDelay: `${i * 90}ms` }} />)}</div>
-        </div>
+        <PerfilSkeleton className={isMobile ? "min-h-[calc(100dvh-190px)]" : "max-w-xl"} />
       </MainLayout>
     );
   }
@@ -227,13 +225,7 @@ export default function PerfilPage() {
     if (!metricsQuery.isError && metricsLoading) {
       return (
         <MainLayout title="Perfil" hideHeaderBorder mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
-          <div className="flex flex-col min-h-[calc(100dvh-190px)] gap-6" aria-busy="true" aria-label="Carregando perfil">
-            <div className="space-y-2"><div className="skeleton h-3 w-28 rounded" /><div className="skeleton h-9 w-44 rounded-lg" /><div className="skeleton h-4 w-52 rounded" /></div>
-            <div className="grid grid-cols-2">
-              {Array.from({ length: 4 }, (_, i) => <div key={i} className={cn("py-4 space-y-2", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-5 w-16 rounded" /></div>)}
-            </div>
-            <div><div className="skeleton h-3 w-16 rounded mb-2" /><div className="border-y border-border divide-y divide-border">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-14 rounded-none" style={{ animationDelay: `${i * 90}ms` }} />)}</div></div>
-          </div>
+          <PerfilSkeleton className="min-h-[calc(100dvh-190px)]" />
         </MainLayout>
       );
     }
@@ -249,7 +241,7 @@ export default function PerfilPage() {
           <div>
             <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Lucro acumulado</p>
             <p className={cn("text-3xl font-semibold tabular-nums leading-tight", !metricsUnavailable && (summary.totalProfit >= 0 ? "text-positive" : "text-negative"))}>
-              {metricsLoading ? "Carregando…" : metricsQuery.isError ? "Indisponível" : formatSignedCurrency(summary.totalProfit)}
+              {metricsLoading ? <Skeleton className="h-8 w-40 rounded-lg" /> : metricsQuery.isError ? "Indisponível" : formatSignedCurrency(summary.totalProfit)}
             </p>
             {since && <p className="text-sm text-zinc-500 mt-0.5">{since}</p>}
           </div>

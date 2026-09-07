@@ -80,7 +80,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
         style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
         <Button
-          className="w-full min-h-[44px] bg-blue-600 text-white font-bold hover:opacity-90 active:opacity-90"
+          className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
           onClick={() => onNewTransaction(house)}
         >
           Nova movimentação

@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface MovimentacaoModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId }: Movime
             </div>
           </div>
         ) : movimentacoes.length === 0 ? (
-          <p className="text-center py-8 text-sm opacity-55">Nenhuma movimentação registrada</p>
+          <EmptyState bare title="Nenhuma movimentação" description="Depósitos e saques desta casa aparecem aqui." />
         ) : (
           <table className="table w-full text-sm">
             <thead>

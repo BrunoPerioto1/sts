@@ -14,12 +14,16 @@ import { tapHaptic } from "@/lib/haptics";
 import { useLongPress } from "@/hooks/apostas/useLongPress";
 import type { useBulkSelection } from "@/hooks/apostas/useBulkSelection";
 import { ApostasMobileSkeleton } from "./ApostasMobileSkeleton";
+import { ApostasEmpty } from "./ApostasList";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Selection = ReturnType<typeof useBulkSelection>;
 
 interface ApostasGroupedProps {
   apostas: BetItem[];
   isLoading?: boolean;
+  hasFilters?: boolean;
+  onClearFilters?: () => void;
   onEdit?: (aposta: BetItem) => void;
   onDelete?: (id: number) => void;
   onDuplicate?: (aposta: BetItem) => void;
@@ -131,7 +135,7 @@ function BetRowDesktop({
       className={cn(
         "group flex items-center gap-3 py-[10px] px-2 -mx-2 border-b border-border last:border-b-0 rounded-md transition-colors",
         selection.selectionMode && "cursor-pointer",
-        isSelected && "bg-blue-500/[0.06]"
+        isSelected && "bg-accent/[0.08]"
       )}
       onClick={handleRowClick}
     >
@@ -231,7 +235,7 @@ function BetCardMobile({
     <div
       className={cn(
         "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-4 flex flex-col gap-2",
-        isSelected ? "ring-2 ring-blue-500/60 bg-blue-500/[0.06]" : "bg-card"
+        isSelected ? "ring-2 ring-accent/60 bg-accent/[0.08]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
       role={selection.selectionMode ? "group" : "button"}
@@ -271,7 +275,7 @@ function BetCardMobile({
   );
 }
 
-export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection }: ApostasGroupedProps) {
+export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection, hasFilters, onClearFilters }: ApostasGroupedProps) {
   const isMobile = useIsMobile();
   const groups = useMemo(() => groupBets(apostas), [apostas]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -301,14 +305,14 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
     return (
       <div className="card bg-card rounded-md p-4 space-y-3">
         {[38, 88, 72, 80, 56].map((w, i) => (
-          <div key={i} className="skeleton h-[10px] rounded" style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }} />
+          <Skeleton key={i} className="h-[10px]" style={{ width: `${w}%` }} delay={i * 90} />
         ))}
       </div>
     );
   }
 
   if (apostas.length === 0) {
-    return <p className="text-center py-10 text-sm opacity-55">Nenhuma aposta encontrada com os critérios de busca.</p>;
+    return <ApostasEmpty hasFilters={hasFilters} onClearFilters={onClearFilters} />;
   }
 
   const detailSheet = (

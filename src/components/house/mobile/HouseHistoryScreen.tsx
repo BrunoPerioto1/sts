@@ -4,6 +4,7 @@ import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircl
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> = {
   DEPOSIT: { label: "Depósito", icon: ArrowDownLeft },
@@ -108,7 +109,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
             <p>{error}</p>
           </div>
         ) : groups.length === 0 ? (
-          <p className="text-center py-10 text-sm opacity-75">Nenhuma movimentação registrada</p>
+          <EmptyState bare icon={<SlidersHorizontal size={26} />} title="Nenhuma movimentação" description="Depósitos e saques desta casa aparecem aqui." />
         ) : (
           groups.map((g) => (
             <div key={g.day}>

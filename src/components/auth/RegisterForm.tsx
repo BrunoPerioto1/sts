@@ -144,7 +144,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         </p>
       </div>
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2 bg-blue-600 text-white hover:bg-blue-600/90" disabled={submitting}>
+      <Button type="submit" className="w-full min-h-[48px] text-base gap-2 bg-accent text-white hover:bg-accent/90" disabled={submitting}>
         {submitting ? (
           <>
             <CircleNotch size={18} className="animate-spin" /> Criando conta…

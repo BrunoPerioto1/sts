@@ -13,6 +13,8 @@ import { format, parseISO, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Segmented } from "@/components/ui/segmented";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ChartBar } from "@phosphor-icons/react";
 
 interface DailyData {
   date: string;
@@ -67,9 +69,14 @@ const formatAxisValue = (value: number) => {
 };
 
 export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChartProps) => {
-  const [grouping, setGrouping] = useState<Grouping>("week");
+  // Agrupamento nulo = ainda no automatico. Semana era o padrao fixo, entao um
+  // periodo de poucos dias virava uma ou duas barras soltas num grafico de
+  // 400px. Assim que o usuario escolhe, a escolha dele manda.
+  const [chosenGrouping, setChosenGrouping] = useState<Grouping | null>(null);
   const isMobile = useIsMobile();
+  const grouping = chosenGrouping ?? (data.length <= 14 ? "day" : "week");
   const grouped = useMemo(() => groupData(data, grouping), [data, grouping]);
+  const isEmpty = data.length === 0;
 
   const totalProfit = data.reduce((sum, item) => sum + item.profitDay, 0);
   const positiveCount = grouped.filter((d) => d.profitDay > 0).length;
@@ -81,17 +88,26 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
           <h3 className="text-base font-medium">Resultado diário</h3>
           <p className="text-xs opacity-55">Lucro líquido por período selecionado</p>
         </div>
-        <Segmented
+        {!isEmpty && <Segmented
           options={[
             { value: "day", label: "Dia" },
             { value: "week", label: "Semana" },
             { value: "month", label: "Mês" },
           ]}
           value={grouping}
-          onChange={(v) => setGrouping(v as Grouping)}
-        />
+          onChange={(v) => setChosenGrouping(v as Grouping)}
+        />}
       </div>
 
+      {isEmpty ? (
+        <EmptyState
+          bare
+          icon={<ChartBar size={28} />}
+          title="Sem resultados no período"
+          description="Nenhuma aposta liquidada nas datas selecionadas. Amplie o período para ver a evolução."
+          className="py-14"
+        />
+      ) : (
       <div style={{ height: isMobile ? 180 : 400 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={grouped} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={isMobile ? 4 : 8}>
@@ -125,8 +141,9 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
           </BarChart>
         </ResponsiveContainer>
       </div>
+      )}
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-xs">
+      {!isEmpty && <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-xs">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-[6px]">
             <span className="w-2 h-2 rounded-sm bg-positive inline-block" /> Período positivo
@@ -138,7 +155,7 @@ export const DailyEvolutionChart = ({ data, className = "" }: DailyEvolutionChar
         <span className={totalProfit >= 0 ? "text-positive font-medium" : "text-negative font-medium"}>
           {totalProfit >= 0 ? "+" : ""}R$ {totalProfit.toFixed(2)} · {positiveCount}/{grouped.length} positivos
         </span>
-      </div>
+      </div>}
     </div>
   );
 };
