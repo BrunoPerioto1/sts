@@ -3,29 +3,23 @@ import { ptBR } from "date-fns/locale";
 import { CalendarSlash, WarningCircle } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "react-router-dom";
-import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
 import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { DashboardDesktopSkeleton } from "@/components/dashboard/DashboardDesktopSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { MainMetrics } from "@/components/dashboard/MainMetrics";
-import { Segmented } from "@/components/ui/segmented";
-import { DateRangeField } from "@/components/ui/date-range-field";
+import { DashboardDesktopView } from "@/components/dashboard/DashboardDesktopView";
+import { PeriodPopover } from "@/components/dashboard/PeriodPopover";
 import { Button } from "@/components/ui/button";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 
 interface DashboardPageContentProps {
   hasNoBets: boolean;
   ready: boolean;
   error: boolean;
   onRetry: () => void;
-  metrics: DashboardMetrics;
-  previousMetrics: DashboardMetrics;
-  dailyData: DailySummaryPoint[];
+  desktopView: React.ReactNode;
   // Em telas estreitas o corpo do dashboard é outro (card único do mobile);
   // os estados de carregando/sem apostas continuam sendo os mesmos.
   mobileView?: React.ReactNode;
@@ -36,9 +30,7 @@ function DashboardPageContent({
   ready,
   error,
   onRetry,
-  metrics,
-  previousMetrics,
-  dailyData,
+  desktopView,
   mobileView,
 }: DashboardPageContentProps) {
   if (error) {
@@ -68,15 +60,7 @@ function DashboardPageContent({
     );
   }
 
-  if (mobileView) return <>{mobileView}</>;
-
-  return (
-    <div className="space-y-7">
-      <DailyEvolutionChart data={dailyData} />
-
-      <MainMetrics metrics={metrics} previousMetrics={previousMetrics} />
-    </div>
-  );
+  return <>{mobileView ?? desktopView}</>;
 }
 
 export function DashboardPage() {
@@ -89,47 +73,54 @@ export function DashboardPage() {
       ? `${format(parseISO(filters.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(filters.endDate), "dd MMM", { locale: ptBR })}`
       : undefined;
 
-  const segmentedControl = (
-    <Segmented
-      options={[
-        { value: "currentMonth", label: "Mês atual" },
-        { value: "60d", label: "60 dias" },
-      ]}
-      value={preset as "currentMonth" | "60d"}
-      onChange={(v) => setPreset(v as DatePreset)}
-    />
-  );
+  // "Visao geral ... - 21 ago - 3 set - 82 apostas liquidadas": o periodo e o
+  // volume ficam juntos, com contraste maior que o subtitulo padrao.
+  const subtitle = [
+    "Visão geral da sua performance",
+    rangeLabel,
+    ready && !loading ? `${Number(metrics.totalBets)} apostas liquidadas` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
-  const desktopHeaderControls = (
-    <>
-      {segmentedControl}
-      <DateRangeField
-        startDate={filters.startDate}
-        endDate={filters.endDate}
-        onChange={(from, to) => setCustomRange(from, to)}
-        iconOnly
-      />
-    </>
+  const periodButton = (
+    <PeriodPopover
+      preset={preset}
+      firstBetDate={firstBetDate}
+      from={filters.startDate}
+      to={filters.endDate}
+      onSelect={setPreset}
+      onCustomRange={setCustomRange}
+    />
   );
 
   return (
     <MainLayout
       title="Dashboard"
-      subtitle={rangeLabel}
+      subtitle={subtitle}
+      titleWrapperClassName="flex flex-col gap-1 min-w-0"
+      titleClassName="text-xl font-semibold tracking-tight"
+      subtitleClassName="text-[13px] text-zinc-400 truncate"
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
       mobileFullBleed
-      actions={desktopHeaderControls}
+      actions={periodButton}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
         ready={ready && !loading}
         error={error}
         onRetry={reload}
-        metrics={metrics}
-        previousMetrics={previousMetrics}
-        dailyData={dailyData}
+        desktopView={
+          <DashboardDesktopView
+            filters={filters}
+            preset={preset}
+            metrics={metrics}
+            dailyData={dailyData}
+            onPresetChange={setPreset}
+          />
+        }
         mobileView={
           isMobile ? (
             <DashboardMobileView
@@ -145,6 +136,7 @@ export function DashboardPage() {
           ) : undefined
         }
       />
+
     </MainLayout>
   );
 }

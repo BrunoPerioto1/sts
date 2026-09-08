@@ -6,27 +6,16 @@ import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
-import { formatSignedCurrency } from "@/lib/format";
-import { AnimatedNumber } from "@/components/ui/animated-number";
 import { stagger } from "@/lib/motion";
 import { DashboardKpiGrid } from "../DashboardKpiGrid";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
-import { PeriodSheet } from "./PeriodSheet";
-import { ProfitBarChart } from "./ProfitBarChart";
-
-const PRESET_LABEL: Record<DatePreset, string> = {
-  "7d": "7 dias",
-  "14d": "14 dias",
-  currentMonth: "Mês atual",
-  lastMonth: "Mês passado",
-  "60d": "60 dias",
-  "90d": "90 dias",
-  allTime: "Tudo",
-  custom: "Personalizado",
-};
+import { PeriodSheet } from "../PeriodSheet";
+import { PRESET_LABEL } from "@/lib/dashboard-periods";
+import { ProfitBarChart } from "../ProfitBarChart";
+import { DashboardProfitHero, daysSummary } from "../DashboardProfitHero";
 
 // Barras também representam um único dia; vazio só quando não há dados.
 const MIN_DAYS_FOR_CHART = 1;
@@ -62,23 +51,6 @@ export function DashboardMobileView({
   const shortDate = (iso: string) => format(parseISO(iso), "d MMM", { locale: ptBR });
   const rangeSuffix = preset === "custom" ? `${days} dias` : PRESET_LABEL[preset].toLowerCase();
 
-  const positives = dailyData.filter((d) => d.profitDay > 0).length;
-  const negatives = dailyData.filter((d) => d.profitDay < 0).length;
-  const neutrals = dailyData.filter((d) => d.profitDay === 0).length;
-
-  const daysSummary =
-    dailyData.length === 0
-      ? "Nenhum dia com resultado"
-      : dailyData.length === 1
-        ? `1 dia com resultado · ${shortDate(dailyData[0].date)}`
-        : [
-            `${positives} dia${positives === 1 ? "" : "s"} positivo${positives === 1 ? "" : "s"}`,
-            `${negatives} negativo${negatives === 1 ? "" : "s"}`,
-            neutrals > 0 ? `${neutrals} neutro${neutrals === 1 ? "" : "s"}` : null,
-          ]
-            .filter(Boolean)
-            .join(" · ");
-
   return (
     <>
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
@@ -101,20 +73,14 @@ export function DashboardMobileView({
           </button>
         </div>
 
-        <div className="mt-8 shrink-0 animate-rise stagger" style={stagger(1)}>
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Lucro líquido</p>
-          {/* Numero-heroi da tela: conta ate o valor final. O `key` no periodo
-              faz a contagem recomecar quando o usuario troca o filtro — sem
-              ele o hook so interpolaria do valor antigo pro novo. */}
-          <p className="text-[clamp(1.75rem,9vw,2.5rem)] font-semibold tabular-nums leading-tight tracking-tight" style={{ color: performanceColor(profit, preferences.performanceColors) }}>
-            <AnimatedNumber
-              key={`${filters.startDate}-${filters.endDate}`}
-              value={profit}
-              format={formatSignedCurrency}
-            />
-          </p>
-          <p className="text-sm text-zinc-400 mt-1">{daysSummary}</p>
-        </div>
+        <DashboardProfitHero
+          className="mt-8 shrink-0 animate-rise stagger"
+          style={stagger(1)}
+          profit={profit}
+          color={performanceColor(profit, preferences.performanceColors)}
+          summary={daysSummary(dailyData)}
+          resetKey={`${filters.startDate}-${filters.endDate}`}
+        />
 
         <div className="mt-5 animate-rise stagger" style={stagger(2)}>
           {dailyData.length >= MIN_DAYS_FOR_CHART ? (
