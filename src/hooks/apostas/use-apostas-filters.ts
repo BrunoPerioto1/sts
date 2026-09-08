@@ -4,7 +4,6 @@ import { format, startOfMonth } from "date-fns";
 import type { ApostasFilterState, PeriodPreset } from "@/types/apostas-filters";
 import { PER_PAGE, type BetsQueryFilters } from "./use-bets-query";
 
-export type ViewMode = "agrupado" | "tabela";
 
 // Todo o estado de filtro da tela de apostas: valores, sementes vindas da URL,
 // debounce da busca e as ações que mexem em mais de um campo ao mesmo tempo.
@@ -22,7 +21,6 @@ export function useApostasFilters() {
     return fromUrl ? [Number(fromUrl)] : [];
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("agrupado");
   const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "mes");
@@ -43,7 +41,6 @@ export function useApostasFilters() {
     startDate,
     endDate,
     searchTerm: debouncedSearch,
-    viewMode,
     pageStart,
   };
 
@@ -66,13 +63,6 @@ export function useApostasFilters() {
     setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
     setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPageStart(1);
   };
-  const changeViewMode = (mode: ViewMode) => {
-    setViewMode(mode);
-    // Agrupado não pagina; voltar pra ele vindo da página 3 da Tabela deixaria
-    // o rodapé contando "61–90 de N" sem nada pra paginar.
-    setPageStart(1);
-  };
-
   // Filtro ativo = qualquer coisa fora do estado inicial; o vazio da lista usa
   // isso pra decidir entre "limpe os filtros" e "registre a primeira aposta".
   const hasFilters =
@@ -92,7 +82,6 @@ export function useApostasFilters() {
     startDate,
     endDate,
     searchTerm,
-    viewMode,
     pageStart,
     debouncedSearch,
     perPage: PER_PAGE,
@@ -106,7 +95,6 @@ export function useApostasFilters() {
     setDateRange,
     applyMobileFilters,
     clearFilters,
-    changeViewMode,
     setPageStart,
   };
 }

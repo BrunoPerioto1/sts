@@ -8,6 +8,11 @@ import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { ReturnValue } from "./ReturnValue";
 import { RowActions } from "./RowActions";
 
+// Uma única definição de colunas pro cabeçalho e pras linhas — antes cada
+// célula tinha sua largura solta (w-12/w-20/w-24) e nada alinhava de fato.
+export const BET_GRID =
+  "grid items-center gap-3 grid-cols-[20px_46px_88px_minmax(0,1fr)_56px_84px_100px_104px_32px]";
+
 export function BetRowDesktop({
   aposta,
   onEdit,
@@ -37,14 +42,15 @@ export function BetRowDesktop({
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 py-[10px] px-2 -mx-2 border-b border-border last:border-b-0 rounded-md transition-colors",
+        BET_GRID,
+        "group py-[9px] px-2 -mx-2 rounded-md transition-colors hover:bg-foreground/[0.03]",
         selection.selectionMode && "cursor-pointer",
         isSelected && "bg-accent/[0.08]"
       )}
       onClick={handleRowClick}
     >
       <span
-        className={cn("shrink-0 transition-opacity", selection.selectionMode || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100")}
+        className={cn("transition-opacity", selection.selectionMode || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100")}
         onClick={(e) => e.stopPropagation()}
       >
         <Checkbox
@@ -57,29 +63,22 @@ export function BetRowDesktop({
         />
       </span>
 
-      <span className="text-xs tabular-nums opacity-50 shrink-0 w-[46px]">{formatTime(aposta.betTime)}</span>
+      <span className="text-xs tabular-nums opacity-45">{formatTime(aposta.betTime)}</span>
 
-      <div className="flex-1 min-w-0 flex items-center gap-2">
-        {aposta.houseName && (
-          <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 whitespace-nowrap shrink-0">
-            {aposta.houseName}
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="font-medium text-sm truncate">{aposta.game}</p>
-          <p className="text-xs opacity-55 truncate">{aposta.market}</p>
-        </div>
+      <span className="text-[11px] uppercase tracking-wide opacity-45 truncate">{aposta.houseName}</span>
+
+      <div className="min-w-0">
+        <p className="font-medium text-sm truncate">{aposta.game}</p>
+        <p className="text-xs opacity-55 truncate">{aposta.market}</p>
       </div>
 
-      <div className="flex items-center gap-4 shrink-0">
-        <span className="text-right w-12 text-sm tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
-        <span className="text-right w-20 text-sm tabular-nums opacity-80 shrink-0">{formatCurrency(Number(aposta.stake))}</span>
-        <ReturnValue aposta={aposta} className="text-sm w-24 text-right shrink-0" />
-      </div>
+      <span className="text-right text-sm tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
+      <span className="text-right text-sm tabular-nums opacity-80">{formatCurrency(Number(aposta.stake))}</span>
+      <ReturnValue aposta={aposta} className="text-sm text-right" />
 
-      <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
+      <Badge variant={statusVariant[status]} className="justify-self-start">{statusLabel[status]}</Badge>
 
-      <span onClick={(e) => e.stopPropagation()}>
+      <span onClick={(e) => e.stopPropagation()} className="justify-self-end">
         <RowActions aposta={aposta} onEdit={onEdit} onDelete={onDelete} onDuplicate={onDuplicate} onFinalize={onFinalize} />
       </span>
     </div>

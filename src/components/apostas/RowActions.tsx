@@ -32,7 +32,7 @@ export function RowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]">
           <DotsThreeOutline size={18} weight="fill" />
         </Button>
       </DropdownMenuTrigger>

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { ApostasList } from "@/components/apostas/ApostasList";
 import { ApostasGrouped } from "@/components/apostas/ApostasGrouped";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
@@ -12,10 +11,7 @@ import { BulkActionBar } from "@/components/apostas/BulkActionBar";
 import { MobileFiltersSheet } from "@/components/apostas/MobileFiltersSheet";
 import { MobileStatusPills } from "@/components/apostas/MobileStatusPills";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
-import { TableBulkToolbar } from "@/components/apostas/TableBulkToolbar";
-import { ViewModeToggle } from "@/components/apostas/ViewModeToggle";
 import { useBulkSelection } from "@/hooks/apostas/use-bulk-selection";
-import { cn } from "@/lib/utils";
 import { exportBetsListCsv } from "@/lib/bet-exports";
 import { type BetItem, type PaginatedBetsResponseDto } from "@/api/routes/get-bets";
 import { useHouses } from "@/hooks/queries/use-houses";
@@ -23,7 +19,6 @@ import { betsQueryKey, useBetsQuery } from "@/hooks/apostas/use-bets-query";
 import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
 import { Button } from "@/components/ui/button";
-import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { CaretDown, Plus } from "@phosphor-icons/react";
 import { tapHaptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,8 +37,6 @@ export default function ApostasPage() {
   const [editAposta, setEditAposta] = useState<BetItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [selectedBets, setSelectedBets] = useState<number[]>([]);
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -69,9 +62,8 @@ export default function ApostasPage() {
   // deixaria marcada uma aposta que nem está mais na lista.
   useEffect(() => {
     selection.clear();
-    setSelectedBets([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.statusFilter, filters.houseIds, filters.startDate, filters.endDate, filters.debouncedSearch, filters.viewMode]);
+  }, [filters.statusFilter, filters.houseIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
 
   useEffect(() => {
     if (!selection.selectionMode) return;
@@ -98,25 +90,6 @@ export default function ApostasPage() {
 
   // Puxar do topo substitui o botao de recarregar que saiu do header mobile.
   const pull = usePullToRefresh(actions.reload, isMobile);
-
-  const changeViewMode = (mode: "agrupado" | "tabela") => {
-    selection.clear();
-    filters.changeViewMode(mode);
-  };
-
-  const handleDeleteSelected = async () => {
-    setConfirmDeleteOpen(false);
-    await actions.deleteMany(selectedBets, () => setSelectedBets([]));
-  };
-
-  // Excluir mais de 1 aposta de uma vez pede confirmação antes; 1, exclui direto.
-  const handleDeleteSelectedClick = () => {
-    if (selectedBets.length > 1) {
-      setConfirmDeleteOpen(true);
-    } else {
-      handleDeleteSelected();
-    }
-  };
 
   const filterProps = {
     houses,
@@ -162,12 +135,12 @@ export default function ApostasPage() {
         />
       }
       actions={
-        <>
-          <ViewModeToggle value={filters.viewMode} onChange={changeViewMode} />
-          <Button onClick={() => setCreateModalOpen(true)} className="hidden md:flex gap-2">
-            <Plus size={16} /> Nova aposta
-          </Button>
-        </>
+        <Button
+          onClick={() => setCreateModalOpen(true)}
+          className="hidden md:flex gap-2 bg-accent text-white hover:bg-accent/90"
+        >
+          <Plus size={16} /> Nova aposta
+        </Button>
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
@@ -190,38 +163,14 @@ export default function ApostasPage() {
             usava md: (768px) e deixava 640-767px sem nenhum filtro visível. */}
         {!isMobile && <ApostasFilter {...filterProps} />}
 
-        <div
-          className={cn(
-            "space-y-3 min-w-0",
-            !(isMobile && filters.viewMode === "agrupado") && "card elev-sm bg-card rounded-md p-[14px_16px]"
-          )}
-        >
-          {filters.viewMode === "tabela" && (
-            <TableBulkToolbar
-              totalOnPage={apostas.length}
-              selectedCount={selectedBets.length}
-              disabled={loading}
-              onToggleAll={() => setSelectedBets(selectedBets.length === apostas.length ? [] : apostas.map((a) => a.id))}
-              onChangeStatus={(resultId) => actions.changeStatusMany(selectedBets, resultId, () => setSelectedBets([]))}
-              onDeleteSelected={handleDeleteSelectedClick}
-            />
-          )}
-
-          {filters.viewMode === "agrupado" ? (
-            <ApostasGrouped
-              {...listProps}
-              selection={selection}
-              onDelete={(id) => actions.deleteOne(id)}
-            />
-          ) : (
-            <ApostasList
-              {...listProps}
-              onDelete={(id) => actions.deleteOne(id, () => setSelectedBets((prev) => prev.filter((betId) => betId !== id)))}
-              selectedBets={selectedBets}
-              onSelectBet={(id) => setSelectedBets((prev) => (prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]))}
-              showCheckboxes
-            />
-          )}
+        {/* Sem card em volta: a lista agrupada desenha as próprias divisões, e
+            a caixa cinza só criava uma moldura dentro de outra. */}
+        <div className="space-y-3 min-w-0">
+          <ApostasGrouped
+            {...listProps}
+            selection={selection}
+            onDelete={(id) => actions.deleteOne(id)}
+          />
 
           {isMobile ? (
             apostas.length > 0 && page < totalPages && (
@@ -254,27 +203,6 @@ export default function ApostasPage() {
           />
         )}
 
-        {/* Mesmo padrao do sheet da selecao multipla: confirmacao sobe de
-            baixo em vez de abrir no meio da tela. */}
-        <BottomSheet
-          open={confirmDeleteOpen}
-          onOpenChange={setConfirmDeleteOpen}
-          title={`Excluir ${selectedBets.length} apostas?`}
-          footer={
-            <div className="flex flex-col gap-2">
-              <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleDeleteSelected}>
-                Excluir {selectedBets.length} apostas
-              </Button>
-              <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmDeleteOpen(false)}>
-                Cancelar
-              </Button>
-            </div>
-          }
-        >
-          <p className="pb-4 text-sm text-zinc-400">
-            As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
-          </p>
-        </BottomSheet>
       </div>
 
       {/* FAB mobile — substitui o botão "Nova aposta" do header em telas estreitas */}

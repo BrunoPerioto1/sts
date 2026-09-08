@@ -25,11 +25,7 @@ import { HouseHistoryScreen } from "./HouseHistoryScreen";
 // invalidaria os useMemo que dependem de `houses`.
 const EMPTY_HOUSES: HouseBalanceDto[] = [];
 
-interface CasasMobileViewProps {
-  onCountChange?: (count: number) => void;
-}
-
-export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
+export function CasasMobileView() {
   const navigate = useNavigate();
 
   const balancesQuery = useHouseBalances();
@@ -59,11 +55,7 @@ export function CasasMobileView({ onCountChange }: CasasMobileViewProps) {
     }
   }, [balancesQuery.isError, metricsQuery.isError]);
 
-  useEffect(() => {
-    onCountChange?.(houses.length);
-  }, [houses.length, onCountChange]);
-
-  const withBalanceCount = houses.filter((h) => Number(h.houseBalance) > 0).length;
+  const withBalanceCount = houses.filter((h) => Number(h.realHouseBalance) > 0).length;
 
   return (
     <div className="space-y-4">

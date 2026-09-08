@@ -18,6 +18,12 @@ export function formatSignedCurrencyCompact(value: number): string {
   return value >= 0 ? `+${formatCurrencyCompact(value)}` : formatCurrencyCompact(value);
 }
 
+// Máscara de valor "de trás pra frente": os dígitos digitados preenchem os
+// centavos primeiro (ex: "1050" -> "10,50"), padrão comum em apps BR.
+export function centsToDisplay(cents: number): string {
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // Aceita tanto vírgula quanto ponto como separador decimal na digitação.
 export function parsePtBrNumber(raw: string): number {
   return Number(raw.trim().replace(",", "."));

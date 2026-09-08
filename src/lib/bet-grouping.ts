@@ -6,6 +6,7 @@ import { settledProfit } from "./bet-status";
 export interface DayGroup {
   key: string;
   label: string;
+  total: number;
   bets: BetItem[];
 }
 export interface WeekGroup {
@@ -54,9 +55,10 @@ export function groupBets(apostas: BetItem[]): MonthGroup[] {
 
     let day = week.days.find((d) => d.key === dayKey);
     if (!day) {
-      day = { key: dayKey, label: capitalize(format(date, "EEEE dd", { locale: ptBR })), bets: [] };
+      day = { key: dayKey, label: capitalize(format(date, "EEEE dd", { locale: ptBR })), total: 0, bets: [] };
       week.days.push(day);
     }
+    day.total += settledProfit(bet);
     day.bets.push(bet);
   }
 

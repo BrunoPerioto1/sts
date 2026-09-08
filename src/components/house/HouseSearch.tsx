@@ -1,4 +1,4 @@
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass, DownloadSimple } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,9 +12,14 @@ interface HousesSearchProps {
   onOnlyWithBalanceChange: (val: boolean) => void;
   sort: HouseSort;
   onSortChange: (val: HouseSort) => void;
+  onExportCsv?: () => void;
   isLoading?: boolean;
 }
 
+const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
+
+// Mesma barra única da tela de apostas — antes eram três controles soltos
+// flutuando com alturas diferentes.
 export function HousesSearch({
   searchTerm,
   onChange,
@@ -22,24 +27,37 @@ export function HousesSearch({
   onOnlyWithBalanceChange,
   sort,
   onSortChange,
+  onExportCsv,
   isLoading = false,
 }: HousesSearchProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="relative w-full sm:w-[240px]">
-        <MagnifyingGlass size={14} className="absolute left-[10px] top-1/2 -translate-y-1/2 opacity-50" />
-        <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => onChange(e.target.value)} className="pl-8" disabled={isLoading} />
+    <div className="h-11 rounded-xl border border-white/10 bg-white/[0.02] flex items-center overflow-x-auto">
+      <div className="flex items-center gap-2 px-3.5 flex-1 min-w-0">
+        <MagnifyingGlass className="h-4 w-4 text-zinc-500 shrink-0" />
+        <Input
+          placeholder="Buscar casa"
+          value={searchTerm}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={isLoading}
+          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+        />
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
+      {divider}
+
+      <label className="flex items-center gap-2 px-3.5 text-sm shrink-0 cursor-pointer">
         <Checkbox checked={onlyWithBalance} onCheckedChange={(v) => onOnlyWithBalanceChange(!!v)} disabled={isLoading} />
         Só com saldo
       </label>
 
-      <div className="flex items-center gap-2 text-sm opacity-70">
-        <span>Ordenar:</span>
+      {divider}
+
+      <div className="px-3.5 shrink-0">
         <Select value={sort} onValueChange={(v) => onSortChange(v as HouseSort)} disabled={isLoading}>
-          <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-white">
+            <span className="text-zinc-500 shrink-0">Ordenar</span>
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="balance">Saldo</SelectItem>
             <SelectItem value="name">Nome</SelectItem>
@@ -47,6 +65,20 @@ export function HousesSearch({
           </SelectContent>
         </Select>
       </div>
+
+      {onExportCsv && (
+        <>
+          {divider}
+          <button
+            type="button"
+            onClick={onExportCsv}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+          >
+            <DownloadSimple className="h-4 w-4" /> CSV
+          </button>
+        </>
+      )}
     </div>
   );
 }

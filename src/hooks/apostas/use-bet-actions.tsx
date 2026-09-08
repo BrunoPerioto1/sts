@@ -73,36 +73,6 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
     }
   };
 
-  const deleteMany = async (ids: number[], onSuccess?: () => void) => {
-    if (ids.length === 0) return;
-    setMutating(true);
-    try {
-      await deleteMultipleBets(ids);
-      onSuccess?.();
-      await reload();
-      actionToast.success({ icon: TrashIcon, title: "Sucesso", description: "Apostas excluídas!" });
-    } catch (e) {
-      actionToast.error({ description: errText(e, "Falha ao excluir apostas") });
-    } finally {
-      setMutating(false);
-    }
-  };
-
-  const changeStatusMany = async (ids: number[], resultId: number, onSuccess?: () => void) => {
-    if (ids.length === 0) return;
-    setMutating(true);
-    try {
-      await finalizeMultipleBets({ betIds: ids, resultId });
-      await reload();
-      onSuccess?.();
-      actionToast.success({ icon: Check, title: "Status atualizado", description: "Apostas alteradas!" });
-    } catch (e) {
-      actionToast.error({ description: errText(e, "Falha ao atualizar status") });
-    } finally {
-      setMutating(false);
-    }
-  };
-
   const finalizeOne = async (id: number, resultId: ResultIdEnum, cashoutValue?: number) => {
     try {
       await finalizeBet(id, { resultId, cashoutValue });
@@ -199,5 +169,5 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
     }
   };
 
-  return { mutating, bulkLoading, reload, deleteOne, deleteMany, changeStatusMany, finalizeOne, duplicate, bulkFinalize, bulkDelete };
+  return { mutating, bulkLoading, reload, deleteOne, finalizeOne, duplicate, bulkFinalize, bulkDelete };
 }
