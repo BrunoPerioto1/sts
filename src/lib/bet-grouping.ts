@@ -27,14 +27,21 @@ function capitalize(s: string) {
   return s.length ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
+// A data que manda e a do jogo; sem evento identificado cai na data em que a
+// aposta foi planilhada. Mesma regra do backend (coalesce em bet-date.ts) —
+// filtro, ordenacao e agrupamento tem que concordar.
+export function betDate(bet: BetItem): Date {
+  return new Date(bet.eventStartAt ?? bet.betTime);
+}
+
 // Mês > semana ISO > dia, do mais recente pro mais antigo, com o lucro
 // liquidado somado em cada nível.
 export function groupBets(apostas: BetItem[]): MonthGroup[] {
-  const sorted = [...apostas].sort((a, b) => new Date(b.betTime).getTime() - new Date(a.betTime).getTime());
+  const sorted = [...apostas].sort((a, b) => betDate(b).getTime() - betDate(a).getTime());
 
   const months = new Map<string, MonthGroup>();
   for (const bet of sorted) {
-    const date = new Date(bet.betTime);
+    const date = betDate(bet);
     const monthKey = format(date, "yyyy-MM");
     const weekKey = `${format(date, "yyyy")}-W${getISOWeek(date)}`;
     const dayKey = format(date, "yyyy-MM-dd");

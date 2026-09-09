@@ -4,6 +4,7 @@ import { type HouseBalanceDto } from "@/api/routes/get-houses";
 import { getDashboardMonthlySummary } from "@/api/routes/get-dashboard-monthly";
 import { downloadCsv } from "./csv";
 import { formatDate, formatTime } from "./format";
+import { betDate } from "./bet-grouping";
 
 function betRow(b: BetItem) {
   return [
@@ -17,12 +18,13 @@ function betRow(b: BetItem) {
   ];
 }
 
-// Exporta o que está na tela de apostas (já filtrado), com a hora do lançamento.
+// Exporta o que está na tela de apostas (já filtrado), pela data do jogo
+// quando ele foi identificado.
 export function exportBetsListCsv(bets: BetItem[]) {
   downloadCsv(
     "apostas.csv",
     ["Data", "Hora", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"],
-    bets.map((b) => [formatDate(b.betTime), formatTime(b.betTime), ...betRow(b)])
+    bets.map((b) => [formatDate(betDate(b)), formatTime(betDate(b)), ...betRow(b)])
   );
 }
 
@@ -32,7 +34,7 @@ export async function exportAllBetsCsv() {
   downloadCsv(
     "apostas.csv",
     ["Data", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"],
-    (res.data ?? []).map((b) => [formatDate(b.betTime), ...betRow(b)])
+    (res.data ?? []).map((b) => [formatDate(betDate(b)), ...betRow(b)])
   );
 }
 

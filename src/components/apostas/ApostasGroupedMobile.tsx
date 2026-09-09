@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatSignedCurrency } from "@/lib/format";
 import { settledProfit } from "@/lib/bet-status";
-import { betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";
+import { betDate, betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";
 import type { BetItem } from "@/api/routes/get-bets";
 import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { BetCardMobile } from "./BetCardMobile";
@@ -51,7 +51,7 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
                         onCheckedChange={() => selection.toggleMany(dayIds)}
                         aria-label={`Selecionar todas as apostas de ${day.label}`} />
                     )}
-                    <h2 className="text-base font-medium text-zinc-300">{format(new Date(day.bets[0].betTime), "dd MMM yyyy", { locale: ptBR })}</h2>
+                    <h2 className="text-base font-medium text-zinc-300">{format(betDate(day.bets[0]), "dd MMM yyyy", { locale: ptBR })}</h2>
                     <span className="text-[11px] text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
                     <span className={cn("ml-auto text-xs tabular-nums shrink-0", total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(total)}</span>
                   </div>

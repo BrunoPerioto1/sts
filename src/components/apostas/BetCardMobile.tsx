@@ -5,6 +5,7 @@ import { formatTime } from "@/lib/format";
 import { stagger } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import { mapResultToStatus, statusLabel, type Status } from "@/lib/bet-status";
+import { betDate } from "@/lib/bet-grouping";
 import type { BetItem } from "@/api/routes/get-bets";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
 import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
@@ -84,7 +85,7 @@ export function BetCardMobile({
           </span>
         )}
         <span className={timeChipClass}>
-          <Clock size={12} weight="bold" /> {formatTime(aposta.betTime)}
+          <Clock size={12} weight="bold" /> {formatTime(betDate(aposta))}
         </span>
         <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)}</span>
         {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}

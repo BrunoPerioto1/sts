@@ -40,6 +40,7 @@ export interface BetItem {
   profit: string | number | null;
   cashoutValue?: string | number | null;
   betTime: string | Date;
+  eventStartAt?: string | Date | null;
   resultId: number;
   resultName: string;
   houseName?: string;

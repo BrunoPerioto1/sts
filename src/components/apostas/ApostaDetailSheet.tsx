@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, formatSignedCurrency, formatTime } from "@/lib/format";
 import { colorByResultId, mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
+import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { BottomSheet } from "./BottomSheet";
 import { LiquidarSheet } from "./LiquidarSheet";
@@ -42,9 +43,16 @@ export function ApostaDetailSheet({
     >
       <div className="pb-4 space-y-4">
         <p className="text-sm text-zinc-500 -mt-1">
-          {formatDate(aposta.betTime)} · {formatTime(aposta.betTime)}
+          {formatDate(betDate(aposta))} · {formatTime(betDate(aposta))}
           {aposta.houseName && ` · ${aposta.houseName}`}
         </p>
+        {aposta.eventStartAt && (
+          // Só aparece quando o jogo foi identificado: aí a data acima é a do
+          // jogo, e esta é a de quando a aposta foi feita.
+          <p className="text-xs text-zinc-600 -mt-3">
+            Planilhada em {formatDate(aposta.betTime)} · {formatTime(aposta.betTime)}
+          </p>
+        )}
 
         <div>
           <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>

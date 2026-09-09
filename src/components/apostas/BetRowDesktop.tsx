@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTime } from "@/lib/format";
 import { mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
+import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { ReturnValue } from "./ReturnValue";
@@ -63,7 +64,7 @@ export function BetRowDesktop({
         />
       </span>
 
-      <span className="text-xs tabular-nums opacity-45">{formatTime(aposta.betTime)}</span>
+      <span className="text-xs tabular-nums opacity-45">{formatTime(betDate(aposta))}</span>
 
       <span className="text-[11px] uppercase tracking-wide opacity-45 truncate">{aposta.houseName}</span>
 
