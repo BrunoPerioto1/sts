@@ -1,4 +1,12 @@
-import { ArrowSquareOut, ArrowCounterClockwise, Clock, Warning, XCircle } from "@phosphor-icons/react";
+import {
+  ArrowSquareOut,
+  ArrowCounterClockwise,
+  Check,
+  Clock,
+  PencilSimple,
+  Warning,
+  XCircle,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatTime } from "@/lib/format";
 import { stagger } from "@/lib/motion";
@@ -25,12 +33,16 @@ export function TipCard({
   index = 0,
   onDismiss,
   onUndismiss,
+  onPlanilhar,
+  onEdit,
   busy,
 }: {
   tip: TipItem;
   index?: number;
   onDismiss: () => void;
   onUndismiss: () => void;
+  onPlanilhar: () => void;
+  onEdit: () => void;
   busy: boolean;
 }) {
   return (
@@ -75,7 +87,7 @@ export function TipCard({
 
       <div className="flex items-center gap-2 pt-1">
         {tip.link && (
-          <Button asChild size="sm" className="flex-1">
+          <Button asChild size="sm" className="flex-1 sm:flex-none sm:min-w-[200px]">
             {/* noreferrer junto do _blank: sem ele a aba da casa recebe
                 window.opener e pode navegar esta de volta. */}
             <a href={tip.link} target="_blank" rel="noopener noreferrer">
@@ -84,18 +96,29 @@ export function TipCard({
             </a>
           </Button>
         )}
-        {tip.status === "caiu" ? (
+        {tip.status === "caiu" && (
           <Button variant="outline" size="sm" onClick={onUndismiss} disabled={busy} className={cn(!tip.link && "flex-1")}>
             <ArrowCounterClockwise size={14} weight="bold" /> Devolver
           </Button>
-        ) : (
-          tip.status === "pending" && (
-            <Button variant="destructive" size="sm" onClick={onDismiss} disabled={busy} className={cn(!tip.link && "flex-1")}>
-              <XCircle size={14} weight="bold" /> Caiu
-            </Button>
-          )
         )}
       </div>
+
+      {tip.status === "pending" && (
+        <div className="flex items-center gap-2">
+          {/* Planilhar grava na hora, sem confirmação — o clique é a
+              confirmação, igual ao botão do /pendentes no bot. Editar é pra
+              quando a casa deu outra odd ou você apostou outro valor. */}
+          <Button variant="outline" size="sm" onClick={onPlanilhar} disabled={busy} className="flex-1">
+            <Check size={14} weight="bold" /> Planilhar
+          </Button>
+          <Button variant="outline" size="sm" onClick={onEdit} disabled={busy}>
+            <PencilSimple size={14} weight="bold" /> Editar
+          </Button>
+          <Button variant="destructive" size="sm" onClick={onDismiss} disabled={busy}>
+            <XCircle size={14} weight="bold" /> Caiu
+          </Button>
+        </div>
+      )}
 
       {/* A mensagem como ela chegou no Telegram. O card mostra o que dá pra
           decidir de relance; quem quiser conferir uma linha que o parser não

@@ -42,6 +42,16 @@ export async function getTips(params: { status?: TipStatus; page?: number; perPa
   return response.data;
 }
 
+export interface PlanilharTipDto {
+  stake?: number;
+  odd?: number;
+  houseId?: number;
+}
+
+export function planilharTip(id: number, overrides: PlanilharTipDto = {}) {
+  return unwrap(api.tips.post(`/${id}/planilhar`, overrides));
+}
+
 export function dismissTip(id: number) {
   return unwrap(api.tips.post(`/${id}/dismiss`));
 }

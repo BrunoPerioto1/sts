@@ -1,5 +1,12 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dismissTip, getTips, undismissTip, type TipStatus } from "@/api/routes/get-tips";
+import {
+  dismissTip,
+  getTips,
+  planilharTip,
+  undismissTip,
+  type PlanilharTipDto,
+  type TipStatus,
+} from "@/api/routes/get-tips";
 
 const TIPS_KEY = ["tips"] as const;
 const PER_PAGE = 20;
@@ -31,9 +38,24 @@ export function useTips(status?: TipStatus) {
 export function useTipActions() {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: TIPS_KEY });
+  // Planilhar cria aposta: mexe na lista de apostas, no saldo da casa e nas
+  // métricas do dashboard, exatamente como registrar uma aposta pela tela de
+  // Apostas — sem isso a outra aba mostra número velho até o cache expirar.
+  const invalidateAll = () =>
+    Promise.all([
+      invalidate(),
+      qc.invalidateQueries({ queryKey: ["bets"] }),
+      qc.invalidateQueries({ queryKey: ["houses"] }),
+      qc.invalidateQueries({ queryKey: ["dashboard"] }),
+    ]);
 
   return {
     dismiss: useMutation({ mutationFn: dismissTip, onSuccess: invalidate }),
     undismiss: useMutation({ mutationFn: undismissTip, onSuccess: invalidate }),
+    planilhar: useMutation({
+      mutationFn: ({ id, ...overrides }: PlanilharTipDto & { id: number }) =>
+        planilharTip(id, overrides),
+      onSuccess: invalidateAll,
+    }),
   };
 }

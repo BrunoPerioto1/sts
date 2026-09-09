@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
+import { TipEditSheet } from "@/components/tips/TipEditSheet";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,7 @@ import { actionToast } from "@/lib/action-toast";
 import { formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTipActions, useTips } from "@/hooks/queries/use-tips";
-import type { TipStatus } from "@/api/routes/get-tips";
+import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
 
 const tabs: { value: TipStatus; label: string; countKey: "pending" | "planilhadas" | "caidas" }[] = [
   { value: "pending", label: "Pendentes", countKey: "pending" },
@@ -34,16 +35,31 @@ const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
 
 export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
+  const [editing, setEditing] = useState<TipItem | null>(null);
   const { tips, summary, total, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useTips(tab);
-  const { dismiss, undismiss } = useTipActions();
+  const { dismiss, undismiss, planilhar } = useTipActions();
 
-  const busy = dismiss.isPending || undismiss.isPending;
+  const busy = dismiss.isPending || undismiss.isPending || planilhar.isPending;
 
   const run = (mutation: typeof dismiss, id: number, title: string) =>
     mutation.mutate(id, {
       onSuccess: () => actionToast.success({ title }),
       onError: (e: Error) => actionToast.error({ description: e.message }),
     });
+
+  const doPlanilhar = (id: number, overrides: PlanilharTipDto = {}) =>
+    planilhar.mutate(
+      { id, ...overrides },
+      {
+        onSuccess: (res: { alreadyExisted: boolean }) => {
+          setEditing(null);
+          actionToast.success({
+            title: res.alreadyExisted ? "Essa tip já estava planilhada" : "Aposta planilhada",
+          });
+        },
+        onError: (e: Error) => actionToast.error({ description: e.message }),
+      },
+    );
 
   const subtitle = summary
     ? `${summary.pending} pendentes${summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} sugeridos` : ""}`
@@ -101,6 +117,8 @@ export default function TipsPage() {
               busy={busy}
               onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
               onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
+              onPlanilhar={() => doPlanilhar(tip.id)}
+              onEdit={() => setEditing(tip)}
             />
           ))}
           {hasNextPage && (
@@ -114,6 +132,20 @@ export default function TipsPage() {
             </Button>
           )}
         </div>
+      )}
+
+      {/* key remonta o sheet a cada tip: os campos são inicializados no
+          useState a partir dela, então sem isso a segunda tip abriria com os
+          valores da primeira. */}
+      {editing && (
+        <TipEditSheet
+          key={editing.id}
+          tip={editing}
+          open
+          onOpenChange={(o) => !o && setEditing(null)}
+          onConfirm={(overrides) => doPlanilhar(editing.id, overrides)}
+          busy={planilhar.isPending}
+        />
       )}
     </MainLayout>
   );
