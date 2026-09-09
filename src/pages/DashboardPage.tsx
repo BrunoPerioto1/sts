@@ -1,30 +1,25 @@
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarSlash } from "@phosphor-icons/react";
+import { CalendarSlash, WarningCircle } from "@phosphor-icons/react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "react-router-dom";
-import { DailyEvolutionChart } from "@/components/dashboard/DailyEvolutionChart";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
 import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
+import { DashboardDesktopSkeleton } from "@/components/dashboard/DashboardDesktopSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { MainMetrics } from "@/components/dashboard/MainMetrics";
-import { Segmented } from "@/components/ui/segmented";
-import { DateRangeField } from "@/components/ui/date-range-field";
+import { DashboardDesktopView } from "@/components/dashboard/DashboardDesktopView";
+import { PeriodPopover } from "@/components/dashboard/PeriodPopover";
 import { Button } from "@/components/ui/button";
-import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/useDashboardFilters";
-import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
+import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
+import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Spinner } from "@/components/ui/spinner";
-import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 
 interface DashboardPageContentProps {
   hasNoBets: boolean;
   ready: boolean;
   error: boolean;
   onRetry: () => void;
-  metrics: DashboardMetrics;
-  previousMetrics: DashboardMetrics;
-  dailyData: DailySummaryPoint[];
+  desktopView: React.ReactNode;
   // Em telas estreitas o corpo do dashboard é outro (card único do mobile);
   // os estados de carregando/sem apostas continuam sendo os mesmos.
   mobileView?: React.ReactNode;
@@ -35,53 +30,37 @@ function DashboardPageContent({
   ready,
   error,
   onRetry,
-  metrics,
-  previousMetrics,
-  dailyData,
+  desktopView,
   mobileView,
 }: DashboardPageContentProps) {
   if (error) {
-    return <div role="alert" className="py-12 text-center space-y-4">
-      <p>Não foi possível carregar o dashboard.</p>
-      <Button onClick={onRetry}>Tentar novamente</Button>
+    return <div role="alert">
+      <EmptyState
+        icon={<WarningCircle size={30} />}
+        title="Não foi possível carregar o dashboard"
+        description="Verifique sua conexão e tente de novo."
+        action={<Button onClick={onRetry}>Tentar novamente</Button>}
+      />
     </div>;
   }
   if (!ready) {
     // `mobileView` so vem preenchido em tela estreita — e o sinal de que o
     // esqueleto certo e o do layout mobile, e nao o spinner generico.
-    return mobileView ? (
-      <DashboardMobileSkeleton />
-    ) : (
-      <div className="py-24 animate-fade-in">
-        <Spinner label="Carregando dashboard…" />
-      </div>
-    );
+    return mobileView ? <DashboardMobileSkeleton /> : <DashboardDesktopSkeleton />;
   }
 
   if (ready && hasNoBets) {
     return (
-      <div className="animate-rise flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-md">
-        <CalendarSlash size={30} className="opacity-35 mb-3" />
-        <h3 className="text-base font-medium mb-1">Nenhuma aposta registrada ainda</h3>
-        <p className="text-sm opacity-60 max-w-sm mb-4">
-          Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas.
-        </p>
-        <Button asChild>
-          <Link to="/bets">Nova aposta</Link>
-        </Button>
-      </div>
+      <EmptyState
+        icon={<CalendarSlash size={30} />}
+        title="Nenhuma aposta registrada ainda"
+        description="Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas."
+        action={<Button asChild><Link to="/bets">Nova aposta</Link></Button>}
+      />
     );
   }
 
-  if (mobileView) return <>{mobileView}</>;
-
-  return (
-    <div className="space-y-7">
-      <DailyEvolutionChart data={dailyData} />
-
-      <MainMetrics metrics={metrics} previousMetrics={previousMetrics} />
-    </div>
-  );
+  return <>{mobileView ?? desktopView}</>;
 }
 
 export function DashboardPage() {
@@ -94,47 +73,54 @@ export function DashboardPage() {
       ? `${format(parseISO(filters.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(filters.endDate), "dd MMM", { locale: ptBR })}`
       : undefined;
 
-  const segmentedControl = (
-    <Segmented
-      options={[
-        { value: "currentMonth", label: "Mês atual" },
-        { value: "60d", label: "60 dias" },
-      ]}
-      value={preset as "currentMonth" | "60d"}
-      onChange={(v) => setPreset(v as DatePreset)}
-    />
-  );
+  // "Visao geral ... - 21 ago - 3 set - 82 apostas liquidadas": o periodo e o
+  // volume ficam juntos, com contraste maior que o subtitulo padrao.
+  const subtitle = [
+    "Visão geral da sua performance",
+    rangeLabel,
+    ready && !loading ? `${Number(metrics.totalBets)} apostas liquidadas` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
-  const desktopHeaderControls = (
-    <>
-      {segmentedControl}
-      <DateRangeField
-        startDate={filters.startDate}
-        endDate={filters.endDate}
-        onChange={(from, to) => setCustomRange(from, to)}
-        iconOnly
-      />
-    </>
+  const periodButton = (
+    <PeriodPopover
+      preset={preset}
+      firstBetDate={firstBetDate}
+      from={filters.startDate}
+      to={filters.endDate}
+      onSelect={setPreset}
+      onCustomRange={setCustomRange}
+    />
   );
 
   return (
     <MainLayout
       title="Dashboard"
-      subtitle={rangeLabel}
+      subtitle={subtitle}
+      titleWrapperClassName="flex flex-col gap-1 min-w-0"
+      titleClassName="text-xl font-semibold tracking-tight"
+      subtitleClassName="text-[13px] text-zinc-400 truncate"
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
       mobileFullBleed
-      actions={desktopHeaderControls}
+      actions={periodButton}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
         ready={ready && !loading}
         error={error}
         onRetry={reload}
-        metrics={metrics}
-        previousMetrics={previousMetrics}
-        dailyData={dailyData}
+        desktopView={
+          <DashboardDesktopView
+            filters={filters}
+            preset={preset}
+            metrics={metrics}
+            dailyData={dailyData}
+            onPresetChange={setPreset}
+          />
+        }
         mobileView={
           isMobile ? (
             <DashboardMobileView
@@ -150,6 +136,7 @@ export function DashboardPage() {
           ) : undefined
         }
       />
+
     </MainLayout>
   );
 }

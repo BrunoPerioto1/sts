@@ -2,8 +2,9 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { getBets, type BetFilterDto, type PaginatedBetsResponseDto } from "@/api/routes/get-bets";
 
 export const PER_PAGE = 30;
-// Agrupado soma o array inteiro pros totais de mes/semana/dia — com paginacao
-// de 30 eles batiam so com o que ja estava na tela. Busca tudo do filtro.
+// A lista agrupada soma o array inteiro pros totais de mes/semana/dia — com
+// paginacao de 30 eles batiam so com o que ja estava na tela. Busca tudo do
+// filtro.
 const GROUPED_PER_PAGE = 1000;
 
 export interface BetsQueryFilters {
@@ -12,7 +13,6 @@ export interface BetsQueryFilters {
   startDate: string;
   endDate: string;
   searchTerm: string;
-  viewMode: "agrupado" | "tabela";
   // Pagina inicial. Desktop troca de pagina mexendo aqui (cada pagina vira uma
   // query propria, cacheada); mobile mantem em 1 e vai empilhando com
   // fetchNextPage no "Carregar mais".
@@ -36,7 +36,6 @@ export function betsQueryKey(f: BetsQueryFilters) {
   return [
     "bets",
     "list",
-    f.viewMode,
     f.pageStart,
     f.statusFilter.join(","),
     f.houseIds.join(","),
@@ -52,11 +51,6 @@ export function useBetsQuery(filters: BetsQueryFilters) {
     initialPageParam: filters.pageStart,
     queryFn: async ({ pageParam }): Promise<PaginatedBetsResponseDto> => {
       const base = paramsFrom(filters);
-
-      if (filters.viewMode !== "agrupado") {
-        return getBets({ ...base, page: pageParam, perPage: PER_PAGE });
-      }
-
       const first = await getBets({ ...base, page: 1, perPage: GROUPED_PER_PAGE });
       let data = Array.isArray(first?.data) ? first.data : [];
       const pagesTotal = first?.totalPages ?? 1;
@@ -71,11 +65,7 @@ export function useBetsQuery(filters: BetsQueryFilters) {
       // Uma "pagina" so: o agrupado ja recebeu tudo.
       return { data, total: first?.total ?? data.length, totalPages: 1 };
     },
-    getNextPageParam: (last, allPages) => {
-      if (filters.viewMode === "agrupado") return undefined;
-      const totalPages = last?.totalPages ?? 1;
-      const nextPage = filters.pageStart + allPages.length;
-      return nextPage <= totalPages ? nextPage : undefined;
-    },
+    // A lista agrupada vem inteira numa pagina so — nao ha proxima.
+    getNextPageParam: () => undefined,
   });
 }

@@ -4,7 +4,8 @@ import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StatusMultiSelect, STATUS_OPTIONS } from "./StatusMultiSelect";
+import { StatusMultiSelect } from "./StatusMultiSelect";
+import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -169,7 +170,7 @@ export function ApostasFilter({
               key={chip.key}
               className={cn(
                 "h-7 inline-flex items-center gap-1 rounded-full px-3 text-xs",
-                chip.solid ? "bg-blue-600 text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
+                chip.solid ? "bg-accent text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
               )}
             >
               {chip.label}

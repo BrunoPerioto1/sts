@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FormSkeleton } from "@/components/ui/skeleton";
 import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { useMe } from "@/hooks/queries/use-me";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
@@ -32,7 +33,7 @@ export default function PreferencesPage() {
       }
     >
       {!me ? (
-        <div className="opacity-55 text-sm">Carregando…</div>
+        <FormSkeleton fields={4} />
       ) : (
         <div className="flex flex-col">
           <div className="flex flex-col gap-7">

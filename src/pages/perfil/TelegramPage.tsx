@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CaretLeft, ChatCircleDots, CircleNotch, Clock, PaperPlaneTilt, Sun, Bell } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { actionToast } from "@/lib/action-toast";
 import { useMe } from "@/hooks/queries/use-me";
@@ -9,6 +10,7 @@ import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import { formatCountdown } from "@/lib/format";
 
 const BOT_HANDLE = "@betbpbot";
 
@@ -17,11 +19,6 @@ const BENEFITS = [
   { icon: Sun, title: "Resumo do dia", text: "Lucro, pendentes e ROI do dia todo às 21h." },
   { icon: Bell, title: "Sinais filtrados", text: "Só chega o que passa do seu filtro de banca." },
 ];
-
-function formatCountdown(ms: number) {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
-}
 
 export default function TelegramPage() {
   const navigate = useNavigate();
@@ -115,7 +112,7 @@ export default function TelegramPage() {
       }
     >
       {!me ? (
-        <div className="opacity-55 text-sm">Carregando…</div>
+        <FormSkeleton fields={2} />
       ) : code ? (
         <div className="flex flex-col gap-5">
           <p className="text-sm text-zinc-400">
@@ -231,7 +228,7 @@ export default function TelegramPage() {
           </div>
 
           <Button
-            className="w-full min-h-[48px] bg-blue-600 text-white font-semibold hover:bg-blue-600/90"
+            className="w-full min-h-[48px] bg-accent text-white font-semibold hover:bg-accent/90"
             onClick={generateCode}
             disabled={linking}
           >

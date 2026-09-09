@@ -1,4 +1,5 @@
 import { api } from '@/api/apiClient';
+import { unwrap } from '@/api/request';
 
 export interface CreateTransactionParams {
   houseId: number;
@@ -7,15 +8,10 @@ export interface CreateTransactionParams {
   description?: string;
 }
 
-export async function createTransaction(transaction: CreateTransactionParams) {
-  try {
-    const response = await api.transactions.post('new', transaction);
-    return response.data;
-  } catch (e: any) {
-      throw new Error(`${e?.message || e}`);
-    }
-  }
-  
+export function createTransaction(transaction: CreateTransactionParams) {
+  return unwrap(api.transactions.post('new', transaction));
+}
+
 
 export interface TransactionTypeDto {
   id: number;

@@ -1,4 +1,4 @@
-// src/hooks/dashboard/useDashboardData.ts
+// src/hooks/dashboard/use-dashboard-data.ts
 import { useQuery } from "@tanstack/react-query";
 import { differenceInCalendarDays, format, parseISO, subDays } from "date-fns";
 import { type DashboardMetrics } from "@/api/routes/get-dashboard-metrics";

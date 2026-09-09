@@ -39,7 +39,7 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
     >
       <div className="pb-4">
         <p className="text-sm text-zinc-500 -mt-1 mb-2">
-          {formatCurrency(Number(house.houseBalance))} · {house.totalBets} aposta{Number(house.totalBets) === 1 ? "" : "s"}
+          {formatCurrency(Number(house.realHouseBalance))} · {house.totalBets} aposta{Number(house.totalBets) === 1 ? "" : "s"}
         </p>
 
         <div className="flex flex-col gap-1">

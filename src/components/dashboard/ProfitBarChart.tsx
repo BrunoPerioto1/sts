@@ -1,11 +1,11 @@
 import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import { formatSignedCurrency } from "@/lib/format";
 
 interface ProfitBarChartProps {
-  data: DailySummaryPoint[];
+  data: { date: string; profitDay: number }[];
+  height?: number;
 }
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
@@ -22,31 +22,35 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 }
 
 // Escala automática mantém os valores reais do período, inclusive dias negativos.
-export function ProfitBarChart({ data }: ProfitBarChartProps) {
+export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
+  // Tela larga cabe mais rótulos: deixa o recharts escolher. Na estreita, três
+  // marcas fixas (início/meio/fim) evitam rótulo espremido.
   const ticks =
-    data.length > 2
-      ? [data[0].date, data[Math.floor(data.length / 2)].date, data[data.length - 1].date]
-      : data.map((d) => d.date);
+    height > 220
+      ? undefined
+      : data.length > 2
+        ? [data[0].date, data[Math.floor(data.length / 2)].date, data[data.length - 1].date]
+        : data.map((d) => d.date);
 
   return (
-    <div className="h-[180px] -mx-1">
+    <div className="-mx-1" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap="20%" accessibilityLayer>
-          <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeDasharray="3 4" />
-          <YAxis width={36} tickCount={4} axisLine={false} tickLine={false} tick={{ fill: "var(--color-text)", opacity: 0.55, fontSize: 10 }} tickFormatter={(value: number) => value.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 })} />
+          <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeOpacity={0.5} strokeDasharray="3 4" />
+          <YAxis width={height > 220 ? 48 : 36} tickCount={height > 220 ? 3 : 4} axisLine={false} tickLine={false} tick={{ fill: "var(--color-text)", opacity: 0.6, fontSize: height > 220 ? 11 : 10 }} tickFormatter={(value: number) => value.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 })} />
           <XAxis
             dataKey="date"
             ticks={ticks}
             stroke="var(--color-text)"
-            opacity={0.45}
-            fontSize={11}
+            opacity={0.6}
+            fontSize={height > 220 ? 11 : 10}
             minTickGap={24}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => format(parseISO(value), "d MMM", { locale: ptBR })}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: "color-mix(in srgb, var(--color-text) 6%, transparent)" }} />
-          <ReferenceLine y={0} stroke="var(--color-divider)" strokeWidth={1} />
+          <ReferenceLine y={0} stroke="color-mix(in srgb, var(--color-text) 22%, transparent)" strokeWidth={1} />
           {/* As barras crescem a partir da linha do zero. 650ms e o ponto em
               que da pra ver a curva se formar sem atrasar a leitura; o padrao
               do recharts (1500ms) parece lento numa tela pequena. */}

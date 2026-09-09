@@ -12,8 +12,14 @@
     --color-surface: #131316;
     --color-surface-2: #1c1c20;
     --color-text: #f2f2f4;
-    --color-accent: #5b7fff;
-    --color-accent-2: #7d9aff;
+    /* Um azul só no app: a familia blue do Tailwind, ancorada no blue-600 que
+       os botoes e chips ja usavam via `bg-blue-600`. Dois papeis, porque um
+       tom nao serve os dois: `--color-accent` e superficie (texto branco por
+       cima, 5.17:1) e `--color-accent-text` e texto/link sobre fundo escuro
+       (5.41:1 no fundo mais claro). O blue-600 como texto daria 3.29:1. */
+    --color-accent: #2563eb;
+    --color-accent-text: #3b82f6;
+    --color-accent-2: #3b82f6;
     --color-divider: rgba(255, 255, 255, 0.1);
 
     --color-neutral-100: #f2f2f4;
@@ -26,19 +32,29 @@
     --color-neutral-800: #2a2a2e;
     --color-neutral-900: #1a1a1d;
 
-    --color-accent-100: #eef1ff;
-    --color-accent-200: #dce3ff;
-    --color-accent-300: #b9c8ff;
-    --color-accent-400: #93a9ff;
-    --color-accent-500: #5b7fff;
-    --color-accent-600: #4864cc;
-    --color-accent-700: #364b99;
-    --color-accent-800: #253366;
-    --color-accent-900: #171f3d;
+    --color-accent-100: #dbeafe;
+    --color-accent-200: #bfdbfe;
+    --color-accent-300: #93c5fd;
+    --color-accent-400: #60a5fa;
+    --color-accent-500: #3b82f6;
+    --color-accent-600: #2563eb;
+    --color-accent-700: #1d4ed8;
+    --color-accent-800: #1e40af;
+    --color-accent-900: #1e3a8a;
 
     --color-section: #0d0d10;
     --color-section-glow: #16161b;
     --color-section-ghost: #202028;
+
+    /* Paleta controlada do dashboard. Defaults iguais a text-positive/negative. */
+    --dashboard-positive: #4ade9e;
+    --dashboard-negative: #f0797e;
+    --dashboard-emerald: #6ee7b7;
+    --dashboard-turquoise: #5eead4;
+    --dashboard-blue: #93c5fd;
+    --dashboard-coral: #fda4af;
+    --dashboard-orange: #fdba74;
+    --dashboard-pink: #f9a8d4;
 
     --color-positive: #3ddc84;
     --color-negative: #f2555c;
@@ -350,5 +366,14 @@
   .press:active,
   .press-sm:active {
     transform: none;
+  }
+}
+
+@layer utilities {
+  /* Sobrescreve a utility gerada pelo Tailwind (mesma especificidade, vem
+     depois). Assim os ~30 `text-accent` espalhados ficam legiveis sem trocar
+     um a um, e `bg-accent`/`border-accent` continuam no blue-600. */
+  .text-accent {
+    color: var(--color-accent-text);
   }
 }

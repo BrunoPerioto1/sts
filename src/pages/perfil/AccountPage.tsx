@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CaretLeft, CaretRight, Lock, Trash } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
+import { FormSkeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
@@ -12,6 +13,7 @@ import { patchMe } from "@/api/routes/patch-me";
 import { deleteMe } from "@/api/routes/delete-me";
 import { useMe } from "@/hooks/queries/use-me";
 import { getErrorMessage } from "@/lib/api-error";
+import { clearToken } from "@/lib/auth-session";
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ export default function AccountPage() {
     setDeleting(true);
     try {
       await deleteMe();
-      localStorage.removeItem("token");
+      clearToken();
       navigate("/login", { replace: true });
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao excluir a conta.") });
@@ -71,7 +73,7 @@ export default function AccountPage() {
       }
     >
       {!me ? (
-        <div className="opacity-55 text-sm">Carregando…</div>
+        <FormSkeleton fields={3} />
       ) : (
         // Sem `min-h` forçado: a tela termina onde o conteúdo termina e o
         // rodapé encosta no último item, em vez de sobrar vazio no meio.

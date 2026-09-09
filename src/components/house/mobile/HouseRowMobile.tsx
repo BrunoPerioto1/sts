@@ -1,18 +1,12 @@
 import { useRef } from "react";
 import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
-import { useLongPress } from "@/hooks/apostas/useLongPress";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { useLongPress } from "@/hooks/apostas/use-long-press";
+import { initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
-
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
 
 function colorForHouse(id: number) {
   return AVATAR_PALETTE[id % AVATAR_PALETTE.length];

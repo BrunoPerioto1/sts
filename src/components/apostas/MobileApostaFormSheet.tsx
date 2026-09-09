@@ -2,10 +2,11 @@ import { useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { CasaSheet } from "./CasaSheet";
+import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
-import { useApostaForm } from "@/hooks/apostas/useApostaForm";
+import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 import { type BetItem } from "@/api/routes/get-bets";
 
 const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-400";
@@ -20,6 +21,7 @@ interface MobileApostaFormSheetProps {
 
 export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialData, isEditing = false }: MobileApostaFormSheetProps) {
   const [casaOpen, setCasaOpen] = useState(false);
+  const [dataHoraOpen, setDataHoraOpen] = useState(false);
   const { formData, setFormData, houses, submitting, potentialReturn, handleSubmit } = useApostaForm({
     onApostaAdded: (aposta) => {
       onApostaAdded(aposta);
@@ -88,8 +90,12 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
 
         {isEditing && (
           <div className="space-y-1.5">
-            <label htmlFor="bet-betTime" className={fieldLabel}>Data e hora *</label>
-            <Input id="bet-betTime" type="datetime-local" value={formData.betTime} onChange={(e) => setFormData({ ...formData, betTime: e.target.value })} />
+            <span className={fieldLabel}>Data e hora *</span>
+            <SheetSelectField
+              summary={formatDataHora(formData.betTime)}
+              onOpen={() => setDataHoraOpen(true)}
+              className="min-h-[44px] sm:min-h-[36px]"
+            />
           </div>
         )}
 
@@ -133,6 +139,13 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           </div>
         )}
       </form>
+
+      <DataHoraSheet
+        open={dataHoraOpen}
+        onOpenChange={setDataHoraOpen}
+        value={formData.betTime}
+        onApply={(betTime) => setFormData({ ...formData, betTime })}
+      />
 
       <CasaSheet
         multiple={false}

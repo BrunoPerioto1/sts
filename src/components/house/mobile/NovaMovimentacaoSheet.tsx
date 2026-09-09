@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { createTransaction, getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-transaction";
-import { formatCurrency } from "@/lib/format";
+import { centsToDisplay, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft; submitLabel: string }> = {
@@ -14,12 +14,6 @@ const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft; sub
 };
 
 const QUICK_AMOUNTS = [50, 100, 500];
-
-// Máscara de valor "de trás pra frente": os dígitos digitados preenchem os
-// centavos primeiro (ex: "1050" -> R$ 10,50), padrão comum em apps BR.
-function centsToDisplay(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 interface NovaMovimentacaoSheetProps {
   house: HouseBalanceDto | null;
@@ -51,7 +45,9 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   const selectedType = types.find((t) => t.id === typeId);
   const meta = selectedType ? TYPE_META[selectedType.name] : undefined;
   const numericValue = cents / 100;
-  const balance = Number(house.houseBalance);
+  // `houseBalance` vem clampado em zero pelo backend; casa no vermelho
+  // projetaria o saldo errado depois do depósito.
+  const balance = Number(house.realHouseBalance);
   const projectedBalance = selectedType?.name === "WITHDRAWAL" ? balance - numericValue : balance + numericValue;
 
   const addAmount = (amount: number) => {
@@ -86,7 +82,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
       }
       footer={
         <Button
-          className="w-full min-h-[44px] bg-blue-600 text-white font-bold hover:opacity-90 active:opacity-90"
+          className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
           disabled={loading || !(numericValue > 0)}
           onClick={handleSubmit}
         >

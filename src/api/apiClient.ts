@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken } from '@/lib/auth-session';
 
 export const apiClient = () => {
 
@@ -31,16 +32,10 @@ export const apiClient = () => {
 
   const attachAuthInterceptor = (instance: ReturnType<typeof axios.create>) => {
     instance.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Axios v1: headers can be AxiosHeaders (with set) or a plain object
-        const headers: any = config.headers;
-        if (headers && typeof (headers as any).set === 'function') {
-          (headers as any).set('Authorization', `Bearer ${token}`);
-        } else {
-          config.headers = { ...(headers || {}), Authorization: `Bearer ${token}` } as any;
-        }
-      }
+      // No axios v1 `config.headers` num interceptor de request é sempre
+      // AxiosHeaders, então `.set` basta.
+      const token = getToken();
+      if (token) config.headers.set('Authorization', `Bearer ${token}`);
       return config;
     });
     return instance;
