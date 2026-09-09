@@ -7,6 +7,7 @@ import {
   Buildings,
   UserCircle,
   SignOut,
+  ClipboardText,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ import { initialsOf } from "@/lib/format";
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
   { id: "apostas", label: "Apostas", icon: Receipt, path: "/bets" },
+  { id: "conferir", label: "Conferir", icon: ClipboardText, path: "/settlement" },
   { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
   { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
 ];

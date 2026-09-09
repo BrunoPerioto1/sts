@@ -30,6 +30,10 @@ export const apiClient = () => {
     baseURL: baseURL + 'users/',
   });
 
+  const settlement = axios.create({
+    baseURL: baseURL + 'settlement/',
+  });
+
   const attachAuthInterceptor = (instance: ReturnType<typeof axios.create>) => {
     instance.interceptors.request.use((config) => {
       // No axios v1 `config.headers` num interceptor de request é sempre
@@ -48,6 +52,7 @@ export const apiClient = () => {
   attachAuthInterceptor(transactions);
   attachAuthInterceptor(users);
   attachAuthInterceptor(auth);
+  attachAuthInterceptor(settlement);
 
 
   return {
@@ -57,6 +62,7 @@ export const apiClient = () => {
     transactions,
     auth,
     users,
+    settlement,
   };
 };
 
