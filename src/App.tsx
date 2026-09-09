@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const ApostasPage = lazy(() => import("./pages/ApostasPage"));
 const CasasPage = lazy(() => import("./pages/CasasPage").then((m) => ({ default: m.CasasPage })));
+const TipsPage = lazy(() => import("./pages/TipsPage"));
 const PerfilPage = lazy(() => import("./pages/PerfilPage"));
 const AccountPage = lazy(() => import("./pages/perfil/AccountPage"));
 const PasswordPage = lazy(() => import("./pages/perfil/PasswordPage"));
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
+          <Route path="/tips" element={<RequireAuth><TipsPage /></RequireAuth>} />
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />
