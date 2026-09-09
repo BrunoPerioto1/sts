@@ -1,4 +1,4 @@
-import { format, startOfMonth, startOfYear, subDays } from "date-fns";
+import { endOfMonth, format, startOfMonth, startOfYear, subDays } from "date-fns";
 
 export type PeriodPreset = "mes" | "60d" | "ano" | "tudo" | "custom";
 
@@ -24,7 +24,9 @@ export function periodRangeFor(preset: Exclude<PeriodPreset, "custom">): { from:
   const today = format(new Date(), "yyyy-MM-dd");
   switch (preset) {
     case "mes":
-      return { from: format(startOfMonth(new Date()), "yyyy-MM-dd"), to: today };
+      // Vai ate o fim do mes, nao ate hoje: aposta planilhada pra um jogo de
+      // amanha tem event_start_at futuro e sumiria do filtro padrao.
+      return { from: format(startOfMonth(new Date()), "yyyy-MM-dd"), to: format(endOfMonth(new Date()), "yyyy-MM-dd") };
     case "60d":
       return { from: format(subDays(new Date(), 60), "yyyy-MM-dd"), to: today };
     case "ano":

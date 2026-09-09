@@ -27,7 +27,7 @@ export function presetRangeLabel(preset: SheetPreset, firstBetDate: string | nul
     case "14d":
       return `${shortDate(subDays(today, 13))} – ${shortDate(today)}`;
     case "currentMonth":
-      return `${shortDate(startOfMonth(today))} – ${shortDate(today)}`;
+      return `${shortDate(startOfMonth(today))} – ${shortDate(endOfMonth(today))}`;
     case "lastMonth": {
       const lastMonth = subMonths(today, 1);
       return `${shortDate(startOfMonth(lastMonth))} – ${shortDate(endOfMonth(lastMonth))}`;

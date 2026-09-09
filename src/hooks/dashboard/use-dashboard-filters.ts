@@ -26,7 +26,7 @@ export function useDashboardFilters() {
   const [filters, setFiltersState] = useState<Filters>({
     houseId: undefined,
     startDate: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    endDate: format(endOfMonth(new Date()), "yyyy-MM-dd"),
   });
 
   useEffect(() => {
@@ -59,7 +59,8 @@ export function useDashboardFilters() {
       // Intervalo inclusivo nas duas pontas: 7 dias = hoje + os 6 anteriores.
       setRange(subDays(today, p === "7d" ? 6 : 13));
     } else if (p === "currentMonth") {
-      setRange(startOfMonth(today));
+      // Fim do mes, nao hoje: aposta de jogo futuro cai no filtro do mes atual.
+      setRange(startOfMonth(today), endOfMonth(today));
     } else if (p === "lastMonth") {
       const lastMonth = subMonths(today, 1);
       setRange(startOfMonth(lastMonth), endOfMonth(lastMonth));
