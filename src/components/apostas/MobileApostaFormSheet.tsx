@@ -76,9 +76,11 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           </div>
           <div className="space-y-1.5">
             <label htmlFor="bet-odd" className={fieldLabel}>Odd *</label>
+            {/* type="text", não "number": com locale pt-BR o input numérico
+                trata a vírgula como caractere inválido e zera o valor sem
+                avisar — justamente o separador que o placeholder pede. */}
             <Input
-              type="number"
-              step="0.01"
+              type="text"
               inputMode="decimal"
               placeholder="Ex: 1,92"
               id="bet-odd"
@@ -112,8 +114,7 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           <div className="space-y-1.5">
             <label htmlFor="bet-stake" className={fieldLabel}>Stake (R$) *</label>
             <Input
-              type="number"
-              step="0.01"
+              type="text"
               inputMode="decimal"
               placeholder="Ex: 100,00"
               id="bet-stake"

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { actionToast, Check } from "@/lib/action-toast";
+import { parsePtBrNumber } from "@/lib/format";
 import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
 import { useHouses } from "@/hooks/queries/use-houses";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
@@ -55,8 +56,8 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
   }, [initialData, houses]);
 
   const potentialReturn = useMemo(() => {
-    const odd = parseFloat(formData.odd.replace(",", "."));
-    const stake = parseFloat(formData.stake.replace(",", "."));
+    const odd = parsePtBrNumber(formData.odd);
+    const stake = parsePtBrNumber(formData.stake);
     if (!Number.isFinite(odd) || !Number.isFinite(stake) || odd <= 0 || stake <= 0) return null;
     return { total: odd * stake, profit: odd * stake - stake };
   }, [formData.odd, formData.stake]);
@@ -75,8 +76,8 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
         const payload = {
           game: formData.game,
           market: formData.market,
-          odd: parseFloat(formData.odd),
-          stake: parseFloat(formData.stake),
+          odd: parsePtBrNumber(formData.odd),
+          stake: parsePtBrNumber(formData.stake),
           sport: formData.sport,
           houseId: formData.houseId,
           betTime: new Date(formData.betTime).toISOString(),
@@ -86,8 +87,8 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
       } else {
         const payload = {
           game: formData.game,
-          stake: parseFloat(formData.stake),
-          odd: parseFloat(formData.odd),
+          stake: parsePtBrNumber(formData.stake),
+          odd: parsePtBrNumber(formData.odd),
           houseId: formData.houseId,
           market: formData.market,
           sport: formData.sport,
