@@ -15,6 +15,9 @@ graph LR
 
 Aposta que entra pelo Telegram e aposta digitada aqui caem no mesmo lugar. O dashboard só lê e edita o que a API tem — ele não é dono de nada.
 
+![Dashboard do SportsBet Manager](docs/screenshots/02-dashboard.png)
+
+
 ---
 
 ## O print que vira formulário
@@ -22,6 +25,13 @@ Aposta que entra pelo Telegram e aposta digitada aqui caem no mesmo lugar. O das
 Essa é a parte que eu queria mostrar. O atrito de um controle de apostas é a digitação, então o modal de "Nova aposta" aceita uma imagem e se preenche.
 
 Tem três formas de entrar, e todas caem no mesmo fluxo: `Ctrl+V` em qualquer lugar — inclusive na lista de apostas, que abre o modal já lendo —, arrastar e soltar, ou o input de arquivo, que no celular já abre galeria e câmera direto.
+
+![Modal de nova aposta com leitura por IA](docs/screenshots/04-nova-aposta-ia.png)
+
+No celular a faixa vira dois botões, Galeria e Câmera:
+
+<img src="docs/screenshots/09-mobile-nova-aposta.png" alt="Nova aposta no mobile" width="320">
+
 
 O que fez a diferença não foi chamar a API. Foi o resto.
 
@@ -38,6 +48,20 @@ E alguns detalhes que só aparecem usando: trocar o print no meio de uma leitura
 ---
 
 ## As telas
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/03-apostas.png" alt="Lista de apostas"><br><sub><b>Apostas</b> — 2.268 registros agrupados por mês, liquidação inline e filtros.</sub></td>
+    <td width="50%"><img src="docs/screenshots/06-tips.png" alt="Fila de tips"><br><sub><b>Tips</b> — fila espelhada do canal, com stake sugerida e % da banca.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/05-casas.png" alt="Casas de apostas"><br><sub><b>Casas</b> — saldo conciliado em 88 casas.</sub></td>
+    <td><img src="docs/screenshots/07-dashboard-config.png" alt="Personalizar dashboard"><br><sub><b>Personalizar dashboard</b> — reordenar, ligar/desligar e trocar o ícone de cada KPI.</sub></td>
+  </tr>
+</table>
+
+<img src="docs/screenshots/08-mobile-dashboard.png" alt="Dashboard no mobile" width="300">
+
 
 **Dashboard.** Gráfico de lucro diário, semanal ou mensal, cards de métrica no topo, apostas recentes e presets rápidos de período (mês atual, 60 e 90 dias, tudo).
 
