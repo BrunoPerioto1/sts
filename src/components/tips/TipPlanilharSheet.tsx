@@ -2,15 +2,10 @@ import { useState } from "react";
 import { Check, PencilSimple, XCircle } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
+import { CasaSheet } from "@/components/apostas/CasaSheet";
+import { SheetSelectField } from "@/components/apostas/SheetSelectField";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatCurrency, parsePtBrNumber } from "@/lib/format";
 import { useHouses } from "@/hooks/queries/use-houses";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
@@ -41,8 +36,12 @@ export function TipPlanilharSheet({
   const houses = useHouses();
   const [stake, setStake] = useState(toInput(tip.recommendedStake));
   const [odd, setOdd] = useState(toInput(tip.odd));
-  const [houseId, setHouseId] = useState("");
+  const [houseIds, setHouseIds] = useState<number[]>([]);
   const [editing, setEditing] = useState(false);
+  const [casaOpen, setCasaOpen] = useState(false);
+
+  const casaLabel =
+    houses.find((h) => h.id === houseIds[0])?.name ?? tip.house ?? "Escolher casa";
 
   const stakeValue = parsePtBrNumber(stake);
   const oddValue = parsePtBrNumber(odd);
@@ -73,7 +72,7 @@ export function TipPlanilharSheet({
               onConfirm({
                 stake: stakeValue,
                 odd: oddValue,
-                ...(houseId ? { houseId: Number(houseId) } : {}),
+                ...(houseIds[0] ? { houseId: houseIds[0] } : {}),
               })
             }
           >
@@ -152,22 +151,23 @@ export function TipPlanilharSheet({
             </div>
             <div className="space-y-1.5">
               <Label>Casa</Label>
-              <Select value={houseId} onValueChange={setHouseId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={tip.house ?? "Escolher casa"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {houses.map((h) => (
-                    <SelectItem key={h.id} value={String(h.id)}>
-                      {h.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Mesmo seletor dos filtros de Apostas: com ~200 casas
+                  cadastradas, o dropdown nativo vira uma lista infinita sem
+                  busca. O sheet tem busca e as usadas recentemente no topo. */}
+              <SheetSelectField summary={casaLabel} onOpen={() => setCasaOpen(true)} />
             </div>
           </div>
         )}
       </div>
+
+      <CasaSheet
+        open={casaOpen}
+        onOpenChange={setCasaOpen}
+        houses={houses}
+        houseIds={houseIds}
+        onChange={setHouseIds}
+        multiple={false}
+      />
     </BottomSheet>
   );
 }

@@ -23,7 +23,10 @@ function formatPercent(value: number) {
 }
 
 const squareButtonClass =
-  "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-zinc-300 transition-colors hover:bg-foreground/[0.07] disabled:opacity-40";
+  "press flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-zinc-300 transition-colors hover:bg-foreground/[0.07] disabled:opacity-40";
+
+const dangerButtonClass =
+  "press flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-negative text-negative transition-colors hover:bg-negative/10";
 
 // Uma linha da fila. Densa de propósito: o que decide a aposta (odd, EV,
 // jogo, mercado) tem que caber sem rolar, e a ação principal é um alvo só.
@@ -99,9 +102,17 @@ export function TipCard({
           </button>
         ) : (
           tip.status === "pending" && (
-            <button type="button" onClick={onPlanilhar} className={squareButtonClass} aria-label="Planilhar">
-              <Check size={18} weight="bold" />
-            </button>
+            <>
+              <button type="button" onClick={onPlanilhar} className={squareButtonClass} aria-label="Planilhar">
+                <Check size={18} weight="bold" />
+              </button>
+              {/* Caiu é um dos dois desfechos de toda tip, não uma ação
+                  secundária — escondê-lo num menu custava dois toques na
+                  metade dos casos. */}
+              <button type="button" onClick={onDismiss} className={dangerButtonClass} aria-label="Marcar como caiu">
+                <XCircle size={18} weight="bold" />
+              </button>
+            </>
           )
         )}
 
@@ -113,11 +124,6 @@ export function TipCard({
             <DropdownMenuItem onSelect={() => setShowMessage((v) => !v)}>
               {showMessage ? "Esconder mensagem" : "Ver mensagem do canal"}
             </DropdownMenuItem>
-            {tip.status === "pending" && (
-              <DropdownMenuItem onSelect={onDismiss} className="text-negative">
-                <XCircle size={15} weight="bold" /> Marcar como caiu
-              </DropdownMenuItem>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
