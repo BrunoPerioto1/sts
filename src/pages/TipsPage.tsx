@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
+import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { Button } from "@/components/ui/button";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,8 +41,19 @@ export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
   const isMobile = useIsMobile();
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
+
+  // Mesmo debounce da busca de Apostas (250 ms): sem ele cada tecla vira uma
+  // pagina nova no infinite query.
+  const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
+  const buscaRef = useRef<HTMLInputElement>(null!);
+  useEffect(() => {
+    const t = setTimeout(() => setBuscaDebounced(busca), 250);
+    return () => clearTimeout(t);
+  }, [busca]);
+
   const { tips, summary, total, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
-    useTips(tab);
+    useTips(tab, buscaDebounced || undefined);
   const { dismiss, undismiss, planilhar } = useTipActions();
 
   const run = (mutation: typeof dismiss, id: number, title: string) =>
@@ -93,6 +105,18 @@ export default function TipsPage() {
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
+      {/* Sempre aberta, sem botao de alternar no header: aqui a busca e' o
+          unico filtro da tela alem das abas. Reusa a barra de Apostas. */}
+      <MobileSearchBar
+        value={busca}
+        onChange={setBusca}
+        resultsCount={total}
+        open
+        onClose={() => setBusca("")}
+        inputRef={buscaRef}
+        placeholder="Buscar por evento ou mercado..."
+      />
+
       <div className="mb-4 flex gap-2">
         {tabs.map((t) => (
           <button
@@ -123,7 +147,12 @@ export default function TipsPage() {
       ) : tips.length === 0 ? (
         <EmptyState
           icon={tab === "pending" ? <CheckCircle size={32} /> : <PaperPlaneTilt size={32} />}
-          {...emptyByTab[tab]}
+          {...(buscaDebounced
+            ? {
+                title: "Nada encontrado",
+                description: `Nenhuma tip com "${buscaDebounced}" nesta aba.`,
+              }
+            : emptyByTab[tab])}
         />
       ) : (
         <>

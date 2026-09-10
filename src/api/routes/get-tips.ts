@@ -37,7 +37,9 @@ export interface TipsListResponse {
   perPage: number;
 }
 
-export async function getTips(params: { status?: TipStatus; page?: number; perPage?: number } = {}) {
+export async function getTips(
+  params: { status?: TipStatus; q?: string; page?: number; perPage?: number } = {},
+) {
   const response = await api.tips.get<TipsListResponse>('', { params });
   return response.data;
 }
