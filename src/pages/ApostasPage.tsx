@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasGrouped } from "@/components/apostas/ApostasGrouped";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
+import { pickImage } from "@/hooks/apostas/use-bet-slip-scan";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { ApostasMobileHeader } from "@/components/apostas/ApostasMobileHeader";
@@ -37,8 +38,27 @@ export default function ApostasPage() {
   const [editAposta, setEditAposta] = useState<BetItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [pastedImage, setPastedImage] = useState<File | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
+
+  // Ctrl+V na lista abre o modal já lendo o print. Ignora colagem dentro de
+  // campo de texto (a busca, por exemplo) e não faz nada com o modal aberto —
+  // ali o próprio formulário já escuta o paste.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (createModalOpen || editModalOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, [contenteditable='true']")) return;
+      const file = pickImage(e.clipboardData);
+      if (!file) return;
+      e.preventDefault();
+      setPastedImage(file);
+      setCreateModalOpen(true);
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [createModalOpen, editModalOpen]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const betsQuery = useBetsQuery(filters.queryFilters);
@@ -193,7 +213,13 @@ export default function ApostasPage() {
           )}
         </div>
 
-        <ApostaFormModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} onApostaAdded={() => { setCreateModalOpen(false); actions.reload(); }} />
+        <ApostaFormModal
+          open={createModalOpen}
+          onClose={() => { setCreateModalOpen(false); setPastedImage(null); }}
+          onApostaAdded={() => { setCreateModalOpen(false); setPastedImage(null); actions.reload(); }}
+          pendingImage={pastedImage}
+          onPendingImageConsumed={() => setPastedImage(null)}
+        />
         {editAposta && (
           <EditApostaModal
             aposta={editAposta}

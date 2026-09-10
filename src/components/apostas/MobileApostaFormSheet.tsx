@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { CasaSheet } from "./CasaSheet";
@@ -6,8 +6,15 @@ import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 import { type BetItem } from "@/api/routes/get-bets";
+import { useBetSlipScan } from "@/hooks/apostas/use-bet-slip-scan";
+import { BetSlipUpload } from "./BetSlipUpload";
+import { AiFieldLabel } from "./AiFieldLabel";
+import { aiFieldRing } from "@/lib/ai-field";
+import { OddBoostHint } from "./OddBoostHint";
+import { MatchedTipsCard } from "./MatchedTipsCard";
 
 const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-400";
 
@@ -17,12 +24,15 @@ interface MobileApostaFormSheetProps {
   onApostaAdded: (aposta: BetItem) => void;
   initialData?: BetItem;
   isEditing?: boolean;
+  /** Print colado na lista de Apostas: já entra lendo, sem passar pelo vazio. */
+  pendingImage?: File | null;
+  onPendingImageConsumed?: () => void;
 }
 
-export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialData, isEditing = false }: MobileApostaFormSheetProps) {
+export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialData, isEditing = false, pendingImage, onPendingImageConsumed }: MobileApostaFormSheetProps) {
   const [casaOpen, setCasaOpen] = useState(false);
   const [dataHoraOpen, setDataHoraOpen] = useState(false);
-  const { formData, setFormData, houses, submitting, potentialReturn, handleSubmit } = useApostaForm({
+  const { formData, setFormData, setField, houses, submitting, potentialReturn, handleSubmit, aiMarks, originalOdd, tipId, setTipId, applyAiFields, resetForm } = useApostaForm({
     onApostaAdded: (aposta) => {
       onApostaAdded(aposta);
       onClose();
@@ -30,6 +40,26 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
     initialData,
     isEditing,
   });
+
+  const scan = useBetSlipScan();
+  // Legenda da casa, como no Telegram: digitar "kto" antes de escolher a
+  // imagem evita que a IA tenha que adivinhar a casa pela logo.
+  const [caption, setCaption] = useState("");
+  const houseName = houses.find((h) => h.id === formData.houseId)?.name;
+  // A legenda digitada vence o select: é o gesto mais recente do usuário.
+  const hint = caption.trim() || houseName;
+
+  const read = async (file: File | Blob) => {
+    const parsed = await scan.scan(file, hint);
+    if (parsed) applyAiFields(parsed);
+  };
+
+  useEffect(() => {
+    if (!pendingImage) return;
+    void read(pendingImage);
+    onPendingImageConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingImage]);
 
   return (
     <BottomSheet
@@ -40,34 +70,56 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
       title={isEditing ? "Editar aposta" : "Nova aposta"}
       footer={
         <Button type="submit" form="mobile-aposta-form" disabled={submitting} className="w-full min-h-[44px]">
-          {submitting ? "Salvando…" : isEditing ? "Atualizar aposta" : "Registrar aposta"}
+          {submitting ? "Salvando…" : isEditing ? "Atualizar aposta" : tipId ? "Registrar e vincular" : "Registrar aposta"}
         </Button>
       }
     >
       <form id="mobile-aposta-form" onSubmit={handleSubmit} className="flex flex-col gap-4 pb-4">
+        {/* Edição de aposta já registrada não lê print — só o cadastro novo. */}
+        {!isEditing && (
+          <BetSlipUpload
+            variant="mobile"
+            status={scan.status}
+            preview={scan.preview}
+            error={scan.error}
+            houseName={houseName}
+            caption={caption}
+            onCaptionChange={setCaption}
+            onFile={(file) => void read(file)}
+            onRetry={() => void scan.retry(hint).then((p) => p && applyAiFields(p))}
+            onReset={() => {
+              scan.reset();
+              resetForm();
+              setCaption("");
+            }}
+          />
+        )}
+
         <div className="space-y-1.5">
-          <label htmlFor="bet-game" className={fieldLabel}>Evento *</label>
+          <AiFieldLabel htmlFor="bet-game" mark={aiMarks.game} className={fieldLabel}>Evento *</AiFieldLabel>
           <Input
             placeholder="Ex: Palmeiras x Flamengo"
             id="bet-game"
-              value={formData.game}
-            onChange={(e) => setFormData({ ...formData, game: e.target.value })}
+            className={aiFieldRing(aiMarks.game)}
+            value={formData.game}
+            onChange={(e) => setField("game", e.target.value)}
           />
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="bet-market" className={fieldLabel}>Mercado *</label>
+          <AiFieldLabel htmlFor="bet-market" mark={aiMarks.market} className={fieldLabel}>Mercado *</AiFieldLabel>
           <Input
             placeholder="Ex: Mais de 2.5 gols"
             id="bet-market"
-              value={formData.market}
-            onChange={(e) => setFormData({ ...formData, market: e.target.value })}
+            className={aiFieldRing(aiMarks.market)}
+            value={formData.market}
+            onChange={(e) => setField("market", e.target.value)}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <span className={fieldLabel}>Casa *</span>
+            <AiFieldLabel mark={aiMarks.houseId} className={fieldLabel}>Casa *</AiFieldLabel>
             <SheetSelectField
               summary={formData.houseId ? (houses.find((h) => h.id === formData.houseId)?.name ?? "Selecionar") : "Selecionar"}
               onOpen={() => setCasaOpen(true)}
@@ -75,18 +127,22 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="bet-odd" className={fieldLabel}>Odd *</label>
+            <AiFieldLabel htmlFor="bet-odd" mark={aiMarks.odd} className={fieldLabel}>Odd *</AiFieldLabel>
             {/* type="text", não "number": com locale pt-BR o input numérico
                 trata a vírgula como caractere inválido e zera o valor sem
                 avisar — justamente o separador que o placeholder pede. */}
-            <Input
-              type="text"
-              inputMode="decimal"
-              placeholder="Ex: 1,92"
-              id="bet-odd"
-              value={formData.odd}
-              onChange={(e) => setFormData({ ...formData, odd: e.target.value })}
-            />
+            <div className="relative">
+              <Input
+                type="text"
+                inputMode="decimal"
+                placeholder="Ex: 1,92"
+                id="bet-odd"
+                className={cn(aiFieldRing(aiMarks.odd), originalOdd !== null && "pr-24")}
+                value={formData.odd}
+                onChange={(e) => setField("odd", e.target.value)}
+              />
+              <OddBoostHint originalOdd={originalOdd} />
+            </div>
           </div>
         </div>
 
@@ -103,39 +159,42 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label htmlFor="bet-sport" className={fieldLabel}>Esporte</label>
+            <AiFieldLabel htmlFor="bet-sport" mark={aiMarks.sport} className={fieldLabel}>Esporte</AiFieldLabel>
             <Input
               placeholder="Ex: Futebol"
               id="bet-sport"
+              className={aiFieldRing(aiMarks.sport)}
               value={formData.sport}
-              onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
+              onChange={(e) => setField("sport", e.target.value)}
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="bet-stake" className={fieldLabel}>Stake (R$) *</label>
+            <AiFieldLabel htmlFor="bet-stake" mark={aiMarks.stake} className={fieldLabel}>Stake (R$) *</AiFieldLabel>
             <Input
               type="text"
               inputMode="decimal"
               placeholder="Ex: 100,00"
               id="bet-stake"
+              className={aiFieldRing(aiMarks.stake)}
               value={formData.stake}
-              onChange={(e) => setFormData({ ...formData, stake: e.target.value })}
+              onChange={(e) => setField("stake", e.target.value)}
             />
           </div>
         </div>
 
+        {scan.result && (
+          <MatchedTipsCard tips={scan.result.matchedTips} selected={tipId} onSelect={setTipId} />
+        )}
+
         {potentialReturn && (
-          <div
-            className="grid grid-cols-2 gap-3 rounded-md p-3"
-            style={{ background: "var(--color-bg)", boxShadow: "inset 2px 0 0 var(--color-accent)" }}
-          >
+          <div className="grid grid-cols-2 gap-3 rounded-xl border border-positive/20 bg-positive/[0.07] p-3">
             <div>
-              <p className={fieldLabel}>Retorno potencial</p>
-              <p className="text-xl font-semibold tabular-nums text-white">{formatCurrency(potentialReturn.total)}</p>
+              <p className={fieldLabel}>Possível ganho</p>
+              <p className="text-xl font-semibold tabular-nums text-positive">{formatCurrency(potentialReturn.total)}</p>
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-xl font-semibold tabular-nums text-positive">+{formatCurrency(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-white">+{formatCurrency(potentialReturn.profit)}</p>
             </div>
           </div>
         )}

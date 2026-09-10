@@ -44,6 +44,10 @@ export default {
                 accent: {
                     DEFAULT: 'var(--color-accent)',
                     foreground: 'var(--color-bg)',
+                    // Par de leitura do accent: o DEFAULT e superficie (texto
+                    // branco por cima) e este e texto/link sobre fundo escuro.
+                    // Ja existia como CSS var, faltava registrar como cor.
+                    text: 'var(--color-accent-text)',
                     2: 'var(--color-accent-2)',
                     100: 'var(--color-accent-100)',
                     200: 'var(--color-accent-200)',

@@ -3,7 +3,33 @@ import { actionToast, Check } from "@/lib/action-toast";
 import { parsePtBrNumber } from "@/lib/format";
 import { createBet as createBetRoute, updateBet as updateBetRoute, type BetItem } from "@/api/routes/get-bets";
 import { useHouses } from "@/hooks/queries/use-houses";
+import { LOW_CONFIDENCE, type ParsedBetSlip } from "@/api/routes/post-parse-image";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
+
+/**
+ * Campo do formulário -> chave correspondente em `confidence` na resposta do
+ * backend. Os nomes divergem de propósito (o form fala "game"/"houseId", a API
+ * fala "event"/"house"), então o de-para tem que ser explícito: consultar
+ * `confidence[field]` direto devolve undefined e marca tudo como duvidoso.
+ */
+const CONFIDENCE_KEY: Record<AiField, string> = {
+  game: "event",
+  market: "market",
+  houseId: "house",
+  sport: "sport",
+  odd: "odd",
+  stake: "stake",
+};
+
+/** Campos que a leitura do print consegue preencher. */
+export type AiField = "game" | "market" | "houseId" | "sport" | "odd" | "stake";
+
+export interface AiFieldMark {
+  /** Veio da IA (ganha o selo "IA" no rótulo). */
+  filled: boolean;
+  /** Confiança abaixo do piso — a tela pede conferência em amarelo. */
+  check: boolean;
+}
 
 export interface ApostaFormData {
   game: string;
@@ -34,6 +60,11 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
   const houses = useHouses();
   const invalidate = useInvalidateBetData();
   const [submitting, setSubmitting] = useState(false);
+  // Marcas por campo: quais vieram da IA e quais pedem conferência. Some assim
+  // que o usuário digita por cima — a partir daí o valor é dele, não da IA.
+  const [aiMarks, setAiMarks] = useState<Partial<Record<AiField, AiFieldMark>>>({});
+  const [originalOdd, setOriginalOdd] = useState<number | null>(null);
+  const [tipId, setTipId] = useState<number | undefined>(undefined);
   const [formData, setFormData] = useState<ApostaFormData>({
     game: initialData?.game || "",
     market: initialData?.market || "",
@@ -54,6 +85,76 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
       setFormData((prev) => ({ ...prev, houseId }));
     }
   }, [initialData, houses]);
+
+  // Toda edição manual tira o selo do campo. Sem isso o formulário continuaria
+  // dizendo "preenchido pela IA" num valor que o usuário corrigiu na mão.
+  const setField = <K extends keyof ApostaFormData>(field: K, value: ApostaFormData[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setAiMarks((prev) => {
+      if (!prev[field as AiField]) return prev;
+      const next = { ...prev };
+      delete next[field as AiField];
+      return next;
+    });
+    if (field === "odd") setOriginalOdd(null);
+  };
+
+  /**
+   * Escreve no formulário o que a IA leu do print. Só preenche campo que veio
+   * — o que ela não identificou continua como estava, para o usuário digitar.
+   */
+  const applyAiFields = (parsed: ParsedBetSlip) => {
+    const marks: Partial<Record<AiField, AiFieldMark>> = {};
+    const mark = (field: AiField) => {
+      const score = parsed.confidence?.[CONFIDENCE_KEY[field]] ?? 1;
+      marks[field] = { filled: true, check: score < LOW_CONFIDENCE };
+    };
+
+    setFormData((prev) => {
+      const next = { ...prev };
+      if (parsed.event) { next.game = parsed.event; mark("game"); }
+      if (parsed.market) { next.market = parsed.market; mark("market"); }
+      if (parsed.sport) { next.sport = parsed.sport; mark("sport"); }
+      if (parsed.odd !== null) { next.odd = String(parsed.odd); mark("odd"); }
+      if (parsed.stake !== null) { next.stake = String(parsed.stake); mark("stake"); }
+      // A casa só é sobrescrita se o usuário ainda não escolheu uma: a escolha
+      // dele é sempre mais confiável que a logo lida do print.
+      if (parsed.house && !prev.houseId) {
+        next.houseId = parsed.house.id;
+        mark("houseId");
+      }
+      return next;
+    });
+    setAiMarks(marks);
+    setOriginalOdd(parsed.originalOdd);
+    // Vincular é decisão do usuário: a melhor candidata já vem marcada, mas
+    // nada é enviado sem ele confirmar em "Registrar e vincular".
+    setTipId(parsed.matchedTips[0]?.tipId);
+  };
+
+  const clearAi = () => {
+    setAiMarks({});
+    setOriginalOdd(null);
+    setTipId(undefined);
+  };
+
+  /**
+   * Zera o formulário inteiro, não só os selos da IA. É o que "Trocar" e
+   * "Remover" fazem: sair de um bilhete e entrar noutro não pode deixar
+   * evento/odd/stake do print anterior parados na tela.
+   */
+  const resetForm = () => {
+    setFormData({
+      game: "",
+      market: "",
+      odd: "",
+      stake: "",
+      houseId: undefined,
+      sport: "Futebol",
+      betTime: toLocalDateTime(),
+    });
+    clearAi();
+  };
 
   const potentialReturn = useMemo(() => {
     const odd = parsePtBrNumber(formData.odd);
@@ -93,6 +194,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
           market: formData.market,
           sport: formData.sport,
           betTime: new Date(formData.betTime).toISOString(),
+          ...(tipId ? { tipId } : {}),
         };
         const created = await createBetRoute(payload);
         onApostaAdded(created);
@@ -109,5 +211,19 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
     }
   };
 
-  return { formData, setFormData, houses, submitting, potentialReturn, handleSubmit };
+  return {
+    formData,
+    setFormData,
+    setField,
+    houses,
+    submitting,
+    potentialReturn,
+    handleSubmit,
+    aiMarks,
+    originalOdd,
+    tipId,
+    setTipId,
+    applyAiFields,
+    resetForm,
+  };
 }

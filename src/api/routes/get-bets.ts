@@ -9,6 +9,9 @@ export interface CreateBetDto {
   market: string;
   sport: string;
   betTime?: string;
+  // Tip pendente que esta aposta liquida. Quando vai preenchido, a tip sai da
+  // fila de pendências e o resultado volta pro canal.
+  tipId?: number;
 }
 
 export function createBet(bet: CreateBetDto) {
