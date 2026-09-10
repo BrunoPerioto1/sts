@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { endOfMonth, format, startOfMonth } from "date-fns";
-import type { ApostasFilterState, PeriodPreset } from "@/types/apostas-filters";
+import { format, startOfMonth } from "date-fns";
+import { defaultPeriod, type ApostasFilterState, type PeriodPreset } from "@/types/apostas-filters";
 import { PER_PAGE, type BetsQueryFilters } from "./use-bets-query";
 
 
@@ -22,8 +22,9 @@ export function useApostasFilters() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(endOfMonth(new Date()), "yyyy-MM-dd"));
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "mes");
+  // Padrao: dia 1 ate hoje. O chip "Mes atual" continua indo ate o fim do mes.
+  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "custom");
   const [pageStart, setPageStart] = useState(1);
 
   // Só o texto da busca é debounced — os outros filtros (chip, sheet, período)
@@ -74,7 +75,10 @@ export function useApostasFilters() {
     houseIds,
   };
 
-  const activeMobileFilterCount = [periodPreset !== "mes", statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
+  // Periodo so conta como filtro ativo quando difere do padrao (dia 1 -> hoje).
+  const dflt = defaultPeriod();
+  const periodChanged = startDate !== dflt.from || endDate !== dflt.to;
+  const activeMobileFilterCount = [periodChanged, statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
 
   return {
     statusFilter,

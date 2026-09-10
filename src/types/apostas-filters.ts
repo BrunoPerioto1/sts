@@ -15,7 +15,12 @@ export interface ApostasFilterState {
 }
 
 export function defaultPeriod(): ApostasPeriod {
-  return { preset: "mes", ...periodRangeFor("mes") };
+  // Dia 1 ate hoje — o chip "Mes atual" e que estende ate o fim do mes.
+  return {
+    preset: "custom",
+    from: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    to: format(new Date(), "yyyy-MM-dd"),
+  };
 }
 
 // Calcula from/to pros presets fixos (não usado pra "custom", que já vem com
