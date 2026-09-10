@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { PaperPlaneTilt } from "@phosphor-icons/react";
+import { ArrowsClockwise, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
-import { TipEditSheet } from "@/components/tips/TipEditSheet";
+import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,7 @@ const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
   },
   planilhada: {
     title: "Nenhuma planilhada",
-    description: "As tips que virarem aposta aparecem aqui com o resultado em Apostas.",
+    description: "As tips que virarem aposta aparecem aqui, com resultado e lucro em Apostas.",
   },
   caiu: {
     title: "Nenhuma marcada como caiu",
@@ -35,24 +35,26 @@ const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
 
 export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
-  const [editing, setEditing] = useState<TipItem | null>(null);
-  const { tips, summary, total, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useTips(tab);
+  const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
+  const { tips, summary, total, isPending, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
+    useTips(tab);
   const { dismiss, undismiss, planilhar } = useTipActions();
-
-  const busy = dismiss.isPending || undismiss.isPending || planilhar.isPending;
 
   const run = (mutation: typeof dismiss, id: number, title: string) =>
     mutation.mutate(id, {
-      onSuccess: () => actionToast.success({ title }),
+      onSuccess: () => {
+        setPlanilhando(null);
+        actionToast.success({ title });
+      },
       onError: (e: Error) => actionToast.error({ description: e.message }),
     });
 
-  const doPlanilhar = (id: number, overrides: PlanilharTipDto = {}) =>
+  const doPlanilhar = (id: number, overrides: PlanilharTipDto) =>
     planilhar.mutate(
       { id, ...overrides },
       {
         onSuccess: (res: { alreadyExisted: boolean }) => {
-          setEditing(null);
+          setPlanilhando(null);
           actionToast.success({
             title: res.alreadyExisted ? "Essa tip já estava planilhada" : "Aposta planilhada",
           });
@@ -62,26 +64,41 @@ export default function TipsPage() {
     );
 
   const subtitle = summary
-    ? `${summary.pending} pendentes${summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} sugeridos` : ""}`
+    ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${
+        summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} sugeridos` : ""
+      }`
     : undefined;
 
-  const header = (
-    <div className="flex items-baseline gap-2.5">
-      <h1 className="text-2xl font-semibold tracking-tight">Tips</h1>
-      {subtitle && <span className="text-sm text-zinc-500">{subtitle}</span>}
-    </div>
+  const refreshButton = (
+    <button
+      type="button"
+      onClick={() => void refetch()}
+      aria-label="Atualizar"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-zinc-300 transition-colors hover:bg-foreground/[0.07]"
+    >
+      <ArrowsClockwise size={16} weight="bold" className={cn(isFetching && "animate-spin")} />
+    </button>
   );
 
   return (
     <MainLayout
-      title="Tips"
+      title="Pendentes"
       subtitle={subtitle}
-      titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
-      titleClassName="text-2xl font-semibold tracking-tight shrink-0"
+      titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
+      titleClassName="text-2xl font-semibold tracking-tight"
       subtitleClassName="text-sm text-zinc-500 truncate"
-      mobileHeader={header}
+      actions={refreshButton}
+      mobileHeader={
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight">Pendentes</h1>
+            {subtitle && <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>}
+          </div>
+          {refreshButton}
+        </div>
+      }
     >
-      <div className="flex gap-2 mb-4">
+      <div className="mb-4 flex gap-2">
         {tabs.map((t) => (
           <button
             key={t.value}
@@ -89,8 +106,8 @@ export default function TipsPage() {
             className={cn(
               "press h-8 rounded-full px-3 text-xs font-medium transition-colors",
               tab === t.value
-                ? "bg-accent/[0.14] text-accent border border-accent/30"
-                : "border border-border text-zinc-400 hover:text-foreground"
+                ? "border border-accent/30 bg-accent/[0.14] text-accent"
+                : "border border-border text-zinc-400 hover:text-foreground",
             )}
           >
             {t.label}
@@ -106,44 +123,50 @@ export default function TipsPage() {
           ))}
         </div>
       ) : tips.length === 0 ? (
-        <EmptyState icon={<PaperPlaneTilt size={32} />} {...emptyByTab[tab]} />
+        <EmptyState
+          icon={tab === "pending" ? <CheckCircle size={32} /> : <PaperPlaneTilt size={32} />}
+          {...emptyByTab[tab]}
+        />
       ) : (
-        <div className="space-y-2">
-          {tips.map((tip, index) => (
-            <TipCard
-              key={tip.id}
-              tip={tip}
-              index={index}
-              busy={busy}
-              onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
-              onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
-              onPlanilhar={() => doPlanilhar(tip.id)}
-              onEdit={() => setEditing(tip)}
-            />
-          ))}
+        <>
+          {/* Container único com divisórias, não cards soltos: a fila é pra
+              varrer de cima a baixo, e sombra por item vira ruído nisso. */}
+          <div className="overflow-hidden rounded-xl border border-border">
+            {tips.map((tip) => (
+              <TipCard
+                key={tip.id}
+                tip={tip}
+                onPlanilhar={() => setPlanilhando(tip)}
+                onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
+                onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
+              />
+            ))}
+          </div>
+
           {hasNextPage && (
             <Button
               variant="outline"
-              className="w-full"
+              className="mt-3 w-full"
               onClick={() => void fetchNextPage()}
               disabled={isFetchingNextPage}
             >
               {isFetchingNextPage ? "Carregando…" : `Carregar mais (${tips.length} de ${total})`}
             </Button>
           )}
-        </div>
+        </>
       )}
 
       {/* key remonta o sheet a cada tip: os campos são inicializados no
-          useState a partir dela, então sem isso a segunda tip abriria com os
+          useState a partir dela, então sem isso a segunda abriria com os
           valores da primeira. */}
-      {editing && (
-        <TipEditSheet
-          key={editing.id}
-          tip={editing}
+      {planilhando && (
+        <TipPlanilharSheet
+          key={planilhando.id}
+          tip={planilhando}
           open
-          onOpenChange={(o) => !o && setEditing(null)}
-          onConfirm={(overrides) => doPlanilhar(editing.id, overrides)}
+          onOpenChange={(o) => !o && setPlanilhando(null)}
+          onConfirm={(overrides) => doPlanilhar(planilhando.id, overrides)}
+          onDismiss={() => run(dismiss, planilhando.id, "Tip marcada como caiu")}
           busy={planilhar.isPending}
         />
       )}
