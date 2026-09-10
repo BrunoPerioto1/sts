@@ -7,7 +7,6 @@ import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { TipsListDesktop } from "@/components/tips/TipsListDesktop";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
-import { Button } from "@/components/ui/button";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,9 +60,6 @@ export default function TipsPage() {
     total,
     isPending,
     isFetching,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
     refetch,
   } = useTips(tab, buscaDebounced || undefined);
 
@@ -100,39 +96,6 @@ export default function TipsPage() {
   // Recarregar é puxar a lista pra baixo, como no resto do app — não sobra
   // botão de reload competindo com o "..." na largura do header.
   const pull = usePullToRefresh(() => refetch(), isMobile);
-
-  const carregarMais = hasNextPage ? (
-    <Button
-      variant="outline"
-      className="mt-3 w-full"
-      onClick={() => void fetchNextPage()}
-      disabled={isFetchingNextPage}
-    >
-      {isFetchingNextPage ? "Carregando…" : `Carregar mais (${tips.length} de ${total})`}
-    </Button>
-  ) : null;
-
-  // Mesmos chips nos dois lugares: no desktop eles moram no header (a fila
-  // ocupa a largura toda abaixo), no mobile ficam acima da lista.
-  const abas = (
-    <div className="flex gap-2">
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          onClick={() => setTab(t.value)}
-          className={cn(
-            "press h-9 shrink-0 rounded-full px-3 text-[13px] font-medium transition-colors",
-            tab === t.value
-              ? "bg-accent text-white"
-              : "border border-white/10 bg-transparent text-zinc-400 hover:text-foreground",
-          )}
-        >
-          {t.label}
-          {summary && <span className="ml-1.5 tabular-nums opacity-60">{summary[t.countKey]}</span>}
-        </button>
-      ))}
-    </div>
-  );
 
   const subtitle = summary
     ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${
@@ -215,7 +178,6 @@ export default function TipsPage() {
                 selectedId={selecionada?.id ?? null}
                 onSelect={(tip) => setSelecionadaId(tip.id)}
               />
-              {carregarMais}
             </div>
 
             {selecionada && (
@@ -242,7 +204,6 @@ export default function TipsPage() {
                 />
               ))}
             </div>
-            {carregarMais}
           </div>
         </>
       )}

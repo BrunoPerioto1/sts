@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   dismissTip,
   getTips,
@@ -9,29 +9,27 @@ import {
 } from "@/api/routes/get-tips";
 
 const TIPS_KEY = ["tips"] as const;
-const PER_PAGE = 20;
+// Sem paginacao na tela: a fila e' curta (o canal manda dezenas, nao milhares)
+// e o backend ja pagina em memoria, entao "carregar mais" so adicionava um
+// clique. 200 e' o teto que o TipFilterDto aceita.
+const PER_PAGE = 200;
 
-// staleTime curto contra o global de 5 min do App.tsx: tip é o único dado do
-// app que chega de fora (fan-out do canal no Telegram) sem o usuário ter feito
-// nada, então uma lista de 5 minutos atrás já não vale.
+// staleTime curto contra o global de 5 min do App.tsx: tip e' o unico dado do
+// app que chega de fora (fan-out do canal no Telegram) sem o usuario ter feito
+// nada, entao uma lista de 5 minutos atras ja nao vale.
 export function useTips(status?: TipStatus, q?: string) {
-  const query = useInfiniteQuery({
+  const query = useQuery({
     queryKey: [...TIPS_KEY, status ?? "all", q ?? ""],
-    queryFn: ({ pageParam }) => getTips({ status, q, page: pageParam, perPage: PER_PAGE }),
-    initialPageParam: 1,
-    getNextPageParam: (last) => (last.page * last.perPage < last.total ? last.page + 1 : undefined),
+    queryFn: () => getTips({ status, q, page: 1, perPage: PER_PAGE }),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });
 
-  const pages = query.data?.pages ?? [];
-
   return {
     ...query,
-    tips: pages.flatMap((p) => p.data),
-    // Os contadores das abas são iguais em toda página; a primeira já basta.
-    summary: pages[0]?.summary ?? null,
-    total: pages[0]?.total ?? 0,
+    tips: query.data?.data ?? [],
+    summary: query.data?.summary ?? null,
+    total: query.data?.total ?? 0,
   };
 }
 
