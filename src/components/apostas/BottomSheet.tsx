@@ -16,6 +16,10 @@ interface BottomSheetProps {
   // que precisa ficar parado enquanto a lista rola por baixo.
   subHeader?: React.ReactNode;
   footer?: React.ReactNode;
+  // Esconde o X do cabeçalho: pra sheets onde fechar é decisão (o rodapé tem
+  // as saídas explícitas) e o X vira um jeito ambíguo de sair. Arrastar o
+  // handle pra baixo continua fechando.
+  hideClose?: boolean;
   children: React.ReactNode;
   contentClassName?: string;
 }
@@ -28,6 +32,7 @@ export function BottomSheet({
   titleExtra,
   subHeader,
   footer,
+  hideClose = false,
   children,
   contentClassName,
 }: BottomSheetProps) {
@@ -36,7 +41,7 @@ export function BottomSheet({
   // layout viewport, que no iOS nao encolhe — o teclado cobria o campo em foco
   // e o resultado da busca. Nao usa `transform` de proposito: o vaul controla o
   // transform do Content pro gesto de arrastar, e mexer nele brigaria com ele.
-  const keyboardInset = useKeyboardInset();
+  const keyboard = useKeyboardInset();
 
   return (
     // handleOnly: sem isso o vaul trata o conteúdo inteiro como área de
@@ -58,32 +63,35 @@ export function BottomSheet({
             contentClassName
           )}
           style={
-            keyboardInset
+            keyboard.inset
               ? {
-                  bottom: keyboardInset,
-                  // Com a sheet levantada, o teto de 88dvh deixaria de caber:
-                  // limita pelo espaco que sobrou acima do teclado.
-                  maxHeight: `calc((100dvh - ${keyboardInset}px) * 0.92)`,
+                  bottom: keyboard.inset,
+                  // Em px medidos, não em dvh: no iOS o `dvh` ignora o teclado,
+                  // então o teto de 88dvh não limitava nada e o sheet crescia
+                  // pra cima até o título sair pela borda de cima da tela.
+                  maxHeight: Math.round(keyboard.viewportHeight * 0.92),
                 }
               : undefined
           }
         >
           <DrawerPrimitive.Handle className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-full bg-white/15" />
 
-          <div className="flex items-center justify-between gap-2 pl-4 pr-2 pb-3 pt-3">
+          <div className="flex shrink-0 items-center justify-between gap-2 pl-4 pr-2 pb-3 pt-3">
             <div className="flex items-center gap-2 min-w-0">
               <DrawerPrimitive.Title className="text-base font-semibold truncate">
                 {title}
               </DrawerPrimitive.Title>
               {titleExtra}
             </div>
-            <DrawerPrimitive.Close
-              onClick={() => onOpenChange(false)}
-              aria-label="Fechar"
-              className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-white shrink-0"
-            >
-              <X size={18} />
-            </DrawerPrimitive.Close>
+            {!hideClose && (
+              <DrawerPrimitive.Close
+                onClick={() => onOpenChange(false)}
+                aria-label="Fechar"
+                className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-white shrink-0"
+              >
+                <X size={18} />
+              </DrawerPrimitive.Close>
+            )}
           </div>
 
           {subHeader && <div className="shrink-0 px-4 pb-2">{subHeader}</div>}
