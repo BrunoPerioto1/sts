@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { ArrowsClockwise, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
+import { CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { Button } from "@/components/ui/button";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { actionToast } from "@/lib/action-toast";
 import { formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTipActions, useTips } from "@/hooks/queries/use-tips";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
 
 const tabs: { value: TipStatus; label: string; countKey: "pending" | "planilhadas" | "caidas" }[] = [
@@ -35,8 +38,9 @@ const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
 
 export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
+  const isMobile = useIsMobile();
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
-  const { tips, summary, total, isPending, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
+  const { tips, summary, total, isPending, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useTips(tab);
   const { dismiss, undismiss, planilhar } = useTipActions();
 
@@ -63,22 +67,15 @@ export default function TipsPage() {
       },
     );
 
+  // Recarregar é puxar a lista pra baixo, como no resto do app — não sobra
+  // botão de reload competindo com o "..." na largura do header.
+  const pull = usePullToRefresh(() => refetch(), isMobile);
+
   const subtitle = summary
     ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${
         summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} sugeridos` : ""
       }`
     : undefined;
-
-  const refreshButton = (
-    <button
-      type="button"
-      onClick={() => void refetch()}
-      aria-label="Atualizar"
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-zinc-300 transition-colors hover:bg-foreground/[0.07]"
-    >
-      <ArrowsClockwise size={16} weight="bold" className={cn(isFetching && "animate-spin")} />
-    </button>
-  );
 
   return (
     <MainLayout
@@ -87,27 +84,28 @@ export default function TipsPage() {
       titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
       titleClassName="text-2xl font-semibold tracking-tight"
       subtitleClassName="text-sm text-zinc-500 truncate"
-      actions={refreshButton}
       mobileHeader={
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">Pendentes</h1>
-            {subtitle && <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>}
-          </div>
-          {refreshButton}
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">Pendentes</h1>
+          {subtitle && <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>}
         </div>
       }
     >
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
+
       <div className="mb-4 flex gap-2">
         {tabs.map((t) => (
           <button
             key={t.value}
             onClick={() => setTab(t.value)}
+            // Azul sólido no selecionado, igual ao filtro de status em Apostas.
+            // Um pouco mais baixo que lá (h-9): aqui os chips dividem a tela
+            // com a fila, não são o controle principal.
             className={cn(
-              "press h-8 rounded-full px-3 text-xs font-medium transition-colors",
+              "press h-9 shrink-0 rounded-full px-3 text-[13px] font-medium transition-colors",
               tab === t.value
-                ? "border border-accent/30 bg-accent/[0.14] text-accent"
-                : "border border-border text-zinc-400 hover:text-foreground",
+                ? "bg-accent text-white"
+                : "border border-white/10 bg-transparent text-zinc-400 hover:text-foreground",
             )}
           >
             {t.label}

@@ -3,17 +3,12 @@ import {
   ArrowSquareOut,
   ArrowCounterClockwise,
   Check,
-  DotsThree,
+  MagnifyingGlass,
   Warning,
   XCircle,
 } from "@phosphor-icons/react";
+import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatCurrency, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
@@ -80,7 +75,9 @@ export function TipCard({
           asChild={!!tip.link}
           size="lg"
           disabled={!tip.link}
-          className="h-11 flex-1 border-transparent bg-accent text-white hover:bg-accent-700"
+          // min-w-0: sem isso o rótulo longo ("Apostar R$ 1.000,00") impede o
+          // botão de encolher e empurra o "..." pra fora da tela no mobile.
+          className="h-11 min-w-0 flex-1 truncate border-transparent bg-accent text-white hover:bg-accent-700"
         >
           {tip.link ? (
             // noreferrer junto do _blank: sem ele a aba da casa recebe
@@ -116,23 +113,25 @@ export function TipCard({
           )
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger className={squareButtonClass} aria-label="Mais ações">
-            <DotsThree size={20} weight="bold" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setShowMessage((v) => !v)}>
-              {showMessage ? "Esconder mensagem" : "Ver mensagem do canal"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* A mensagem crua do canal é consulta, não ação: um menu de um item
+            só custava dois toques. A lupa abre direto o sheet com o texto. */}
+        <button
+          type="button"
+          onClick={() => setShowMessage(true)}
+          className={squareButtonClass}
+          aria-label="Ver mensagem do canal"
+        >
+          <MagnifyingGlass size={18} weight="bold" />
+        </button>
       </div>
 
-      {showMessage && (
-        <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-md bg-black/30 p-2.5 text-xs leading-relaxed text-zinc-400">
+      {/* Sheet em vez de expandir o card inline: o texto do canal é longo e
+          empurrava as tips seguintes pra fora da tela no mobile. */}
+      <BottomSheet open={showMessage} onOpenChange={setShowMessage} title="Mensagem do canal">
+        <pre className="whitespace-pre-wrap break-words pb-4 text-sm leading-relaxed text-zinc-300">
           {tip.text}
         </pre>
-      )}
+      </BottomSheet>
 
       {tip.status !== "pending" && (
         <p className={cn("mt-2 text-xs", tip.status === "planilhada" ? "text-green-400" : "text-zinc-500")}>

@@ -53,6 +53,9 @@ export function TipPlanilharSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Conseguiu apostar?"
+      // Sem X: sair daqui é escolher um dos desfechos do rodapé, ou arrastar o
+      // handle pra baixo.
+      hideClose
       // O contexto vai no subHeader, não no titleExtra: lá ele dividiria a
       // linha com o título, que é curto mas não pode ser cortado.
       subHeader={
@@ -81,7 +84,12 @@ export function TipPlanilharSheet({
           </Button>
 
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" disabled={busy} onClick={onDismiss}>
+            <Button
+              variant="outline"
+              className="flex-1 border-negative text-negative hover:bg-negative/10 hover:text-negative"
+              disabled={busy}
+              onClick={onDismiss}
+            >
               <XCircle size={15} weight="bold" /> Caiu
             </Button>
             <Button variant="outline" className="flex-1" onClick={() => setEditing((v) => !v)}>
@@ -111,7 +119,6 @@ export function TipPlanilharSheet({
             <Input
               id="tip-stake"
               inputMode="decimal"
-              autoFocus
               value={stake}
               onChange={(e) => setStake(e.target.value)}
               className="h-12 pl-10 text-lg font-semibold tabular-nums"
