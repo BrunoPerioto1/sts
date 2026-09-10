@@ -149,6 +149,7 @@ npm run test
 
 Projeto pessoal, em desenvolvimento ativo. Está aqui como portfólio.
 
-O app está no ar em **[stsfront.vercel.app](https://stsfront.vercel.app)**, mas o login é fechado: a instância
-guarda movimentação financeira real, então não publico credenciais de demonstração. Os prints acima são da
-aplicação rodando. Se quiser navegar por dentro, me chama que eu abro um acesso.
+Não publico link de demonstração: a instância que uso guarda movimentação financeira real, e sem login
+aberto um link só levaria a uma tela de entrada. Os prints acima são da aplicação rodando de verdade — e
+quem quiser mexer sobe o projeto localmente com os passos acima, apontando `VITE_API_URL` para a própria
+instância do backend.
