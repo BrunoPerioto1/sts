@@ -18,7 +18,9 @@ const badgeVariants = cva(
         canceled: "border-transparent bg-neutral-800 text-neutral-300",
         halfWon: "border-transparent bg-positive/[0.10] text-positive",
         halfLost: "border-transparent bg-negative/[0.10] text-negative",
-        cashout: "border-transparent bg-accent-700 text-accent-100",
+        // Violeta, nao azul: cashout ficava indistinguivel do "pendente"
+        // (ambos accent) na mesma coluna de status.
+        cashout: "border-transparent bg-violet-500/20 text-violet-300",
       },
     },
     defaultVariants: {
