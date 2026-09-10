@@ -87,7 +87,11 @@ export function TipCard({
 
       <div className="flex items-center gap-2 pt-1">
         {tip.link && (
-          <Button asChild size="sm" className="flex-1 sm:flex-none sm:min-w-[200px]">
+          <Button
+            asChild
+            size="sm"
+            className="flex-1 sm:flex-none sm:min-w-[200px] border-transparent bg-accent text-white hover:bg-accent-700"
+          >
             {/* noreferrer junto do _blank: sem ele a aba da casa recebe
                 window.opener e pode navegar esta de volta. */}
             <a href={tip.link} target="_blank" rel="noopener noreferrer">
