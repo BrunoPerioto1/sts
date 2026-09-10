@@ -148,3 +148,7 @@ npm run test
 ## Status
 
 Projeto pessoal, em desenvolvimento ativo. Está aqui como portfólio.
+
+O app está no ar em **[stsfront.vercel.app](https://stsfront.vercel.app)**, mas o login é fechado: a instância
+guarda movimentação financeira real, então não publico credenciais de demonstração. Os prints acima são da
+aplicação rodando. Se quiser navegar por dentro, me chama que eu abro um acesso.
