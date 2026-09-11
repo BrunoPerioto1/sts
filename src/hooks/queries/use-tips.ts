@@ -17,10 +17,12 @@ const PER_PAGE = 200;
 // staleTime curto contra o global de 5 min do App.tsx: tip e' o unico dado do
 // app que chega de fora (fan-out do canal no Telegram) sem o usuario ter feito
 // nada, entao uma lista de 5 minutos atras ja nao vale.
-export function useTips(status?: TipStatus, q?: string) {
+export function useTips(status?: TipStatus, q?: string, houseIds: number[] = []) {
   const query = useQuery({
-    queryKey: [...TIPS_KEY, status ?? "all", q ?? ""],
-    queryFn: () => getTips({ status, q, page: 1, perPage: PER_PAGE }),
+    // Chave pelos VALORES do filtro (não pelo array), senão cada render pediria
+    // uma query nova.
+    queryKey: [...TIPS_KEY, status ?? "all", q ?? "", houseIds.join(",")],
+    queryFn: () => getTips({ status, q, houseIds, page: 1, perPage: PER_PAGE }),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });

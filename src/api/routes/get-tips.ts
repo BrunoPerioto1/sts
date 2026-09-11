@@ -9,6 +9,8 @@ export interface TipItem {
   status: TipStatus;
   betId: number | null;
   house: string | null;
+  /** Casa cadastrada que o nome da tip casou, quando reconhecida. */
+  houseId: number | null;
   game: string | null;
   sport: string | null;
   market: string | null;
@@ -40,9 +42,21 @@ export interface TipsListResponse {
 }
 
 export async function getTips(
-  params: { status?: TipStatus; q?: string; page?: number; perPage?: number } = {},
+  params: {
+    status?: TipStatus;
+    q?: string;
+    houseIds?: number[];
+    page?: number;
+    perPage?: number;
+  } = {},
 ) {
-  const response = await api.tips.get<TipsListResponse>('', { params });
+  const { houseIds, ...rest } = params;
+  const queryParams: Record<string, string | number | undefined> = { ...rest };
+  // Mesma convenção do /bets: lista separada por vírgula, independente de
+  // como o axios serializaria um array.
+  if (houseIds?.length) queryParams.houseIds = houseIds.join(',');
+
+  const response = await api.tips.get<TipsListResponse>('', { params: queryParams });
   return response.data;
 }
 

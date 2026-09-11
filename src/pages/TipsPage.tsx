@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowsClockwise, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
+import { ArrowsClockwise, Buildings, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
+import { CasaSheet } from "@/components/apostas/CasaSheet";
+import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { TipsListDesktop } from "@/components/tips/TipsListDesktop";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
@@ -14,6 +16,7 @@ import { actionToast } from "@/lib/action-toast";
 import { formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTipActions, useTips } from "@/hooks/queries/use-tips";
+import { useHouses } from "@/hooks/queries/use-houses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
@@ -44,6 +47,13 @@ export default function TipsPage() {
   const isMobile = useIsMobile();
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
 
+  // Filtro de casas: mesma multi-seleção de Apostas. A casa da tip vem como
+  // texto do canal, então quem casa nome com casa cadastrada é o backend —
+  // aqui só viajam os ids.
+  const houses = useHouses();
+  const [houseIds, setHouseIds] = useState<number[]>([]);
+  const [casaSheetOpen, setCasaSheetOpen] = useState(false);
+
   // Mesmo debounce da busca de Apostas (250 ms): sem ele cada tecla vira uma
   // pagina nova no infinite query.
   const [busca, setBusca] = useState("");
@@ -61,7 +71,7 @@ export default function TipsPage() {
     isPending,
     isFetching,
     refetch,
-  } = useTips(tab, buscaDebounced || undefined);
+  } = useTips(tab, buscaDebounced || undefined, houseIds);
 
   // Só no desktop: a linha clicada abre o painel da direita. Guarda o id, não
   // a tip — depois de planilhar/descartar a lista é refeita, e um objeto
@@ -157,21 +167,49 @@ export default function TipsPage() {
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
-      {/* Sempre aberta, sem botao de alternar no header: aqui a busca e' o
-          unico filtro da tela alem das abas. Reusa a barra de Apostas. */}
-      <div className="md:max-w-sm">
-        <MobileSearchBar
-          value={busca}
-          onChange={setBusca}
-          resultsCount={total}
-          open
-          onClose={() => setBusca("")}
-          inputRef={buscaRef}
-          placeholder="Buscar por evento ou mercado..."
-        />
+      {/* Busca sempre aberta, sem botao de alternar no header: reusa a barra
+          de Apostas, e do lado dela mora a multi-selecao de casas. */}
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1 md:max-w-sm">
+          <MobileSearchBar
+            value={busca}
+            onChange={setBusca}
+            resultsCount={total}
+            open
+            onClose={() => setBusca("")}
+            inputRef={buscaRef}
+            placeholder="Buscar por evento ou mercado..."
+          />
+        </div>
+
+        {/* Mesma caixa dos filtros de Apostas pra barra não ficar com dois
+            controles de altura diferente. */}
+        <div className="hidden h-11 shrink-0 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 md:flex">
+          <HouseMultiSelect
+            houses={houses}
+            selected={houseIds}
+            onChange={setHouseIds}
+            label="Casas"
+          />
+        </div>
       </div>
 
-      <div className="mb-4 md:hidden">{abas}</div>
+      <div className="mb-4 flex items-center gap-2 overflow-x-auto md:hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {abas}
+        <button
+          type="button"
+          onClick={() => setCasaSheetOpen(true)}
+          className={cn(
+            "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
+            houseIds.length > 0
+              ? "bg-accent text-white"
+              : "border border-white/10 bg-transparent text-zinc-400",
+          )}
+        >
+          <Buildings size={13} /> Casas
+          {houseIds.length > 0 && <span className="tabular-nums opacity-75">{houseIds.length}</span>}
+        </button>
+      </div>
 
       {isPending ? (
         <div className="space-y-2" role="status" aria-label="Carregando tips">
@@ -182,10 +220,12 @@ export default function TipsPage() {
       ) : tips.length === 0 ? (
         <EmptyState
           icon={tab === "pending" ? <CheckCircle size={32} /> : <PaperPlaneTilt size={32} />}
-          {...(buscaDebounced
+          {...(buscaDebounced || houseIds.length > 0
             ? {
                 title: "Nada encontrado",
-                description: `Nenhuma tip com "${buscaDebounced}" nesta aba.`,
+                description: buscaDebounced
+                  ? `Nenhuma tip com "${buscaDebounced}" nesta aba.`
+                  : "Nenhuma tip das casas selecionadas nesta aba.",
               }
             : emptyByTab[tab])}
         />
@@ -229,6 +269,15 @@ export default function TipsPage() {
           </div>
         </>
       )}
+
+      <CasaSheet
+        nested={false}
+        open={casaSheetOpen}
+        onOpenChange={setCasaSheetOpen}
+        houses={houses}
+        houseIds={houseIds}
+        onChange={setHouseIds}
+      />
 
       {/* key remonta o sheet a cada tip: os campos são inicializados no
           useState a partir dela, então sem isso a segunda abriria com os

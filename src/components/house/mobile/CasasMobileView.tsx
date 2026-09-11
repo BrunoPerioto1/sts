@@ -15,6 +15,8 @@ import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { HouseRowMobile } from "./HouseRowMobile";
 import { HouseTotalsHeader } from "./HouseTotalsHeader";
 import { HouseFiltersBar } from "./HouseFiltersBar";
+import { CasaSheet } from "@/components/apostas/CasaSheet";
+import { metricsFromBalances } from "@/lib/house-metrics";
 import { SortSheet } from "./SortSheet";
 import { HouseActionsSheet } from "./HouseActionsSheet";
 import { NovaMovimentacaoSheet } from "./NovaMovimentacaoSheet";
@@ -41,6 +43,7 @@ export function CasasMobileView() {
   const panel = useHousePanel(houses);
 
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
+  const [casaSheetOpen, setCasaSheetOpen] = useState(false);
   const [actionsHouse, setActionsHouse] = useState<HouseBalanceDto | null>(null);
   const [novaMovHouse, setNovaMovHouse] = useState<HouseBalanceDto | null>(null);
 
@@ -55,13 +58,19 @@ export function CasasMobileView() {
     }
   }, [balancesQuery.isError, metricsQuery.isError]);
 
-  const withBalanceCount = houses.filter((h) => Number(h.realHouseBalance) > 0).length;
+  // Com casas escolhidas o topo passa a somar só a seleção — o /metrics do
+  // servidor soma todas, e o número brigaria com a lista logo abaixo.
+  const shownMetrics =
+    filters.houseIds.length > 0 ? metricsFromBalances(filters.filteredHouses) : metrics;
+  const withBalanceCount = (filters.houseIds.length > 0 ? filters.filteredHouses : houses).filter(
+    (h) => Number(h.realHouseBalance) > 0
+  ).length;
 
   return (
     <div className="space-y-4">
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
-      <HouseTotalsHeader metrics={metrics} loading={loading} />
+      <HouseTotalsHeader metrics={shownMetrics} loading={loading} />
 
       <HouseFiltersBar
         loading={loading}
@@ -74,6 +83,8 @@ export function CasasMobileView() {
         onToggleNegative={filters.toggleOnlyNegative}
         sort={filters.sort}
         onOpenSort={() => setSortSheetOpen(true)}
+        selectedHousesCount={filters.houseIds.length}
+        onOpenCasas={() => setCasaSheetOpen(true)}
       />
 
       {loading ? (
@@ -114,6 +125,15 @@ export function CasasMobileView() {
           ))}
         </div>
       )}
+
+      <CasaSheet
+        nested={false}
+        open={casaSheetOpen}
+        onOpenChange={setCasaSheetOpen}
+        houses={filters.houseOptions}
+        houseIds={filters.houseIds}
+        onChange={filters.setHouseIds}
+      />
 
       <SortSheet open={sortSheetOpen} onOpenChange={setSortSheetOpen} value={filters.sort} onChange={filters.setSort} />
 

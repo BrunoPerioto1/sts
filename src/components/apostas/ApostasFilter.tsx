@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { DateRangeField } from "@/components/ui/date-range-field";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { StatusMultiSelect } from "./StatusMultiSelect";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
@@ -13,7 +13,7 @@ interface ApostasFilterProps {
   houses: { id: number; name: string }[];
   onSearch: (term: string) => void;
   onFilterStatus?: (status: string[]) => void;
-  onFilterHouse?: (houseId: string) => void;
+  onFilterHouses?: (houseIds: number[]) => void;
   onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
   onExportCsv?: () => void;
@@ -23,7 +23,7 @@ interface ApostasFilterProps {
   initialDateTo?: string;
   initialSearchTerm?: string;
   initialStatus?: string[];
-  initialHouseId?: string;
+  initialHouseIds?: number[];
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
@@ -34,7 +34,7 @@ export function ApostasFilter({
   houses,
   onSearch,
   onFilterStatus,
-  onFilterHouse,
+  onFilterHouses,
   onDateRangeChange,
   onClearFilters,
   onExportCsv,
@@ -44,13 +44,13 @@ export function ApostasFilter({
   initialDateTo = "",
   initialSearchTerm = "",
   initialStatus = [],
-  initialHouseId = "0",
+  initialHouseIds = [],
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo);
   const [status, setStatus] = useState<string[]>(initialStatus);
-  const [houseId, setHouseId] = useState(initialHouseId);
+  const [houseIds, setHouseIds] = useState<number[]>(initialHouseIds);
 
   const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
   if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
@@ -77,9 +77,17 @@ export function ApostasFilter({
       },
     });
   }
-  if (houseId !== "0") {
-    const houseName = houses.find((h) => h.id.toString() === houseId)?.name ?? houseId;
-    activeChips.push({ key: "house", label: houseName, clear: () => { setHouseId("0"); onFilterHouse?.("0"); } });
+  for (const id of houseIds) {
+    const houseName = houses.find((h) => h.id === id)?.name ?? String(id);
+    activeChips.push({
+      key: `house-${id}`,
+      label: houseName,
+      clear: () => {
+        const next = houseIds.filter((v) => v !== id);
+        setHouseIds(next);
+        onFilterHouses?.(next);
+      },
+    });
   }
 
   const handleClear = () => {
@@ -87,7 +95,7 @@ export function ApostasFilter({
     setDateFrom("");
     setDateTo("");
     setStatus([]);
-    setHouseId("0");
+    setHouseIds([]);
     onClearFilters?.();
   };
 
@@ -133,18 +141,13 @@ export function ApostasFilter({
         {divider}
 
         <div className="px-3.5 shrink-0">
-          <Select value={houseId} onValueChange={(v) => { setHouseId(v); onFilterHouse?.(v); }} disabled={isLoading}>
-            <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-white">
-              <span className="text-zinc-500 shrink-0">Casa</span>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">Todas</SelectItem>
-              {houses.map((h) => (
-                <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <HouseMultiSelect
+            houses={houses}
+            selected={houseIds}
+            onChange={(next) => { setHouseIds(next); onFilterHouses?.(next); }}
+            disabled={isLoading}
+            label="Casas"
+          />
         </div>
 
         {onExportCsv && (
