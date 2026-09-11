@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ArrowSquareOut,
   ArrowCounterClockwise,
+  Calculator,
   Check,
   MagnifyingGlass,
   Warning,
@@ -54,7 +55,25 @@ export function TipCard({
 
         <div className="shrink-0 text-right">
           {tip.odd !== null && (
-            <p className="text-2xl font-semibold leading-none tabular-nums">{tip.odd.toFixed(2)}</p>
+            <div className="flex items-center justify-end gap-1.5">
+              {/* A odd da tip envelhece: quando muda na casa, esse link do
+                  canal recalcula quanto a aposta ainda vale. Fica colado na
+                  odd, e não na linha de ações — lá o quarto botão quadrado
+                  não cabia com o "Apostar R$ 1.000,00" no mobile. */}
+              {tip.calcLink && (
+                <a
+                  href={tip.calcLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="press flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-foreground/[0.07] hover:text-zinc-300"
+                  aria-label="Calcular quanto vale com a odd nova"
+                  title="Odd mudou? Calcule quanto vale"
+                >
+                  <Calculator size={16} weight="bold" />
+                </a>
+              )}
+              <p className="text-2xl font-semibold leading-none tabular-nums">{tip.odd.toFixed(2)}</p>
+            </div>
           )}
           {tip.percent !== null && (
             <p className="mt-1 text-xs font-semibold tabular-nums text-green-400">
@@ -112,6 +131,7 @@ export function TipCard({
             </>
           )
         )}
+
 
         {/* A mensagem crua do canal é consulta, não ação: um menu de um item
             só custava dois toques. A lupa abre direto o sheet com o texto. */}

@@ -1,6 +1,7 @@
 import {
   ArrowCounterClockwise,
   ArrowSquareOut,
+  Calculator,
   CaretRight,
   Check,
   Warning,
@@ -101,6 +102,14 @@ export function TipDetailPanel({
                 window.opener e pode navegar esta de volta. */}
             <a href={tip.link} target="_blank" rel="noopener noreferrer">
               <ArrowSquareOut size={16} weight="bold" /> Abrir na casa
+            </a>
+          </Button>
+        )}
+
+        {tip.calcLink && (
+          <Button asChild variant="outline" className="mt-2 w-full justify-center gap-2">
+            <a href={tip.calcLink} target="_blank" rel="noopener noreferrer">
+              <Calculator size={16} weight="bold" /> Calcular odd justa
             </a>
           </Button>
         )}

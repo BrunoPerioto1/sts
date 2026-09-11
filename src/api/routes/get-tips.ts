@@ -18,6 +18,8 @@ export interface TipItem {
   recommendedStake: number | null;
   potentialProfit: number | null;
   link: string | null;
+  /** "Odd mudou? ... calcule quanto vale" — calculador de odd justa. */
+  calcLink: string | null;
   isAviso: boolean;
   text: string;
 }
