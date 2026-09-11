@@ -4,12 +4,13 @@ import {
   Calculator,
   CaretRight,
   Check,
+  Clock,
   Warning,
   XCircle,
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -57,6 +58,15 @@ export function TipDetailPanel({
         </h2>
         {tip.market && <p className="mt-1 text-sm opacity-70">{tip.market}</p>}
         {meta && <p className="mt-1 text-xs opacity-45">{meta}</p>}
+
+        {/* "recebida" lá em cima é da tip; esta é do jogo. Separadas de
+            propósito — juntas na mesma linha uma passa pela outra. */}
+        {tip.eventStartAt && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+            <Clock size={13} weight="bold" />
+            Início do jogo · {formatKickoff(tip.eventStartAt)}
+          </p>
+        )}
 
         {tip.isAviso && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-400">
