@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
 
 // Uma definição de colunas só, usada pelo cabeçalho e pelas linhas — mesmo
 // arranjo de BetRowDesktop, que é a outra lista densa do app.
 export const TIP_GRID =
-  "grid items-center gap-3 grid-cols-[46px_minmax(0,1fr)_92px_56px_76px_64px_92px]";
+  "grid items-center gap-3 grid-cols-[56px_78px_minmax(0,1fr)_92px_56px_76px_64px_92px]";
 
 const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" | "canceled" }> = {
   pending: { label: "Pendente", variant: "pending" },
@@ -17,7 +17,10 @@ const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" 
 export function TipColumnHeaderDesktop() {
   return (
     <div className={cn(TIP_GRID, "px-3 pb-1.5 text-[11px] uppercase tracking-wider opacity-40")}>
-      <span>Hora</span>
+      {/* Com duas colunas de horário, "Hora" sozinho não dizia de qual:
+          esta é quando a tip chegou, a outra é quando o jogo começa. */}
+      <span>Chegou</span>
+      <span>Início</span>
       <span>Evento</span>
       <span>Casa</span>
       <span className="text-right">Odd</span>
@@ -53,6 +56,12 @@ export function TipRowDesktop({
       )}
     >
       <span className="text-xs tabular-nums opacity-50">{formatTime(tip.createdAt)}</span>
+
+      {/* Coluna própria em vez de linha extra no Evento: numa fila longa o
+          que se compara entre linhas é o horário, e comparar exige alinhar. */}
+      <span className="truncate text-xs tabular-nums opacity-70">
+        {tip.eventStartAt ? formatKickoff(tip.eventStartAt) : "—"}
+      </span>
 
       <span className="min-w-0">
         <span className="block truncate text-sm font-medium">

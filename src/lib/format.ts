@@ -39,6 +39,20 @@ export function formatTime(value: string | number | Date): string {
   return new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Horário de jogo: o dia só aparece quando não é hoje, porque numa fila em
+// que quase tudo é de hoje repetir a data em toda linha é ruído. Amanhã
+// aparece por extenso — é a distinção que mais importa pra decidir se dá tempo.
+export function formatKickoff(value: string | number | Date): string {
+  const date = new Date(value);
+  const hora = formatTime(date);
+  const hoje = new Date();
+  const amanha = new Date(hoje);
+  amanha.setDate(amanha.getDate() + 1);
+  if (date.toDateString() === hoje.toDateString()) return hora;
+  if (date.toDateString() === amanha.toDateString()) return `Amanhã ${hora}`;
+  return `${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} ${hora}`;
+}
+
 // Iniciais de nome de usuário/casa pro avatar redondo.
 export function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

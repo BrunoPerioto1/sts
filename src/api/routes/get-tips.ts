@@ -22,6 +22,8 @@ export interface TipItem {
   link: string | null;
   /** "Odd mudou? ... calcule quanto vale" — calculador de odd justa. */
   calcLink: string | null;
+  /** Início do jogo, do cache de eventos do provider. Null quando o confronto não foi reconhecido. */
+  eventStartAt: string | null;
   isAviso: boolean;
   text: string;
 }

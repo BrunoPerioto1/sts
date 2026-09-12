@@ -4,13 +4,14 @@ import {
   ArrowCounterClockwise,
   Calculator,
   Check,
+  Clock,
   MagnifyingGlass,
   Warning,
   XCircle,
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -51,6 +52,15 @@ export function TipCard({
             {tip.game ?? "Jogo não identificado"}
           </h3>
           {tip.market && <p className="mt-0.5 text-sm text-zinc-400">{tip.market}</p>}
+          {/* Hora do jogo, não da tip: é ela que diz se ainda dá tempo de
+              entrar. Só aparece quando o confronto casou com o cache de
+              eventos — data chutada aqui seria pior que nenhuma. */}
+          {tip.eventStartAt && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
+              <Clock size={13} weight="bold" />
+              {formatKickoff(tip.eventStartAt)}
+            </p>
+          )}
         </div>
 
         <div className="shrink-0 text-right">
