@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { DateRangeField } from "@/components/ui/date-range-field";
-import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
+import { OptionMultiSelect } from "@/components/ui/option-multi-select";
 import { StatusMultiSelect } from "./StatusMultiSelect";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
@@ -11,9 +11,11 @@ import { cn } from "@/lib/utils";
 
 interface ApostasFilterProps {
   houses: { id: number; name: string }[];
+  sports: { id: number; name: string }[];
   onSearch: (term: string) => void;
   onFilterStatus?: (status: string[]) => void;
   onFilterHouses?: (houseIds: number[]) => void;
+  onFilterSports?: (sportIds: number[]) => void;
   onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
   onExportCsv?: () => void;
@@ -24,6 +26,7 @@ interface ApostasFilterProps {
   initialSearchTerm?: string;
   initialStatus?: string[];
   initialHouseIds?: number[];
+  initialSportIds?: number[];
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
@@ -32,9 +35,11 @@ const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
 
 export function ApostasFilter({
   houses,
+  sports,
   onSearch,
   onFilterStatus,
   onFilterHouses,
+  onFilterSports,
   onDateRangeChange,
   onClearFilters,
   onExportCsv,
@@ -45,12 +50,14 @@ export function ApostasFilter({
   initialSearchTerm = "",
   initialStatus = [],
   initialHouseIds = [],
+  initialSportIds = [],
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo);
   const [status, setStatus] = useState<string[]>(initialStatus);
   const [houseIds, setHouseIds] = useState<number[]>(initialHouseIds);
+  const [sportIds, setSportIds] = useState<number[]>(initialSportIds);
 
   const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
   if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
@@ -77,6 +84,18 @@ export function ApostasFilter({
       },
     });
   }
+  for (const id of sportIds) {
+    const sportName = sports.find((sp) => sp.id === id)?.name ?? String(id);
+    activeChips.push({
+      key: `sport-${id}`,
+      label: sportName,
+      clear: () => {
+        const next = sportIds.filter((v) => v !== id);
+        setSportIds(next);
+        onFilterSports?.(next);
+      },
+    });
+  }
   for (const id of houseIds) {
     const houseName = houses.find((h) => h.id === id)?.name ?? String(id);
     activeChips.push({
@@ -96,6 +115,7 @@ export function ApostasFilter({
     setDateTo("");
     setStatus([]);
     setHouseIds([]);
+    setSportIds([]);
     onClearFilters?.();
   };
 
@@ -141,12 +161,30 @@ export function ApostasFilter({
         {divider}
 
         <div className="px-3.5 shrink-0">
-          <HouseMultiSelect
-            houses={houses}
+          <OptionMultiSelect
+            options={houses}
             selected={houseIds}
             onChange={(next) => { setHouseIds(next); onFilterHouses?.(next); }}
             disabled={isLoading}
             label="Casas"
+            countLabel="casas"
+            searchPlaceholder="Buscar casa"
+            emptyLabel="Nenhuma casa encontrada."
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <OptionMultiSelect
+            options={sports}
+            selected={sportIds}
+            onChange={(next) => { setSportIds(next); onFilterSports?.(next); }}
+            disabled={isLoading}
+            label="Esporte"
+            countLabel="esportes"
+            searchPlaceholder="Buscar esporte"
+            emptyLabel="Nenhum esporte encontrado."
           />
         </div>
 

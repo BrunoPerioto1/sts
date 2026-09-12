@@ -16,6 +16,7 @@ import { useBulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { exportBetsListCsv } from "@/lib/bet-exports";
 import { type BetItem, type PaginatedBetsResponseDto } from "@/api/routes/get-bets";
 import { useHouses } from "@/hooks/queries/use-houses";
+import { useSports } from "@/hooks/queries/use-sports";
 import { betsQueryKey, useBetsQuery } from "@/hooks/apostas/use-bets-query";
 import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
@@ -32,6 +33,7 @@ const EMPTY_PAGES: PaginatedBetsResponseDto[] = [];
 export default function ApostasPage() {
   const isMobile = useIsMobile();
   const houses = useHouses();
+  const sports = useSports();
   const filters = useApostasFilters();
   const selection = useBulkSelection();
 
@@ -83,7 +85,7 @@ export default function ApostasPage() {
   useEffect(() => {
     selection.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.statusFilter, filters.houseIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
+  }, [filters.statusFilter, filters.houseIds, filters.sportIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
 
   useEffect(() => {
     if (!selection.selectionMode) return;
@@ -113,14 +115,17 @@ export default function ApostasPage() {
 
   const filterProps = {
     houses,
+    sports,
     initialDateFrom: filters.startDate,
     initialDateTo: filters.endDate,
     initialSearchTerm: filters.searchTerm,
     initialStatus: filters.statusFilter,
     initialHouseIds: filters.houseIds,
+    initialSportIds: filters.sportIds,
     onSearch: filters.setSearch,
     onFilterStatus: filters.setStatus,
     onFilterHouses: filters.setHouses,
+    onFilterSports: filters.setSports,
     onDateRangeChange: filters.setDateRange,
     onClearFilters: filters.clearFilters,
     onExportCsv: () => exportBetsListCsv(apostas),
@@ -250,6 +255,7 @@ export default function ApostasPage() {
         onOpenChange={setMobileFilterOpen}
         value={filters.mobileFilterValue}
         houses={houses}
+        sports={sports}
         onApply={filters.applyMobileFilters}
       />
 

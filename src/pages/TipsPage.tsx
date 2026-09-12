@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowsClockwise, Buildings, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
+import { ArrowsClockwise, Buildings, CheckCircle, PaperPlaneTilt, SoccerBall } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
-import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
+import { OptionListSheet } from "@/components/apostas/OptionListSheet";
+import { OptionMultiSelect } from "@/components/ui/option-multi-select";
 import { TipsListDesktop } from "@/components/tips/TipsListDesktop";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
@@ -17,6 +18,7 @@ import { formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTipActions, useTips } from "@/hooks/queries/use-tips";
 import { useHouses } from "@/hooks/queries/use-houses";
+import { useSports } from "@/hooks/queries/use-sports";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
@@ -54,6 +56,10 @@ export default function TipsPage() {
   const [houseIds, setHouseIds] = useState<number[]>([]);
   const [casaSheetOpen, setCasaSheetOpen] = useState(false);
 
+  const sports = useSports();
+  const [sportIds, setSportIds] = useState<number[]>([]);
+  const [esporteSheetOpen, setEsporteSheetOpen] = useState(false);
+
   // Mesmo debounce da busca de Apostas (250 ms): sem ele cada tecla vira uma
   // pagina nova no infinite query.
   const [busca, setBusca] = useState("");
@@ -71,7 +77,7 @@ export default function TipsPage() {
     isPending,
     isFetching,
     refetch,
-  } = useTips(tab, buscaDebounced || undefined, houseIds);
+  } = useTips(tab, buscaDebounced || undefined, houseIds, sportIds);
 
   // Só no desktop: a linha clicada abre o painel da direita. Guarda o id, não
   // a tip — depois de planilhar/descartar a lista é refeita, e um objeto
@@ -185,11 +191,24 @@ export default function TipsPage() {
         {/* Mesma caixa dos filtros de Apostas pra barra não ficar com dois
             controles de altura diferente. */}
         <div className="hidden h-11 shrink-0 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 md:flex">
-          <HouseMultiSelect
-            houses={houses}
+          <OptionMultiSelect
+            options={houses}
             selected={houseIds}
             onChange={setHouseIds}
             label="Casas"
+            countLabel="casas"
+            searchPlaceholder="Buscar casa"
+            emptyLabel="Nenhuma casa encontrada."
+          />
+          <div className="mx-3.5 h-5 w-px bg-white/10" />
+          <OptionMultiSelect
+            options={sports}
+            selected={sportIds}
+            onChange={setSportIds}
+            label="Esporte"
+            countLabel="esportes"
+            searchPlaceholder="Buscar esporte"
+            emptyLabel="Nenhum esporte encontrado."
           />
         </div>
       </div>
@@ -209,6 +228,19 @@ export default function TipsPage() {
           <Buildings size={13} /> Casas
           {houseIds.length > 0 && <span className="tabular-nums opacity-75">{houseIds.length}</span>}
         </button>
+        <button
+          type="button"
+          onClick={() => setEsporteSheetOpen(true)}
+          className={cn(
+            "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
+            sportIds.length > 0
+              ? "bg-accent text-white"
+              : "border border-white/10 bg-transparent text-zinc-400",
+          )}
+        >
+          <SoccerBall size={13} /> Esporte
+          {sportIds.length > 0 && <span className="tabular-nums opacity-75">{sportIds.length}</span>}
+        </button>
       </div>
 
       {isPending ? (
@@ -220,12 +252,12 @@ export default function TipsPage() {
       ) : tips.length === 0 ? (
         <EmptyState
           icon={tab === "pending" ? <CheckCircle size={32} /> : <PaperPlaneTilt size={32} />}
-          {...(buscaDebounced || houseIds.length > 0
+          {...(buscaDebounced || houseIds.length > 0 || sportIds.length > 0
             ? {
                 title: "Nada encontrado",
                 description: buscaDebounced
                   ? `Nenhuma tip com "${buscaDebounced}" nesta aba.`
-                  : "Nenhuma tip das casas selecionadas nesta aba.",
+                  : "Nenhuma tip com esses filtros nesta aba.",
               }
             : emptyByTab[tab])}
         />
@@ -277,6 +309,17 @@ export default function TipsPage() {
         houses={houses}
         houseIds={houseIds}
         onChange={setHouseIds}
+      />
+
+      <OptionListSheet
+        nested={false}
+        open={esporteSheetOpen}
+        onOpenChange={setEsporteSheetOpen}
+        title="Esporte"
+        options={sports}
+        selected={sportIds}
+        onChange={setSportIds}
+        countLabel="esportes"
       />
 
       {/* key remonta o sheet a cada tip: os campos são inicializados no

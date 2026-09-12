@@ -22,6 +22,7 @@ export function useApostasFilters() {
     if (!fromUrl) return [];
     return fromUrl.split(",").map(Number).filter((n) => Number.isFinite(n));
   });
+  const [sportIds, setSportIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
   // Padrao: dia 1 ate hoje. O chip "Mes atual" continua indo ate o fim do mes.
@@ -41,6 +42,7 @@ export function useApostasFilters() {
   const queryFilters: BetsQueryFilters = {
     statusFilter,
     houseIds,
+    sportIds,
     startDate,
     endDate,
     searchTerm: debouncedSearch,
@@ -50,6 +52,7 @@ export function useApostasFilters() {
   const setSearch = (term: string) => { setSearchTerm(term); setPageStart(1); };
   const setStatus = (status: string[]) => { setStatusFilter(status); setPageStart(1); };
   const setHouses = (ids: number[]) => { setHouseIds(ids); setPageStart(1); };
+  const setSports = (ids: number[]) => { setSportIds(ids); setPageStart(1); };
   const setDateRange = (from: string, to: string) => {
     setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPageStart(1);
   };
@@ -59,31 +62,43 @@ export function useApostasFilters() {
     setEndDate(next.period.to);
     setStatusFilter(next.status);
     setHouseIds(next.houseIds);
+    setSportIds(next.sportIds);
     setPageStart(1);
   };
   const clearFilters = () => {
     setStartDate(""); setEndDate(""); setPeriodPreset("tudo");
-    setStatusFilter([]); setHouseIds([]); setSearchTerm(""); setPageStart(1);
+    setStatusFilter([]); setHouseIds([]); setSportIds([]); setSearchTerm(""); setPageStart(1);
   };
   // Filtro ativo = qualquer coisa fora do estado inicial; o vazio da lista usa
   // isso pra decidir entre "limpe os filtros" e "registre a primeira aposta".
   const hasFilters =
-    statusFilter.length > 0 || houseIds.length > 0 || searchTerm !== "" || periodPreset !== "tudo";
+    statusFilter.length > 0 ||
+    houseIds.length > 0 ||
+    sportIds.length > 0 ||
+    searchTerm !== "" ||
+    periodPreset !== "tudo";
 
   const mobileFilterValue: ApostasFilterState = {
     period: { preset: periodPreset, from: startDate, to: endDate },
     status: statusFilter,
     houseIds,
+    sportIds,
   };
 
   // Periodo so conta como filtro ativo quando difere do padrao (dia 1 -> hoje).
   const dflt = defaultPeriod();
   const periodChanged = startDate !== dflt.from || endDate !== dflt.to;
-  const activeMobileFilterCount = [periodChanged, statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
+  const activeMobileFilterCount = [
+    periodChanged,
+    statusFilter.length > 0,
+    houseIds.length > 0,
+    sportIds.length > 0,
+  ].filter(Boolean).length;
 
   return {
     statusFilter,
     houseIds,
+    sportIds,
     startDate,
     endDate,
     searchTerm,
@@ -97,6 +112,7 @@ export function useApostasFilters() {
     setSearch,
     setStatus,
     setHouses,
+    setSports,
     setDateRange,
     applyMobileFilters,
     clearFilters,

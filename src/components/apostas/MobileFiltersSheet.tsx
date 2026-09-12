@@ -6,6 +6,7 @@ import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { StatusSheet } from "./StatusSheet";
 import { CasaSheet } from "./CasaSheet";
+import { OptionListSheet } from "./OptionListSheet";
 import { PeriodCalendarSheet } from "./PeriodCalendarSheet";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { Button } from "@/components/ui/button";
@@ -27,15 +28,17 @@ interface MobileFiltersSheetProps {
   value: ApostasFilterState;
   onApply: (next: ApostasFilterState) => void;
   houses: { id: number; name: string }[];
+  sports: { id: number; name: string }[];
 }
 
 // Rascunho local: nada é aplicado no app real até tocar em "Aplicar" aqui.
 // Status/Casa/Período personalizado editam esse mesmo rascunho por baixo —
 // seus próprios botões "Aplicar" só fecham o sheet filho e voltam pra cá.
-export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses }: MobileFiltersSheetProps) {
+export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses, sports }: MobileFiltersSheetProps) {
   const [draft, setDraft] = useState<ApostasFilterState>(value);
   const [statusOpen, setStatusOpen] = useState(false);
   const [casaOpen, setCasaOpen] = useState(false);
+  const [esporteOpen, setEsporteOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
@@ -43,7 +46,12 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const activeCount = [draft.period.preset !== "mes", draft.status.length > 0, draft.houseIds.length > 0].filter(Boolean).length;
+  const activeCount = [
+    draft.period.preset !== "mes",
+    draft.status.length > 0,
+    draft.houseIds.length > 0,
+    draft.sportIds.length > 0,
+  ].filter(Boolean).length;
 
   const statusSummary =
     draft.status.length === 0
@@ -59,12 +67,20 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         ? (houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
         : `${draft.houseIds.length} casas`;
 
+  const esporteSummary =
+    draft.sportIds.length === 0
+      ? "Todos os esportes"
+      : draft.sportIds.length === 1
+        ? (sports.find((sp) => sp.id === draft.sportIds[0])?.name ?? "1 esporte")
+        : `${draft.sportIds.length} esportes`;
+
   const periodLabel =
     draft.period.from && draft.period.to
       ? `${format(parseISO(draft.period.from), "dd MMM", { locale: ptBR })} – ${format(parseISO(draft.period.to), "dd MMM", { locale: ptBR })}`
       : "Selecionar período";
 
-  const handleClear = () => setDraft({ period: defaultPeriod(), status: [], houseIds: [] });
+  const handleClear = () =>
+    setDraft({ period: defaultPeriod(), status: [], houseIds: [], sportIds: [] });
 
   const handleApply = () => {
     onApply(draft);
@@ -128,6 +144,11 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         </section>
 
         <section className="space-y-1.5">
+          <p className={sectionLabel}>Esporte</p>
+          <SheetSelectField summary={esporteSummary} onOpen={() => setEsporteOpen(true)} />
+        </section>
+
+        <section className="space-y-1.5">
           <p className={sectionLabel}>Período personalizado</p>
           <button
             type="button"
@@ -153,6 +174,15 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         houses={houses}
         houseIds={draft.houseIds}
         onChange={(houseIds) => setDraft((d) => ({ ...d, houseIds }))}
+      />
+      <OptionListSheet
+        open={esporteOpen}
+        onOpenChange={setEsporteOpen}
+        title="Esporte"
+        options={sports}
+        selected={draft.sportIds}
+        onChange={(sportIds) => setDraft((d) => ({ ...d, sportIds }))}
+        countLabel="esportes"
       />
       <PeriodCalendarSheet
         open={calendarOpen}

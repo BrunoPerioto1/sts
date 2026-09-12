@@ -2,7 +2,7 @@ import { MagnifyingGlass, DownloadSimple } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { HouseMultiSelect } from "./HouseMultiSelect";
+import { OptionMultiSelect } from "@/components/ui/option-multi-select";
 import type { HouseOption } from "@/hooks/queries/use-houses";
 
 export type HouseSort = "balance" | "name" | "profit";
@@ -54,12 +54,15 @@ export function HousesSearch({
       {divider}
 
       <div className="px-3.5 shrink-0">
-        <HouseMultiSelect
-          houses={houses}
+        <OptionMultiSelect
+          options={houses}
           selected={houseIds}
           onChange={onHouseIdsChange}
           disabled={isLoading}
           label="Casas"
+          countLabel="casas"
+          searchPlaceholder="Buscar casa"
+          emptyLabel="Nenhuma casa encontrada."
         />
       </div>
 

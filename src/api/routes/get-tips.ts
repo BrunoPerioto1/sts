@@ -13,6 +13,8 @@ export interface TipItem {
   houseId: number | null;
   game: string | null;
   sport: string | null;
+  /** Esporte cadastrado que o texto da tip casou, quando reconhecido. */
+  sportId: number | null;
   market: string | null;
   odd: number | null;
   percent: number | null;
@@ -48,15 +50,17 @@ export async function getTips(
     status?: TipStatus;
     q?: string;
     houseIds?: number[];
+    sportIds?: number[];
     page?: number;
     perPage?: number;
   } = {},
 ) {
-  const { houseIds, ...rest } = params;
+  const { houseIds, sportIds, ...rest } = params;
   const queryParams: Record<string, string | number | undefined> = { ...rest };
   // Mesma convenção do /bets: lista separada por vírgula, independente de
   // como o axios serializaria um array.
   if (houseIds?.length) queryParams.houseIds = houseIds.join(',');
+  if (sportIds?.length) queryParams.sportIds = sportIds.join(',');
 
   const response = await api.tips.get<TipsListResponse>('', { params: queryParams });
   return response.data;
