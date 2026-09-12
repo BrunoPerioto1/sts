@@ -18,9 +18,16 @@ export interface SettlementSuggestion {
 }
 
 export interface ComputeSummary {
+  /** Apostas com placar que entraram neste lote. */
   analyzed: number;
   suggested: number;
+  /** Tinham placar, mas o bot não soube resolver: seguem pendentes. */
   undecided: number;
+  /**
+   * O backend recalcula em lotes. `true` significa que o lote encheu e ainda
+   * sobrou aposta esperando — dá pra chamar compute de novo pro resto.
+   */
+  hasMore: boolean;
 }
 
 /** Recalcula as sugestões. Não altera resultado nenhum. */

@@ -1,19 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResultIdEnum } from "@/api/routes/get-bets";
-import type { SettlementSuggestion } from "@/api/routes/get-settlement";
+import type {
+  ComputeSummary,
+  SettlementSuggestion,
+} from "@/api/routes/get-settlement";
 import {
   useSettlementActions,
   useSettlementSuggestions,
 } from "@/hooks/apostas/use-settlement";
+import { nextSelection } from "@/lib/settlement-selection";
 import { cn } from "@/lib/utils";
 import {
   ArrowsClockwise,
   CheckCircle,
   ClipboardText,
+  Info,
   XCircle,
 } from "@phosphor-icons/react";
 
@@ -111,6 +116,54 @@ function SuggestionRow({
   );
 }
 
+// O que o ultimo calculo deixou pendurado. As duas coisas eram silencio antes:
+// aposta com jogo encerrado que o bot nao soube resolver ficava invisivel, e
+// lote cheio dava a impressao de que nao havia mais nada esperando.
+function ComputeNotes({
+  summary,
+  busy,
+  onCompute,
+}: {
+  summary: ComputeSummary | undefined;
+  busy: boolean;
+  onCompute: () => void;
+}) {
+  if (!summary || (!summary.undecided && !summary.hasMore)) return null;
+  const { undecided, hasMore } = summary;
+  const plural = undecided === 1 ? "" : "s";
+
+  return (
+    <div className="space-y-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      {!!undecided && (
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-zinc-400">
+          <Info size={14} className="mt-0.5 shrink-0 text-zinc-500" />
+          <span>
+            {undecided} aposta{plural} com o jogo encerrado que o bot não soube
+            resolver. Segue{plural === "s" ? "m" : ""} pendente{plural} na lista
+            de apostas, pra você resolver na mão.
+          </span>
+        </p>
+      )}
+      {hasMore && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-zinc-400">
+            Ainda sobrou aposta fora deste lote.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCompute}
+            disabled={busy}
+            className="shrink-0"
+          >
+            Calcular o resto
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ConferirPage() {
   const { data: suggestions, isLoading } = useSettlementSuggestions();
   const { compute, confirm, dismiss } = useSettlementActions();
@@ -118,10 +171,17 @@ export default function ConferirPage() {
 
   const lista = useMemo(() => suggestions ?? [], [suggestions]);
 
-  // Sugestao nova chega marcada: o fluxo esperado e' aceitar tudo e desmarcar
-  // as poucas que discordar, nao marcar uma a uma.
+  // betIds que a tela ja' mostrou. Sem isso, todo refetch remarcava a lista
+  // inteira e desfazia o que o usuario tinha desmarcado de proposito. Ver
+  // nextSelection.
+  const conhecidas = useRef<ReadonlySet<number>>(new Set());
+
   useEffect(() => {
-    setSelected(new Set(lista.map((s) => s.betId)));
+    const betIds = lista.map((s) => s.betId);
+    setSelected((previous) =>
+      nextSelection({ betIds, previous, known: conhecidas.current }),
+    );
+    conhecidas.current = new Set(betIds);
   }, [lista]);
 
   const toggle = (betId: number) =>
@@ -175,6 +235,12 @@ export default function ConferirPage() {
             Buscar resultados
           </Button>
         </div>
+
+        <ComputeNotes
+          summary={compute.data}
+          busy={ocupado}
+          onCompute={() => compute.mutate()}
+        />
 
         {isLoading ? (
           <div className="space-y-2">

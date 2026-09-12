@@ -29,11 +29,24 @@ export function useSettlementActions() {
     mutationFn: computeSettlement,
     onSuccess: (summary) => {
       void refresh();
-      toast.success(
-        summary.suggested
-          ? `${summary.suggested} aposta${summary.suggested === 1 ? "" : "s"} pronta${summary.suggested === 1 ? "" : "s"} pra conferir`
-          : "Nenhum resultado novo encontrado",
-      );
+      if (summary.suggested) {
+        const n = summary.suggested;
+        toast.success(
+          `${n} aposta${n === 1 ? "" : "s"} pronta${n === 1 ? "" : "s"} pra conferir`,
+        );
+        return;
+      }
+      // Analisar e nao saber decidir e' diferente de nao achar nada: dizer
+      // "nenhum resultado" nessas horas esconde aposta que o jogo ja' terminou
+      // e que continua esperando o usuario resolver na mao.
+      if (summary.undecided) {
+        const n = summary.undecided;
+        toast.info(
+          `${n} aposta${n === 1 ? "" : "s"} com placar que o bot não soube resolver`,
+        );
+        return;
+      }
+      toast.success("Nenhum resultado novo encontrado");
     },
     onError: (e: Error) => toast.error(e.message || "Falha ao buscar resultados"),
   });
