@@ -39,18 +39,33 @@ export function formatTime(value: string | number | Date): string {
   return new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Horário de jogo: o dia só aparece quando não é hoje, porque numa fila em
-// que quase tudo é de hoje repetir a data em toda linha é ruído. Amanhã
-// aparece por extenso — é a distinção que mais importa pra decidir se dá tempo.
-export function formatKickoff(value: string | number | Date): string {
+// Horário de jogo, em duas partes. Separadas porque a lista do desktop empilha
+// dia sobre hora numa coluna estreita — junto numa linha só, "Amanhã 11:30"
+// não cabia e o dia era justamente o que ficava cortado.
+export function kickoffParts(value: string | number | Date): {
+  dia: string;
+  hora: string;
+  eHoje: boolean;
+} {
   const date = new Date(value);
-  const hora = formatTime(date);
   const hoje = new Date();
   const amanha = new Date(hoje);
   amanha.setDate(amanha.getDate() + 1);
-  if (date.toDateString() === hoje.toDateString()) return hora;
-  if (date.toDateString() === amanha.toDateString()) return `Amanhã ${hora}`;
-  return `${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} ${hora}`;
+  const eHoje = date.toDateString() === hoje.toDateString();
+  const dia = eHoje
+    ? "Hoje"
+    : date.toDateString() === amanha.toDateString()
+      ? "Amanhã"
+      : date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  return { dia, hora: formatTime(date), eHoje };
+}
+
+// Uma linha só, pro card do mobile e pro painel de detalhe, onde a frase corre
+// no texto. "Hoje" fica implícito: numa fila em que quase tudo é de hoje,
+// repetir isso em toda linha é ruído.
+export function formatKickoff(value: string | number | Date): string {
+  const { dia, hora, eHoje } = kickoffParts(value);
+  return eHoje ? hora : `${dia} ${hora}`;
 }
 
 // Iniciais de nome de usuário/casa pro avatar redondo.
