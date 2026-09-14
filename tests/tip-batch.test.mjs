@@ -28,3 +28,19 @@ test('dados incompletos não viram apostas com valores inventados', () => {
     assert.throws(() => tipPlanilharDefaults({ recommendedStake: 10, odd }));
   }
 });
+
+test('lote em paralelo respeita o teto e devolve na ordem da lista', async () => {
+  let emVoo = 0;
+  let pico = 0;
+  const items = Array.from({ length: 10 }, (_, i) => ({ id: i + 1 }));
+  const result = await runTipBatch(items, async ({ id }) => {
+    emVoo++;
+    pico = Math.max(pico, emVoo);
+    await new Promise((r) => setTimeout(r, id % 3));
+    emVoo--;
+    if (id === 4) throw new Error('falhou');
+  }, 3);
+  assert.equal(pico, 3);
+  assert.deepEqual(result.succeeded, [1, 2, 3, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(result.failed, [{ id: 4, message: 'falhou' }]);
+});

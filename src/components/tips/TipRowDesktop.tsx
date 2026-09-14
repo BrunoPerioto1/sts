@@ -70,22 +70,29 @@ export function TipRowDesktop({
   onSelect,
   checked,
   onToggle,
-  busy = false,
 }: {
   tip: TipItem;
   selected: boolean;
   onSelect: () => void;
   checked?: boolean;
   onToggle?: (shiftKey: boolean) => void;
-  busy?: boolean;
 }) {
   const status = statusMeta[tip.status];
 
   return (
-    <div className={cn("flex items-center rounded-md", checked && "bg-accent/10")}>
+    // Marcada pra lote: fundo accent mais firme + contorno + barra grossa na
+    // borda esquerda, cobrindo a linha inteira (checkbox incluso). Precisa dar
+    // pra varrer a lista e ver o que está no lote sem ler cada checkbox.
+    <div
+      className={cn(
+        "flex items-center rounded-md transition-colors",
+        checked &&
+          "bg-accent/[0.16] ring-1 ring-inset ring-accent/45 shadow-[inset_4px_0_0_0_var(--color-accent)]",
+      )}
+    >
       {onToggle && (
         <div className="flex w-10 shrink-0 justify-center">
-          <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)} disabled={busy}
+          <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)}
             onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
             aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`} />
         </div>
@@ -103,7 +110,8 @@ export function TipRowDesktop({
         "min-w-0 flex-1 rounded-md px-3 py-3 text-left transition-colors hover:bg-foreground/[0.03]",
         // Barra à esquerda em vez de fundo forte: a linha selecionada precisa
         // se distinguir do hover sem virar o elemento mais claro da tela.
-        selected && "bg-foreground/[0.05] shadow-[inset_2px_0_0_0_var(--color-accent)]",
+        selected && "bg-foreground/[0.05]",
+        selected && !checked && "shadow-[inset_2px_0_0_0_var(--color-accent)]",
       )}
     >
       <span className="text-xs tabular-nums opacity-50">{formatTime(tip.createdAt)}</span>

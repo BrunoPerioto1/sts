@@ -9,6 +9,7 @@ import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { TipsListDesktop } from "@/components/tips/TipsListDesktop";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
+import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,8 +86,10 @@ export default function TipsPage() {
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
   const selectionAnchor = useRef<number | null>(null);
   const [batchReview, setBatchReview] = useState<TipItem[] | null>(null);
-  const batchLock = useRef(false);
-  const busy = batch.isPending || dismiss.isPending || undismiss.isPending || planilhar.isPending;
+  // Nada de `busy` global travando a tela: as ações são otimistas (a tip sai da
+  // lista no clique, ver use-tips), então a gravação corre por baixo e a fila
+  // continua clicável. Travar tudo até a resposta era o que fazia cada
+  // "Planilhar"/"Caiu" parecer lento.
   const canSelect = tab !== "planilhada";
   const checkedTips = tips.filter((tip) => checkedIds.has(tip.id));
   const allChecked = tips.length > 0 && checkedTips.length === tips.length;
@@ -111,7 +114,6 @@ export default function TipsPage() {
   };
 
   const toggleChecked = (id: number, shiftKey = false) => {
-    if (busy) return;
     const anchorIndex = tips.findIndex((tip) => tip.id === selectionAnchor.current);
     const targetIndex = tips.findIndex((tip) => tip.id === id);
     if (targetIndex < 0) return;
@@ -130,60 +132,61 @@ export default function TipsPage() {
     });
   };
 
-  const runBatch = async (action: "planilhar" | "dismiss" | "undismiss", items = checkedTips) => {
-    if (busy || batchLock.current || !items.length) return;
-    batchLock.current = true;
-    try {
-      const result = await batch.mutateAsync({ tips: items, action });
-      setCheckedIds((current) => {
-        const next = new Set(current);
-        result.succeeded.forEach((id) => next.delete(id));
-        return next;
-      });
-      setBatchReview(null);
-      if (result.succeeded.length) {
-        const label = action === "planilhar" ? "planilhadas" : action === "dismiss" ? "marcadas como caiu" : "devolvidas para a fila";
-        actionToast.success({ title: `${result.succeeded.length} tips ${label}` });
-      }
-      if (result.failed.length) {
-        actionToast.error({
-          title: `${result.failed.length} tips não concluídas`,
-          description: `Continuam selecionadas. ${result.failed[0].message}`,
-        });
-      }
-    } catch (error) {
-      actionToast.error({ description: error instanceof Error ? error.message : "Não foi possível concluir o lote." });
-    } finally {
-      batchLock.current = false;
-    }
+  // Fecha o diálogo, limpa a seleção e sai: o lote roda em background e o toast
+  // chega quando terminar. Quem clicou já pode continuar varrendo a fila.
+  const runBatch = (action: "planilhar" | "dismiss" | "undismiss", items = checkedTips) => {
+    if (!items.length) return;
+    setBatchReview(null);
+    clearSelection();
+    batch.mutate(
+      { tips: items, action },
+      {
+        onSuccess: (result) => {
+          if (result.succeeded.length) {
+            const label = action === "planilhar" ? "planilhadas" : action === "dismiss" ? "marcadas como caiu" : "devolvidas para a fila";
+            actionToast.success({ title: `${result.succeeded.length} tips ${label}` });
+          }
+          // As que falharem voltam pra lista sozinhas na revalidação.
+          if (result.failed.length) {
+            actionToast.error({
+              title: `${result.failed.length} tips não concluídas`,
+              description: `Continuam na fila. ${result.failed[0].message}`,
+            });
+          }
+        },
+        onError: (error: Error) =>
+          actionToast.error({ description: error.message || "Não foi possível concluir o lote." }),
+      },
+    );
   };
 
-  const run = (mutation: typeof dismiss, id: number, title: string) =>
+  // O sheet fecha antes da resposta, não no onSuccess: a tip já saiu da lista
+  // e deixar o modal aberto em "Planilhando…" era a espera mais visível da tela.
+  const run = (mutation: typeof dismiss, id: number, title: string) => {
+    setPlanilhando(null);
     mutation.mutate(id, {
-      onSuccess: () => {
-        setPlanilhando(null);
-        actionToast.success({ title });
-      },
+      onSuccess: () => actionToast.success({ title }),
       onError: (e: Error) => actionToast.error({ description: e.message }),
     });
+  };
 
-  const doPlanilhar = (id: number, overrides: PlanilharTipDto) =>
+  const doPlanilhar = (id: number, overrides: PlanilharTipDto) => {
+    setPlanilhando(null);
     planilhar.mutate(
       { id, ...overrides },
       {
-        onSuccess: (res: { alreadyExisted: boolean }) => {
-          setPlanilhando(null);
+        onSuccess: (res: { alreadyExisted: boolean }) =>
           actionToast.success({
             title: res.alreadyExisted ? "Essa tip já estava planilhada" : "Aposta planilhada",
-          });
-        },
+          }),
         onError: (e: Error) => actionToast.error({ description: e.message }),
       },
     );
+  };
 
   // Recarregar é puxar a lista pra baixo, como no resto do app — não sobra
   // botão de reload competindo com o "..." na largura do header.
-  const pull = usePullToRefresh(() => refetch(), isMobile && !busy);
+  const pull = usePullToRefresh(() => refetch(), isMobile);
 
   // Mesmos chips nos dois lugares: no desktop moram no header (a fila ocupa a
   // largura toda abaixo), no mobile ficam acima da lista.
@@ -193,7 +196,6 @@ export default function TipsPage() {
         <button
           key={t.value}
           onClick={() => setTab(t.value)}
-          disabled={busy}
           className={cn(
             "press h-9 shrink-0 rounded-full px-3 text-[13px] font-medium transition-colors",
             tab === t.value
@@ -227,7 +229,7 @@ export default function TipsPage() {
           <button
             type="button"
             onClick={() => void refetch()}
-            disabled={isFetching || busy}
+            disabled={isFetching}
             aria-label="Atualizar tips"
             className="press flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-zinc-400 transition-colors hover:text-foreground disabled:opacity-50"
           >
@@ -253,10 +255,10 @@ export default function TipsPage() {
         <div className="min-w-0 flex-1 md:max-w-sm">
           <MobileSearchBar
             value={busca}
-            onChange={(value) => !busy && setBusca(value)}
+            onChange={setBusca}
             resultsCount={total}
             open
-            onClose={() => !busy && setBusca("")}
+            onClose={() => setBusca("")}
             inputRef={buscaRef}
             placeholder="Buscar por evento ou mercado..."
           />
@@ -268,7 +270,7 @@ export default function TipsPage() {
           <HouseMultiSelect
             houses={houses}
             selected={houseIds}
-            onChange={(ids) => !busy && setHouseIds(ids)}
+            onChange={setHouseIds}
             label="Casas"
           />
         </div>
@@ -294,7 +296,7 @@ export default function TipsPage() {
       {canSelect && tips.length > 0 && (
         <div className="mb-3 flex items-center gap-3 text-sm">
           <label className="flex min-h-11 cursor-pointer items-center gap-2">
-            <Checkbox aria-label="Selecionar todas da página" disabled={busy}
+            <Checkbox aria-label="Selecionar todas da página"
               checked={allChecked ? true : checkedTips.length > 0 ? "indeterminate" : false}
               onCheckedChange={() => {
                 selectionAnchor.current = null;
@@ -335,11 +337,10 @@ export default function TipsPage() {
                 selectedId={selecionada?.id ?? null}
                 onSelect={(tip) => {
                   setSelecionadaId(tip.id);
-                  if (!busy) selectionAnchor.current = tip.id;
+                  selectionAnchor.current = tip.id;
                 }}
                 checkedIds={checkedIds}
                 onToggle={canSelect ? toggleChecked : undefined}
-                busy={busy}
               />
             </div>
 
@@ -350,7 +351,6 @@ export default function TipsPage() {
                 onPlanilhar={() => setPlanilhando(selecionada)}
                 onDismiss={() => run(dismiss, selecionada.id, "Tip marcada como caiu")}
                 onUndismiss={() => run(undismiss, selecionada.id, "Tip devolvida para a fila")}
-                busy={busy}
                 hasSelection={checkedTips.length > 0}
               />
             )}
@@ -361,15 +361,22 @@ export default function TipsPage() {
                 varrer de cima a baixo, e sombra por item vira ruído nisso. */}
             <div className="overflow-hidden rounded-xl border border-border">
               {tips.map((tip) => (
-                <div key={tip.id} className={cn("relative border-b border-border last:border-b-0", checkedIds.has(tip.id) && "bg-accent/10")}>
+                <div
+                  key={tip.id}
+                  className={cn(
+                    "relative border-b border-border transition-colors last:border-b-0",
+                    checkedIds.has(tip.id) &&
+                      "bg-accent/[0.16] shadow-[inset_4px_0_0_0_var(--color-accent)]",
+                  )}
+                >
                 {canSelect && (
                   <label className="flex min-h-11 items-center gap-2 px-4 pt-2 text-xs text-zinc-400">
-                    <Checkbox checked={checkedIds.has(tip.id)} onCheckedChange={() => toggleChecked(tip.id)} disabled={busy}
+                    <Checkbox checked={checkedIds.has(tip.id)} onCheckedChange={() => toggleChecked(tip.id)}
                       aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`} />
                     Selecionar
                   </label>
                 )}
-                <fieldset disabled={busy} className="min-w-0">
+                <fieldset className="min-w-0">
                 <TipCard
                   key={tip.id}
                   tip={tip}
@@ -385,29 +392,20 @@ export default function TipsPage() {
         </>
       )}
 
-      {checkedTips.length > 0 && (
-        <>
-          <div className="h-28" aria-hidden="true" />
-          <div role="region" aria-label="Ações das tips selecionadas"
-            className="fixed inset-x-0 bottom-0 z-40 flex flex-wrap items-center justify-center gap-3 border-t border-border bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:left-[var(--sidebar-w)]">
-            <span className="text-sm" aria-live="polite">{checkedTips.length} {checkedTips.length === 1 ? "selecionada" : "selecionadas"}</span>
-            <Button variant="ghost" disabled={busy} onClick={clearSelection}>Limpar seleção</Button>
-            {tab === "pending" ? (
-              <>
-                <Button disabled={busy} className="border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
-                  onClick={() => setBatchReview([...checkedTips])}>Planilhar selecionadas</Button>
-                <Button disabled={busy} className="border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26]"
-                  onClick={() => void runBatch("dismiss")}>Caiu</Button>
-              </>
-            ) : (
-              <Button disabled={busy} onClick={() => void runBatch("undismiss")}>Devolver para a fila</Button>
-            )}
-            {batch.isPending && <span role="status" className="text-sm">Processando…</span>}
-          </div>
-        </>
-      )}
+      {/* Mesma barra flutuante da tela de Apostas (BulkActionBar): o espaçador
+          evita que ela cubra o último item da fila. */}
+      {checkedTips.length > 0 && <div className="h-32" aria-hidden="true" />}
+      <TipsBulkActionBar
+        count={checkedTips.length}
+        loading={false}
+        variant={tab === "pending" ? "pending" : "caiu"}
+        onPlanilhar={() => setBatchReview([...checkedTips])}
+        onDismiss={() => runBatch("dismiss")}
+        onUndismiss={() => runBatch("undismiss")}
+        onCancel={clearSelection}
+      />
 
-      <Dialog open={batchReview !== null} onOpenChange={(open) => !open && !busy && setBatchReview(null)}>
+      <Dialog open={batchReview !== null} onOpenChange={(open) => !open && setBatchReview(null)}>
         <DialogContent aria-describedby="batch-description" className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Planilhar {batchReview?.length} tips</DialogTitle>
@@ -423,9 +421,9 @@ export default function TipsPage() {
             ))}
           </ul>
           <p className="text-sm">Stake total: {formatCurrency(batchReview?.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0) ?? 0)}</p>
-          <Button disabled={busy} className="border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
-            onClick={() => batchReview && void runBatch("planilhar", batchReview)}>
-            {batch.isPending ? "Planilhando…" : "Confirmar e planilhar"}
+          <Button className="border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
+            onClick={() => batchReview && runBatch("planilhar", batchReview)}>
+            Confirmar e planilhar
           </Button>
         </DialogContent>
       </Dialog>
@@ -436,7 +434,7 @@ export default function TipsPage() {
         onOpenChange={setCasaSheetOpen}
         houses={houses}
         houseIds={houseIds}
-        onChange={(ids) => !busy && setHouseIds(ids)}
+        onChange={setHouseIds}
       />
 
       {/* key remonta o sheet a cada tip: os campos são inicializados no
@@ -451,7 +449,7 @@ export default function TipsPage() {
           onOpenChange={(o) => !o && setPlanilhando(null)}
           onConfirm={(overrides) => doPlanilhar(planilhando.id, overrides)}
           onDismiss={() => run(dismiss, planilhando.id, "Tip marcada como caiu")}
-          busy={planilhar.isPending}
+          busy={false}
         />
         ) : (
           <TipPlanilharDialog
@@ -461,7 +459,7 @@ export default function TipsPage() {
             onOpenChange={(o) => !o && setPlanilhando(null)}
             onConfirm={(overrides) => doPlanilhar(planilhando.id, overrides)}
             onDismiss={() => run(dismiss, planilhando.id, "Tip marcada como caiu")}
-            busy={planilhar.isPending}
+            busy={false}
           />
         ))}
     </MainLayout>

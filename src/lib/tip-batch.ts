@@ -16,20 +16,43 @@ export function tipPlanilharDefaults(tip: TipItem): PlanilharTipDto {
 export async function runTipBatch<T extends { id: number }>(
   items: T[],
   execute: (item: T) => Promise<unknown>,
+  // Quantas gravações correm juntas. 1 (padrão) para planilhar, que cria aposta
+  // e mexe no saldo da casa — ali a ordem importa. Marcar como caiu/devolver
+  // para a fila é só virar status, então vale disparar em paralelo: com 30 tips
+  // o lote passa de meio minuto para poucos segundos.
+  concurrency = 1,
 ) {
   const succeeded: number[] = [];
   const failed: { id: number; message: string }[] = [];
   const seen = new Set<number>();
-  // Sequencial: não dispara centenas de gravações concorrentes nem repete ids.
-  for (const item of items) {
-    if (seen.has(item.id)) continue;
+  const fila = items.filter((item) => {
+    if (seen.has(item.id)) return false;
     seen.add(item.id);
-    try {
-      await execute(item);
-      succeeded.push(item.id);
-    } catch (error) {
-      failed.push({ id: item.id, message: error instanceof Error ? error.message : "Não foi possível concluir." });
+    return true;
+  });
+
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < fila.length) {
+      const item = fila[cursor++];
+      try {
+        await execute(item);
+        succeeded.push(item.id);
+      } catch (error) {
+        failed.push({
+          id: item.id,
+          message: error instanceof Error ? error.message : "Não foi possível concluir.",
+        });
+      }
     }
-  }
+  };
+  await Promise.all(
+    Array.from({ length: Math.max(1, Math.min(concurrency, fila.length)) }, worker),
+  );
+
+  // A ordem de conclusão varia com a concorrência; devolve na ordem da lista.
+  const ordem = new Map(fila.map((item, index) => [item.id, index]));
+  succeeded.sort((x, y) => ordem.get(x)! - ordem.get(y)!);
+  failed.sort((x, y) => ordem.get(x.id)! - ordem.get(y.id)!);
   return { succeeded, failed };
 }
