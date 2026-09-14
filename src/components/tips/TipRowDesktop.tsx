@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTime, kickoffParts } from "@/lib/format";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
@@ -18,7 +19,7 @@ const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" 
   caiu: { label: "Caiu", variant: "canceled" },
 };
 
-export function TipColumnHeaderDesktop() {
+export function TipColumnHeaderDesktop({ selectable = false }: { selectable?: boolean }) {
   return (
     <div
       className={cn(
@@ -26,6 +27,7 @@ export function TipColumnHeaderDesktop() {
         // opacity-40 sumia contra o fundo escuro; o cabeçalho precisa ser
         // legível pra coluna ter nome, não só posição.
         "px-3 pb-2 text-[11px] uppercase tracking-wider opacity-60",
+        selectable && "ml-10",
       )}
     >
       {/* Com duas colunas de horário, "Hora" sozinho não dizia de qual:
@@ -66,21 +68,39 @@ export function TipRowDesktop({
   tip,
   selected,
   onSelect,
+  checked,
+  onToggle,
+  busy = false,
 }: {
   tip: TipItem;
   selected: boolean;
   onSelect: () => void;
+  checked?: boolean;
+  onToggle?: (shiftKey: boolean) => void;
+  busy?: boolean;
 }) {
   const status = statusMeta[tip.status];
 
   return (
-    <button
+    <div className={cn("flex items-center rounded-md", checked && "bg-accent/10")}>
+      {onToggle && (
+        <div className="flex w-10 shrink-0 justify-center">
+          <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)} disabled={busy}
+            onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
+            aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`} />
+        </div>
+      )}
+      <button
       type="button"
-      onClick={onSelect}
+      onClick={(event) => {
+        if (event.shiftKey && onToggle) onToggle(true);
+        else onSelect();
+      }}
+      onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
       aria-current={selected}
       className={cn(
         TIP_GRID,
-        "w-full rounded-md px-3 py-3 text-left transition-colors hover:bg-foreground/[0.03]",
+        "min-w-0 flex-1 rounded-md px-3 py-3 text-left transition-colors hover:bg-foreground/[0.03]",
         // Barra à esquerda em vez de fundo forte: a linha selecionada precisa
         // se distinguir do hover sem virar o elemento mais claro da tela.
         selected && "bg-foreground/[0.05] shadow-[inset_2px_0_0_0_var(--color-accent)]",
@@ -123,5 +143,6 @@ export function TipRowDesktop({
         <Badge variant={status.variant}>{status.label}</Badge>
       </span>
     </button>
+    </div>
   );
 }

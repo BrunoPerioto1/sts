@@ -51,7 +51,9 @@ export function AppShell() {
           JS a partir do isMobile, e era ele que animava de 248px ate 0 quando o
           hook se corrigia, refluindo o texto no meio do caminho. */}
       <div
-        className="min-h-dvh flex w-full bg-background overflow-x-hidden"
+        // clip contém o excesso horizontal sem criar um scroll container que
+        // prende os headers e painéis sticky enquanto quem rola é a página.
+        className="min-h-dvh flex w-full bg-background overflow-x-clip"
         style={{ "--sidebar-w": sidebarCollapsed ? "72px" : "248px" } as CSSProperties}
       >
         <div className="hidden sm:block">

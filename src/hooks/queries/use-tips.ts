@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { runTipBatch, tipPlanilharDefaults } from "@/lib/tip-batch";
 import {
   dismissTip,
   getTips,
@@ -6,6 +7,7 @@ import {
   undismissTip,
   type PlanilharTipDto,
   type TipStatus,
+  type TipItem,
 } from "@/api/routes/get-tips";
 
 const TIPS_KEY = ["tips"] as const;
@@ -55,6 +57,21 @@ export function useTipActions() {
     planilhar: useMutation({
       mutationFn: ({ id, ...overrides }: PlanilharTipDto & { id: number }) =>
         planilharTip(id, overrides),
+      onSuccess: invalidateAll,
+    }),
+    batch: useMutation({
+      mutationFn: ({ tips, action }: { tips: TipItem[]; action: "planilhar" | "dismiss" | "undismiss" }) =>
+        runTipBatch(tips, async (tip) => {
+          if (action === "undismiss") {
+            if (tip.status !== "caiu") throw new Error("Esta tip não está marcada como caiu.");
+            return undismissTip(tip.id);
+          }
+          if (tip.status !== "pending") throw new Error("Esta tip não está pendente.");
+          return action === "planilhar"
+            ? planilharTip(tip.id, tipPlanilharDefaults(tip))
+            : dismissTip(tip.id);
+        }),
+      // Uma atualização ao terminar, inclusive quando parte do lote falha.
       onSuccess: invalidateAll,
     }),
   };

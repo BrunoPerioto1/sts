@@ -29,14 +29,21 @@ export function TipsListDesktop({
   tips,
   selectedId,
   onSelect,
+  checkedIds,
+  onToggle,
+  busy,
 }: {
   tips: TipItem[];
   selectedId: number | null;
   onSelect: (tip: TipItem) => void;
+  checkedIds: Set<number>;
+  onToggle?: (id: number, shiftKey: boolean) => void;
+  busy: boolean;
 }) {
   return (
-    <div className="min-w-0">
-      <TipColumnHeaderDesktop />
+    <div className="min-w-0 overflow-x-auto">
+      <div className="min-w-[900px]">
+      <TipColumnHeaderDesktop selectable={!!onToggle} />
       {groupByDay(tips).map((grupo) => (
         <section key={grupo.date} className="min-w-0">
           <div className="flex items-baseline gap-2 border-b border-border px-3 py-2">
@@ -54,10 +61,14 @@ export function TipsListDesktop({
               tip={tip}
               selected={tip.id === selectedId}
               onSelect={() => onSelect(tip)}
+              checked={checkedIds.has(tip.id)}
+              onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
+              busy={busy}
             />
           ))}
         </section>
       ))}
+      </div>
     </div>
   );
 }

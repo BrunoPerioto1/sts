@@ -31,16 +31,24 @@ export function TipDetailPanel({
   onPlanilhar,
   onDismiss,
   onUndismiss,
+  busy = false,
+  hasSelection = false,
 }: {
   tip: TipItem;
   onPlanilhar: () => void;
   onDismiss: () => void;
   onUndismiss: () => void;
+  busy?: boolean;
+  hasSelection?: boolean;
 }) {
   const meta = [tip.sport, tip.house].filter(Boolean).join(" · ");
 
   return (
-    <aside className="sticky top-20 flex max-h-[calc(100vh-7rem)] flex-col rounded-xl border border-border">
+    <aside aria-label="Detalhes da tip" className={cn(
+      "sticky top-24 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background",
+      hasSelection ? "max-h-[calc(100dvh-14rem)]" : "max-h-[calc(100dvh-7rem)]",
+    )}>
+      <div className="min-h-0 overflow-y-auto overscroll-contain">
       <div className="border-b border-border px-5 py-4">
         <div className="flex items-center gap-2 text-xs opacity-50">
           <Badge
@@ -77,7 +85,7 @@ export function TipDetailPanel({
 
       {/* min-h-0 junto do flex-1: sem ele o filho com overflow cresce além do
           container e a rolagem vai parar na página inteira. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+      <div className="px-5 py-4">
         <div className="grid grid-cols-3 gap-4">
           <Stat label="Odd" value={tip.odd?.toFixed(2) ?? "—"} />
           <Stat
@@ -138,7 +146,8 @@ export function TipDetailPanel({
         </details>
       </div>
 
-      <div className="border-t border-border px-5 py-4">
+      </div>
+      <div className="shrink-0 border-t border-border px-5 py-4">
         {tip.status === "pending" ? (
           <div className="flex gap-2">
             {/* Verde/vermelho porque sao os dois desfechos opostos da tip; o
@@ -150,18 +159,20 @@ export function TipDetailPanel({
               // escuro e, virando fundo, deixam o rotulo branco em ~2:1.
               className="h-11 flex-1 border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
               onClick={onPlanilhar}
+              disabled={busy}
             >
               <Check size={16} weight="bold" /> Planilhar
             </Button>
             <Button
               className="h-11 gap-2 border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26] hover:text-white"
               onClick={onDismiss}
+              disabled={busy}
             >
               <XCircle size={16} weight="bold" /> Caiu
             </Button>
           </div>
         ) : tip.status === "caiu" ? (
-          <Button variant="outline" className="h-11 w-full gap-2" onClick={onUndismiss}>
+          <Button variant="outline" className="h-11 w-full gap-2" onClick={onUndismiss} disabled={busy}>
             <ArrowCounterClockwise size={16} weight="bold" /> Devolver para a fila
           </Button>
         ) : (
