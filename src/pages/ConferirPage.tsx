@@ -5,20 +5,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import type {
-  ComputeSummary,
+  SettlementQueue,
   SettlementSuggestion,
 } from "@/api/routes/get-settlement";
 import {
   useSettlementActions,
+  useSettlementQueue,
   useSettlementSuggestions,
 } from "@/hooks/apostas/use-settlement";
 import { nextSelection } from "@/lib/settlement-selection";
+import {
+  diaRelativo,
+  formatTally,
+  lucroSugerido,
+  tally,
+} from "@/lib/settlement-view";
+import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   ArrowsClockwise,
   CheckCircle,
-  ClipboardText,
+  CheckSquare,
   Info,
+  X,
   XCircle,
 } from "@phosphor-icons/react";
 
@@ -27,138 +36,304 @@ const BRL = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
-// Previa do impacto, so' pra tela: quem grava o lucro de verdade e' o backend,
-// em calculateProfit. Se os dois divergirem, o backend manda.
-function lucroSugerido(s: SettlementSuggestion): number {
-  if (s.suggestedResultId === ResultIdEnum.WON) return s.stake * (s.odd - 1);
-  if (s.suggestedResultId === ResultIdEnum.LOST) return -s.stake;
-  return 0; // CANCELED devolve a aposta
+// A stake aparece ao lado da odd o tempo todo; centavos zerados em toda linha
+// só engrossam a coluna sem informar nada.
+function stakeCurta(value: number): string {
+  return Number.isInteger(value)
+    ? `R$ ${value.toLocaleString("pt-BR")}`
+    : BRL.format(value);
 }
 
+function corDoLucro(lucro: number): string {
+  return lucro > 0 ? "text-green-400" : lucro < 0 ? "text-red-400" : "text-zinc-300";
+}
+
+const BADGES: Record<number, { label: string; cls: string }> = {
+  [ResultIdEnum.WON]: {
+    label: "GANHOU",
+    cls: "bg-green-500/[0.12] border-green-500/25 text-green-400",
+  },
+  [ResultIdEnum.LOST]: {
+    label: "PERDEU",
+    cls: "bg-red-500/[0.12] border-red-500/25 text-red-400",
+  },
+  [ResultIdEnum.CANCELED]: {
+    label: "ANULADA",
+    cls: "bg-white/[0.06] border-white/10 text-zinc-300",
+  },
+};
+
 function ResultBadge({ resultId }: { resultId: ResultIdEnum }) {
-  const map = {
-    [ResultIdEnum.WON]: { label: "Ganhou", cls: "bg-green-500/[0.12] border-green-500/25 text-green-400" },
-    [ResultIdEnum.LOST]: { label: "Perdeu", cls: "bg-red-500/[0.12] border-red-500/25 text-red-400" },
-    [ResultIdEnum.CANCELED]: { label: "Devolvida", cls: "bg-white/[0.06] border-white/10 text-zinc-300" },
-  } as Record<number, { label: string; cls: string }>;
-  const it = map[resultId] ?? map[ResultIdEnum.CANCELED];
+  const it = BADGES[resultId] ?? BADGES[ResultIdEnum.CANCELED];
   return (
-    <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-xs font-medium", it.cls)}>
+    <span
+      className={cn(
+        "shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide",
+        it.cls,
+      )}
+    >
       {it.label}
     </span>
   );
 }
 
-function SuggestionRow({
+/** "+R$ 102,00" ou, na anulada, "R$ 150,00 devolvidos" — devolver não é lucro zero. */
+function Impacto({
   suggestion,
-  checked,
-  onToggle,
+  className,
 }: {
+  suggestion: SettlementSuggestion;
+  className?: string;
+}) {
+  if (suggestion.suggestedResultId === ResultIdEnum.CANCELED) {
+    return (
+      <span className={cn("text-zinc-400", className)}>
+        {BRL.format(suggestion.stake)} devolvidos
+      </span>
+    );
+  }
+  const lucro = lucroSugerido(suggestion);
+  return (
+    <span className={cn("font-medium", corDoLucro(lucro), className)}>
+      {lucro > 0 ? "+" : ""}
+      {BRL.format(lucro)}
+    </span>
+  );
+}
+
+interface RowProps {
   suggestion: SettlementSuggestion;
   checked: boolean;
   onToggle: () => void;
-}) {
-  const lucro = lucroSugerido(suggestion);
+  onDismiss: () => void;
+  busy: boolean;
+}
+
+function SuggestionRow({ suggestion, checked, onToggle, onDismiss, busy }: RowProps) {
   const placar =
     suggestion.homeScore != null && suggestion.awayScore != null
-      ? `${suggestion.homeScore} x ${suggestion.awayScore}`
-      : null;
+      ? `${suggestion.homeScore}x${suggestion.awayScore}`
+      : "—";
+  const quando = suggestion.eventStartAt
+    ? { dia: diaRelativo(suggestion.eventStartAt), hora: formatTime(suggestion.eventStartAt) }
+    : null;
+  const marcar = `${checked ? "Desmarcar" : "Marcar"} ${suggestion.game}`;
+  const descartar = (
+    <button
+      type="button"
+      onClick={onDismiss}
+      disabled={busy}
+      aria-label={`Descartar a proposta de ${suggestion.game}`}
+      className="shrink-0 rounded-md p-1 text-zinc-600 transition-colors hover:bg-white/[0.06] hover:text-zinc-300 disabled:opacity-40"
+    >
+      <X size={14} />
+    </button>
+  );
 
   return (
     <li
       className={cn(
-        "rounded-xl border p-3 transition-colors",
-        checked
-          ? "border-accent/40 bg-white/[0.04]"
-          : "border-white/10 bg-white/[0.02]",
+        "border-b border-white/[0.06] transition-colors last:border-b-0",
+        checked ? "bg-white/[0.035]" : "hover:bg-white/[0.02]",
       )}
     >
-      <label className="flex cursor-pointer items-start gap-3">
-        <Checkbox
-          checked={checked}
-          onCheckedChange={onToggle}
-          className="mt-1 shrink-0"
-          aria-label={`Selecionar ${suggestion.game}`}
-        />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">
-                {suggestion.game}
+      {/* Mobile: cartão empilhado. A explicação ganha caixa própria porque é o
+          que decide se o usuário aceita ou não — não é detalhe de rodapé. */}
+      <div className="p-3 md:hidden">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={onToggle}
+            className="mt-0.5 shrink-0"
+            aria-label={marcar}
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 truncate text-xs text-zinc-500">
+                {quando && `${quando.dia} ${quando.hora} · `}
+                {suggestion.market}
               </p>
-              <p className="truncate text-xs text-zinc-400">{suggestion.market}</p>
+              <ResultBadge resultId={suggestion.suggestedResultId} />
             </div>
-            <ResultBadge resultId={suggestion.suggestedResultId} />
+
+            <p className="truncate text-sm font-medium text-white">{suggestion.game}</p>
+
+            <p className="rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-xs text-zinc-400">
+              <span className="mr-1.5 font-semibold text-zinc-200">{placar}</span>
+              {suggestion.explanation}
+            </p>
+
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-zinc-500">
+                {stakeCurta(suggestion.stake)} @ {suggestion.odd.toFixed(2)}{" "}
+                <Impacto suggestion={suggestion} className="ml-1 text-xs" />
+              </p>
+              {descartar}
+            </div>
           </div>
-
-          {/* A explicacao e' o que deixa conferir sem abrir a casa de aposta. */}
-          <p className="text-xs text-zinc-500">
-            {placar && <span className="font-medium text-zinc-300">{placar}</span>}
-            {placar && " · "}
-            {suggestion.explanation}
-          </p>
-
-          <p className="text-xs text-zinc-500">
-            {BRL.format(suggestion.stake)} @ {suggestion.odd.toFixed(2)} ·{" "}
-            <span
-              className={cn(
-                "font-medium",
-                lucro > 0 ? "text-green-400" : lucro < 0 ? "text-red-400" : "text-zinc-300",
-              )}
-            >
-              {lucro > 0 ? "+" : ""}
-              {BRL.format(lucro)}
-            </span>
-          </p>
         </div>
-      </label>
+      </div>
+
+      {/* Desktop: uma linha por proposta, colunas alinhadas — dá pra varrer o
+          lote de cima a baixo sem ler cada cartão. */}
+      <div className="hidden items-center gap-3 px-4 py-2.5 text-sm md:grid md:grid-cols-[auto_58px_minmax(140px,1.05fr)_auto_minmax(150px,1.5fr)_auto_auto_88px_auto]">
+        <Checkbox checked={checked} onCheckedChange={onToggle} aria-label={marcar} />
+
+        <div className="text-xs leading-tight text-zinc-500">
+          {quando ? (
+            <>
+              <div>{quando.dia}</div>
+              <div>{quando.hora}</div>
+            </>
+          ) : (
+            <span className="text-zinc-600">—</span>
+          )}
+        </div>
+
+        <div className="min-w-0">
+          <p className="truncate font-medium text-white">{suggestion.game}</p>
+          <p className="truncate text-xs text-zinc-500">{suggestion.market}</p>
+        </div>
+
+        <span className="font-semibold text-zinc-200">{placar}</span>
+
+        <p className="truncate text-xs text-zinc-400" title={suggestion.explanation}>
+          {suggestion.explanation}
+        </p>
+
+        <span className="whitespace-nowrap text-xs text-zinc-500">
+          {stakeCurta(suggestion.stake)} @ {suggestion.odd.toFixed(2)}
+        </span>
+
+        <Impacto suggestion={suggestion} className="whitespace-nowrap text-right text-xs" />
+
+        <div className="flex justify-end">
+          <ResultBadge resultId={suggestion.suggestedResultId} />
+        </div>
+
+        {descartar}
+      </div>
     </li>
   );
 }
 
-// O que o ultimo calculo deixou pendurado. As duas coisas eram silencio antes:
-// aposta com jogo encerrado que o bot nao soube resolver ficava invisivel, e
-// lote cheio dava a impressao de que nao havia mais nada esperando.
-function ComputeNotes({
-  summary,
+/**
+ * O que a fila deixou de fora. As duas coisas eram silêncio: aposta com jogo
+ * encerrado que o bot não soube resolver ficava invisível, e lote cheio dava a
+ * impressão de que não havia mais nada esperando.
+ */
+function FilaNotes({
+  fila,
   busy,
   onCompute,
 }: {
-  summary: ComputeSummary | undefined;
+  fila: SettlementQueue | undefined;
   busy: boolean;
   onCompute: () => void;
 }) {
-  if (!summary || (!summary.undecided && !summary.hasMore)) return null;
-  const { undecided, hasMore } = summary;
-  const plural = undecided === 1 ? "" : "s";
+  if (!fila || (!fila.hasMore && !fila.undecided)) return null;
+  const n = fila.undecided;
 
   return (
-    <div className="space-y-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-3">
-      {!!undecided && (
-        <p className="flex items-start gap-2 text-xs leading-relaxed text-zinc-400">
-          <Info size={14} className="mt-0.5 shrink-0 text-zinc-500" />
-          <span>
-            {undecided} aposta{plural} com o jogo encerrado que o bot não soube
-            resolver. Segue{plural === "s" ? "m" : ""} pendente{plural} na lista
-            de apostas, pra você resolver na mão.
-          </span>
+    <div className="flex flex-col gap-2 border-b border-white/[0.06] px-4 py-2.5 text-xs md:flex-row md:items-center md:justify-between">
+      {fila.hasMore ? (
+        <p className="flex items-start gap-2 text-zinc-400">
+          <Info size={14} className="mt-px shrink-0 text-zinc-500" />
+          Ainda há apostas na fila que não entraram neste lote.
+          <button
+            type="button"
+            onClick={onCompute}
+            disabled={busy}
+            className="shrink-0 text-accent underline-offset-4 hover:underline disabled:opacity-50 md:hidden"
+          >
+            Calcular
+          </button>
+        </p>
+      ) : (
+        <span />
+      )}
+      {!!n && (
+        <p className="text-zinc-500">
+          {n} aposta{n === 1 ? "" : "s"} fic{n === 1 ? "ou" : "aram"} sem proposta e
+          segue{n === 1 ? "" : "m"} pendente{n === 1 ? "" : "s"}.
         </p>
       )}
-      {hasMore && (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-zinc-400">
-            Ainda sobrou aposta fora deste lote.
+    </div>
+  );
+}
+
+/** Enquanto o compute roda: dizer quantas estão sendo lidas evita a sensação de travado. */
+function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-base font-medium text-white">Lendo os placares</p>
+        <p className="text-xs text-zinc-500">
+          {fila?.settleable
+            ? `${fila.settleable} de ${fila.pending} apostas pendentes · pode levar alguns segundos`
+            : "pode levar alguns segundos"}
+        </p>
+        <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-xl" delay={i * 60} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Vazio({
+  fila,
+  busy,
+  onCompute,
+}: {
+  fila: SettlementQueue | undefined;
+  busy: boolean;
+  onCompute: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {fila?.hasMore && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+          <p className="text-[11px] font-semibold tracking-wide text-zinc-500">
+            FILA RESTANTE
+          </p>
+          <p className="mt-1.5 text-sm text-zinc-400">
+            Ainda há apostas na fila que não entraram neste lote.
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={onCompute}
             disabled={busy}
-            className="shrink-0"
+            className="mt-3 w-full gap-2"
           >
-            Calcular o resto
+            <ArrowsClockwise size={16} className={busy ? "animate-spin" : undefined} />
+            Calcular próximo lote
           </Button>
         </div>
+      )}
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center">
+        <CheckCircle size={32} className="mx-auto mb-3 text-zinc-600" />
+        <p className="text-sm text-zinc-300">Nenhum resultado pra conferir</p>
+        <p className="mx-auto mt-1 max-w-[320px] text-xs text-zinc-600">
+          Quando o bot fechar o placar de uma aposta pendente, a proposta aparece
+          aqui.
+        </p>
+      </div>
+
+      {!!fila?.undecided && (
+        <p className="px-1 text-xs text-zinc-500">
+          {fila.undecided} aposta{fila.undecided === 1 ? "" : "s"} fic
+          {fila.undecided === 1 ? "ou" : "aram"} sem proposta e segue
+          {fila.undecided === 1 ? "" : "m"} pendente
+          {fila.undecided === 1 ? "" : "s"}.
+        </p>
       )}
     </div>
   );
@@ -166,13 +341,14 @@ function ComputeNotes({
 
 export default function ConferirPage() {
   const { data: suggestions, isLoading } = useSettlementSuggestions();
+  const { data: fila } = useSettlementQueue();
   const { compute, confirm, dismiss } = useSettlementActions();
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const lista = useMemo(() => suggestions ?? [], [suggestions]);
 
-  // betIds que a tela ja' mostrou. Sem isso, todo refetch remarcava a lista
-  // inteira e desfazia o que o usuario tinha desmarcado de proposito. Ver
+  // betIds que a tela já mostrou. Sem isso, todo refetch remarcava a lista
+  // inteira e desfazia o que o usuário tinha desmarcado de propósito. Ver
   // nextSelection.
   const conhecidas = useRef<ReadonlySet<number>>(new Set());
 
@@ -193,17 +369,19 @@ export default function ConferirPage() {
     });
 
   const ids = [...selected];
-  const total = lista
-    .filter((s) => selected.has(s.betId))
-    .reduce((sum, s) => sum + lucroSugerido(s), 0);
+  const marcadas = lista.filter((s) => selected.has(s.betId));
+  const total = marcadas.reduce((sum, s) => sum + lucroSugerido(s), 0);
   const ocupado = confirm.isPending || dismiss.isPending || compute.isPending;
+  const todasMarcadas = lista.length > 0 && selected.size === lista.length;
+  const resumoLote = formatTally(tally(lista));
+  const resumoSelecao = formatTally(tally(marcadas), ", ");
 
   return (
     <MainLayout
-      title="Conferir resultados"
+      title="Conferência de liquidação"
       subtitle={
         lista.length
-          ? `${lista.length} aposta${lista.length === 1 ? "" : "s"} com resultado pronto`
+          ? `${lista.length} proposta${lista.length === 1 ? "" : "s"} do bot · nada vira lucro até você confirmar`
           : "Nada aguardando conferência"
       }
       titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
@@ -211,136 +389,147 @@ export default function ConferirPage() {
       subtitleClassName="text-sm text-zinc-500 truncate"
       mobileHeader={
         <div className="flex items-baseline gap-2.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Conferir</h1>
-          <span className="text-sm text-zinc-500">{lista.length}</span>
+          <h1 className="text-2xl font-semibold tracking-tight">Conferência</h1>
+          <span className="text-sm text-zinc-500">{lista.length || ""}</span>
         </div>
       }
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => compute.mutate()}
+          disabled={ocupado}
+          className="hidden shrink-0 gap-2 md:inline-flex"
+        >
+          <ArrowsClockwise
+            size={16}
+            className={compute.isPending ? "animate-spin" : undefined}
+          />
+          Calcular próximo lote
+        </Button>
+      }
     >
-      <div className="space-y-4 pb-40">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-zinc-500">
-            Nada entra na planilha sem você confirmar.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => compute.mutate()}
-            disabled={ocupado}
-            className="shrink-0 gap-2"
-          >
-            <ArrowsClockwise
-              size={16}
-              className={compute.isPending ? "animate-spin" : undefined}
-            />
-            Buscar resultados
-          </Button>
-        </div>
-
-        <ComputeNotes
-          summary={compute.data}
-          busy={ocupado}
-          onCompute={() => compute.mutate()}
-        />
-
-        {isLoading ? (
-          <div className="space-y-2">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" delay={i * 60} />
-            ))}
-          </div>
+      <div className="pb-32 md:pb-6">
+        {isLoading || compute.isPending ? (
+          <LendoPlacares fila={fila} />
         ) : lista.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center">
-            <ClipboardText size={32} className="mx-auto mb-3 text-zinc-600" />
-            <p className="text-sm text-zinc-400">
-              Nenhuma aposta com resultado pronto.
-            </p>
-            <p className="mt-1 text-xs text-zinc-600">
-              Assim que os jogos terminarem e o placar for coletado, as
-              sugestões aparecem aqui.
-            </p>
-          </div>
+          <Vazio fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
         ) : (
-          <>
-            <div className="flex items-center justify-between text-sm">
-              <button
-                type="button"
-                onClick={() =>
-                  setSelected(
-                    selected.size === lista.length
-                      ? new Set()
-                      : new Set(lista.map((s) => s.betId)),
-                  )
-                }
-                className="text-zinc-400 underline-offset-4 hover:underline"
-              >
-                {selected.size === lista.length ? "Desmarcar todas" : "Marcar todas"}
-              </button>
-              <span className="text-zinc-500">
-                {selected.size} de {lista.length}
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
+            <FilaNotes fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
+
+            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2.5">
+              <div className="flex min-w-0 items-center gap-3">
+                <Checkbox
+                  checked={todasMarcadas}
+                  onCheckedChange={() =>
+                    setSelected(
+                      todasMarcadas ? new Set() : new Set(lista.map((s) => s.betId)),
+                    )
+                  }
+                  aria-label={todasMarcadas ? "Desmarcar todas" : "Selecionar todas"}
+                />
+                <span className="truncate text-sm font-medium text-white">
+                  {selected.size} de {lista.length} selecionada
+                  {selected.size === 1 ? "" : "s"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelected(
+                      todasMarcadas ? new Set() : new Set(lista.map((s) => s.betId)),
+                    )
+                  }
+                  className="shrink-0 text-sm text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+                >
+                  {todasMarcadas ? "Limpar" : "Selecionar todas"}
+                </button>
+              </div>
+              <span className="hidden shrink-0 text-xs text-zinc-500 sm:inline">
+                {resumoLote}
               </span>
             </div>
 
-            <ul className="space-y-2">
+            <ul>
               {lista.map((s) => (
                 <SuggestionRow
                   key={s.betId}
                   suggestion={s}
                   checked={selected.has(s.betId)}
                   onToggle={() => toggle(s.betId)}
+                  onDismiss={() => dismiss.mutate([s.betId])}
+                  busy={ocupado}
                 />
               ))}
             </ul>
-          </>
+
+            {/* No mobile a barra flutua sobre a lista; no desktop ela é o rodapé
+                do próprio card, no fim do lote que acabou de ser lido. */}
+            <div
+              role="toolbar"
+              aria-label="Confirmar propostas"
+              className={cn(
+                "fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-50",
+                "space-y-3 rounded-2xl border border-white/10 bg-zinc-900/95 p-3 backdrop-blur-md",
+                "animate-in slide-in-from-bottom-4 duration-200",
+                "md:static md:inset-auto md:flex md:items-center md:justify-between md:gap-4",
+                "md:space-y-0 md:rounded-none md:border-0 md:border-t md:border-white/[0.06]",
+                "md:bg-transparent md:px-4 md:py-3 md:backdrop-blur-none",
+              )}
+              style={{ boxShadow: "var(--shadow-lg)" }}
+            >
+              <div className="flex items-center justify-between gap-3 px-1 text-sm md:px-0">
+                {selected.size ? (
+                  <>
+                    <span className="truncate text-zinc-400">
+                      <span className="font-semibold text-white">
+                        {selected.size} aposta{selected.size === 1 ? "" : "s"}
+                      </span>
+                      {resumoSelecao && `: ${resumoSelecao}`}
+                    </span>
+                    <span
+                      className={cn("shrink-0 font-semibold", corDoLucro(total))}
+                    >
+                      {total > 0 ? "+" : ""}
+                      {BRL.format(total)}
+                      <span className="hidden font-normal text-zinc-500 md:inline">
+                        {" "}
+                        no lucro
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-zinc-500">
+                    Marque o que você aceita para confirmar
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-[auto_1fr] gap-2 md:flex md:shrink-0 md:items-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => dismiss.mutate(ids)}
+                  disabled={ocupado || !selected.size}
+                  aria-label="Descartar propostas selecionadas"
+                  className="min-h-[48px] gap-2 px-4 text-zinc-300 md:min-h-0"
+                >
+                  <XCircle size={20} />
+                  <span className="hidden md:inline">Descartar selecionadas</span>
+                </Button>
+                <Button
+                  onClick={() => confirm.mutate(ids)}
+                  disabled={ocupado || !selected.size}
+                  className="min-h-[48px] gap-2 bg-accent text-base font-semibold text-white md:min-h-0 md:text-sm"
+                >
+                  <CheckSquare size={20} weight="fill" className="md:hidden" />
+                  <CheckCircle size={16} className="hidden md:block" />
+                  Confirmar {selected.size || ""}
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      {selected.size > 0 && (
-        <div
-          role="toolbar"
-          aria-label="Confirmar resultados"
-          className={cn(
-            "fixed z-50 space-y-3 rounded-2xl border border-white/10 bg-zinc-900/95 p-3 backdrop-blur-md",
-            "animate-in slide-in-from-bottom-4 duration-200",
-            "inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))]",
-            "md:inset-x-auto md:bottom-6 md:left-1/2 md:w-full md:max-w-[480px] md:-translate-x-1/2",
-          )}
-          style={{ boxShadow: "var(--shadow-lg)" }}
-        >
-          <div className="flex items-center justify-between px-1 text-sm">
-            <span className="font-semibold text-white">
-              {selected.size} selecionada{selected.size === 1 ? "" : "s"}
-            </span>
-            <span
-              className={cn(
-                "font-semibold",
-                total > 0 ? "text-green-400" : total < 0 ? "text-red-400" : "text-zinc-300",
-              )}
-            >
-              {total > 0 ? "+" : ""}
-              {BRL.format(total)}
-            </span>
-          </div>
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Button
-              onClick={() => confirm.mutate(ids)}
-              disabled={ocupado}
-              className="min-h-[48px] gap-2 bg-green-500 text-base font-semibold text-white hover:bg-green-600"
-            >
-              <CheckCircle size={20} weight="fill" />
-              Planilhar {selected.size === lista.length ? "todas" : selected.size}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => dismiss.mutate(ids)}
-              disabled={ocupado}
-              aria-label="Descartar sugestões selecionadas"
-              className="min-h-[48px] px-4 text-zinc-300"
-            >
-              <XCircle size={20} />
-            </Button>
-          </div>
-        </div>
-      )}
     </MainLayout>
   );
 }

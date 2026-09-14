@@ -51,3 +51,24 @@ export function dismissSettlement(betIds: number[]) {
     api.settlement.post('dismiss', { betIds }),
   );
 }
+
+/**
+ * Contadores da fila. Vêm do banco, não da resposta do último compute — por
+ * isso sobrevivem a um F5, que era o que fazia os avisos de fila restante e de
+ * aposta sem proposta sumirem da tela.
+ */
+export interface SettlementQueue {
+  /** Apostas ainda pendentes do usuário. */
+  pending: number;
+  /** Pendentes com placar esperando cálculo: o que entra no próximo lote. */
+  settleable: number;
+  /** Propostas aguardando confirmação. */
+  suggestions: number;
+  /** Analisadas que o bot não soube resolver. Seguem pendentes. */
+  undecided: number;
+  hasMore: boolean;
+}
+
+export function getSettlementQueue() {
+  return unwrap<SettlementQueue>(api.settlement.get('queue'));
+}

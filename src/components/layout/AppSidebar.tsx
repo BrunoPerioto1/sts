@@ -10,13 +10,14 @@ import {
   ClipboardText,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
+import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { cn } from "@/lib/utils";
 import { initialsOf } from "@/lib/format";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
   { id: "apostas", label: "Apostas", icon: Receipt, path: "/bets" },
-  { id: "conferir", label: "Conferir", icon: ClipboardText, path: "/settlement" },
+  { id: "conferir", label: "Conferência", icon: ClipboardText, path: "/settlement" },
   { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
   { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
@@ -31,6 +32,13 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
   const location = useLocation();
   const isInDrawer = !!onNavigate;
   const { me: user } = useMe();
+  // Proposta esperando confirmação é dinheiro parado: o número no menu é o que
+  // faz o usuário voltar na conferência sem precisar lembrar dela sozinho.
+  const { data: fila } = useSettlementQueue();
+  const contagem: Record<string, number | undefined> = {
+    conferir: fila?.suggestions,
+    apostas: fila?.pending,
+  };
 
   return (
     <div
@@ -84,6 +92,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname.startsWith(item.path);
+          const badge = contagem[item.id];
           return (
             <NavLink
               key={item.id}
@@ -111,8 +120,31 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                 }
               }}
             >
-              <Icon size={18} weight={isActive ? "fill" : "regular"} className="shrink-0" />
-              {!collapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>}
+              <div className="relative shrink-0">
+                <Icon size={18} weight={isActive ? "fill" : "regular"} />
+                {/* Colapsado não sobra largura pro número: vira só o ponto, que
+                    ainda diz "tem coisa aqui". */}
+                {collapsed && !!badge && item.id === "conferir" && (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
+                )}
+              </div>
+              {!collapsed && (
+                <>
+                  <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
+                  {!!badge && (
+                    <span
+                      className={cn(
+                        "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+                        item.id === "conferir"
+                          ? "bg-accent/15 text-accent"
+                          : "bg-foreground/[0.07] text-foreground/55",
+                      )}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </>
+              )}
             </NavLink>
           );
         })}

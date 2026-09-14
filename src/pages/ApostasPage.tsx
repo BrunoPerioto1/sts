@@ -5,6 +5,7 @@ import { ApostasGrouped } from "@/components/apostas/ApostasGrouped";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
+import { ConferenciaCallout } from "@/components/apostas/ConferenciaCallout";
 import { ApostasMobileHeader } from "@/components/apostas/ApostasMobileHeader";
 import { ApostasPagination } from "@/components/apostas/ApostasPagination";
 import { BulkActionBar } from "@/components/apostas/BulkActionBar";
@@ -159,6 +160,7 @@ export default function ApostasPage() {
       <MobileStatusPills value={filters.statusFilter} onChange={filters.setStatus} />
 
       <div className="space-y-4 min-w-0">
+        <ConferenciaCallout />
         {/* Breakpoint alinhado com o mobileHeader/sheets (isMobile, 640px) — antes
             usava md: (768px) e deixava 640-767px sem nenhum filtro visível. */}
         {!isMobile && <ApostasFilter {...filterProps} />}

@@ -4,12 +4,15 @@ import {
   computeSettlement,
   confirmSettlement,
   dismissSettlement,
+  getSettlementQueue,
   getSettlementSuggestions,
+  type SettlementQueue,
   type SettlementSuggestion,
 } from "@/api/routes/get-settlement";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 
 const SETTLEMENT_KEY = ["settlement", "suggestions"] as const;
+const QUEUE_KEY = ["settlement", "queue"] as const;
 
 export function useSettlementSuggestions() {
   return useQuery<SettlementSuggestion[]>({
@@ -18,12 +21,28 @@ export function useSettlementSuggestions() {
   });
 }
 
+/**
+ * Contadores da fila. Toda acao (compute/confirm/dismiss) mexe neles, entao
+ * invalidam junto com a lista — senao o badge do menu continuaria anunciando
+ * proposta que o usuario acabou de planilhar.
+ */
+export function useSettlementQueue() {
+  return useQuery<SettlementQueue>({
+    queryKey: QUEUE_KEY,
+    queryFn: getSettlementQueue,
+  });
+}
+
 export function useSettlementActions() {
   const queryClient = useQueryClient();
   const invalidateBetData = useInvalidateBetData();
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: SETTLEMENT_KEY });
+  // A fila invalida junto com a lista: sem isso o badge do menu continuaria
+  // anunciando proposta que o usuário acabou de planilhar ou descartar.
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: SETTLEMENT_KEY });
+    void queryClient.invalidateQueries({ queryKey: QUEUE_KEY });
+  };
 
   const compute = useMutation({
     mutationFn: computeSettlement,

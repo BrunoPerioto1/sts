@@ -1,18 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { SquaresFour, Receipt, Buildings, UserCircle, ClipboardText } from "@phosphor-icons/react";
+import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { tapHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const items = [
   { label: "Início", icon: SquaresFour, path: "/dashboard" },
   { label: "Apostas", icon: Receipt, path: "/bets" },
-  { label: "Conferir", icon: ClipboardText, path: "/settlement" },
+  { label: "Conferência", icon: ClipboardText, path: "/settlement" },
   { label: "Casas", icon: Buildings, path: "/houses" },
   { label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
 
 export function BottomNav() {
   const location = useLocation();
+  const { data: fila } = useSettlementQueue();
   const activeIndex = items.findIndex((item) => location.pathname.startsWith(item.path));
 
   return (
@@ -49,14 +51,23 @@ export function BottomNav() {
               transition: "color var(--dur-base) var(--ease-out-soft), transform var(--dur-fast) var(--ease-out-soft)",
             }}
           >
-            {/* key no indice ativo remonta o icone quando a aba muda, o que
-                redispara o pop — sem isso a animacao so rodaria na montagem. */}
-            <Icon
-              key={isActive ? "on" : "off"}
-              size={19}
-              weight={isActive ? "fill" : "regular"}
-              className={cn(isActive && "animate-pop-in")}
-            />
+            <span className="relative">
+              {/* key no indice ativo remonta o icone quando a aba muda, o que
+                  redispara o pop — sem isso a animacao so rodaria na montagem. */}
+              <Icon
+                key={isActive ? "on" : "off"}
+                size={19}
+                weight={isActive ? "fill" : "regular"}
+                className={cn(isActive && "animate-pop-in")}
+              />
+              {/* Contagem de proposta esperando confirmacao. So' na aba da
+                  conferencia: e' a unica que pede acao do usuario. */}
+              {item.path === "/settlement" && !!fila?.suggestions && (
+                <span className="absolute -right-2.5 -top-1.5 min-w-[16px] rounded-full bg-accent px-1 text-center text-[10px] font-semibold leading-4 text-white tabular-nums">
+                  {fila.suggestions > 99 ? "99+" : fila.suggestions}
+                </span>
+              )}
+            </span>
             <span className={cn("text-xs transition-opacity", isActive ? "opacity-100" : "opacity-90")}>{item.label}</span>
           </NavLink>
         );
