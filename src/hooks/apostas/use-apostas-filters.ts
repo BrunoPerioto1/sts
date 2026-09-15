@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { endOfMonth, format, startOfMonth } from "date-fns";
-import type { ApostasFilterState, PeriodPreset } from "@/types/apostas-filters";
+import { format, startOfMonth } from "date-fns";
+import { defaultPeriod, type ApostasFilterState, type PeriodPreset } from "@/types/apostas-filters";
 import { PER_PAGE, type BetsQueryFilters } from "./use-bets-query";
 
 
@@ -16,14 +16,17 @@ export function useApostasFilters() {
     const fromUrl = searchParams.get("status");
     return fromUrl ? fromUrl.split(",") : [];
   });
+  // ?houseId=3 (card do dashboard / "ver apostas" da casa) ou ?houseId=3,7.
   const [houseIds, setHouseIds] = useState<number[]>(() => {
     const fromUrl = searchParams.get("houseId");
-    return fromUrl ? [Number(fromUrl)] : [];
+    if (!fromUrl) return [];
+    return fromUrl.split(",").map(Number).filter((n) => Number.isFinite(n));
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(endOfMonth(new Date()), "yyyy-MM-dd"));
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "mes");
+  // Padrao: dia 1 ate hoje. O chip "Mes atual" continua indo ate o fim do mes.
+  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "custom");
   const [pageStart, setPageStart] = useState(1);
 
   // Só o texto da busca é debounced — os outros filtros (chip, sheet, período)
@@ -46,8 +49,7 @@ export function useApostasFilters() {
 
   const setSearch = (term: string) => { setSearchTerm(term); setPageStart(1); };
   const setStatus = (status: string[]) => { setStatusFilter(status); setPageStart(1); };
-  // ApostasFilter (desktop) continua single-select — ponte pro houseIds[] interno.
-  const setHouseFromSelect = (id: string) => { setHouseIds(id === "0" ? [] : [Number(id)]); setPageStart(1); };
+  const setHouses = (ids: number[]) => { setHouseIds(ids); setPageStart(1); };
   const setDateRange = (from: string, to: string) => {
     setStartDate(from); setEndDate(to); setPeriodPreset("custom"); setPageStart(1);
   };
@@ -74,7 +76,10 @@ export function useApostasFilters() {
     houseIds,
   };
 
-  const activeMobileFilterCount = [periodPreset !== "mes", statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
+  // Periodo so conta como filtro ativo quando difere do padrao (dia 1 -> hoje).
+  const dflt = defaultPeriod();
+  const periodChanged = startDate !== dflt.from || endDate !== dflt.to;
+  const activeMobileFilterCount = [periodChanged, statusFilter.length > 0, houseIds.length > 0].filter(Boolean).length;
 
   return {
     statusFilter,
@@ -91,7 +96,7 @@ export function useApostasFilters() {
     activeMobileFilterCount,
     setSearch,
     setStatus,
-    setHouseFromSelect,
+    setHouses,
     setDateRange,
     applyMobileFilters,
     clearFilters,

@@ -54,13 +54,24 @@ interface CasaSheetProps {
   houses: { id: number; name: string }[];
   houseIds: number[];
   onChange: (next: number[]) => void;
+  // false quando o sheet abre direto da tela, sem outro sheet por baixo:
+  // NestedRoot do vaul estoura se não houver drawer pai.
+  nested?: boolean;
   // false = seleção única (usado no form de aposta): tocar já seleciona e
   // fecha o sheet, sem rodapé de Aplicar. Default true preserva o
   // comportamento de filtro (multi-seleção + Aplicar).
   multiple?: boolean;
 }
 
-export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, multiple = true }: CasaSheetProps) {
+export function CasaSheet({
+  open,
+  onOpenChange,
+  houses,
+  houseIds,
+  onChange,
+  multiple = true,
+  nested = true,
+}: CasaSheetProps) {
   const [search, setSearch] = useState("");
   const [recentIds, setRecentIds] = useState<number[]>([]);
 
@@ -105,7 +116,7 @@ export function CasaSheet({ open, onOpenChange, houses, houseIds, onChange, mult
 
   return (
     <BottomSheet
-      nested
+      nested={nested}
       open={open}
       onOpenChange={onOpenChange}
       title="Casa"

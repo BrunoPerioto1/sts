@@ -31,6 +31,7 @@ interface MobileSearchBarProps {
   // Ref vem de fora: quem abre a busca precisa focar o input DENTRO do próprio
   // gesto de toque (ver ApostasPage), senão o iOS não abre o teclado.
   inputRef: React.RefObject<HTMLInputElement>;
+  placeholder?: string;
 }
 
 // Linha de busca renderizada no corpo da página (não no header) — aparece
@@ -38,7 +39,7 @@ interface MobileSearchBarProps {
 // só controla o mesmo `searchTerm`/onSearch que já dirige fetchFilteredBets
 // em ApostasPage — os resultados aparecem porque a listagem principal já
 // reage ao `q`.
-export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, inputRef }: MobileSearchBarProps) {
+export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, inputRef, placeholder = "Buscar apostas..." }: MobileSearchBarProps) {
   const [pinned, setPinned] = useState(false);
   const [focused, setFocused] = useState(false);
 
@@ -80,7 +81,7 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, 
               handleClear();
             }
           }}
-          placeholder="Buscar apostas..."
+          placeholder={placeholder}
           className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-white placeholder:text-zinc-500 outline-none"
         />
         <button

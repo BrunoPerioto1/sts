@@ -6,12 +6,14 @@ import type { HouseSortMobile } from "@/components/house/mobile/SortSheet";
 // "Negativas" são mutuamente exclusivos: ligar um desliga o outro.
 export function useHouseFilters(houses: HouseBalanceDto[]) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [houseIds, setHouseIds] = useState<number[]>([]);
   const [onlyWithBalance, setOnlyWithBalance] = useState(false);
   const [onlyNegative, setOnlyNegative] = useState(false);
   const [sort, setSort] = useState<HouseSortMobile>("balance");
 
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (houseIds.length > 0) list = list.filter((h) => houseIds.includes(h.houseId));
     if (onlyWithBalance) list = list.filter((h) => Number(h.houseBalance) > 0);
     if (onlyNegative) list = list.filter((h) => Number(h.realHouseBalance) < 0);
     list = [...list].sort((a, b) => {
@@ -22,11 +24,19 @@ export function useHouseFilters(houses: HouseBalanceDto[]) {
       return Number(b.realHouseBalance) - Number(a.realHouseBalance);
     });
     return list;
-  }, [houses, searchTerm, onlyWithBalance, onlyNegative, sort]);
+  }, [houses, searchTerm, houseIds, onlyWithBalance, onlyNegative, sort]);
+
+  const houseOptions = useMemo(
+    () => houses.map((h) => ({ id: h.houseId, name: h.houseName })),
+    [houses]
+  );
 
   return {
     searchTerm,
     setSearchTerm,
+    houseIds,
+    setHouseIds,
+    houseOptions,
     onlyWithBalance,
     toggleOnlyWithBalance: () => { setOnlyWithBalance((v) => !v); setOnlyNegative(false); },
     onlyNegative,
@@ -34,7 +44,7 @@ export function useHouseFilters(houses: HouseBalanceDto[]) {
     sort,
     setSort,
     filteredHouses,
-    hasFilters: !!searchTerm || onlyNegative || onlyWithBalance,
-    clear: () => { setSearchTerm(""); setOnlyNegative(false); setOnlyWithBalance(false); },
+    hasFilters: !!searchTerm || onlyNegative || onlyWithBalance || houseIds.length > 0,
+    clear: () => { setSearchTerm(""); setOnlyNegative(false); setOnlyWithBalance(false); setHouseIds([]); },
   };
 }

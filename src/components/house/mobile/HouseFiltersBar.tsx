@@ -1,4 +1,4 @@
-import { ArrowsDownUp, MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowsDownUp, Buildings, MagnifyingGlass } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { stagger } from "@/lib/motion";
@@ -23,6 +23,8 @@ interface HouseFiltersBarProps {
   onToggleNegative: () => void;
   sort: HouseSortMobile;
   onOpenSort: () => void;
+  selectedHousesCount: number;
+  onOpenCasas: () => void;
 }
 
 export function HouseFiltersBar({
@@ -36,6 +38,8 @@ export function HouseFiltersBar({
   onToggleNegative,
   sort,
   onOpenSort,
+  selectedHousesCount,
+  onOpenCasas,
 }: HouseFiltersBarProps) {
   if (loading) {
     return (
@@ -63,6 +67,10 @@ export function HouseFiltersBar({
         </button>
         <button type="button" aria-pressed={onlyNegative} onClick={onToggleNegative} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
           Negativas
+        </button>
+        <button type="button" aria-pressed={selectedHousesCount > 0} onClick={onOpenCasas} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium flex items-center gap-1.5", selectedHousesCount > 0 ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+          <Buildings size={13} /> Casas
+          {selectedHousesCount > 0 && <span className="tabular-nums opacity-75">{selectedHousesCount}</span>}
         </button>
         <button type="button" onClick={onOpenSort} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
           <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}

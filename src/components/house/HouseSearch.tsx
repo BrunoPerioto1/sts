@@ -2,12 +2,17 @@ import { MagnifyingGlass, DownloadSimple } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HouseMultiSelect } from "./HouseMultiSelect";
+import type { HouseOption } from "@/hooks/queries/use-houses";
 
 export type HouseSort = "balance" | "name" | "profit";
 
 interface HousesSearchProps {
   searchTerm: string;
   onChange: (val: string) => void;
+  houses: HouseOption[];
+  houseIds: number[];
+  onHouseIdsChange: (ids: number[]) => void;
   onlyWithBalance: boolean;
   onOnlyWithBalanceChange: (val: boolean) => void;
   sort: HouseSort;
@@ -23,6 +28,9 @@ const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
 export function HousesSearch({
   searchTerm,
   onChange,
+  houses,
+  houseIds,
+  onHouseIdsChange,
   onlyWithBalance,
   onOnlyWithBalanceChange,
   sort,
@@ -40,6 +48,18 @@ export function HousesSearch({
           onChange={(e) => onChange(e.target.value)}
           disabled={isLoading}
           className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+        />
+      </div>
+
+      {divider}
+
+      <div className="px-3.5 shrink-0">
+        <HouseMultiSelect
+          houses={houses}
+          selected={houseIds}
+          onChange={onHouseIdsChange}
+          disabled={isLoading}
+          label="Casas"
         />
       </div>
 

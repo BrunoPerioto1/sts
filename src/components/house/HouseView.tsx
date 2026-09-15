@@ -10,6 +10,7 @@ import { useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { exportHousesCsv } from "@/lib/bet-exports";
+import { metricsFromBalances } from "@/lib/house-metrics";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 
@@ -27,6 +28,7 @@ export function CasasApostaView() {
   const loading = balancesQuery.isPending || metricsQuery.isPending;
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [houseIds, setHouseIds] = useState<number[]>([]);
   const [onlyWithBalance, setOnlyWithBalance] = useState(false);
   const [sort, setSort] = useState<HouseSort>("balance");
   const [selectedHouse, setSelectedHouse] = useState<HouseBalanceDto | null>(null);
@@ -43,6 +45,7 @@ export function CasasApostaView() {
 
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (houseIds.length > 0) list = list.filter((h) => houseIds.includes(h.houseId));
     if (onlyWithBalance) list = list.filter((h) => Number(h.realHouseBalance) !== 0);
     list = [...list].sort((a, b) => {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);
@@ -50,21 +53,36 @@ export function CasasApostaView() {
       return Number(b.realHouseBalance) - Number(a.realHouseBalance);
     });
     return list;
-  }, [houses, searchTerm, onlyWithBalance, sort]);
+  }, [houses, searchTerm, houseIds, onlyWithBalance, sort]);
 
   const maxBalance = useMemo(
     () => filteredHouses.reduce((max, h) => Math.max(max, Math.abs(Number(h.realHouseBalance))), 0),
     [filteredHouses]
   );
-  const withBalanceCount = houses.filter((h) => Number(h.realHouseBalance) > 0).length;
+  const houseOptions = useMemo(
+    () => houses.map((h) => ({ id: h.houseId, name: h.houseName })),
+    [houses]
+  );
+
+  // Com casas escolhidas os totais passam a ser os da seleção — somar todas
+  // enquanto a lista mostra três casas seria um número que não explica a tela.
+  const shownMetrics = houseIds.length > 0 ? metricsFromBalances(filteredHouses) : metrics;
+  const withBalanceCount = (houseIds.length > 0 ? filteredHouses : houses).filter(
+    (h) => Number(h.realHouseBalance) > 0
+  ).length;
 
   return (
     <div className="space-y-4">
-      {metrics && <HousesMetrics metrics={metrics} withBalanceCount={withBalanceCount} isLoading={loading} />}
+      {shownMetrics && (
+        <HousesMetrics metrics={shownMetrics} withBalanceCount={withBalanceCount} isLoading={loading} />
+      )}
 
       <HousesSearch
         searchTerm={searchTerm}
         onChange={setSearchTerm}
+        houses={houseOptions}
+        houseIds={houseIds}
+        onHouseIdsChange={setHouseIds}
         onlyWithBalance={onlyWithBalance}
         onOnlyWithBalanceChange={setOnlyWithBalance}
         sort={sort}
@@ -77,7 +95,7 @@ export function CasasApostaView() {
         <EmptyState
           icon={<Buildings size={30} />}
           title="Nenhuma casa encontrada"
-          description={searchTerm ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
+          description={searchTerm || houseIds.length > 0 ? "Nenhuma casa corresponde aos filtros aplicados." : "Não há casas de apostas cadastradas no momento."}
         />
       ) : (
         <div className="min-w-0">

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { SquaresFour, Receipt, Buildings, UserCircle, ClipboardText } from "@phosphor-icons/react";
+import { SquaresFour, Receipt, Buildings, UserCircle, ClipboardText, PaperPlaneTilt } from "@phosphor-icons/react";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { tapHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { label: "Início", icon: SquaresFour, path: "/dashboard" },
   { label: "Apostas", icon: Receipt, path: "/bets" },
+  { label: "Tips", icon: PaperPlaneTilt, path: "/tips" },
   { label: "Conferência", icon: ClipboardText, path: "/settlement" },
   { label: "Casas", icon: Buildings, path: "/houses" },
   { label: "Perfil", icon: UserCircle, path: "/profile" },

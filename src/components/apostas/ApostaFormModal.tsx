@@ -8,13 +8,24 @@ interface ApostaFormModalProps {
   onApostaAdded: (aposta: BetItem) => void;
   open: boolean;
   onClose: () => void;
+  /** Print colado na lista de Apostas, antes do modal existir. */
+  pendingImage?: File | null;
+  onPendingImageConsumed?: () => void;
 }
 
-export function ApostaFormModal({ onApostaAdded, open, onClose }: ApostaFormModalProps) {
+export function ApostaFormModal({ onApostaAdded, open, onClose, pendingImage, onPendingImageConsumed }: ApostaFormModalProps) {
   const isMobile = useIsMobile();
 
   if (isMobile) {
-    return <MobileApostaFormSheet open={open} onClose={onClose} onApostaAdded={onApostaAdded} />;
+    return (
+      <MobileApostaFormSheet
+        open={open}
+        onClose={onClose}
+        onApostaAdded={onApostaAdded}
+        pendingImage={pendingImage}
+        onPendingImageConsumed={onPendingImageConsumed}
+      />
+    );
   }
 
   const handleApostaAdded = (aposta: BetItem) => {
@@ -24,11 +35,16 @@ export function ApostaFormModal({ onApostaAdded, open, onClose }: ApostaFormModa
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nova aposta</DialogTitle>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-6">
+        <DialogHeader className="mb-1">
+          <DialogTitle className="text-xl">Nova aposta</DialogTitle>
         </DialogHeader>
-        <ApostaForm onApostaAdded={handleApostaAdded} />
+        <ApostaForm
+          onApostaAdded={handleApostaAdded}
+          pendingImage={pendingImage}
+          onPendingImageConsumed={onPendingImageConsumed}
+          onCancel={onClose}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -1,30 +1,53 @@
 import { useEffect, useState } from "react";
 
+export interface KeyboardInset {
+  /** Altura ocupada pelo teclado virtual, em px (0 quando fechado). */
+  inset: number;
+  /** Altura visível acima do teclado, em px (0 quando ele está fechado). */
+  viewportHeight: number;
+}
+
+const CLOSED: KeyboardInset = { inset: 0, viewportHeight: 0 };
+
 /**
- * Altura ocupada pelo teclado virtual, em px (0 quando fechado).
+ * Onde o teclado virtual começa, para um bottom sheet `position: fixed`.
  *
  * No iOS o teclado NÃO encolhe o layout viewport — só o visual viewport. Como
- * `dvh` e `position: fixed; bottom: 0` se resolvem pelo layout viewport, um
- * bottom sheet fica ancorado atrás do teclado: o campo em foco e o resultado
- * da busca somem embaixo dele. A diferença entre os dois viewports é
- * justamente a altura do teclado.
+ * `dvh` e `bottom: 0` se resolvem pelo layout viewport, um sheet ancorado no
+ * fundo fica atrás do teclado. A diferença entre os dois viewports é
+ * justamente a altura do teclado (mais a barra de acessório do Safari, que o
+ * visual viewport também exclui).
  *
- * No Android o Chrome já encolhe o layout viewport por padrão, então a conta
- * dá ~0 e nada muda. No desktop os dois viewports são iguais, idem.
+ * A altura do layout viewport é MEDIDA com uma sonda `fixed; top:0; bottom:0`
+ * em vez de deduzida de `innerHeight`/`clientHeight`: no iOS esses dois
+ * divergem do que o browser de fato usa pra resolver `bottom` (a barra inferior
+ * do Safari recolhe junto com o teclado e cada um reage a isso de um jeito), e
+ * errar por ~100px deixava o sheet flutuando com uma faixa da página aparecendo
+ * embaixo dele. A sonda é a mesma coisa que o sheet: um elemento fixed. O que
+ * ela mede é, por definição, o que ele vai obedecer.
+ *
+ * No Android o Chrome já encolhe o layout viewport, e no desktop os dois
+ * viewports são iguais: a conta dá ~0 e nada muda.
  */
-export function useKeyboardInset(): number {
-  const [inset, setInset] = useState(0);
+export function useKeyboardInset(): KeyboardInset {
+  const [state, setState] = useState<KeyboardInset>(CLOSED);
 
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
 
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none";
+    document.body.appendChild(probe);
+
     const update = () => {
+      const layoutHeight = probe.getBoundingClientRect().height;
       // offsetTop entra na conta porque o iOS desloca o visual viewport quando
       // rola a página com o teclado aberto.
-      const hidden = window.innerHeight - vv.height - vv.offsetTop;
+      const hidden = layoutHeight - vv.height - vv.offsetTop;
       // Abaixo de ~80px é ruído (barra de endereço encolhendo, safe area), não teclado.
-      setInset(hidden > 80 ? Math.round(hidden) : 0);
+      setState(hidden > 80 ? { inset: Math.round(hidden), viewportHeight: Math.round(vv.height) } : CLOSED);
     };
 
     update();
@@ -33,8 +56,9 @@ export function useKeyboardInset(): number {
     return () => {
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
+      probe.remove();
     };
   }, []);
 
-  return inset;
+  return state;
 }
