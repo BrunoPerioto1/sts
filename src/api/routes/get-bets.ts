@@ -81,15 +81,10 @@ export async function getBets(params?: BetFilterDto) {
 }
 
 
-export enum ResultIdEnum {
-  WON = 1,
-  LOST = 2,
-  CANCELED = 3,
-  HALF_WON = 4,
-  HALF_LOST = 5,
-  CASHOUT = 6,
-  PENDING = 9
-}
+// O enum mora em result-id.ts (sem import de HTTP, pra ser testável com
+// `node --test`). Continua saindo daqui pra não mexer nos imports existentes.
+export { ResultIdEnum } from './result-id';
+import { ResultIdEnum } from './result-id';
 
 export interface FinalizarApostaDto {
   resultId: ResultIdEnum;

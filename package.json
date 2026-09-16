@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

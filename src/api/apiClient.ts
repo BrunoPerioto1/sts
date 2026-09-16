@@ -30,6 +30,10 @@ export const apiClient = () => {
     baseURL: baseURL + 'users/',
   });
 
+  const settlement = axios.create({
+    baseURL: baseURL + 'settlement/',
+  });
+
   const tips = axios.create({
     baseURL: baseURL + 'tips',
   });
@@ -52,6 +56,7 @@ export const apiClient = () => {
   attachAuthInterceptor(transactions);
   attachAuthInterceptor(users);
   attachAuthInterceptor(auth);
+  attachAuthInterceptor(settlement);
   attachAuthInterceptor(tips);
 
 
@@ -62,6 +67,7 @@ export const apiClient = () => {
     transactions,
     auth,
     users,
+    settlement,
     tips,
   };
 };

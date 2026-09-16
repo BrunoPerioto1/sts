@@ -121,9 +121,9 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
       const undo = async () => {
         const uniqueOriginal = new Set(previous.map((p) => p.resultId));
         if (uniqueOriginal.size === 1) {
-          await finalizeMultipleBets({ betIds: previous.map((p) => p.id), resultId: previous[0].resultId });
+          await finalizeMultipleBets({ betIds: previous.map((p) => p.id), resultId: previous[0].resultId as ResultIdEnum });
         } else {
-          await Promise.all(previous.map((p) => finalizeBet(p.id, { resultId: p.resultId })));
+          await Promise.all(previous.map((p) => finalizeBet(p.id, { resultId: p.resultId as ResultIdEnum })));
         }
         await reload();
         actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
