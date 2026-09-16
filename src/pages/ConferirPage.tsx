@@ -22,6 +22,7 @@ import {
 } from "@/lib/settlement-view";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { SuggestionDetail } from "@/components/conferir/SuggestionDetail";
 import {
   ArrowsClockwise,
   CheckCircle,
@@ -106,10 +107,11 @@ interface RowProps {
   checked: boolean;
   onToggle: () => void;
   onDismiss: () => void;
+  onOpen: () => void;
   busy: boolean;
 }
 
-function SuggestionRow({ suggestion, checked, onToggle, onDismiss, busy }: RowProps) {
+function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy }: RowProps) {
   const placar =
     suggestion.homeScore != null && suggestion.awayScore != null
       ? `${suggestion.homeScore}x${suggestion.awayScore}`
@@ -148,6 +150,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, busy }: RowPr
             aria-label={marcar}
           />
           <div className="min-w-0 flex-1 space-y-2">
+            <button type="button" onClick={onOpen} className="block w-full space-y-2 text-left">
             <div className="flex items-start justify-between gap-2">
               <p className="min-w-0 truncate text-xs text-zinc-500">
                 {quando && `${quando.dia} ${quando.hora} · `}
@@ -162,6 +165,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, busy }: RowPr
               <span className="mr-1.5 font-semibold text-zinc-200">{placar}</span>
               {suggestion.explanation}
             </p>
+            </button>
 
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-zinc-500">
@@ -190,16 +194,24 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, busy }: RowPr
           )}
         </div>
 
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={onOpen}
+          onKeyDown={(e) => e.key === "Enter" && onOpen()}
+          className="min-w-0 cursor-pointer md:col-span-3 md:grid md:grid-cols-subgrid md:items-center"
+        >
         <div className="min-w-0">
-          <p className="truncate font-medium text-white">{suggestion.game}</p>
+          <p className="truncate font-medium text-white hover:underline">{suggestion.game}</p>
           <p className="truncate text-xs text-zinc-500">{suggestion.market}</p>
         </div>
 
         <span className="font-semibold text-zinc-200">{placar}</span>
 
-        <p className="truncate text-xs text-zinc-400" title={suggestion.explanation}>
+        <p className="truncate text-xs text-zinc-400" >
           {suggestion.explanation}
         </p>
+        </div>
 
         <span className="whitespace-nowrap text-xs text-zinc-500">
           {stakeCurta(suggestion.stake)} @ {suggestion.odd.toFixed(2)}
@@ -344,6 +356,7 @@ export default function ConferirPage() {
   const { data: fila } = useSettlementQueue();
   const { compute, confirm, dismiss } = useSettlementActions();
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [aberta, setAberta] = useState<SettlementSuggestion | null>(null);
 
   const lista = useMemo(() => suggestions ?? [], [suggestions]);
 
@@ -409,6 +422,14 @@ export default function ConferirPage() {
         </Button>
       }
     >
+      <SuggestionDetail
+        suggestion={aberta}
+        checked={!!aberta && selected.has(aberta.betId)}
+        busy={ocupado}
+        onClose={() => setAberta(null)}
+        onToggle={() => aberta && toggle(aberta.betId)}
+        onDismiss={() => aberta && dismiss.mutate([aberta.betId])}
+      />
       <div className="pb-32 md:pb-6">
         {isLoading || compute.isPending ? (
           <LendoPlacares fila={fila} />
@@ -458,6 +479,7 @@ export default function ConferirPage() {
                   checked={selected.has(s.betId)}
                   onToggle={() => toggle(s.betId)}
                   onDismiss={() => dismiss.mutate([s.betId])}
+                  onOpen={() => setAberta(s)}
                   busy={ocupado}
                 />
               ))}
