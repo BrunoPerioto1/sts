@@ -303,10 +303,13 @@ function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
 function Vazio({
   fila,
   busy,
+  buscando,
   onCompute,
 }: {
   fila: SettlementQueue | undefined;
   busy: boolean;
+  /** Busca em andamento: o card fica, só troca o ícone e a frase. */
+  buscando: boolean;
   onCompute: () => void;
 }) {
   return (
@@ -333,11 +336,18 @@ function Vazio({
       )}
 
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center">
-        <CheckCircle size={32} className="mx-auto mb-3 text-zinc-600" />
-        <p className="text-sm text-zinc-300">Nenhum resultado pra conferir</p>
+        {buscando ? (
+          <ArrowsClockwise size={32} className="mx-auto mb-3 animate-spin text-zinc-500" />
+        ) : (
+          <CheckCircle size={32} className="mx-auto mb-3 text-zinc-600" />
+        )}
+        <p className="text-sm text-zinc-300" aria-live="polite">
+          {buscando ? "Buscando resultados…" : "Nenhum resultado pra conferir"}
+        </p>
         <p className="mx-auto mt-1 max-w-[320px] text-xs text-zinc-600">
-          Quando o bot fechar o placar de uma aposta pendente, a proposta aparece
-          aqui.
+          {buscando
+            ? "Lendo os placares dos jogos que já terminaram."
+            : "Quando o bot fechar o placar de uma aposta pendente, a proposta aparece aqui."}
         </p>
       </div>
 
@@ -441,10 +451,18 @@ export default function ConferirPage() {
         onDismiss={() => aberta && dismiss.mutate([aberta.betId])}
       />
       <div className="pb-32 md:pb-6">
-        {isLoading || compute.isPending ? (
+        {/* Carregamento de tela cheia só na primeira carga. Numa nova busca
+            (botão ou puxar) o conteúdo fica: trocar tudo por skeleton e voltar
+            pro mesmo vazio parecia a tela quebrando. */}
+        {isLoading ? (
           <LendoPlacares fila={fila} />
         ) : lista.length === 0 ? (
-          <Vazio fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
+          <Vazio
+            fila={fila}
+            busy={ocupado}
+            buscando={compute.isPending}
+            onCompute={() => compute.mutate()}
+          />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
             <FilaNotes fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
