@@ -72,3 +72,19 @@ export interface SettlementQueue {
 export function getSettlementQueue() {
   return unwrap<SettlementQueue>(api.settlement.get('queue'));
 }
+
+/** Apostas com jogo encerrado que o bot não soube resolver. */
+export interface SettlementReviewItem {
+  betId: number;
+  game: string;
+  market: string;
+  stake: number | string;
+  odd: number | string;
+  eventStartAt: string | null;
+  reason: string | null;
+  explanation: string;
+}
+
+export function getSettlementReview() {
+  return unwrap<SettlementReviewItem[]>(api.settlement.get('review'));
+}

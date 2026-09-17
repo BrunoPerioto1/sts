@@ -22,7 +22,7 @@ export function useApostasFilters() {
     if (!fromUrl) return [];
     return fromUrl.split(",").map(Number).filter((n) => Number.isFinite(n));
   });
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
   const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
   // Padrao: dia 1 ate hoje. O chip "Mes atual" continua indo ate o fim do mes.
   const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));

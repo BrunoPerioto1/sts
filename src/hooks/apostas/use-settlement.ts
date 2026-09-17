@@ -6,6 +6,8 @@ import {
   confirmSettlement,
   dismissSettlement,
   getSettlementQueue,
+  getSettlementReview,
+  type SettlementReviewItem,
   getSettlementSuggestions,
   type SettlementQueue,
   type SettlementSuggestion,
@@ -14,6 +16,15 @@ import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 
 const SETTLEMENT_KEY = ["settlement", "suggestions"] as const;
 const QUEUE_KEY = ["settlement", "queue"] as const;
+const REVIEW_KEY = ["settlement", "review"] as const;
+
+export function useSettlementReview(enabled: boolean) {
+  return useQuery<SettlementReviewItem[]>({
+    queryKey: REVIEW_KEY,
+    queryFn: getSettlementReview,
+    enabled,
+  });
+}
 
 export function useSettlementSuggestions() {
   return useQuery<SettlementSuggestion[]>({
@@ -43,6 +54,7 @@ export function useSettlementActions() {
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: SETTLEMENT_KEY });
     void queryClient.invalidateQueries({ queryKey: QUEUE_KEY });
+    void queryClient.invalidateQueries({ queryKey: REVIEW_KEY });
   };
 
   const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;

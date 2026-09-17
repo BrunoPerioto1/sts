@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +12,7 @@ import type {
 import {
   useSettlementActions,
   useSettlementQueue,
+  useSettlementReview,
   useSettlementSuggestions,
 } from "@/hooks/apostas/use-settlement";
 import { nextSelection } from "@/lib/settlement-selection";
@@ -268,11 +270,62 @@ function FilaNotes({
       )}
       {!!n && (
         <p className="text-zinc-500">
-          {n} aposta{n === 1 ? "" : "s"} fic{n === 1 ? "ou" : "aram"} sem proposta e
-          segue{n === 1 ? "" : "m"} pendente{n === 1 ? "" : "s"}.
+          {n} sem proposta — lista abaixo.
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * As que o bot não resolveu. Antes era só um número; agora dá pra ver quais
+ * são e pular direto pra Apostas já filtrado nela. Lista aqui, ação lá.
+ */
+function SemProposta({ enabled }: { enabled: boolean }) {
+  const { data } = useSettlementReview(enabled);
+  if (!enabled || !data?.length) return null;
+  const n = data.length;
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
+      <header className="border-b border-white/[0.06] px-4 py-3">
+        <h2 className="text-base font-semibold text-white">Nada pra confirmar</h2>
+        <p className="mt-0.5 text-xs text-zinc-500">
+          {n === 1 ? "Esta o bot não resolveu" : `Estas ${n} o bot não resolveu`} — liquide na mão
+          quando quiser.
+        </p>
+      </header>
+      <ul>
+        {data.map((b) => {
+          const quando = b.eventStartAt
+            ? `${diaRelativo(b.eventStartAt)} ${formatTime(b.eventStartAt)} · `
+            : "";
+          return (
+            <li
+              key={b.betId}
+              className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 last:border-b-0"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs text-zinc-500">
+                  {quando}
+                  {stakeCurta(Number(b.stake))} @ {Number(b.odd).toFixed(2)}
+                </p>
+                <p className="truncate text-sm font-medium text-white">{b.game}</p>
+                <p className="truncate text-xs text-zinc-400">{b.market}</p>
+                {b.explanation && (
+                  <p className="truncate text-[11px] text-zinc-600">{b.explanation}</p>
+                )}
+              </div>
+              <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Link to={`/bets?status=${ResultIdEnum.PENDING}&period=tudo&q=${encodeURIComponent(b.game)}`}>
+                  Liquidar
+                </Link>
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -351,14 +404,7 @@ function Vazio({
         </p>
       </div>
 
-      {!!fila?.undecided && (
-        <p className="px-1 text-xs text-zinc-500">
-          {fila.undecided} aposta{fila.undecided === 1 ? "" : "s"} fic
-          {fila.undecided === 1 ? "ou" : "aram"} sem proposta e segue
-          {fila.undecided === 1 ? "" : "m"} pendente
-          {fila.undecided === 1 ? "" : "s"}.
-        </p>
-      )}
+      <SemProposta enabled={!!fila?.undecided} />
     </div>
   );
 }
@@ -577,6 +623,11 @@ export default function ConferirPage() {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+        {!isLoading && !!lista.length && (
+          <div className="mt-4">
+            <SemProposta enabled={!!fila?.undecided} />
           </div>
         )}
       </div>
