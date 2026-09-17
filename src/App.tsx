@@ -9,6 +9,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ 
 const ApostasPage = lazy(() => import("./pages/ApostasPage"));
 const CasasPage = lazy(() => import("./pages/CasasPage").then((m) => ({ default: m.CasasPage })));
 const ConferirPage = lazy(() => import("./pages/ConferirPage"));
+const ConferirPendentesPage = lazy(() => import("./pages/ConferirPendentesPage"));
 const TipsPage = lazy(() => import("./pages/TipsPage"));
 const PerfilPage = lazy(() => import("./pages/PerfilPage"));
 const AccountPage = lazy(() => import("./pages/perfil/AccountPage"));
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
           <Route path="/settlement" element={<RequireAuth><ConferirPage /></RequireAuth>} />
+          <Route path="/settlement/review" element={<RequireAuth><ConferirPendentesPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
           <Route path="/tips" element={<RequireAuth><TipsPage /></RequireAuth>} />
         </Route>
