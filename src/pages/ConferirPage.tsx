@@ -358,7 +358,8 @@ function Vazio({
         </div>
       )}
 
-      <div className="grid flex-1 place-items-center rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
+      {/* Sem moldura: o vazio e' a propria tela, nao um card dentro dela. */}
+      <div className="grid flex-1 place-items-center p-8 text-center">
         <div>
           {buscando ? (
             <ArrowsClockwise size={32} className="mx-auto mb-3 animate-spin text-zinc-500" />
