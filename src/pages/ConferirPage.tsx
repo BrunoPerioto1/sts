@@ -334,7 +334,9 @@ function Vazio({
   onCompute: () => void;
 }) {
   return (
-    <div className="space-y-3">
+    // A tela vazia ocupa a altura toda e empurra o cartao das pendentes pro
+    // rodape: ali ele e' a unica saida, em vez de mais um bloco na pilha.
+    <div className="flex min-h-[calc(100svh-13rem)] flex-col gap-3 md:min-h-[calc(100vh-11rem)]">
       {fila?.hasMore && (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
           <p className="text-[11px] font-semibold tracking-wide text-zinc-500">
@@ -356,20 +358,24 @@ function Vazio({
         </div>
       )}
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center">
-        {buscando ? (
-          <ArrowsClockwise size={32} className="mx-auto mb-3 animate-spin text-zinc-500" />
-        ) : (
-          <CheckCircle size={32} className="mx-auto mb-3 text-zinc-600" />
-        )}
-        <p className="text-sm text-zinc-300" aria-live="polite">
-          {buscando ? "Buscando resultados…" : "Nenhum resultado pra conferir"}
-        </p>
-        <p className="mx-auto mt-1 max-w-[320px] text-xs text-zinc-600">
-          {buscando
-            ? "Lendo os placares dos jogos que já terminaram."
-            : "Quando o bot fechar o placar de uma aposta pendente, a proposta aparece aqui."}
-        </p>
+      <div className="grid flex-1 place-items-center rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
+        <div>
+          {buscando ? (
+            <ArrowsClockwise size={32} className="mx-auto mb-3 animate-spin text-zinc-500" />
+          ) : (
+            <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-white/[0.04] text-zinc-500">
+              <CheckCircle size={26} />
+            </span>
+          )}
+          <p className="text-lg font-semibold text-white" aria-live="polite">
+            {buscando ? "Buscando resultados…" : "Nenhuma proposta nova"}
+          </p>
+          <p className="mx-auto mt-1 max-w-[320px] text-sm text-zinc-500">
+            {buscando
+              ? "Lendo os placares dos jogos que já terminaram."
+              : "O bot já passou por todas as apostas deste lote."}
+          </p>
+        </div>
       </div>
 
       <SemProposta enabled={!!fila?.undecided} />
