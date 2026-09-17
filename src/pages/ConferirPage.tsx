@@ -285,14 +285,17 @@ function FilaNotes({
  */
 function SemProposta({ enabled }: { enabled: boolean }) {
   const { data } = useSettlementReview(enabled);
+  const [aberto, setAberto] = useState(false);
   if (!enabled || !data?.length) return null;
   const n = data.length;
 
   return (
     <div className="space-y-3">
-    <Link
-      to={`/bets?status=${ResultIdEnum.PENDING}&period=tudo`}
-      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.05]"
+    <button
+      type="button"
+      onClick={() => setAberto((v) => !v)}
+      aria-expanded={aberto}
+      className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3 text-left transition-colors hover:bg-white/[0.05]"
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-zinc-300">
         <HandPointing size={20} />
@@ -301,10 +304,16 @@ function SemProposta({ enabled }: { enabled: boolean }) {
         <span className="block text-sm font-medium text-white">
           {n} espera{n === 1 ? "" : "m"} você
         </span>
-        <span className="block text-xs text-zinc-500">Liquidar na mão em Apostas</span>
+        <span className="block text-xs text-zinc-500">
+          {aberto ? "Esconder a lista" : "Ver as apostas pendentes"}
+        </span>
       </span>
-      <CaretRight size={16} className="shrink-0 text-zinc-500" />
-    </Link>
+      <CaretRight
+        size={16}
+        className={cn("shrink-0 text-zinc-500 transition-transform", aberto && "rotate-90")}
+      />
+    </button>
+    {aberto && (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
       <header className="border-b border-white/[0.06] px-4 py-3">
         <h2 className="text-base font-semibold text-white">Nada pra confirmar</h2>
@@ -344,6 +353,7 @@ function SemProposta({ enabled }: { enabled: boolean }) {
         })}
       </ul>
     </section>
+    )}
     </div>
   );
 }
