@@ -23,6 +23,8 @@ import {
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SuggestionDetail } from "@/components/conferir/SuggestionDetail";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import {
   ArrowsClockwise,
   CheckCircle,
@@ -385,6 +387,13 @@ export default function ConferirPage() {
   const marcadas = lista.filter((s) => selected.has(s.betId));
   const total = marcadas.reduce((sum, s) => sum + lucroSugerido(s), 0);
   const ocupado = confirm.isPending || dismiss.isPending || compute.isPending;
+  // Puxar a lista no celular busca resultados novos, igual ao botão "Calcular
+  // próximo lote" do desktop. Desligado com o detalhe aberto: o gesto ali é
+  // rolar o sheet. O erro já vira toast no onError da mutation.
+  const pull = usePullToRefresh(
+    () => compute.mutateAsync().catch(() => undefined),
+    !aberta && !ocupado,
+  );
   const todasMarcadas = lista.length > 0 && selected.size === lista.length;
   const resumoLote = formatTally(tally(lista));
   const resumoSelecao = formatTally(tally(marcadas), ", ");
@@ -422,6 +431,7 @@ export default function ConferirPage() {
         </Button>
       }
     >
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       <SuggestionDetail
         suggestion={aberta}
         checked={!!aberta && selected.has(aberta.betId)}

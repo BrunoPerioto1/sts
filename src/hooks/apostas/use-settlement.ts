@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { CalendarCheck, ListChecks, Question } from "@phosphor-icons/react";
+import { actionToast, Trash } from "@/lib/action-toast";
 import {
   computeSettlement,
   confirmSettlement,
@@ -44,30 +45,44 @@ export function useSettlementActions() {
     void queryClient.invalidateQueries({ queryKey: QUEUE_KEY });
   };
 
+  const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
   const compute = useMutation({
     mutationFn: computeSettlement,
     onSuccess: (summary) => {
       void refresh();
       if (summary.suggested) {
-        const n = summary.suggested;
-        toast.success(
-          `${n} aposta${n === 1 ? "" : "s"} pronta${n === 1 ? "" : "s"} pra conferir`,
-        );
+        actionToast.success({
+          icon: ListChecks,
+          title: `${plural(summary.suggested, "aposta pronta", "apostas prontas")} pra conferir`,
+          description: summary.undecided
+            ? `${plural(summary.undecided, "outra ficou", "outras ficaram")} sem proposta.`
+            : "Revise e confirme o que estiver certo.",
+          duration: 3500,
+        });
         return;
       }
       // Analisar e nao saber decidir e' diferente de nao achar nada: dizer
       // "nenhum resultado" nessas horas esconde aposta que o jogo ja' terminou
       // e que continua esperando o usuario resolver na mao.
       if (summary.undecided) {
-        const n = summary.undecided;
-        toast.info(
-          `${n} aposta${n === 1 ? "" : "s"} com placar que o bot não soube resolver`,
-        );
+        actionToast.success({
+          icon: Question,
+          title: `${plural(summary.undecided, "aposta", "apostas")} sem proposta`,
+          description: "O jogo acabou, mas o bot não entendeu o mercado. Liquide na tela de apostas.",
+          duration: 4500,
+        });
         return;
       }
-      toast.success("Nenhum resultado novo encontrado");
+      actionToast.success({
+        icon: CalendarCheck,
+        title: "Tudo conferido",
+        description: "Nenhum jogo com aposta pendente terminou desde a última busca. Os placares chegam todo dia às 6h.",
+        duration: 3500,
+      });
     },
-    onError: (e: Error) => toast.error(e.message || "Falha ao buscar resultados"),
+    onError: (e: Error) =>
+      actionToast.error({ title: "Não deu pra buscar resultados", description: e.message || "Tente de novo em instantes." }),
   });
 
   const confirm = useMutation({
@@ -77,18 +92,27 @@ export function useSettlementActions() {
     onSuccess: ({ confirmed }) => {
       void refresh();
       void invalidateBetData();
-      toast.success(`${confirmed} aposta${confirmed === 1 ? "" : "s"} planilhada${confirmed === 1 ? "" : "s"}`);
+      actionToast.success({
+        title: plural(confirmed, "aposta planilhada", "apostas planilhadas"),
+        description: "Lucro e saldo já foram atualizados.",
+      });
     },
-    onError: (e: Error) => toast.error(e.message || "Falha ao planilhar"),
+    onError: (e: Error) =>
+      actionToast.error({ title: "Não deu pra planilhar", description: e.message || "Tente de novo em instantes." }),
   });
 
   const dismiss = useMutation({
     mutationFn: dismissSettlement,
     onSuccess: ({ dismissed }) => {
       void refresh();
-      toast.success(`${dismissed} sugestão${dismissed === 1 ? "" : "ões"} descartada${dismissed === 1 ? "" : "s"}`);
+      actionToast.success({
+        icon: Trash,
+        title: plural(dismissed, "proposta descartada", "propostas descartadas"),
+        description: "As apostas seguem pendentes pra liquidar na mão.",
+      });
     },
-    onError: (e: Error) => toast.error(e.message || "Falha ao descartar"),
+    onError: (e: Error) =>
+      actionToast.error({ title: "Não deu pra descartar", description: e.message || "Tente de novo em instantes." }),
   });
 
   return { compute, confirm, dismiss };

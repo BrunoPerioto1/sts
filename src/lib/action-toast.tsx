@@ -17,6 +17,8 @@ interface ActionToastSuccessOptions {
   description?: ReactNode;
   action?: ActionToastAction;
   icon?: ActionToastIcon;
+  /** Texto longo precisa de mais tempo que o padrão de 1.5s. */
+  duration?: number;
 }
 
 interface ActionToastErrorOptions {
@@ -104,7 +106,7 @@ function ActionToastCard({
 }
 
 export const actionToast = {
-  success({ title, description, action, icon = CheckCircle }: ActionToastSuccessOptions) {
+  success({ title, description, action, icon = CheckCircle, duration }: ActionToastSuccessOptions) {
     return sonnerToast.custom(
       (id) => (
         <ActionToastCard
@@ -116,7 +118,7 @@ export const actionToast = {
           onClose={() => sonnerToast.dismiss(id)}
         />
       ),
-      { duration: action ? SUCCESS_WITH_ACTION_DURATION : SUCCESS_DURATION }
+      { duration: duration ?? (action ? SUCCESS_WITH_ACTION_DURATION : SUCCESS_DURATION) }
     );
   },
   error({ title = "Erro", description }: ActionToastErrorOptions) {
