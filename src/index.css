@@ -126,6 +126,21 @@
     @apply border-border;
   }
 
+  /* App, não documento: segurar o dedo num texto não abre seleção/copiar.
+     Campos de digitação continuam selecionáveis. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input,
+  textarea,
+  [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
   /* Raiz em 100%: 1rem = 16px, igual ao padrao do browser. Antes estava em
      115% (raiz 18.4px), o que empurrava a escala do Tailwind pra cima —
      text-xs virava 13.8px — e obrigava todo tamanho "pequeno" a fugir pra px
