@@ -1,9 +1,11 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "@phosphor-icons/react";
+import { Check, CheckCircle, MinusCircle, X, XCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { SettlementSuggestion } from "@/api/routes/get-settlement";
+import { ResultIdEnum } from "@/api/routes/result-id";
+import { lucroSugerido } from "@/lib/settlement-view";
 import { formatCurrency, formatDate, formatTime } from "@/lib/format";
 
 interface Props {
@@ -20,26 +22,52 @@ interface Props {
 const itens = (texto: string, sep: string) =>
   texto.split(sep).map((t) => t.trim()).filter(Boolean);
 
+const VISUAL = {
+  [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", cor: "text-emerald-400", caixa: "border-emerald-500/25 bg-emerald-500/[0.07]", Icone: CheckCircle },
+  [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", cor: "text-red-400", caixa: "border-red-500/25 bg-red-500/[0.07]", Icone: XCircle },
+} as const;
+const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", cor: "text-zinc-300", caixa: "border-white/10 bg-white/[0.04]", Icone: MinusCircle };
+
 function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }: Props & { suggestion: SettlementSuggestion }) {
-  const placar =
-    s.homeScore != null && s.awayScore != null ? `${s.homeScore}x${s.awayScore}` : "—";
+  const v = VISUAL[s.suggestedResultId as keyof typeof VISUAL] ?? ANULADA;
+  const lucro = lucroSugerido(s);
+  const [casa, fora] = s.game.split(/\s+x\s+/i);
+  const temPlacar = s.homeScore != null && s.awayScore != null;
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-5 pb-4">
       <p className="text-sm text-zinc-500">
         {s.eventStartAt && `${formatDate(s.eventStartAt)} · ${formatTime(s.eventStartAt)} · `}
         {formatCurrency(s.stake)} @ {s.odd.toFixed(2)}
       </p>
 
-      <div>
-        <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500">Placar</p>
-        <p className="text-2xl font-semibold tabular-nums">{placar}</p>
+      <div className={`flex items-end justify-between rounded-xl border px-4 py-3.5 ${v.caixa}`}>
+        <div>
+          <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Proposta do bot</p>
+          <p className={`text-2xl font-medium ${v.cor}`}>{v.rotulo}</p>
+        </div>
+        <div className="text-right">
+          <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Lucro</p>
+          <p className={`text-xl tabular-nums ${v.cor}`}>
+            {lucro > 0 ? "+" : ""}{formatCurrency(lucro)}
+          </p>
+        </div>
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs uppercase tracking-wide text-zinc-500">Seleções</p>
+        <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Placar final</p>
+        <p className="flex items-baseline gap-3">
+          <span className="text-3xl font-semibold tabular-nums text-white">
+            {temPlacar ? `${s.homeScore}×${s.awayScore}` : "—"}
+          </span>
+          {casa && fora && <span className="text-sm text-zinc-500">{casa} · {fora}</span>}
+        </p>
+      </div>
+
+      <div>
+        <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Seleção</p>
         <ul className="space-y-1.5">
           {itens(s.market, " / ").map((m, i) => (
-            <li key={i} className="rounded-md bg-white/[0.04] px-2.5 py-2 text-sm text-zinc-200">
+            <li key={i} className="rounded-lg bg-white/[0.04] px-3 py-2.5 text-sm text-zinc-200">
               {m}
             </li>
           ))}
@@ -47,20 +75,24 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs uppercase tracking-wide text-zinc-500">Como o bot decidiu</p>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-400">
+        <p className="mb-2 text-[11px] uppercase tracking-wider text-zinc-500">Como o bot decidiu</p>
+        <ul className="space-y-2 text-sm text-zinc-300">
           {itens(s.explanation, ";").map((e, i) => (
-            <li key={i}>{e}</li>
+            <li key={i} className="flex items-start gap-2.5">
+              <v.Icone weight="fill" size={18} className={`mt-px shrink-0 ${v.cor}`} />
+              {e}
+            </li>
           ))}
         </ul>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 pt-1">
-        <Button variant="outline" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
+      <div className="grid grid-cols-[auto_1fr] gap-2 pt-1">
+        <Button variant="outline" className="h-12 px-6" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
           Descartar
         </Button>
-        <Button className="bg-accent text-white" onClick={() => { onToggle(); onClose(); }}>
-          {checked ? "Desmarcar" : "Marcar"}
+        <Button className="h-12 bg-blue-600 text-white hover:bg-blue-500" onClick={() => { onToggle(); onClose(); }}>
+          {!checked && <Check size={18} />}
+          {checked ? "Desmarcar" : v.acao}
         </Button>
       </div>
     </div>
