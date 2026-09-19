@@ -15,6 +15,7 @@ import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { PeriodSheet } from "../PeriodSheet";
 import { PRESET_LABEL } from "@/lib/dashboard-periods";
 import { ProfitBarChart } from "../ProfitBarChart";
+import { CumulativeProfitChart } from "../CumulativeProfitChart";
 import { DashboardProfitHero, daysSummary } from "../DashboardProfitHero";
 
 // Barras também representam um único dia; vazio só quando não há dados.
@@ -41,6 +42,7 @@ export function DashboardMobileView({
   onCustomRange,
 }: DashboardMobileViewProps) {
   const [periodOpen, setPeriodOpen] = useState(false);
+  const [grafico, setGrafico] = useState<"dia" | "acumulado">("dia");
   const { me } = useMe();
   const invalidate = useInvalidateBetData();
   const pull = usePullToRefresh(invalidate);
@@ -84,7 +86,27 @@ export function DashboardMobileView({
 
         <div className="mt-5 animate-rise stagger" style={stagger(2)}>
           {dailyData.length >= MIN_DAYS_FOR_CHART ? (
-            <ProfitBarChart data={dailyData} />
+            <>
+              <div role="tablist" className="mb-3 grid grid-cols-2 rounded-xl bg-white/[0.04] p-1 text-sm">
+                {(["dia", "acumulado"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="tab"
+                    aria-selected={grafico === v}
+                    onClick={() => setGrafico(v)}
+                    className={`press h-9 rounded-lg capitalize transition-colors ${grafico === v ? "bg-white/[0.1] text-white" : "text-zinc-400"}`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              {grafico === "dia" ? (
+                <ProfitBarChart data={dailyData} />
+              ) : (
+                <CumulativeProfitChart data={dailyData} height={180} />
+              )}
+            </>
           ) : (
             <div className="rounded-lg bg-white/[0.03] p-3">
               <div className="flex items-start gap-2">
