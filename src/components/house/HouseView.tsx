@@ -46,7 +46,7 @@ export function CasasApostaView() {
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
     if (houseIds.length > 0) list = list.filter((h) => houseIds.includes(h.houseId));
-    if (onlyWithBalance) list = list.filter((h) => Number(h.realHouseBalance) !== 0);
+    if (onlyWithBalance) list = list.filter((h) => Number(h.realHouseBalance) > 0);
     list = [...list].sort((a, b) => {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);
       if (sort === "profit") return Number(b.totalBetProfit) - Number(a.totalBetProfit);
@@ -56,7 +56,7 @@ export function CasasApostaView() {
   }, [houses, searchTerm, houseIds, onlyWithBalance, sort]);
 
   const maxBalance = useMemo(
-    () => filteredHouses.reduce((max, h) => Math.max(max, Math.abs(Number(h.realHouseBalance))), 0),
+    () => filteredHouses.reduce((max, h) => Math.max(max, Number(h.realHouseBalance)), 0),
     [filteredHouses]
   );
   const houseOptions = useMemo(

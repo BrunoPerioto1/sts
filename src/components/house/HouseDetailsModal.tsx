@@ -69,8 +69,8 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
             <div>
               <div className="text-[11px] uppercase tracking-wider opacity-45">Saldo atual</div>
-              <div className={cn("text-[34px] leading-tight font-medium tabular-nums", realBalance < 0 && "text-negative")}>
-                {formatCurrency(house.houseBalance)}
+              <div className={cn("text-[34px] leading-tight font-medium tabular-nums", realBalance < 0 && "opacity-45")}>
+                {formatCurrency(Math.max(0, realBalance))}
               </div>
               <p className={cn("text-xs", noMovement ? signClass(profit) : "opacity-45")}>
                 {noMovement
@@ -82,7 +82,9 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
             </div>
 
             <div>
-              <Row label="Saldo real" value={formatCurrency(realBalance)} valueClass={signClass(realBalance)} />
+              {realBalance < 0 && (
+                <Row label="A conferir" value={formatCurrency(realBalance)} valueClass="text-negative" />
+              )}
               <Row label="Depósitos" value={formatCurrency(deposit)} />
               <Row label="Saques" value={formatCurrency(withdrawal)} />
               <Row label="Lucro em apostas" value={formatCurrency(profit)} valueClass={signClass(profit)} />

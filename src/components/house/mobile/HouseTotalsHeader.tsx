@@ -41,10 +41,13 @@ export function HouseTotalsHeader({ metrics, loading }: { metrics: HouseMetricsD
           <p className="text-base font-medium tabular-nums">{formatCurrency(metrics.totalWithdrawal)}</p>
         </div>
         <div className="pl-3">
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Negativas</p>
+          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">A conferir</p>
           <p className={cn("text-base font-medium tabular-nums", metrics.negativeHouses > 0 && "text-negative")}>
             {metrics.negativeHouses}
           </p>
+          {metrics.negativeHouses > 0 && (
+            <p className="text-xs text-negative tabular-nums">{formatCurrency(metrics.negativeAmount)}</p>
+          )}
         </div>
       </div>
     </div>

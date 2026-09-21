@@ -31,10 +31,15 @@ export function HousesMetrics({ metrics, withBalanceCount, isLoading = false }: 
       hint: moved === 0 ? "nenhum depósito ou saque" : "depósitos + saques",
     },
     {
-      label: "Casas negativas",
+      // "A conferir" e não "Casas negativas": saldo real abaixo de zero não é
+      // dívida com a casa, é depósito/resultado que faltou lançar. O valor do
+      // buraco fica na hint — o número grande é quantas casas conferir.
+      label: "A conferir",
       value: `${metrics.negativeHouses} de ${metrics.totalHousesUsed}`,
       valueClass: metrics.negativeHouses > 0 ? "text-negative" : undefined,
-      hint: "saldo real abaixo de zero",
+      hint: metrics.negativeHouses > 0
+        ? `${formatCurrency(metrics.negativeAmount)} sem lançamento`
+        : "nenhuma casa no vermelho",
     },
   ];
 

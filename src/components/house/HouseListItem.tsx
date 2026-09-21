@@ -8,11 +8,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { DotsThreeOutline, Plus } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { initialsOf, formatCurrency, formatTime } from "@/lib/format";
+import { initialsOf, formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
 
 interface HouseListItemProps {
   house: HouseBalanceDto;
-  // Maior saldo absoluto da lista — a barra é proporcional a ele, então a
+  // Maior saldo exibido na lista — a barra é proporcional a ele, então a
   // escala é a mesma pra todas as linhas.
   maxBalance: number;
   onViewDetails?: (houseId: number) => void;
@@ -36,14 +36,17 @@ function formatMovementDate(iso: string) {
 }
 
 export function HouseListItem({ house, maxBalance, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
-  // `houseBalance` vem do backend clampado em zero (Math.max(0, real)), então
-  // casa no vermelho aparecia como "R$ 0,00" e nunca batia com o KPI de casas
-  // negativas, que conta pelo saldo real. A lista usa o real.
-  const balance = Number(house.realHouseBalance);
-  const negative = balance < 0;
+  // Casa não fica te devendo: saldo real negativo é lançamento faltando, não
+  // dinheiro. A linha mostra o saldo clampado em zero e marca "a conferir"; o
+  // valor negativo em si fica no detalhe da casa.
+  const real = Number(house.realHouseBalance);
+  const balance = Math.max(0, real);
+  const shortfall = Math.min(0, real);
+  const profit = Number(house.totalBetProfit);
+  const stake = Number(house.totalStake);
   const bets = Number(house.totalBets);
   // Saldo zerado não ganha barra: um traço de 2px em "R$ 0,00" só polui.
-  const width = maxBalance > 0 ? (Math.abs(balance) / maxBalance) * 100 : 0;
+  const width = maxBalance > 0 ? (balance / maxBalance) * 100 : 0;
 
   return (
     <div className={cn(HOUSE_GRID, "px-2 -mx-2 py-2.5 rounded-md border-b border-border last:border-b-0 hover:bg-foreground/[0.03] transition-colors")}>
@@ -53,17 +56,27 @@ export function HouseListItem({ house, maxBalance, onViewDetails, onOpenHistory,
 
       <div className="min-w-0">
         <p className="text-sm font-medium uppercase tracking-wide truncate">{house.houseName}</p>
-        <p className="text-xs opacity-45">{bets} {bets === 1 ? "aposta" : "apostas"}</p>
+        <p className="text-xs opacity-45 truncate">
+          {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatCurrency(stake)}
+          {shortfall < 0 && (
+            <span className="text-negative opacity-100"> · a conferir {formatCurrency(shortfall)}</span>
+          )}
+        </p>
       </div>
 
       {/* A barra é o que faz a lista ser lida de relance: compara saldos sem
           o olho ter que ler número por número. */}
       <div className="h-[3px] rounded-full bg-foreground/[0.08] overflow-hidden">
-        <div className={cn("h-full rounded-full", negative ? "bg-negative" : "bg-accent")} style={{ width: `${width}%` }} />
+        <div className={cn("h-full rounded-full", shortfall < 0 ? "bg-negative" : "bg-accent")} style={{ width: `${width}%` }} />
       </div>
 
-      <span className={cn("text-right text-sm tabular-nums", negative ? "text-negative" : balance === 0 && "opacity-45")}>
-        {formatCurrency(balance)}
+      <span className="text-right">
+        <span className={cn("block text-sm tabular-nums", balance === 0 && "opacity-45")}>
+          {formatCurrency(balance)}
+        </span>
+        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
+          {formatSignedCurrency(profit)}
+        </span>
       </span>
 
       <span className="text-right text-xs opacity-45 tabular-nums">

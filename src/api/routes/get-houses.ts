@@ -14,6 +14,8 @@ export interface HouseMetricsDto {
   totalWithdrawal: number;
   consolidatedProfit: number;
   negativeHouses: number;
+  /** Soma dos saldos reais negativos (valor <= 0) — o "a conferir". */
+  negativeAmount: number;
   totalHousesUsed: number;
 }
 

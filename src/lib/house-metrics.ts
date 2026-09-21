@@ -9,11 +9,12 @@ export function metricsFromBalances(rows: HouseBalanceDto[]): HouseMetricsDto {
     (acc, h) => {
       const balance = Number(h.realHouseBalance);
       return {
-        totalBalance: acc.totalBalance + balance,
+        totalBalance: acc.totalBalance + Math.max(0, balance),
         totalDeposit: acc.totalDeposit + Number(h.totalDeposit),
         totalWithdrawal: acc.totalWithdrawal + Number(h.totalWithdrawal),
         consolidatedProfit: acc.consolidatedProfit + Number(h.totalBetProfit),
         negativeHouses: acc.negativeHouses + (balance < 0 ? 1 : 0),
+        negativeAmount: acc.negativeAmount + Math.min(0, balance),
         totalHousesUsed: acc.totalHousesUsed + 1,
       };
     },
@@ -23,6 +24,7 @@ export function metricsFromBalances(rows: HouseBalanceDto[]): HouseMetricsDto {
       totalWithdrawal: 0,
       consolidatedProfit: 0,
       negativeHouses: 0,
+      negativeAmount: 0,
       totalHousesUsed: 0,
     },
   );

@@ -17,10 +17,10 @@ function colorForHouse(id: number) {
 function betsSubtitle(house: HouseBalanceDto) {
   const total = Number(house.totalBets);
   const pending = Number(house.pendingBets);
+  const stake = `Stake ${formatCurrency(Number(house.totalStake))}`;
   const totalLabel = `${total} aposta${total === 1 ? "" : "s"}`;
-  if (pending > 0) return `${totalLabel} · ${pending} aberta${pending === 1 ? "" : "s"}`;
-  if (total === 1) return `${totalLabel} · liquidada`;
-  return totalLabel;
+  if (pending > 0) return `${totalLabel} · ${pending} aberta${pending === 1 ? "" : "s"} · ${stake}`;
+  return `${totalLabel} · ${stake}`;
 }
 
 interface HouseRowMobileProps {
@@ -33,6 +33,9 @@ interface HouseRowMobileProps {
 
 export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRowMobileProps) {
   const profit = Number(house.totalBetProfit);
+  // Saldo clampado em zero: casa no vermelho é lançamento faltando, o valor
+  // real negativo aparece como "a conferir" e no detalhe da casa.
+  const real = Number(house.realHouseBalance);
   // O toque longo dispara onLongPress, mas o navegador ainda emite o click
   // logo depois (ao soltar o dedo) — sem essa flag, esse click "fantasma"
   // também chamaria onTap e navegaria pro detalhe por cima do sheet aberto.
@@ -67,11 +70,14 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRo
 
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-medium truncate">{house.houseName}</span>
-        <span className="block text-xs text-zinc-400 leading-snug">{betsSubtitle(house)}</span>
+        <span className="block text-xs text-zinc-400 leading-snug truncate">{betsSubtitle(house)}</span>
+        {real < 0 && (
+          <span className="block text-xs text-negative leading-snug">a conferir {formatCurrency(real)}</span>
+        )}
       </span>
 
       <span className="shrink-0 text-right">
-        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Number(house.realHouseBalance))}</span>
+        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Math.max(0, real))}</span>
         <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
           Lucro {formatSignedCurrency(profit)}
         </span>

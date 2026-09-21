@@ -58,14 +58,15 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6">
         <div>
           <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo atual</p>
-          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(realBalance)}</p>
+          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(Math.max(0, realBalance))}</p>
           <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-positive" : "text-negative"}`}>
             {formatSignedCurrency(profit)} de lucro · ROI {roi.toFixed(1)}%
           </p>
         </div>
 
         <div className="mt-5 border-t border-border divide-y divide-border">
-          <StatRow label="Saldo real" value={formatCurrency(realBalance)} valueClass={realBalance >= 0 ? "text-positive" : "text-negative"} />
+          {realBalance < 0 && <StatRow label="A conferir" value={formatCurrency(realBalance)} valueClass="text-negative" />}
+          <StatRow label="Volume apostado" value={formatCurrency(Number(house.totalStake))} />
           <StatRow label="Depósitos" value={formatCurrency(Number(house.totalDeposit))} />
           <StatRow label="Saques" value={formatCurrency(Number(house.totalWithdrawal))} />
           <StatRow label="Apostas encerradas" value={String(settledBets)} />
