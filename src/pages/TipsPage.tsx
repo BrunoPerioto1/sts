@@ -34,7 +34,11 @@ const tabs: { value: TipStatus; label: string; countKey: "pending" | "planilhada
 const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
   pending: {
     title: "Fila limpa",
-    description: "Nada esperando você. Avisamos aqui quando o canal mandar a próxima tip.",
+    // A fila é das últimas 48h de propósito: tip que ninguém encostou em dois
+    // dias é jogo que já aconteceu. Sem isso, mexer na % do filtro trazia o
+    // histórico inteiro de volta pra fila.
+    description:
+      "Nada esperando você nas últimas 48h. Avisamos aqui quando o canal mandar a próxima tip.",
   },
   planilhada: {
     title: "Nenhuma planilhada",
