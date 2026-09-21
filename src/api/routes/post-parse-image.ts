@@ -32,16 +32,34 @@ export interface ParsedBetSlip {
    * o que a tela marca em amarelo pedindo conferência.
    */
   confidence: Record<string, number>;
+  /** Campos que a IA não identificou no print, em português e prontos pra tela. */
+  missing: string[];
+  /** Odd que não estava no bilhete — saiu do produto das seleções. Confira. */
+  oddFromSelections: boolean;
   matchedTips: MatchedTip[];
 }
 
 /** Abaixo disso o campo entra em amarelo como "confira". */
 export const LOW_CONFIDENCE = 0.7;
 
-export function parseBetImage(image: Blob, houseHint?: string) {
+/**
+ * Teto de espera da leitura. A function do Vercel morre em 60s e o backend
+ * corta a IA antes disso; sem timeout aqui uma conexão que morre no meio
+ * deixava a tela girando "Lendo bilhete…" para sempre.
+ */
+const READ_TIMEOUT_MS = 75_000;
+
+/**
+ * Lê UM bilhete. Mais de uma imagem = partes do mesmo bilhete (print grande
+ * dividido), nunca apostas diferentes — lote é uma chamada por bilhete.
+ */
+export function parseBetImage(images: Blob | Blob[], houseHint?: string) {
   const form = new FormData();
+  const parts = Array.isArray(images) ? images : [images];
   // O nome do arquivo importa: sem ele o multer recebe o campo como texto.
-  form.append('image', image, 'bilhete.webp');
+  parts.forEach((part, i) => form.append('images', part, `bilhete-${i + 1}.webp`));
   if (houseHint) form.append('houseHint', houseHint);
-  return unwrap<ParsedBetSlip>(api.bets.post('parse-image', form));
+  return unwrap<ParsedBetSlip>(
+    api.bets.post('parse-image', form, { timeout: READ_TIMEOUT_MS }),
+  );
 }

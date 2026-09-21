@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasGrouped } from "@/components/apostas/ApostasGrouped";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
-import { pickImage } from "@/hooks/apostas/use-bet-slip-scan";
+import { pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { ConferenciaCallout } from "@/components/apostas/ConferenciaCallout";
@@ -39,7 +39,7 @@ export default function ApostasPage() {
   const [editAposta, setEditAposta] = useState<BetItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [pastedImage, setPastedImage] = useState<File | null>(null);
+  const [pastedImages, setPastedImages] = useState<File[] | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
 
@@ -51,10 +51,10 @@ export default function ApostasPage() {
       if (createModalOpen || editModalOpen) return;
       const target = e.target as HTMLElement | null;
       if (target?.closest("input, textarea, [contenteditable='true']")) return;
-      const file = pickImage(e.clipboardData);
-      if (!file) return;
+      const files = pickImages(e.clipboardData);
+      if (!files.length) return;
       e.preventDefault();
-      setPastedImage(file);
+      setPastedImages(files);
       setCreateModalOpen(true);
     };
     window.addEventListener("paste", onPaste);
@@ -217,10 +217,10 @@ export default function ApostasPage() {
 
         <ApostaFormModal
           open={createModalOpen}
-          onClose={() => { setCreateModalOpen(false); setPastedImage(null); }}
-          onApostaAdded={() => { setCreateModalOpen(false); setPastedImage(null); actions.reload(); }}
-          pendingImage={pastedImage}
-          onPendingImageConsumed={() => setPastedImage(null)}
+          onClose={() => { setCreateModalOpen(false); setPastedImages(null); }}
+          onApostaAdded={() => { setCreateModalOpen(false); setPastedImages(null); actions.reload(); }}
+          pendingImage={pastedImages}
+          onPendingImageConsumed={() => setPastedImages(null)}
         />
         {editAposta && (
           <EditApostaModal

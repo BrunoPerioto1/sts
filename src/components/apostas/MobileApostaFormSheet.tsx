@@ -24,24 +24,35 @@ interface MobileApostaFormSheetProps {
   onApostaAdded: (aposta: BetItem) => void;
   initialData?: BetItem;
   isEditing?: boolean;
-  /** Print colado na lista de Apostas: já entra lendo, sem passar pelo vazio. */
-  pendingImage?: File | null;
+  /** Prints colados na lista de Apostas: já entram lendo, sem passar pelo vazio. */
+  pendingImage?: File | File[] | null;
   onPendingImageConsumed?: () => void;
 }
 
 export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialData, isEditing = false, pendingImage, onPendingImageConsumed }: MobileApostaFormSheetProps) {
   const [casaOpen, setCasaOpen] = useState(false);
   const [dataHoraOpen, setDataHoraOpen] = useState(false);
-  const { formData, setFormData, setField, houses, submitting, potentialReturn, handleSubmit, aiMarks, originalOdd, tipId, setTipId, applyAiFields, resetForm } = useApostaForm({
-    onApostaAdded: (aposta) => {
+  const scan = useBetSlipScan();
+
+  // Lote: com bilhete sobrando na fila, salvar não fecha a sheet — limpa os
+  // campos e já começa a ler o próximo print.
+  function handleSaved(aposta: BetItem) {
+    if (scan.remaining === 0) {
       onApostaAdded(aposta);
       onClose();
-    },
+      return;
+    }
+    resetForm();
+    // Só a legenda digitada segue pro próximo: a casa do bilhete anterior não
+    // vale pro seguinte, e sem hint a IA lê a logo do próprio print.
+    void scan.next(caption.trim() || undefined).then((p) => p && applyAiFields(p));
+  }
+
+  const { formData, setFormData, setField, houses, submitting, potentialReturn, handleSubmit, aiMarks, originalOdd, tipId, setTipId, applyAiFields, resetForm } = useApostaForm({
+    onApostaAdded: handleSaved,
     initialData,
     isEditing,
   });
-
-  const scan = useBetSlipScan();
   // Legenda da casa, como no Telegram: digitar "kto" antes de escolher a
   // imagem evita que a IA tenha que adivinhar a casa pela logo.
   const [caption, setCaption] = useState("");
@@ -49,13 +60,19 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
   // A legenda digitada vence o select: é o gesto mais recente do usuário.
   const hint = caption.trim() || houseName;
 
-  const read = async (file: File | Blob) => {
-    const parsed = await scan.scan(file, hint);
+  const read = async (files: File | Blob | File[]) => {
+    const parsed = await scan.scan(files, hint);
+    if (parsed) applyAiFields(parsed);
+  };
+
+  /** Mais uma imagem do MESMO bilhete: relê tudo junto e reescreve os campos. */
+  const addPart = async (file: File) => {
+    const parsed = await scan.addPart(file, hint);
     if (parsed) applyAiFields(parsed);
   };
 
   useEffect(() => {
-    if (!pendingImage) return;
+    if (!pendingImage || (Array.isArray(pendingImage) && !pendingImage.length)) return;
     void read(pendingImage);
     onPendingImageConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,7 +87,15 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
       title={isEditing ? "Editar aposta" : "Nova aposta"}
       footer={
         <Button type="submit" form="mobile-aposta-form" disabled={submitting} className="w-full min-h-[44px]">
-          {submitting ? "Salvando…" : isEditing ? "Atualizar aposta" : tipId ? "Registrar e vincular" : "Registrar aposta"}
+          {submitting
+            ? "Salvando…"
+            : isEditing
+              ? "Atualizar aposta"
+              : scan.remaining > 0
+                ? `Registrar e ler o próximo (${scan.remaining})`
+                : tipId
+                  ? "Registrar e vincular"
+                  : "Registrar aposta"}
         </Button>
       }
     >
@@ -85,7 +110,11 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
             houseName={houseName}
             caption={caption}
             onCaptionChange={setCaption}
-            onFile={(file) => void read(file)}
+            onFiles={(files) => void read(files)}
+            onAddPart={(file) => void addPart(file)}
+            missing={scan.result?.missing}
+            oddFromSelections={scan.result?.oddFromSelections}
+            batch={{ index: scan.index, total: scan.total }}
             onRetry={() => void scan.retry(hint).then((p) => p && applyAiFields(p))}
             onReset={() => {
               scan.reset();

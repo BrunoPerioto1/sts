@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Camera,
+  Plus,
   Image as ImageIcon,
   Loader2,
   RefreshCw,
@@ -11,7 +12,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { pickImage, type ScanPreview, type ScanStatus } from "@/hooks/apostas/use-bet-slip-scan";
+import { pickImages, type ScanPreview, type ScanStatus } from "@/hooks/apostas/use-bet-slip-scan";
 
 interface BetSlipUploadProps {
   status: ScanStatus;
@@ -21,7 +22,16 @@ interface BetSlipUploadProps {
   /** Legenda da casa, como no Telegram. Texto livre — o backend resolve. */
   caption: string;
   onCaptionChange: (value: string) => void;
-  onFile: (file: File) => void;
+  /** Cada arquivo é um bilhete: mais de um entra como lote. */
+  onFiles: (files: File[]) => void;
+  /** Mais uma imagem DO MESMO bilhete (print grande, dividido). */
+  onAddPart: (file: File) => void;
+  /** Campos que a IA não leu — a tela diz quais em vez de deixar adivinhar. */
+  missing?: string[];
+  /** Odd deduzida das seleções porque o bilhete não mostrava a total. */
+  oddFromSelections?: boolean;
+  /** Posição no lote: "bilhete 2 de 5". Só aparece com mais de um. */
+  batch?: { index: number; total: number };
   onRetry: () => void;
   /** Limpa print E campos. "Trocar" e "Remover" passam por aqui. */
   onReset: () => void;
@@ -44,13 +54,18 @@ export function BetSlipUpload({
   houseName,
   caption,
   onCaptionChange,
-  onFile,
+  onFiles,
+  onAddPart,
+  missing = [],
+  oddFromSelections = false,
+  batch,
   onRetry,
   onReset,
   variant = "band",
 }: BetSlipUploadProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
+  const partInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [zoom, setZoom] = useState(false);
   // dragenter/dragleave disparam para cada filho; o contador evita a borda
@@ -64,8 +79,8 @@ export function BetSlipUpload({
     return () => window.removeEventListener("keydown", onKey);
   }, [zoom]);
 
-  const take = (file: File | null) => {
-    if (file) onFile(file);
+  const take = (files: File[]) => {
+    if (files.length) onFiles(files);
   };
 
   // Trocar de bilhete é começar do zero: zera os campos antes de abrir o
@@ -94,19 +109,21 @@ export function BetSlipUpload({
       e.preventDefault();
       dragDepth.current = 0;
       setDragging(false);
-      take(pickImage(e.dataTransfer));
+      take(pickImages(e.dataTransfer));
     },
   };
 
   const inputs = (
     <>
+      {/* multiple: escolher 5 prints registra 5 apostas, uma de cada vez. */}
       <input
         ref={fileInput}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={(e) => {
-          take(e.target.files?.[0] ?? null);
+          take(Array.from(e.target.files ?? []));
           e.target.value = "";
         }}
       />
@@ -117,7 +134,20 @@ export function BetSlipUpload({
         capture="environment"
         className="hidden"
         onChange={(e) => {
-          take(e.target.files?.[0] ?? null);
+          take(Array.from(e.target.files ?? []));
+          e.target.value = "";
+        }}
+      />
+      {/* Separado do de cima de propósito: aqui a imagem entra no bilhete
+          atual em vez de virar uma aposta nova. */}
+      <input
+        ref={partInput}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onAddPart(file);
           e.target.value = "";
         }}
       />
@@ -148,10 +178,46 @@ export function BetSlipUpload({
 
   const fileLine = (
     <p className="truncate text-[11px] text-zinc-500">
-      {[houseName, preview?.name, preview ? kb(preview.size) : null]
+      {[
+        batch && batch.total > 1 ? `bilhete ${batch.index} de ${batch.total}` : null,
+        houseName,
+        preview?.name,
+        preview && preview.parts > 1 ? `${preview.parts} partes` : null,
+        preview ? kb(preview.size) : null,
+      ]
         .filter(Boolean)
         .join(" · ")}
     </p>
+  );
+
+  const addPartButton = (
+    <button
+      type="button"
+      onClick={() => partInput.current?.click()}
+      className={cn(chip, "text-zinc-400 hover:bg-white/5 hover:text-white")}
+      title="O bilhete não coube num print só: manda o resto que a IA lê tudo como uma aposta"
+    >
+      <Plus className="h-3 w-3" />
+      Adicionar parte
+    </button>
+  );
+
+  // O que a IA não leu vira texto na tela. Antes o campo só ficava vazio e o
+  // usuário não sabia se a leitura falhou ou se o bilhete não tinha aquilo.
+  const notes = (
+    <>
+      {missing.length > 0 && (
+        <p className="text-[11px] leading-snug text-amber-400">
+          Não identifiquei: {missing.join(", ")} — preencha na mão
+          {preview && preview.parts < 4 ? " ou mande a parte que faltou" : ""}.
+        </p>
+      )}
+      {oddFromSelections && (
+        <p className="text-[11px] leading-snug text-amber-400">
+          O bilhete não mostra a odd total: calculei pelas seleções. Confira.
+        </p>
+      )}
+    </>
   );
 
   const body = () => {
@@ -190,6 +256,7 @@ export function BetSlipUpload({
                 <RotateCcw className="h-3 w-3" />
                 Tentar de novo
               </button>
+              {addPartButton}
               <button
                 type="button"
                 onClick={replace}
@@ -213,7 +280,9 @@ export function BetSlipUpload({
               Lido pela IA
             </span>
             {fileLine}
+            {notes}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
+              {addPartButton}
               <button
                 type="button"
                 onClick={() => setZoom(true)}
@@ -274,7 +343,7 @@ export function BetSlipUpload({
             </button>
           </div>
           <p className="text-center text-[11px] text-zinc-500">
-            a IA lê o bilhete e preenche — ou digite abaixo
+            a IA lê o bilhete e preenche — dá pra escolher vários de uma vez
           </p>
         </div>
       );
@@ -297,7 +366,7 @@ export function BetSlipUpload({
           </p>
           <p className="text-[11px] text-zinc-500">
             {dragging
-              ? "PNG, JPG ou WebP — uma imagem por vez"
+              ? "PNG, JPG ou WebP — uma aposta por imagem"
               : "informe a casa ao lado (opcional) — a IA preenche o resto"}
           </p>
         </div>
@@ -307,7 +376,7 @@ export function BetSlipUpload({
           onClick={() => fileInput.current?.click()}
           className="flex-none rounded-lg border border-white/10 bg-[var(--color-surface-2)] px-3 py-2 text-[11px] font-medium transition-colors hover:border-accent/50"
         >
-          Escolher imagem
+          Escolher imagens
         </button>
       </div>
     );

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type BetItem } from "@/api/routes/get-bets";
 import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
-import { useBetSlipScan, pickImage } from "@/hooks/apostas/use-bet-slip-scan";
+import { useBetSlipScan, pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { BetSlipUpload } from "./BetSlipUpload";
 import { AiFieldLabel } from "./AiFieldLabel";
 import { aiFieldRing } from "@/lib/ai-field";
@@ -19,8 +19,8 @@ interface ApostaFormProps {
   onApostaAdded: (aposta: BetItem) => void;
   initialData?: BetItem;
   isEditing?: boolean;
-  /** Print colado na lista de Apostas: já entra lendo, sem passar pelo vazio. */
-  pendingImage?: File | null;
+  /** Prints colados na lista de Apostas: já entram lendo, sem passar pelo vazio. */
+  pendingImage?: File | File[] | null;
   onPendingImageConsumed?: () => void;
   onCancel?: () => void;
 }
@@ -33,6 +33,21 @@ export function ApostaForm({
   onPendingImageConsumed,
   onCancel,
 }: ApostaFormProps) {
+  const scan = useBetSlipScan();
+
+  // Lote: enquanto sobrar bilhete na fila, salvar não fecha o modal — limpa o
+  // formulário e já começa a ler o próximo.
+  function handleSaved(aposta: BetItem) {
+    if (scan.remaining === 0) {
+      onApostaAdded(aposta);
+      return;
+    }
+    resetForm();
+    // Só a legenda digitada segue pro próximo: a casa do bilhete anterior não
+    // vale pro seguinte, e sem hint a IA lê a logo do próprio print.
+    void scan.next(caption.trim() || undefined).then((p) => p && applyAiFields(p));
+  }
+
   const {
     formData,
     setField,
@@ -46,9 +61,7 @@ export function ApostaForm({
     setTipId,
     applyAiFields,
     resetForm,
-  } = useApostaForm({ onApostaAdded, initialData, isEditing });
-
-  const scan = useBetSlipScan();
+  } = useApostaForm({ onApostaAdded: handleSaved, initialData, isEditing });
   // Legenda da casa, como no Telegram: digitar "kto" antes de colar o print
   // evita que a IA tenha que adivinhar a casa pela logo.
   const [caption, setCaption] = useState("");
@@ -56,15 +69,21 @@ export function ApostaForm({
   // A legenda digitada vence o select: é o gesto mais recente do usuário.
   const hint = caption.trim() || houseName;
 
-  const read = async (file: File | Blob) => {
-    const parsed = await scan.scan(file, hint);
+  const read = async (files: File | Blob | File[]) => {
+    const parsed = await scan.scan(files, hint);
+    if (parsed) applyAiFields(parsed);
+  };
+
+  /** Mais uma imagem do MESMO bilhete: relê tudo junto e reescreve os campos. */
+  const addPart = async (file: File) => {
+    const parsed = await scan.addPart(file, hint);
     if (parsed) applyAiFields(parsed);
   };
 
   // Print colado na tela de Apostas antes do modal existir: o arquivo viaja
   // como prop e a leitura começa assim que o form monta.
   useEffect(() => {
-    if (!pendingImage) return;
+    if (!pendingImage || (Array.isArray(pendingImage) && !pendingImage.length)) return;
     void read(pendingImage);
     onPendingImageConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,10 +94,10 @@ export function ApostaForm({
   useEffect(() => {
     if (isEditing) return;
     const onPaste = (e: ClipboardEvent) => {
-      const file = pickImage(e.clipboardData);
-      if (!file) return;
+      const files = pickImages(e.clipboardData);
+      if (!files.length) return;
       e.preventDefault();
-      void read(file);
+      void read(files);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -98,7 +117,11 @@ export function ApostaForm({
           houseName={houseName}
           caption={caption}
           onCaptionChange={setCaption}
-          onFile={(file) => void read(file)}
+          onFiles={(files) => void read(files)}
+          onAddPart={(file) => void addPart(file)}
+          missing={scan.result?.missing}
+          oddFromSelections={scan.result?.oddFromSelections}
+          batch={{ index: scan.index, total: scan.total }}
           onRetry={() => void scan.retry(hint).then((p) => p && applyAiFields(p))}
           onReset={() => {
             scan.reset();
@@ -191,9 +214,11 @@ export function ApostaForm({
               ? "Salvando…"
               : isEditing
                 ? "Atualizar aposta"
-                : tipId
-                  ? "Registrar e vincular"
-                  : "Registrar aposta"}
+                : scan.remaining > 0
+                  ? `Registrar e ler o próximo (${scan.remaining})`
+                  : tipId
+                    ? "Registrar e vincular"
+                    : "Registrar aposta"}
           </Button>
         </div>
       </div>

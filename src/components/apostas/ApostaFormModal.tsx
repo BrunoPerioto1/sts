@@ -8,8 +8,8 @@ interface ApostaFormModalProps {
   onApostaAdded: (aposta: BetItem) => void;
   open: boolean;
   onClose: () => void;
-  /** Print colado na lista de Apostas, antes do modal existir. */
-  pendingImage?: File | null;
+  /** Prints colados na lista de Apostas, antes do modal existir. */
+  pendingImage?: File | File[] | null;
   onPendingImageConsumed?: () => void;
 }
 
