@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { CaretRight, IdentificationCard, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo } from "@phosphor-icons/react";
+import { CaretRight, IdentificationCard, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
 import type { MeResponse } from "@/api/routes/get-me";
 import type { ProfileSummary } from "@/hooks/perfil/use-profile-summary";
@@ -77,6 +78,11 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
       valueTone: isLinked ? "text-positive" : "text-accent",
     },
     { to: "/profile/preferences", icon: SlidersHorizontal, label: "Preferências de aposta", value: preferencesSummary(me) },
+    // Admin entra por aqui no celular, e não na bottom nav: sétima aba deixaria
+    // cada alvo com menos de 56px, e a tela é de manutenção, não de uso diário.
+    ...(me.roleId === ADMIN_ROLE_ID
+      ? [{ to: "/admin", icon: ShieldCheck, label: "Admin", value: "Pipeline e usuários" }]
+      : []),
   ];
 
   return (

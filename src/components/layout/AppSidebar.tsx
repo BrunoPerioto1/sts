@@ -9,10 +9,12 @@ import {
   PaperPlaneTilt,
   SignOut,
   ClipboardText,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { cn } from "@/lib/utils";
+import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { initialsOf } from "@/lib/format";
 
 const menuItems = [
@@ -23,6 +25,10 @@ const menuItems = [
   { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
   { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
 ];
+
+// Só pra role 1. O que protege de verdade é o AdminGuard do backend; esconder
+// aqui evita oferecer uma tela que responderia 403.
+const adminItem = { id: "admin", label: "Admin", icon: ShieldCheck, path: "/admin" };
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -91,7 +97,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
       )}
 
       <nav className="flex flex-col gap-[2px] flex-1 min-h-0 overflow-y-auto">
-        {menuItems.map((item) => {
+        {(user?.roleId === ADMIN_ROLE_ID ? [...menuItems, adminItem] : menuItems).map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname.startsWith(item.path);
           const badge = contagem[item.id];

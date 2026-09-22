@@ -17,9 +17,12 @@ const PasswordPage = lazy(() => import("./pages/perfil/PasswordPage"));
 const TelegramPage = lazy(() => import("./pages/perfil/TelegramPage"));
 const PreferencesPage = lazy(() => import("./pages/perfil/PreferencesPage"));
 const DashboardPreferencesPage = lazy(() => import("./pages/perfil/DashboardPreferencesPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
+import { useMe } from '@/hooks/queries/use-me';
+import { ADMIN_ROLE_ID } from '@/lib/admin-health';
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
 // so quando ele registra/edita uma aposta. Sem isso o padrao do react-query e
@@ -58,6 +61,7 @@ const App = () => (
           <Route path="/settlement/review" element={<RequireAuth><ConferirPendentesPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
           <Route path="/tips" element={<RequireAuth><TipsPage /></RequireAuth>} />
+          <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />
@@ -85,6 +89,25 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!token) {
     return <Navigate to="/login" replace />;
   }
+  return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+}
+
+/**
+ * Rota de admin. O papel vem do /users/me, entao enquanto o me nao carregou a
+ * tela mostra o fallback — redirecionar nesse intervalo jogaria o proprio admin
+ * pro dashboard toda vez que ele abrisse /admin direto pela URL.
+ *
+ * Isto e' so' a casca: quem barra de verdade e' o AdminGuard do backend, que
+ * responde 403 pras rotas /admin independentemente do que a tela faca.
+ */
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const token = typeof window !== 'undefined' ? getToken() : null;
+  const { me } = useMe();
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (!me) return <RouteFallback />;
+  if (me.roleId !== ADMIN_ROLE_ID) return <Navigate to="/dashboard" replace />;
+
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
 }
 
