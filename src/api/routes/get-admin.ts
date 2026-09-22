@@ -21,7 +21,7 @@ export type AdminOverview = {
   pendingBetsWithoutSuggestion: number;
   undecidedSuggestions: number;
   suggestionsAwaitingUser: number;
-  usersByRole: { admin: number; moderator: number; user: number };
+  usersByRole: { admin: number; user: number };
 };
 
 export type AdminUser = {
@@ -39,6 +39,17 @@ export type AdminUser = {
   hasTelegram: boolean;
   betCount: number;
 };
+
+export type AdminHouse = {
+  id: number;
+  name: string;
+  isActive: boolean;
+  aliases: string[];
+  betCount: number;
+};
+
+export type CreateAdminHouseParams = { name: string; aliases?: string[] };
+export type UpdateAdminHouseParams = { name?: string; aliases?: string[]; isActive?: boolean };
 
 export type UpdateAdminUserParams = {
   roleId?: number;
@@ -58,5 +69,20 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 
 export async function patchAdminUser(id: number, data: UpdateAdminUserParams): Promise<AdminUser> {
   const res = await apiClient().admin.patch<AdminUser>(`users/${id}`, data);
+  return res.data;
+}
+
+export async function getAdminHouses(): Promise<AdminHouse[]> {
+  const res = await apiClient().admin.get<AdminHouse[]>("houses");
+  return res.data;
+}
+
+export async function postAdminHouse(data: CreateAdminHouseParams): Promise<AdminHouse> {
+  const res = await apiClient().admin.post<AdminHouse>("houses", data);
+  return res.data;
+}
+
+export async function patchAdminHouse(id: number, data: UpdateAdminHouseParams): Promise<AdminHouse> {
+  const res = await apiClient().admin.patch<AdminHouse>(`houses/${id}`, data);
   return res.data;
 }

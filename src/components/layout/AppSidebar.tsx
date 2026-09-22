@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
@@ -10,6 +11,7 @@ import {
   SignOut,
   ClipboardText,
   ShieldCheck,
+  CaretDown,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
@@ -28,7 +30,28 @@ const menuItems = [
 
 // Só pra role 1. O que protege de verdade é o AdminGuard do backend; esconder
 // aqui evita oferecer uma tela que responderia 403.
-const adminItem = { id: "admin", label: "Admin", icon: ShieldCheck, path: "/admin" };
+const adminItems = [
+  { label: "Casas de Apostas", path: "/admin/houses" },
+  { label: "Usuários", path: "/admin/users" },
+  { label: "Pipeline", path: "/admin/pipeline" },
+];
+
+const IDLE_COLOR = "color-mix(in srgb, var(--color-text) 62%, transparent)";
+
+// Hover por JS porque a cor de repouso é inline (color-mix): classe de hover
+// do Tailwind perderia pra ela.
+const hoverHandlers = (isActive: boolean) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+    if (isActive) return;
+    e.currentTarget.style.background = "color-mix(in srgb, var(--color-text) 7%, transparent)";
+    e.currentTarget.style.color = "var(--color-text)";
+  },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+    if (isActive) return;
+    e.currentTarget.style.background = "transparent";
+    e.currentTarget.style.color = IDLE_COLOR;
+  },
+});
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -43,6 +66,8 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
   // Proposta esperando confirmação é dinheiro parado: o número no menu é o que
   // faz o usuário voltar na conferência sem precisar lembrar dela sozinho.
   const { data: fila } = useSettlementQueue();
+  const inAdmin = location.pathname.startsWith("/admin");
+  const [adminOpen, setAdminOpen] = useState(inAdmin);
   const contagem: Record<string, number | undefined> = {
     conferir: fila?.suggestions,
     apostas: fila?.pending,
@@ -97,7 +122,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
       )}
 
       <nav className="flex flex-col gap-[2px] flex-1 min-h-0 overflow-y-auto">
-        {(user?.roleId === ADMIN_ROLE_ID ? [...menuItems, adminItem] : menuItems).map((item) => {
+        {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname.startsWith(item.path);
           const badge = contagem[item.id];
@@ -111,22 +136,11 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                 collapsed ? "justify-center px-0" : "px-[10px]"
               )}
               style={{
-                color: isActive ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 62%, transparent)",
+                color: isActive ? "var(--color-accent)" : IDLE_COLOR,
                 background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
                 boxShadow: isActive ? "inset 2px 0 0 var(--color-accent)" : "none",
               }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "color-mix(in srgb, var(--color-text) 7%, transparent)";
-                  e.currentTarget.style.color = "var(--color-text)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "color-mix(in srgb, var(--color-text) 62%, transparent)";
-                }
-              }}
+              {...hoverHandlers(isActive)}
             >
               <div className="relative shrink-0">
                 <Icon size={18} weight={isActive ? "fill" : "regular"} />
@@ -156,6 +170,59 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
             </NavLink>
           );
         })}
+
+        {user?.roleId === ADMIN_ROLE_ID &&
+          (collapsed ? (
+            // Colapsado não há onde abrir a lista: o ícone leva direto pro admin.
+            <NavLink
+              to="/admin"
+              onClick={onNavigate}
+              title="Admin"
+              className="flex items-center justify-center rounded-lg py-2"
+              style={{ color: inAdmin ? "var(--color-accent)" : IDLE_COLOR }}
+              {...hoverHandlers(inAdmin)}
+            >
+              <ShieldCheck size={18} weight={inAdmin ? "fill" : "regular"} />
+            </NavLink>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setAdminOpen((o) => !o)}
+                aria-expanded={adminOpen}
+                className="flex items-center gap-2 rounded-lg py-2 px-[10px] text-sm transition-colors"
+                style={{ color: inAdmin ? "var(--color-accent)" : IDLE_COLOR }}
+                {...hoverHandlers(false)}
+              >
+                <ShieldCheck size={18} weight={inAdmin ? "fill" : "regular"} className="shrink-0" />
+                <span>Admin</span>
+                <CaretDown
+                  size={14}
+                  className={cn("ml-auto opacity-60 transition-transform", adminOpen && "rotate-180")}
+                />
+              </button>
+              {adminOpen &&
+                adminItems.map((item) => {
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={onNavigate}
+                      className="flex items-center rounded-lg py-1.5 pl-[38px] pr-[10px] text-sm transition-colors"
+                      style={{
+                        color: isActive ? "var(--color-accent)" : IDLE_COLOR,
+                        background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
+                        boxShadow: isActive ? "inset 2px 0 0 var(--color-accent)" : "none",
+                      }}
+                      {...hoverHandlers(isActive)}
+                    >
+                      <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+            </>
+          ))}
       </nav>
 
       <div className="pt-3 mt-2 border-t border-border shrink-0">

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CaretDown } from "@phosphor-icons/react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CaretDown } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
   isAlert,
   type HealthLevel,
 } from "@/lib/admin-health";
-import type { AdminOverview, UndeliveredTip } from "@/api/routes/get-admin";
+import type { AdminOverview } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 
 const DOT: Record<HealthLevel, string> = {
@@ -35,8 +36,8 @@ interface Card {
   unit?: string;
   hint: string;
   level: HealthLevel;
-  /** Só o card de tips sem entrega abre lista — os outros são número puro. */
-  details?: UndeliveredTip[];
+  /** Link pra tela de detalhe, quando o número sozinho não explica o caso. */
+  detailsTo?: string;
 }
 
 interface Group {
@@ -71,7 +72,7 @@ export function buildGroups(data: AdminOverview): Group[] {
               ? `${data.undeliveredExpected} deveriam ter chegado em alguém`
               : "todas abaixo do filtro de quem recebe",
           level: countLevel(data.undeliveredExpected),
-          details: data.undeliveredTips,
+          detailsTo: undelivered > 0 ? "/admin/tips" : undefined,
         },
         {
           label: "Última entrega",
@@ -143,33 +144,7 @@ export function countAlerts(groups: Group[]): number {
   return groups.reduce((total, g) => total + g.cards.filter((c) => isAlert(c.level)).length, 0);
 }
 
-function TipList({ tips }: { tips: UndeliveredTip[] }) {
-  if (!tips.length) return null;
-
-  return (
-    <ul className="mt-3 space-y-1.5 border-t border-border pt-3">
-      {tips.map((tip) => (
-        <li key={tip.id} className="flex gap-2 text-xs">
-          <span
-            className={cn(
-              "shrink-0 tabular-nums",
-              tip.expectedDelivery ? "text-[var(--dashboard-orange)]" : "opacity-35",
-            )}
-          >
-            {tip.percent === null ? "—" : `${tip.percent}%`}
-          </span>
-          <span className="truncate opacity-55">{tip.text.replace(/\n/g, " · ")}</span>
-          <span className="ml-auto shrink-0 opacity-35">{formatSaoPaulo(tip.createdAt)}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function HealthCard({ card }: { card: Card }) {
-  const [open, setOpen] = useState(false);
-  const hasDetails = !!card.details?.length;
-
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2">
@@ -186,18 +161,11 @@ function HealthCard({ card }: { card: Card }) {
 
       <p className="mt-2 text-xs opacity-45">{card.hint}</p>
 
-      {hasDetails && (
-        <>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="mt-2 flex items-center gap-1 text-xs text-accent-text hover:underline"
-          >
-            {open ? "ocultar" : "ver quais"}
-            <CaretDown size={12} className={cn("transition-transform", open && "rotate-180")} />
-          </button>
-          {open && <TipList tips={card.details!} />}
-        </>
+      {card.detailsTo && (
+        <Link to={card.detailsTo} className="mt-2 inline-flex items-center gap-1 text-xs text-accent-text hover:underline">
+          ver quais
+          <ArrowRight size={12} />
+        </Link>
       )}
     </div>
   );

@@ -12,8 +12,18 @@ import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin
 import { initialsOf } from "@/lib/format";
 import type { AdminUser } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
 const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_110px]";
+
+const FILTERS = [
+  { id: "all", label: "Todos", test: () => true },
+  { id: "admin", label: "Admin", test: (u: AdminUser) => u.roleId === 1 },
+  { id: "user", label: "Usuário", test: (u: AdminUser) => u.roleId === 3 },
+  { id: "locked", label: "Bloqueados", test: (u: AdminUser) => isLocked(u.lockedUntil) },
+] as const;
+
+type FilterId = (typeof FILTERS)[number]["id"];
 
 function RoleChoice({
   user,
@@ -127,23 +137,21 @@ export function AdminUsers() {
   const { me } = useMe();
   const update = useUpdateAdminUser();
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<FilterId>("all");
 
   // Doze linhas: filtrar aqui é mais barato que uma rota de busca.
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return users ?? [];
+    const test = FILTERS.find((f) => f.id === filter)!.test;
     return (users ?? []).filter(
       (u) =>
-        u.username.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term) ||
-        (u.fullName ?? "").toLowerCase().includes(term),
+        test(u) &&
+        (!term ||
+          u.username.toLowerCase().includes(term) ||
+          u.email.toLowerCase().includes(term) ||
+          (u.fullName ?? "").toLowerCase().includes(term)),
     );
-  }, [users, search]);
-
-  const counts = useMemo(() => {
-    const by = (roleId: number) => (users ?? []).filter((u) => u.roleId === roleId).length;
-    return { admin: by(1), moderator: by(2), user: by(3) };
-  }, [users]);
+  }, [users, search, filter]);
 
   const run = (id: number, params: { roleId?: number; unlock?: boolean; unlinkTelegram?: boolean }, done: string) =>
     update.mutate(
@@ -156,39 +164,114 @@ export function AdminUsers() {
 
   const pendingFor = (id: number) => update.isPending && update.variables?.id === id;
 
-  if (isPending) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" delay={i * 60} />
+  const body = isPending ? (
+    <div className="p-4 space-y-2">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} className="h-14 rounded-lg" delay={i * 60} />
+      ))}
+    </div>
+  ) : isError ? (
+    <EmptyState
+      bare
+      title="Não foi possível carregar os usuários"
+      action={
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Tentar de novo
+        </Button>
+      }
+    />
+  ) : (
+    <>
+      {filtered.length === 0 ? (
+    <EmptyState bare title="Nenhum usuário encontrado" description={search ? `Nada bate com "${search}".` : "Ninguém neste filtro."} />
+  ) : (
+    <>
+      {/* Desktop */}
+      <div className="hidden sm:block">
+        <div className={cn(GRID, "px-6 py-2.5 border-b border-border bg-foreground/[0.02] [&>span]:text-[11px] [&>span]:uppercase [&>span]:tracking-[0.1em] [&>span]:opacity-40")}>
+          <span>Usuário</span>
+          <span>Papel</span>
+          <span className="text-right">Apostas</span>
+          <span>Último login</span>
+          <span>Telegram</span>
+          <span className="text-right">Ações</span>
+        </div>
+        {filtered.map((user) => (
+          <div key={user.id} className={cn(GRID, "px-6 py-3 border-b border-border last:border-b-0")}>
+            <Identity user={user} isMe={user.id === me?.id} />
+            <RoleChoice
+              user={user}
+              disabled={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+            />
+            <span className="text-sm tabular-nums text-right">{user.betCount}</span>
+            <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
+            <span className="text-sm opacity-55">
+              {user.hasTelegram ? `vinculado ${formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}` : "—"}
+            </span>
+            <div className="flex justify-end">
+              <Actions
+                user={user}
+                pending={pendingFor(user.id)}
+                onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
+                onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+              />
+            </div>
+          </div>
         ))}
       </div>
-    );
-  }
 
-  if (isError) {
-    return (
-      <EmptyState
-        title="Não foi possível carregar os usuários"
-        action={
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            Tentar de novo
-          </Button>
-        }
-      />
-    );
-  }
+      {/* Mobile: tabela de seis colunas não cabe em 390px. */}
+      <div className="space-y-2 p-3 sm:hidden">
+        {filtered.map((user) => (
+          <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
+            <Identity user={user} isMe={user.id === me?.id} />
+
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-55">
+              <span>{user.betCount} apostas</span>
+              <span>{formatSaoPaulo(user.lastLogin)}</span>
+              <span>{user.hasTelegram ? "Telegram vinculado" : "sem Telegram"}</span>
+            </div>
+
+            <RoleChoice
+              user={user}
+              disabled={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+            />
+
+            {(isLocked(user.lockedUntil) || user.hasTelegram) && (
+              <div className="[&>button]:w-full">
+                <Actions
+                  user={user}
+                  pending={pendingFor(user.id)}
+                  onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
+                  onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+    </>
+  );
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs uppercase tracking-wider opacity-45">
-          Usuários{" "}
-          <span className="normal-case tracking-normal">
-            · {counts.admin} admin · {counts.moderator} moderador · {counts.user} usuário
-          </span>
-        </p>
-        <div className="relative sm:w-72">
+    <AdminPanel
+      eyebrow="Usuários"
+      title={users ? `${users.length} ${users.length === 1 ? "usuário" : "usuários"}` : "Usuários"}
+      description={
+        <>
+          Papel, bloqueio de login e vínculo com o Telegram.
+          <br />
+          Você não altera o próprio papel — o servidor recusa o auto-rebaixamento.
+        </>
+      }
+      actions={
+        <div className="relative flex-1 sm:w-72">
           <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-35" />
           <Input
             value={search}
@@ -197,82 +280,18 @@ export function AdminUsers() {
             className="pl-9"
           />
         </div>
-      </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState title="Nenhum usuário encontrado" description={`Nada bate com "${search}".`} />
-      ) : (
-        <>
-          {/* Desktop */}
-          <div className="hidden sm:block rounded-lg border border-border">
-            <div className={cn(GRID, "px-4 py-2.5 border-b border-border text-[11px] uppercase tracking-wider opacity-40")}>
-              <span>Usuário</span>
-              <span>Papel</span>
-              <span className="text-right">Apostas</span>
-              <span>Último login</span>
-              <span>Telegram</span>
-              <span className="text-right">Ações</span>
-            </div>
-            {filtered.map((user) => (
-              <div key={user.id} className={cn(GRID, "px-4 py-3 border-b border-border last:border-b-0")}>
-                <Identity user={user} isMe={user.id === me?.id} />
-                <RoleChoice
-                  user={user}
-                  disabled={user.id === me?.id}
-                  pending={pendingFor(user.id)}
-                  onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
-                />
-                <span className="text-sm tabular-nums text-right">{user.betCount}</span>
-                <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
-                <span className="text-sm opacity-55">
-                  {user.hasTelegram ? `vinculado ${formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}` : "—"}
-                </span>
-                <div className="flex justify-end">
-                  <Actions
-                    user={user}
-                    pending={pendingFor(user.id)}
-                    onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
-                    onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile: tabela de seis colunas não cabe em 390px. */}
-          <div className="space-y-2 sm:hidden">
-            {filtered.map((user) => (
-              <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
-                <Identity user={user} isMe={user.id === me?.id} />
-
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-55">
-                  <span>{user.betCount} apostas</span>
-                  <span>{formatSaoPaulo(user.lastLogin)}</span>
-                  <span>{user.hasTelegram ? "Telegram vinculado" : "sem Telegram"}</span>
-                </div>
-
-                <RoleChoice
-                  user={user}
-                  disabled={user.id === me?.id}
-                  pending={pendingFor(user.id)}
-                  onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
-                />
-
-                {(isLocked(user.lockedUntil) || user.hasTelegram) && (
-                  <div className="[&>button]:w-full">
-                    <Actions
-                      user={user}
-                      pending={pendingFor(user.id)}
-                      onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
-                      onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+      }
+      filters={
+        users &&
+        FILTERS.map((f) => (
+          <FilterChip key={f.id} active={filter === f.id} count={users.filter(f.test).length} onClick={() => setFilter(f.id)}>
+            {f.label}
+          </FilterChip>
+        ))
+      }
+      footer={users && !isError && <span className="opacity-45">{filtered.length} de {users.length}</span>}
+    >
+      {body}
+    </AdminPanel>
   );
 }

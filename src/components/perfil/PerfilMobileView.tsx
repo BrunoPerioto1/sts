@@ -81,7 +81,11 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
     // Admin entra por aqui no celular, e não na bottom nav: sétima aba deixaria
     // cada alvo com menos de 56px, e a tela é de manutenção, não de uso diário.
     ...(me.roleId === ADMIN_ROLE_ID
-      ? [{ to: "/admin", icon: ShieldCheck, label: "Admin", value: "Pipeline e usuários" }]
+      ? [
+          { to: "/admin/houses", icon: ShieldCheck, label: "Admin · Casas", value: "Catálogo e apelidos" },
+          { to: "/admin/users", icon: ShieldCheck, label: "Admin · Usuários", value: "Papéis e bloqueios" },
+          { to: "/admin/pipeline", icon: ShieldCheck, label: "Admin · Pipeline", value: "Saúde da coleta" },
+        ]
       : []),
   ];
 

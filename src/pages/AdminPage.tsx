@@ -1,21 +1,21 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowClockwise } from "@phosphor-icons/react";
-import { AdminUsers } from "@/components/admin/AdminUsers";
+import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { AdminPanel } from "@/components/admin/AdminPanel";
 import { PipelineHealth, buildGroups, countAlerts } from "@/components/admin/PipelineHealth";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
 import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
+  const isMobile = useIsMobile();
   const overview = useAdminOverview();
+  // No celular o gesto substitui o botão, como nas outras telas do app.
+  const pull = usePullToRefresh(() => overview.refetch(), isMobile);
   const alerts = overview.data ? countAlerts(buildGroups(overview.data)) : 0;
-
-  const subtitle = overview.data
-    ? `${overview.data.usersByRole.admin + overview.data.usersByRole.moderator + overview.data.usersByRole.user} usuários · ${
-        alerts === 0 ? "pipeline ok" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"} no pipeline`
-      }`
-    : undefined;
 
   // `dataUpdatedAt` em vez de um Date.now() guardado à parte: quem sabe quando
   // o número na tela chegou é o cache, não a tela.
@@ -23,7 +23,7 @@ export default function AdminPage() {
 
   const refresh = (
     <>
-      <span className="hidden sm:inline text-xs opacity-40">atualizado {updatedAt}</span>
+      <span className="text-xs opacity-40">atualizado {updatedAt}</span>
       <Button
         variant="outline"
         size="sm"
@@ -31,7 +31,7 @@ export default function AdminPage() {
         onClick={() => void overview.refetch()}
       >
         <ArrowClockwise size={14} className={cn(overview.isFetching && "animate-spin")} />
-        <span className="hidden sm:inline">Atualizar</span>
+        Atualizar
       </Button>
     </>
   );
@@ -39,7 +39,7 @@ export default function AdminPage() {
   return (
     <MainLayout
       title="Admin"
-      subtitle={subtitle}
+      subtitle="Pipeline"
       actions={refresh}
       mobileHeader={
         <div className="flex items-center gap-2">
@@ -49,30 +49,25 @@ export default function AdminPage() {
               {alerts === 0 ? "ok" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"}`}
             </span>
           )}
-          <div className="ml-auto flex items-center gap-2">{refresh}</div>
         </div>
       }
     >
-      <div className="space-y-6">
-        <section className="space-y-3">
-          <div className="flex items-baseline gap-2">
-            <h2 className="text-xs uppercase tracking-wider opacity-45">Saúde do pipeline</h2>
-            {/* Some no celular: cortada pela metade ela só rouba uma linha. */}
-            <span className="hidden sm:inline text-xs opacity-30 truncate">
-              Telegram → tip → fan-out → coletor → liquidação · horário de Brasília
-            </span>
-          </div>
+      <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
+      <AdminPanel
+        eyebrow="Pipeline"
+        title={!overview.data ? "Saúde do pipeline" : alerts === 0 ? "Tudo rodando" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"}`}
+        description="Telegram → tip → fan-out → coletor → liquidação · horário de Brasília"
+      >
+        <div className="p-4 sm:p-6">
           <PipelineHealth
             data={overview.data}
             isPending={overview.isPending}
             isError={overview.isError}
             onRetry={() => void overview.refetch()}
           />
-        </section>
-
-        <AdminUsers />
-      </div>
+        </div>
+      </AdminPanel>
     </MainLayout>
   );
 }

@@ -18,6 +18,9 @@ const TelegramPage = lazy(() => import("./pages/perfil/TelegramPage"));
 const PreferencesPage = lazy(() => import("./pages/perfil/PreferencesPage"));
 const DashboardPreferencesPage = lazy(() => import("./pages/perfil/DashboardPreferencesPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const AdminTipsPage = lazy(() => import("./pages/AdminTipsPage"));
+const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
+const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
@@ -61,7 +64,11 @@ const App = () => (
           <Route path="/settlement/review" element={<RequireAuth><ConferirPendentesPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
           <Route path="/tips" element={<RequireAuth><TipsPage /></RequireAuth>} />
-          <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
+          <Route path="/admin" element={<Navigate to="/admin/pipeline" replace />} />
+          <Route path="/admin/pipeline" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
+          <Route path="/admin/houses" element={<RequireAdmin><AdminHousesPage /></RequireAdmin>} />
+          <Route path="/admin/users" element={<RequireAdmin><AdminUsersPage /></RequireAdmin>} />
+          <Route path="/admin/tips" element={<RequireAdmin><AdminTipsPage /></RequireAdmin>} />
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />

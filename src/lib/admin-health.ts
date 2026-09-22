@@ -78,13 +78,15 @@ export function formatSaoPaulo(value: string | null): string {
 // usuário não pode abrir.
 export const ADMIN_ROLE_ID = 1;
 
+// Só os dois papéis em uso. O 2 (moderator) segue na tabela `roles` sem
+// ninguém dentro e sem nenhuma regra que o consulte — oferecer na tela era
+// convidar a criar um papel que não significa nada.
 export const ROLE_LABELS: Record<number, string> = {
   1: "Admin",
-  2: "Moderador",
   3: "Usuário",
 };
 
-export const ROLE_OPTIONS = [1, 2, 3] as const;
+export const ROLE_OPTIONS = [1, 3] as const;
 
 export function isLocked(lockedUntil: string | null, now: number = Date.now()): boolean {
   return !!lockedUntil && new Date(lockedUntil).getTime() > now;
