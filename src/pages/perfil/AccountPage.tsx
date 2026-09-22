@@ -18,7 +18,7 @@ import { clearToken } from "@/lib/auth-session";
 export default function AccountPage() {
   const navigate = useNavigate();
   const { me, setMe } = useMe();
-  const [form, setForm] = useState({ username: "", email: "" });
+  const [form, setForm] = useState({ username: "", email: "", currentPassword: "" });
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -26,13 +26,17 @@ export default function AccountPage() {
 
   // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    if (me) setForm({ username: me.username, email: me.email });
+    if (me) setForm({ username: me.username, email: me.email, currentPassword: "" });
   }, [me]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await patchMe(form);
+      const updated = await patchMe({
+        username: form.username,
+        email: form.email,
+        currentPassword: form.currentPassword || undefined,
+      });
       setMe(updated);
       actionToast.success({ title: "Dados atualizados" });
     } catch (error) {
@@ -43,7 +47,7 @@ export default function AccountPage() {
   };
 
   const handleDiscard = () => {
-    if (me) setForm({ username: me.username, email: me.email });
+    if (me) setForm({ username: me.username, email: me.email, currentPassword: "" });
   };
 
   const handleDelete = async () => {
@@ -95,6 +99,19 @@ export default function AccountPage() {
                 onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
               />
             </div>
+            {form.email !== me.email && (
+              <div className="space-y-1.5">
+                {/* E-mail é o login: o servidor só troca com a senha atual. */}
+                <Label className="text-sm font-normal text-zinc-400">Senha atual</Label>
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  className="min-h-[48px] rounded-lg px-3.5"
+                  value={form.currentPassword}
+                  onChange={(e) => setForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                />
+              </div>
+            )}
           </div>
 
           <p className="text-xs uppercase tracking-wider text-zinc-500 mt-7 mb-2">Segurança</p>

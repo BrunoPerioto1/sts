@@ -11,18 +11,19 @@ import { initialsOf } from "@/lib/format";
 // Avatar + nome/e-mail editáveis. Card do desktop; no mobile isso vive na
 // tela /profile/account.
 export function ProfileIdentityCard({ me, onSaved }: { me: MeResponse; onSaved: (me: MeResponse) => void }) {
-  const [form, setForm] = useState({ username: me.username, email: me.email });
+  const blank = { username: me.username, email: me.email, currentPassword: "" };
+  const [form, setForm] = useState(blank);
   const [saving, setSaving] = useState(false);
 
   // Hidrata quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    setForm({ username: me.username, email: me.email });
+    setForm({ username: me.username, email: me.email, currentPassword: "" });
   }, [me]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      onSaved(await patchMe(form));
+      onSaved(await patchMe({ ...form, currentPassword: form.currentPassword || undefined }));
       actionToast.success({ title: "Perfil atualizado" });
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao salvar.") });
@@ -55,10 +56,22 @@ export function ProfileIdentityCard({ me, onSaved }: { me: MeResponse; onSaved: 
           <Label className="text-xs uppercase tracking-wider text-zinc-500">E-mail</Label>
           <Input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
         </div>
+        {/* E-mail é o login: o servidor só troca com a senha atual. */}
+        {form.email !== me.email && (
+          <div className="space-y-1.5 col-span-2">
+            <Label className="text-xs uppercase tracking-wider text-zinc-500">Senha atual</Label>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={form.currentPassword}
+              onChange={(e) => setForm((p) => ({ ...p, currentPassword: e.target.value }))}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 mt-4">
-        <Button variant="outline" onClick={() => setForm({ username: me.username, email: me.email })}>Descartar</Button>
+        <Button variant="outline" onClick={() => setForm(blank)}>Descartar</Button>
         <Button onClick={handleSave} disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
       </div>
     </div>
