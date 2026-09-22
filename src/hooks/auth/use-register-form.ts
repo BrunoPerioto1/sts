@@ -49,7 +49,6 @@ export function useRegisterForm() {
         username: data.nome,
         email: data.email,
         password: data.password,
-        roleId: 1,
         fullName: data.nome,
       });
 
