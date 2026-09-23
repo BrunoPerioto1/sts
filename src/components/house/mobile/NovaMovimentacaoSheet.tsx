@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft; submitLabel: string }> = {
   DEPOSIT: { label: "Depósito", icon: ArrowDownLeft, submitLabel: "Adicionar depósito" },
   WITHDRAWAL: { label: "Saque", icon: ArrowUpRight, submitLabel: "Registrar saque" },
+  ADJUSTMENT: { label: "Saldo real", icon: SlidersHorizontal, submitLabel: "Ajustar saldo" },
 };
 
 const QUICK_AMOUNTS = [50, 100, 500];
@@ -25,17 +26,17 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [typeId, setTypeId] = useState<number | null>(null);
   const [cents, setCents] = useState(0);
+  const [typed, setTyped] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!house) return;
     setCents(0);
+    setTyped(false);
     getTransactionTypes()
       .then((txTypes) => {
-        // Só depósito e saque: ajuste manual não é uma opção pro usuário aqui.
-        const filtered = txTypes.filter((t) => t.name !== "ADJUSTMENT");
-        setTypes(filtered);
-        setTypeId(filtered[0]?.id ?? null);
+        setTypes(txTypes);
+        setTypeId(txTypes[0]?.id ?? null);
       })
       .catch(() => undefined);
   }, [house]);
@@ -49,20 +50,27 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   // projetaria o saldo errado depois do depósito.
   const balance = Number(house.realHouseBalance);
   const projectedBalance = selectedType?.name === "WITHDRAWAL" ? balance - numericValue : balance + numericValue;
+  // "Saldo real": o valor digitado e' o saldo que a casa mostra; grava so' a
+  // diferenca como ajuste. Fecha casa no vermelho por deposito nunca lancado.
+  const isAdjust = selectedType?.name === "ADJUSTMENT";
+  const diff = Math.round(cents - balance * 100) / 100;
+  const valid = isAdjust ? typed && diff !== 0 : numericValue > 0;
 
   const addAmount = (amount: number) => {
+    setTyped(true);
     setCents((c) => c + amount * 100);
   };
 
   const useFullBalance = () => {
+    setTyped(true);
     setCents(Math.round(Math.max(balance, 0) * 100));
   };
 
   const handleSubmit = async () => {
-    if (!typeId || !(numericValue > 0)) return;
+    if (!typeId || !valid) return;
     setLoading(true);
     try {
-      await createTransaction({ houseId: house.houseId, transactionTypeId: typeId, value: numericValue });
+      await createTransaction({ houseId: house.houseId, transactionTypeId: typeId, value: isAdjust ? diff : numericValue });
       onSuccess();
     } finally {
       setLoading(false);
@@ -83,7 +91,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
       footer={
         <Button
           className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
-          disabled={loading || !(numericValue > 0)}
+          disabled={loading || !valid}
           onClick={handleSubmit}
         >
           {loading ? "Enviando…" : meta?.submitLabel ?? "Confirmar"}
@@ -118,16 +126,18 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
 
         <div>
           <div className="flex items-center justify-between px-1 pb-1.5">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Valor</p>
-            {numericValue > 0 && (
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isAdjust ? "Saldo na casa" : "Valor"}</p>
+            {isAdjust ? (
+              typed && <p className="text-xs text-zinc-500">Ajuste {diff > 0 ? "+" : ""}{formatCurrency(diff)}</p>
+            ) : numericValue > 0 && (
               <p className="text-xs text-zinc-500">Saldo passa a {formatCurrency(projectedBalance)}</p>
             )}
           </div>
           <Input
             inputMode="numeric"
             placeholder="0,00"
-            value={cents > 0 ? centsToDisplay(cents) : ""}
-            onChange={(e) => setCents(Number(e.target.value.replace(/\D/g, "")) || 0)}
+            value={typed ? centsToDisplay(cents) : ""}
+            onChange={(e) => { setTyped(e.target.value !== ""); setCents(Number(e.target.value.replace(/\D/g, "")) || 0); }}
             className="text-3xl font-semibold h-auto py-2 tabular-nums"
           />
           <div className="flex gap-2 pt-2">

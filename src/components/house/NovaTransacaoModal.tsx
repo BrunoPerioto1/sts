@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownLeft, ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { centsToDisplay, formatCurrency } from "@/lib/format";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
@@ -17,29 +17,34 @@ interface NovaTransacaoModalProps {
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> = {
   DEPOSIT: { label: "Depósito", icon: ArrowDownLeft },
   WITHDRAWAL: { label: "Saque", icon: ArrowUpRight },
+  ADJUSTMENT: { label: "Saldo real", icon: SlidersHorizontal },
 };
 
 export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModalProps) {
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [typeId, setTypeId] = useState(0);
   const [cents, setCents] = useState(0);
+  const [typed, setTyped] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setCents(0);
+    setTyped(false);
     getTransactionTypes()
       .then((txTypes) => {
-        // Mesma regra do sheet mobile: ajuste manual não é opção pro usuário.
-        const filtered = txTypes.filter((t) => t.name !== "ADJUSTMENT");
-        setTypes(filtered);
-        setTypeId(filtered[0]?.id ?? 0);
+        setTypes(txTypes);
+        setTypeId(txTypes[0]?.id ?? 0);
       })
       .catch(() => undefined);
   }, [isOpen]);
 
-  const value = cents / 100;
-  const valid = typeId > 0 && cents > 0;
+  // "Saldo real": o usuario digita o que a casa mostra e grava so' a diferenca
+  // como ajuste. Fecha casa no vermelho por deposito nunca lancado.
+  const isAdjust = types.find((t) => t.id === typeId)?.name === "ADJUSTMENT";
+  const diff = Math.round(cents - Number(house.realHouseBalance) * 100) / 100;
+  const value = isAdjust ? diff : cents / 100;
+  const valid = typeId > 0 && (isAdjust ? typed && diff !== 0 : cents > 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +66,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
           <div className="text-[11px] uppercase tracking-wider opacity-45 mb-1.5">Tipo</div>
           {/* Dois botões no lugar do select: com só duas opções, abrir uma lista
               pra escolher entre depósito e saque é um clique a mais por nada. */}
-          <div className="grid grid-cols-2 rounded-lg border border-border overflow-hidden divide-x divide-border">
+          <div className="grid grid-cols-3 rounded-lg border border-border overflow-hidden divide-x divide-border">
             {types.map((t) => {
               const meta = TYPE_META[t.name] ?? { label: t.name, icon: ArrowDownLeft };
               const Icon = meta.icon;
@@ -84,19 +89,21 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
         </div>
 
         <div>
-          <div className="text-[11px] uppercase tracking-wider opacity-45 mb-1.5">Valor</div>
+          <div className="text-[11px] uppercase tracking-wider opacity-45 mb-1.5">{isAdjust ? "Saldo na casa" : "Valor"}</div>
           <div className="flex items-baseline gap-2 border-b border-border pb-2">
             <span className="text-lg opacity-45">R$</span>
             <Input
               autoFocus
               inputMode="numeric"
               placeholder="0,00"
-              value={cents > 0 ? centsToDisplay(cents) : ""}
-              onChange={(e) => setCents(Number(e.target.value.replace(/\D/g, "")) || 0)}
+              value={typed ? centsToDisplay(cents) : ""}
+              onChange={(e) => { setTyped(e.target.value !== ""); setCents(Number(e.target.value.replace(/\D/g, "")) || 0); }}
               className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-2xl tabular-nums hover:border-0 focus-visible:border-0 focus-visible:outline-none"
             />
             <span className="text-xs opacity-45 shrink-0 whitespace-nowrap">
-              Saldo atual {formatCurrency(house.realHouseBalance)}
+              {isAdjust && typed
+                ? `Ajuste ${diff > 0 ? "+" : ""}${formatCurrency(diff)}`
+                : `Saldo atual ${formatCurrency(house.realHouseBalance)}`}
             </span>
           </div>
         </div>
