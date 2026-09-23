@@ -35,7 +35,9 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
   const stake = Number(house.totalStake);
   const bets = Number(house.totalBets);
   const settledBets = Number(house.settledBets ?? Math.max(0, bets - Number(house.pendingBets)));
-  const hitRate = settledBets > 0 ? (Number(house.wonBets) / settledBets) * 100 : 0;
+  // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
+  const decided = Number(house.wonBets) + Number(house.lostBets);
+  const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
   const roi = stake > 0 ? (profit / stake) * 100 : 0;
   const noMovement = deposit === 0 && withdrawal === 0;
   const signClass = (v: number) => (v >= 0 ? "text-positive" : "text-negative");

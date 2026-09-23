@@ -30,7 +30,9 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   const isProfit = profit >= 0;
   const totalBets = Number(house.totalBets);
   const settledBets = Number(house.settledBets ?? Math.max(0, totalBets - Number(house.pendingBets)));
-  const hitRate = settledBets > 0 ? (Number(house.wonBets) / settledBets) * 100 : 0;
+  // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
+  const decided = Number(house.wonBets) + Number(house.lostBets);
+  const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
   const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
 
   // Portal pro body: essa tela e um overlay de tela cheia, mas era montada
