@@ -40,6 +40,7 @@ export interface BetItem {
   houseId: number;
   market: string;
   sport: string;
+  sportId?: number | null;
   profit: string | number | null;
   cashoutValue?: string | number | null;
   betTime: string | Date;
@@ -56,6 +57,7 @@ export interface BetFilterDto {
   resultId?: number;
   resultIds?: number[];
   houseIds?: number[];
+  sportIds?: number[];
   q?: string;
   page?: number;
   perPage?: number;
@@ -68,13 +70,14 @@ export interface PaginatedBetsResponseDto {
 }
 
 export async function getBets(params?: BetFilterDto) {
-  const { startDate, endDate, resultIds, houseIds, ...rest } = params ?? {};
+  const { startDate, endDate, resultIds, houseIds, sportIds, ...rest } = params ?? {};
   const queryParams: Record<string, string | number | undefined> = { ...rest };
   if (startDate) queryParams.startDate = new Date(startDate).toISOString();
   if (endDate) queryParams.endDate = new Date(endDate).toISOString();
   // API espera lista separada por vírgula (independe de como axios serializaria um array).
   if (resultIds?.length) queryParams.resultIds = resultIds.join(',');
   if (houseIds?.length) queryParams.houseIds = houseIds.join(',');
+  if (sportIds?.length) queryParams.sportIds = sportIds.join(',');
 
   const response = await api.bets.get<PaginatedBetsResponseDto>('', { params: queryParams });
   return response.data;
@@ -118,4 +121,13 @@ export function deleteBet(id: number) {
   return unwrap(api.bets.delete(`/${id}`));
 }
 
+export interface SportDto {
+  id: number;
+  name: string;
+}
 
+// Esportes normalizados (tabela `sports`). Lista global, cacheada na CDN.
+export async function getSports() {
+  const response = await api.bets.get<SportDto[]>('/sports');
+  return response.data;
+}

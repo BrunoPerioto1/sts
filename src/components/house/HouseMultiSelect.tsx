@@ -13,6 +13,9 @@ interface HouseMultiSelectProps {
   className?: string;
   disabled?: boolean;
   label?: string;
+  // Singular/plural do resumo e da busca. Reaproveitado pelo filtro de esporte.
+  noun?: [string, string];
+  allLabel?: string;
 }
 
 // Multi-seleção de casas das barras de filtro do desktop (Apostas, Tips,
@@ -25,6 +28,8 @@ export function HouseMultiSelect({
   className,
   disabled,
   label = "Casa",
+  noun = ["casa", "casas"],
+  allLabel = "Todas",
 }: HouseMultiSelectProps) {
   const [search, setSearch] = useState("");
 
@@ -43,8 +48,8 @@ export function HouseMultiSelect({
     selected.length === 0
       ? null
       : selected.length === 1
-        ? (houses.find((h) => h.id === selected[0])?.name ?? "1 casa")
-        : `${selected.length} casas`;
+        ? (houses.find((h) => h.id === selected[0])?.name ?? `1 ${noun[0]}`)
+        : `${selected.length} ${noun[1]}`;
 
   return (
     <Popover>
@@ -59,7 +64,7 @@ export function HouseMultiSelect({
         >
           <span className="text-zinc-500 shrink-0">{label}</span>
           <span className={cn("truncate", summary ? "text-white" : "text-zinc-400")}>
-            {summary ?? "Todas"}
+            {summary ?? allLabel}
           </span>
           <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
         </button>
@@ -69,7 +74,7 @@ export function HouseMultiSelect({
         <div className="relative mb-2">
           <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
           <Input
-            placeholder="Buscar casa"
+            placeholder={`Buscar ${noun[0]}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-9 pl-8 text-sm"
@@ -87,7 +92,7 @@ export function HouseMultiSelect({
             </label>
           ))}
           {filtered.length === 0 && (
-            <p className="py-6 text-center text-sm text-zinc-500">Nenhuma casa encontrada.</p>
+            <p className="py-6 text-center text-sm text-zinc-500">Nenhum resultado.</p>
           )}
         </div>
 

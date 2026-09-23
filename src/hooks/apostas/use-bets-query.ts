@@ -10,6 +10,7 @@ const GROUPED_PER_PAGE = 1000;
 export interface BetsQueryFilters {
   statusFilter: string[];
   houseIds: number[];
+  sportIds: number[];
   startDate: string;
   endDate: string;
   searchTerm: string;
@@ -23,6 +24,7 @@ function paramsFrom(f: BetsQueryFilters): BetFilterDto {
   const params: BetFilterDto = {};
   if (f.statusFilter.length > 0) params.resultIds = f.statusFilter.map(Number);
   if (f.houseIds.length > 0) params.houseIds = f.houseIds;
+  if (f.sportIds.length > 0) params.sportIds = f.sportIds;
   if (f.startDate) params.startDate = f.startDate;
   if (f.endDate) params.endDate = f.endDate;
   if (f.searchTerm) params.q = f.searchTerm;
@@ -39,6 +41,7 @@ export function betsQueryKey(f: BetsQueryFilters) {
     f.pageStart,
     f.statusFilter.join(","),
     f.houseIds.join(","),
+    f.sportIds.join(","),
     f.startDate,
     f.endDate,
     f.searchTerm,

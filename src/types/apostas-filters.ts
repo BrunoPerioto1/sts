@@ -12,6 +12,7 @@ export interface ApostasFilterState {
   period: ApostasPeriod;
   status: string[];
   houseIds: number[];
+  sportIds: number[];
 }
 
 export function defaultPeriod(): ApostasPeriod {

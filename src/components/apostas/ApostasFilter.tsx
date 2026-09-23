@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { DateRangeField } from "@/components/ui/date-range-field";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { StatusMultiSelect } from "./StatusMultiSelect";
+import { useSports } from "@/hooks/queries/use-sports";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface ApostasFilterProps {
   onSearch: (term: string) => void;
   onFilterStatus?: (status: string[]) => void;
   onFilterHouses?: (houseIds: number[]) => void;
+  onFilterSports?: (sportIds: number[]) => void;
   onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
   onExportCsv?: () => void;
@@ -24,6 +26,7 @@ interface ApostasFilterProps {
   initialSearchTerm?: string;
   initialStatus?: string[];
   initialHouseIds?: number[];
+  initialSportIds?: number[];
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
@@ -35,6 +38,7 @@ export function ApostasFilter({
   onSearch,
   onFilterStatus,
   onFilterHouses,
+  onFilterSports,
   onDateRangeChange,
   onClearFilters,
   onExportCsv,
@@ -45,12 +49,15 @@ export function ApostasFilter({
   initialSearchTerm = "",
   initialStatus = [],
   initialHouseIds = [],
+  initialSportIds = [],
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo);
   const [status, setStatus] = useState<string[]>(initialStatus);
   const [houseIds, setHouseIds] = useState<number[]>(initialHouseIds);
+  const [sportIds, setSportIds] = useState<number[]>(initialSportIds);
+  const sports = useSports();
 
   const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
   if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
@@ -90,12 +97,25 @@ export function ApostasFilter({
     });
   }
 
+  for (const id of sportIds) {
+    activeChips.push({
+      key: `sport-${id}`,
+      label: sports.find((s) => s.id === id)?.name ?? String(id),
+      clear: () => {
+        const next = sportIds.filter((v) => v !== id);
+        setSportIds(next);
+        onFilterSports?.(next);
+      },
+    });
+  }
+
   const handleClear = () => {
     setSearchTerm("");
     setDateFrom("");
     setDateTo("");
     setStatus([]);
     setHouseIds([]);
+    setSportIds([]);
     onClearFilters?.();
   };
 
@@ -147,6 +167,20 @@ export function ApostasFilter({
             onChange={(next) => { setHouseIds(next); onFilterHouses?.(next); }}
             disabled={isLoading}
             label="Casas"
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <HouseMultiSelect
+            houses={sports}
+            selected={sportIds}
+            onChange={(next) => { setSportIds(next); onFilterSports?.(next); }}
+            disabled={isLoading}
+            label="Esportes"
+            noun={["esporte", "esportes"]}
+            allLabel="Todos"
           />
         </div>
 

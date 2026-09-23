@@ -6,6 +6,9 @@ import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { StatusSheet } from "./StatusSheet";
 import { CasaSheet } from "./CasaSheet";
+import { SportSheet } from "./SportSheet";
+import { SportIcon } from "./SportIcon";
+import { useSports } from "@/hooks/queries/use-sports";
 import { PeriodCalendarSheet } from "./PeriodCalendarSheet";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,8 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
   const [draft, setDraft] = useState<ApostasFilterState>(value);
   const [statusOpen, setStatusOpen] = useState(false);
   const [casaOpen, setCasaOpen] = useState(false);
+  const [sportOpen, setSportOpen] = useState(false);
+  const sports = useSports();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
@@ -43,7 +48,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const activeCount = [draft.period.preset !== "mes", draft.status.length > 0, draft.houseIds.length > 0].filter(Boolean).length;
+  const activeCount = [draft.period.preset !== "mes", draft.status.length > 0, draft.houseIds.length > 0, draft.sportIds.length > 0].filter(Boolean).length;
 
   const statusSummary =
     draft.status.length === 0
@@ -59,12 +64,19 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         ? (houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
         : `${draft.houseIds.length} casas`;
 
+  const sportSummary =
+    draft.sportIds.length === 0
+      ? "Todos os esportes"
+      : draft.sportIds.length === 1
+        ? (sports.find((s) => s.id === draft.sportIds[0])?.name ?? "1 esporte")
+        : `${draft.sportIds.length} esportes`;
+
   const periodLabel =
     draft.period.from && draft.period.to
       ? `${format(parseISO(draft.period.from), "dd MMM", { locale: ptBR })} – ${format(parseISO(draft.period.to), "dd MMM", { locale: ptBR })}`
       : "Selecionar período";
 
-  const handleClear = () => setDraft({ period: defaultPeriod(), status: [], houseIds: [] });
+  const handleClear = () => setDraft({ period: defaultPeriod(), status: [], houseIds: [], sportIds: [] });
 
   const handleApply = () => {
     onApply(draft);
@@ -128,6 +140,19 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         </section>
 
         <section className="space-y-1.5">
+          <p className={sectionLabel}>Esporte</p>
+          <SheetSelectField
+            summary={sportSummary}
+            onOpen={() => setSportOpen(true)}
+            leading={
+              draft.sportIds.length === 1 && (
+                <SportIcon name={sports.find((s) => s.id === draft.sportIds[0])?.name} className="text-zinc-400 shrink-0" />
+              )
+            }
+          />
+        </section>
+
+        <section className="space-y-1.5">
           <p className={sectionLabel}>Período personalizado</p>
           <button
             type="button"
@@ -153,6 +178,13 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         houses={houses}
         houseIds={draft.houseIds}
         onChange={(houseIds) => setDraft((d) => ({ ...d, houseIds }))}
+      />
+      <SportSheet
+        open={sportOpen}
+        onOpenChange={setSportOpen}
+        sports={sports}
+        selected={draft.sportIds}
+        onChange={(sportIds) => setDraft((d) => ({ ...d, sportIds }))}
       />
       <PeriodCalendarSheet
         open={calendarOpen}

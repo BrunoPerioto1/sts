@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { CasaSheet } from "./CasaSheet";
+import { SportSheet } from "./SportSheet";
+import { SportIcon } from "./SportIcon";
+import { useSports, findSport } from "@/hooks/queries/use-sports";
 import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +34,8 @@ interface MobileApostaFormSheetProps {
 
 export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialData, isEditing = false, pendingImage, onPendingImageConsumed }: MobileApostaFormSheetProps) {
   const [casaOpen, setCasaOpen] = useState(false);
+  const [sportOpen, setSportOpen] = useState(false);
+  const sports = useSports();
   const [dataHoraOpen, setDataHoraOpen] = useState(false);
   const scan = useBetSlipScan();
 
@@ -188,13 +193,12 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <AiFieldLabel htmlFor="bet-sport" mark={aiMarks.sport} className={fieldLabel}>Esporte</AiFieldLabel>
-            <Input
-              placeholder="Ex: Futebol"
-              id="bet-sport"
-              className={aiFieldRing(aiMarks.sport)}
-              value={formData.sport}
-              onChange={(e) => setField("sport", e.target.value)}
+            <AiFieldLabel mark={aiMarks.sport} className={fieldLabel}>Esporte</AiFieldLabel>
+            <SheetSelectField
+              summary={findSport(sports, formData.sport)?.name ?? (formData.sport || "Selecionar")}
+              onOpen={() => setSportOpen(true)}
+              leading={formData.sport && <SportIcon name={findSport(sports, formData.sport)?.name} className="text-zinc-400 shrink-0" />}
+              className={cn("min-h-[44px] sm:min-h-[36px]", aiFieldRing(aiMarks.sport))}
             />
           </div>
           <div className="space-y-1.5">
@@ -234,6 +238,15 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
         onOpenChange={setDataHoraOpen}
         value={formData.betTime}
         onApply={(betTime) => setFormData({ ...formData, betTime })}
+      />
+
+      <SportSheet
+        multiple={false}
+        open={sportOpen}
+        onOpenChange={setSportOpen}
+        sports={sports}
+        selected={[findSport(sports, formData.sport)?.id ?? 0]}
+        onChange={(ids) => setField("sport", sports.find((s) => s.id === ids[0])?.name ?? formData.sport)}
       />
 
       <CasaSheet

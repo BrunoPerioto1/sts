@@ -84,7 +84,7 @@ export default function ApostasPage() {
   useEffect(() => {
     selection.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.statusFilter, filters.houseIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
+  }, [filters.statusFilter, filters.houseIds, filters.sportIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
 
   useEffect(() => {
     if (!selection.selectionMode) return;
@@ -119,9 +119,11 @@ export default function ApostasPage() {
     initialSearchTerm: filters.searchTerm,
     initialStatus: filters.statusFilter,
     initialHouseIds: filters.houseIds,
+    initialSportIds: filters.sportIds,
     onSearch: filters.setSearch,
     onFilterStatus: filters.setStatus,
     onFilterHouses: filters.setHouses,
+    onFilterSports: filters.setSports,
     onDateRangeChange: filters.setDateRange,
     onClearFilters: filters.clearFilters,
     onExportCsv: () => exportBetsListCsv(apostas),

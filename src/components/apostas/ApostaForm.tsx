@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type BetItem } from "@/api/routes/get-bets";
 import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
+import { useSports, findSport } from "@/hooks/queries/use-sports";
 import { useBetSlipScan, pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { BetSlipUpload } from "./BetSlipUpload";
 import { AiFieldLabel } from "./AiFieldLabel";
@@ -62,6 +63,8 @@ export function ApostaForm({
     applyAiFields,
     resetForm,
   } = useApostaForm({ onApostaAdded: handleSaved, initialData, isEditing });
+  const sports = useSports();
+  const sportValue = findSport(sports, formData.sport)?.name ?? formData.sport;
   // Legenda da casa, como no Telegram: digitar "kto" antes de colar o print
   // evita que a IA tenha que adivinhar a casa pela logo.
   const [caption, setCaption] = useState("");
@@ -163,7 +166,16 @@ export function ApostaForm({
 
         <div className="space-y-1.5">
           <AiFieldLabel htmlFor="esporte" mark={aiMarks.sport}>Esporte</AiFieldLabel>
-          <Input id="esporte" placeholder="Ex: futebol" className={aiFieldRing(aiMarks.sport)} value={formData.sport} onChange={(e) => setField("sport", e.target.value)} />
+          <Select value={sportValue} onValueChange={(value) => setField("sport", value)}>
+            <SelectTrigger id="esporte" className={aiFieldRing(aiMarks.sport)}><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {/* Texto fora da lista (aposta antiga) continua aparecendo pra não sumir na edição. */}
+              {sportValue && !findSport(sports, sportValue) && <SelectItem value={sportValue}>{sportValue}</SelectItem>}
+              {sports.map((s) => (
+                <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5">
