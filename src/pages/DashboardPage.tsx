@@ -78,7 +78,7 @@ export function DashboardPage() {
   const subtitle = [
     "Visão geral da sua performance",
     rangeLabel,
-    ready && !loading ? `${Number(metrics.totalBets)} apostas liquidadas` : null,
+    ready && !loading ? `${Number(metrics.settledBets)} apostas liquidadas` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -98,9 +98,9 @@ export function DashboardPage() {
     <MainLayout
       title="Dashboard"
       subtitle={subtitle}
-      titleWrapperClassName="flex flex-col gap-1 min-w-0"
-      titleClassName="text-xl font-semibold tracking-tight"
-      subtitleClassName="text-[13px] text-zinc-400 truncate"
+      titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
+      titleClassName="text-2xl font-semibold tracking-tight"
+      subtitleClassName="text-sm text-zinc-400 truncate"
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.

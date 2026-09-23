@@ -32,7 +32,7 @@ function ColumnHeader() {
       <span>Evento</span>
       <span className="text-right">Odd</span>
       <span className="text-right">Valor</span>
-      <span className="text-right">Retorno</span>
+      <span className="text-right">Resultado</span>
       <span>Status</span>
       <span />
     </div>

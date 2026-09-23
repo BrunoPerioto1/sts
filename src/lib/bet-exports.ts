@@ -23,7 +23,7 @@ function betRow(b: BetItem) {
 export function exportBetsListCsv(bets: BetItem[]) {
   downloadCsv(
     "apostas.csv",
-    ["Data", "Hora", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"],
+    ["Data", "Hora", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Lucro"],
     bets.map((b) => [formatDate(betDate(b)), formatTime(betDate(b)), ...betRow(b)])
   );
 }
@@ -33,7 +33,7 @@ export async function exportAllBetsCsv() {
   const res = await getBets({ perPage: 5000, page: 1 });
   downloadCsv(
     "apostas.csv",
-    ["Data", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Retorno"],
+    ["Data", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Lucro"],
     (res.data ?? []).map((b) => [formatDate(betDate(b)), ...betRow(b)])
   );
 }

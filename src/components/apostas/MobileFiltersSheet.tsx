@@ -48,7 +48,12 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const activeCount = [draft.period.preset !== "mes", draft.status.length > 0, draft.houseIds.length > 0, draft.sportIds.length > 0].filter(Boolean).length;
+  // Mesma regra do contador no botao de filtros (use-apostas-filters): periodo
+  // so conta quando sai do padrao dia 1 -> hoje. Antes o sheet dizia 2 e o
+  // botao 1 com os mesmos filtros.
+  const dflt = defaultPeriod();
+  const periodChanged = draft.period.from !== dflt.from || draft.period.to !== dflt.to;
+  const activeCount = [periodChanged, draft.status.length > 0, draft.houseIds.length > 0, draft.sportIds.length > 0].filter(Boolean).length;
 
   const statusSummary =
     draft.status.length === 0

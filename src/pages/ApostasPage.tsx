@@ -147,7 +147,6 @@ export default function ApostasPage() {
       titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
       titleClassName="text-2xl font-semibold tracking-tight shrink-0"
       subtitleClassName="text-sm text-zinc-500 truncate"
-      hideHeaderBorder
       hideBottomNav={selection.selectionMode}
       mobileHeader={
         <ApostasMobileHeader

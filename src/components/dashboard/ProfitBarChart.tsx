@@ -45,12 +45,21 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
     ? [data[0].date, data[Math.floor(data.length / 2)].date, data[data.length - 1].date]
     : data.map((d) => d.date);
   const valores = data.map((d) => d.profitDay);
-  const domain: [number, number] = [Math.min(0, ...valores), Math.max(0, ...valores)];
+  // Passo "redondo" (1/2/2,5/5 x 10^n): com o dominio no min/max exato o eixo
+  // mostrava 707,1 / 129,3 / -170,7.
+  const lo = Math.min(0, ...valores);
+  const hi = Math.max(0, ...valores);
+  const bruto = (hi - lo) / 4 || 1;
+  const mag = 10 ** Math.floor(Math.log10(bruto));
+  const passo = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((p) => p >= bruto)!;
+  const domain: [number, number] = [Math.floor(lo / passo) * passo, Math.ceil(hi / passo) * passo];
+  const yTicks: number[] = [];
+  for (let v = domain[0]; v <= domain[1] + passo / 2; v += passo) yTicks.push(Math.round(v * 100) / 100);
   const eixoY = (
     <YAxis
       width={Y_WIDTH}
       domain={domain}
-      tickCount={4}
+      ticks={yTicks}
       axisLine={false}
       tickLine={false}
       tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 10 }}
@@ -90,12 +99,12 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
             </ResponsiveContainer>
           </div>
         )}
-        <div ref={scroller} className={`min-w-0 flex-1 ${rola ? "overflow-x-auto overscroll-x-contain [scrollbar-width:none]" : ""}`}>
+        <div ref={scroller} className={`min-w-0 flex-1 ${rola ? "overflow-x-auto overscroll-x-contain [scrollbar-width:none] [mask-image:linear-gradient(to_right,transparent,black_20px,black_calc(100%-20px),transparent)]" : ""}`}>
         <div style={{ height: "100%", minWidth: rola ? data.length * SLOT : undefined }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="25%" onMouseMove={mover} onClick={mover}>
             <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeOpacity={0.18} />
-            {rola ? <YAxis hide domain={domain} tickCount={4} /> : eixoY}
+            {rola ? <YAxis hide domain={domain} ticks={yTicks} /> : eixoY}
             <XAxis
               dataKey="date"
               ticks={height > 220 || rola ? undefined : ticks}

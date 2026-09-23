@@ -15,8 +15,9 @@ import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
 
+// % da banca sugerido, nao retorno: sem sinal e sem verde, que liam como EV.
 function formatPercent(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2).replace(".", ",")}%`;
+  return `${value.toFixed(2).replace(".", ",")}% da banca`;
 }
 
 const squareButtonClass =
@@ -86,7 +87,7 @@ export function TipCard({
             </div>
           )}
           {tip.percent !== null && (
-            <p className="mt-1 text-xs font-semibold tabular-nums text-green-400">
+            <p className="mt-1 text-xs font-medium tabular-nums text-zinc-400">
               {formatPercent(tip.percent)}
             </p>
           )}

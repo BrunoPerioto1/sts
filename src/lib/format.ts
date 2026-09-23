@@ -69,6 +69,13 @@ export function formatKickoff(value: string | number | Date): string {
 }
 
 // Iniciais de nome de usuário/casa pro avatar redondo.
+// Cor do avatar da casa: fixa por id, igual em todas as telas.
+const AVATAR_PALETTE = ["#5b7fff", "#f2555c", "#3ddc84", "#f5a623", "#a78bfa", "#22d3ee", "#fb7185", "#facc15"];
+
+export function colorForHouse(id: number) {
+  return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
+}
+
 export function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";

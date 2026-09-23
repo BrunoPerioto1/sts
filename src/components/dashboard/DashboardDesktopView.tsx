@@ -108,6 +108,10 @@ export function DashboardDesktopView({
     (best, day) => (best == null || day.profitDay > best.profitDay ? day : best),
     null
   );
+  const worstDay = dailyData.reduce<DailySummaryPoint | null>(
+    (worst, day) => (worst == null || day.profitDay < worst.profitDay ? day : worst),
+    null
+  );
   const hasData = dailyData.length > 0;
 
   return (
@@ -125,7 +129,6 @@ export function DashboardDesktopView({
             resetKey={`${filters.startDate}-${filters.endDate}`}
           />
           <div className="mt-6">
-            <StatRow label="Volume apostado" value={formatCurrency(Number(metrics.totalStaked))} />
             <StatRow
               label="Melhor dia"
               value={
@@ -134,6 +137,16 @@ export function DashboardDesktopView({
                   : "—"
               }
               color={bestDay && bestDay.profitDay > 0 ? "var(--color-positive)" : undefined}
+            />
+            {/* "Volume apostado" saiu daqui: repetia o KPI "Total apostado" logo abaixo. */}
+            <StatRow
+              label="Pior dia"
+              value={
+                worstDay && worstDay.profitDay < 0
+                  ? `${formatSignedCurrency(worstDay.profitDay)} · ${format(parseISO(worstDay.date), "d MMM", { locale: ptBR })}`
+                  : "—"
+              }
+              color={worstDay && worstDay.profitDay < 0 ? "var(--color-negative)" : undefined}
             />
           </div>
         </div>

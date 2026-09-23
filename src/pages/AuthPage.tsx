@@ -31,19 +31,19 @@ const AuthPage = () => {
             Sem confete, sem cassino, sem cor decorativa.
           </p>
           <div className="hr-fade mb-6" style={{ marginLeft: 0, marginRight: "auto", width: "100%" }} />
+          {/* Antes eram numeros inventados (+R$ 4.812, 1.284 apostas) — num app
+              de banca, cifra de mentira na porta de entrada soa como promessa. */}
           <div className="flex gap-9">
-            <div>
-              <div className="text-2xl font-medium text-positive">+R$ 4.812</div>
-              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Lucro acumulado</div>
-            </div>
-            <div>
-              <div className="text-2xl font-medium">1.284</div>
-              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Apostas</div>
-            </div>
-            <div>
-              <div className="text-2xl font-medium">84</div>
-              <div className="text-xs uppercase tracking-wide opacity-55 mt-1">Casas</div>
-            </div>
+            {[
+              ["Telegram", "Aposta pelo bot"],
+              ["Automática", "Liquidação por placar"],
+              ["Por casa", "Saldo conciliado"],
+            ].map(([value, label]) => (
+              <div key={label}>
+                <div className="text-2xl font-medium">{value}</div>
+                <div className="text-xs uppercase tracking-wide opacity-55 mt-1">{label}</div>
+              </div>
+            ))}
           </div>
         </div>
 

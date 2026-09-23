@@ -35,9 +35,9 @@ export function MainLayout({
   actions,
   hideHeaderBorder = false,
   hideBottomNav = false,
-  titleWrapperClassName = "flex items-baseline gap-3 min-w-0",
-  titleClassName = "text-lg font-medium shrink-0",
-  subtitleClassName = "text-sm opacity-50 truncate",
+  titleWrapperClassName = "flex items-baseline gap-2.5 min-w-0",
+  titleClassName = "text-2xl font-semibold tracking-tight shrink-0",
+  subtitleClassName = "text-sm text-zinc-500 truncate",
   mobileHeader,
   mobileFullBleed = false,
 }: MainLayoutProps) {
@@ -66,7 +66,9 @@ export function MainLayout({
           </div>
         )}
         <div
-          className={cn("items-center justify-between gap-4", mobileHeader ? "hidden sm:flex" : "flex")}
+          // Altura fixa: com subtitulo embaixo (Dashboard/Tips) ou ao lado
+          // (Apostas/Casas) o header tinha 68px numa tela e 84px na outra.
+          className={cn("items-center justify-between gap-4 sm:min-h-[84px]", mobileHeader ? "hidden sm:flex" : "flex")}
           style={{ padding: "16px 24px" }}
         >
           <div className={titleWrapperClassName}>

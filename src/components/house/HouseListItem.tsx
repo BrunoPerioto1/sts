@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DotsThreeOutline, Plus } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { initialsOf, formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
+import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
 
 interface HouseListItemProps {
   house: HouseBalanceDto;
@@ -50,7 +50,10 @@ export function HouseListItem({ house, maxBalance, onViewDetails, onOpenHistory,
 
   return (
     <div className={cn(HOUSE_GRID, "px-2 -mx-2 py-2.5 rounded-md border-b border-border last:border-b-0 hover:bg-foreground/[0.03] transition-colors")}>
-      <div className="w-7 h-7 rounded-[7px] bg-neutral-800 flex items-center justify-center text-[11px] font-medium">
+      <div
+        className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[11px] font-semibold text-white"
+        style={{ background: colorForHouse(house.houseId) }}
+      >
         {initialsOf(house.houseName)}
       </div>
 

@@ -143,7 +143,7 @@ export function TipRowDesktop({
         {tip.recommendedStake !== null ? formatCurrency(tip.recommendedStake) : "—"}
       </span>
 
-      <span className="text-right text-xs font-medium tabular-nums text-positive">
+      <span className="text-right text-xs font-medium tabular-nums text-zinc-400">
         {tip.percent !== null ? `${tip.percent.toFixed(2).replace(".", ",")}%` : "—"}
       </span>
 

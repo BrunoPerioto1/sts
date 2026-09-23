@@ -95,7 +95,6 @@ export function TipDetailPanel({
           <Stat
             label="% da banca"
             value={tip.percent !== null ? `${tip.percent.toFixed(2).replace(".", ",")}%` : "—"}
-            className="text-positive"
           />
         </div>
 
