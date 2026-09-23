@@ -50,6 +50,13 @@ export const apiClient = () => {
       if (token) config.headers.set('Authorization', `Bearer ${token}`);
       return config;
     });
+    // 402 = acesso vencido (backend confere a cada request): leva pra tela do PIX.
+    instance.interceptors.response.use(undefined, (error) => {
+      if (error?.response?.status === 402 && window.location.pathname !== '/renovar') {
+        window.location.href = '/renovar';
+      }
+      return Promise.reject(error);
+    });
     return instance;
   };
 

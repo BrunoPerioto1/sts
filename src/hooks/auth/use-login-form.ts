@@ -81,6 +81,8 @@ export function useLoginForm() {
         setError(
           `Senha incorreta. Resta${left === 1 ? "" : "m"} ${left} tentativa${left === 1 ? "" : "s"} antes do bloqueio temporário.`
         );
+      } else if (status === 402) {
+        // Senha certa, acesso vencido: o interceptor já leva pra /renovar.
       } else if (status === 401) {
         setError("E-mail ou senha incorretos.");
       } else {
