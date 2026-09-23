@@ -227,7 +227,7 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-xl font-semibold tabular-nums text-white">+{formatCurrency(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-foreground">+{formatCurrency(potentialReturn.profit)}</p>
             </div>
           </div>
         )}

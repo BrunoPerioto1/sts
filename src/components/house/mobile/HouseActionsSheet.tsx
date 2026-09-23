@@ -48,10 +48,10 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
               key={r.label}
               type="button"
               onClick={r.onClick}
-              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-foreground/[0.04]"
             >
               <r.icon size={18} className="text-accent shrink-0" />
-              <span className="text-sm text-white">{r.label}</span>
+              <span className="text-sm text-foreground">{r.label}</span>
             </button>
           ))}
         </div>

@@ -204,7 +204,7 @@ export default function TipsPage() {
             "press h-9 shrink-0 rounded-full px-3 text-[13px] font-medium transition-colors",
             tab === t.value
               ? "bg-accent text-white"
-              : "border border-white/10 bg-transparent text-zinc-400 hover:text-foreground",
+              : "border border-foreground/10 bg-transparent text-zinc-400 hover:text-foreground",
           )}
         >
           {t.label}
@@ -235,7 +235,7 @@ export default function TipsPage() {
             onClick={() => void refetch()}
             disabled={isFetching}
             aria-label="Atualizar tips"
-            className="press flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-zinc-400 transition-colors hover:text-foreground disabled:opacity-50"
+            className="press flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 text-zinc-400 transition-colors hover:text-foreground disabled:opacity-50"
           >
             <ArrowsClockwise size={16} weight="bold" className={cn(isFetching && "animate-spin")} />
           </button>
@@ -270,7 +270,7 @@ export default function TipsPage() {
 
         {/* Mesma caixa dos filtros de Apostas pra barra não ficar com dois
             controles de altura diferente. */}
-        <div className="hidden h-11 shrink-0 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 md:flex">
+        <div className="hidden h-11 shrink-0 items-center rounded-xl border border-foreground/10 bg-foreground/[0.02] px-3.5 md:flex">
           <HouseMultiSelect
             houses={houses}
             selected={houseIds}
@@ -289,7 +289,7 @@ export default function TipsPage() {
             "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
             houseIds.length > 0
               ? "bg-accent text-white"
-              : "border border-white/10 bg-transparent text-zinc-400",
+              : "border border-foreground/10 bg-transparent text-zinc-400",
           )}
         >
           <Buildings size={13} /> Casas

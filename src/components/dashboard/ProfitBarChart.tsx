@@ -10,8 +10,9 @@ interface ProfitBarChartProps {
   height?: number;
 }
 
-const POS = "#4ade9e";
-const NEG = "#f0797e";
+// Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
+const POS = "rgb(var(--rgb-positive))";
+const NEG = "rgb(var(--rgb-negative))";
 // Até 30 dias cabe tudo na tela. Acima disso a barra afinaria demais pra tocar:
 // ela fica em 13px e o gráfico rola na horizontal, com o eixo Y parado.
 const MAX_SEM_ROLAGEM = 30;
@@ -71,10 +72,10 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2.5 text-sm">
+      <div className="mb-3 flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2.5 text-sm">
         <span className="flex items-center gap-2.5">
           <span className="text-zinc-100">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
-          <span className="h-4 w-px bg-white/10" />
+          <span className="h-4 w-px bg-foreground/10" />
           <span className="tabular-nums" style={{ color: cor(atual.profitDay) }}>
             {formatSignedCurrency(atual.profitDay)}
           </span>

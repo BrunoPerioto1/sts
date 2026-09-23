@@ -69,7 +69,7 @@ export function DashboardMobileView({
           <button
             type="button"
             onClick={() => setPeriodOpen(true)}
-            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-xl border border-white/10 text-sm text-zinc-300"
+            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-xl border border-foreground/10 text-sm text-zinc-300"
           >
             {PRESET_LABEL[preset]} <CaretDown size={12} />
           </button>
@@ -87,7 +87,7 @@ export function DashboardMobileView({
         <div className="mt-5 animate-rise stagger" style={stagger(2)}>
           {dailyData.length >= MIN_DAYS_FOR_CHART ? (
             <>
-              <div role="tablist" className="mb-3 grid grid-cols-2 rounded-xl bg-white/[0.04] p-1 text-sm">
+              <div role="tablist" className="mb-3 grid grid-cols-2 rounded-xl bg-foreground/[0.04] p-1 text-sm">
                 {(["dia", "acumulado"] as const).map((v) => (
                   <button
                     key={v}
@@ -95,7 +95,7 @@ export function DashboardMobileView({
                     role="tab"
                     aria-selected={grafico === v}
                     onClick={() => setGrafico(v)}
-                    className={`press h-9 rounded-lg capitalize transition-colors ${grafico === v ? "bg-white/[0.1] text-white" : "text-zinc-400"}`}
+                    className={`press h-9 rounded-lg capitalize transition-colors ${grafico === v ? "bg-foreground/[0.1] text-foreground" : "text-zinc-400"}`}
                   >
                     {v}
                   </button>
@@ -108,7 +108,7 @@ export function DashboardMobileView({
               )}
             </>
           ) : (
-            <div className="rounded-lg bg-white/[0.03] p-3">
+            <div className="rounded-lg bg-foreground/[0.03] p-3">
               <div className="flex items-start gap-2">
                 <ChartLine size={16} className="text-zinc-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-zinc-400 leading-snug">

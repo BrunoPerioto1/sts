@@ -12,7 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border border-transparent bg-[var(--color-light)] text-[var(--color-onlight)] hover:bg-white active:opacity-90",
+          "border border-transparent bg-[var(--color-light)] text-[var(--color-onlight)] hover:opacity-90 active:opacity-90",
         destructive:
           "border border-negative text-negative bg-transparent hover:bg-negative/10",
         outline:

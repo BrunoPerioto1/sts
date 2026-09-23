@@ -23,8 +23,13 @@ export default {
                 border: 'var(--color-divider)',
                 input: 'var(--color-divider)',
                 ring: 'var(--color-accent)',
-                background: 'var(--color-bg)',
-                foreground: 'var(--color-text)',
+                // Canais RGB (ver index.css): e o que faz `bg-foreground/[0.07]`
+                // gerar CSS. Com 'var(--color-text)' a opacidade era ignorada.
+                background: 'rgb(var(--rgb-bg) / <alpha-value>)',
+                foreground: 'rgb(var(--rgb-text) / <alpha-value>)',
+                zinc: Object.fromEntries(
+                    [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((n) => [n, `rgb(var(--zinc-${n}) / <alpha-value>)`])
+                ),
                 primary: {
                     DEFAULT: 'var(--color-accent)',
                     foreground: 'var(--color-bg)'
@@ -34,7 +39,7 @@ export default {
                     foreground: 'var(--color-text)'
                 },
                 destructive: {
-                    DEFAULT: '#f0797e',
+                    DEFAULT: 'rgb(var(--rgb-negative) / <alpha-value>)',
                     foreground: 'var(--color-text)'
                 },
                 muted: {
@@ -64,15 +69,15 @@ export default {
                     foreground: 'var(--color-text)'
                 },
                 card: {
-                    DEFAULT: 'var(--color-surface)',
+                    DEFAULT: 'rgb(var(--rgb-surface) / <alpha-value>)',
                     foreground: 'var(--color-text)'
                 },
                 success: {
-                    DEFAULT: '#4ade9e',
+                    DEFAULT: 'rgb(var(--rgb-positive) / <alpha-value>)',
                     foreground: 'var(--color-bg)'
                 },
-                positive: '#4ade9e',
-                negative: '#f0797e',
+                positive: 'rgb(var(--rgb-positive) / <alpha-value>)',
+                negative: 'rgb(var(--rgb-negative) / <alpha-value>)',
                 neutral: {
                     100: 'var(--color-neutral-100)',
                     200: 'var(--color-neutral-200)',
@@ -85,8 +90,8 @@ export default {
                     900: 'var(--color-neutral-900)'
                 },
                 chart: {
-                    green: '#4ade9e',
-                    red: '#f0797e',
+                    green: 'rgb(var(--rgb-positive) / <alpha-value>)',
+                    red: 'rgb(var(--rgb-negative) / <alpha-value>)',
                     blue: 'var(--color-accent)'
                 },
                 sidebar: {

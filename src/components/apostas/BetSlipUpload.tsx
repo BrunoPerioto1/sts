@@ -161,7 +161,7 @@ export function BetSlipUpload({
       onChange={(e) => onCaptionChange(e.target.value)}
       placeholder="casa (ex: kto)"
       aria-label="Casa de apostas do bilhete"
-      className="w-[108px] flex-none rounded-lg border border-white/10 bg-[var(--color-surface-2)] px-2.5 py-2 text-[11px] outline-none transition-colors placeholder:text-zinc-600 focus:border-accent"
+      className="w-[108px] flex-none rounded-lg border border-foreground/10 bg-[var(--color-surface-2)] px-2.5 py-2 text-[11px] outline-none transition-colors placeholder:text-zinc-600 focus:border-accent"
     />
   );
 
@@ -169,7 +169,7 @@ export function BetSlipUpload({
     <button
       type="button"
       onClick={() => setZoom(true)}
-      className="h-[58px] w-[58px] flex-none overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-white/25"
+      className="h-[58px] w-[58px] flex-none overflow-hidden rounded-lg border border-foreground/10 transition-colors hover:border-foreground/25"
       aria-label="Ampliar print"
     >
       <img src={preview.url} alt="Print do bilhete" className="h-full w-full object-cover" />
@@ -194,7 +194,7 @@ export function BetSlipUpload({
     <button
       type="button"
       onClick={() => partInput.current?.click()}
-      className={cn(chip, "text-zinc-400 hover:bg-white/5 hover:text-white")}
+      className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
       title="O bilhete não coube num print só: manda o resto que a IA lê tudo como uma aposta"
     >
       <Plus className="h-3 w-3" />
@@ -260,7 +260,7 @@ export function BetSlipUpload({
               <button
                 type="button"
                 onClick={replace}
-                className={cn(chip, "text-zinc-400 hover:bg-white/5 hover:text-white")}
+                className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
                 <RefreshCw className="h-3 w-3" />
                 Escolher outra
@@ -286,7 +286,7 @@ export function BetSlipUpload({
               <button
                 type="button"
                 onClick={() => setZoom(true)}
-                className={cn(chip, "text-zinc-400 hover:bg-white/5 hover:text-white")}
+                className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
                 <ZoomIn className="h-3 w-3" />
                 Ampliar
@@ -294,7 +294,7 @@ export function BetSlipUpload({
               <button
                 type="button"
                 onClick={replace}
-                className={cn(chip, "text-zinc-400 hover:bg-white/5 hover:text-white")}
+                className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
                 <RefreshCw className="h-3 w-3" />
                 Trocar
@@ -322,13 +322,13 @@ export function BetSlipUpload({
             onChange={(e) => onCaptionChange(e.target.value)}
             placeholder="casa (ex: kto) — opcional"
             aria-label="Casa de apostas do bilhete"
-            className="w-full rounded-lg border border-white/10 bg-[var(--color-surface-2)] px-3 py-2.5 text-xs outline-none transition-colors placeholder:text-zinc-600 focus:border-accent"
+            className="w-full rounded-lg border border-foreground/10 bg-[var(--color-surface-2)] px-3 py-2.5 text-xs outline-none transition-colors placeholder:text-zinc-600 focus:border-accent"
           />
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-white/10 bg-[var(--color-surface-2)] text-xs font-medium transition-colors hover:border-accent/50"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-foreground/10 bg-[var(--color-surface-2)] text-xs font-medium transition-colors hover:border-accent/50"
             >
               <ImageIcon className="h-4 w-4 text-accent-text" />
               Galeria
@@ -336,7 +336,7 @@ export function BetSlipUpload({
             <button
               type="button"
               onClick={() => cameraInput.current?.click()}
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-white/10 bg-[var(--color-surface-2)] text-xs font-medium transition-colors hover:border-accent/50"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-foreground/10 bg-[var(--color-surface-2)] text-xs font-medium transition-colors hover:border-accent/50"
             >
               <Camera className="h-4 w-4 text-accent-text" />
               Câmera
@@ -353,7 +353,7 @@ export function BetSlipUpload({
         <span
           className={cn(
             "flex h-[58px] w-[58px] flex-none items-center justify-center rounded-lg border border-dashed transition-colors",
-            dragging ? "border-accent bg-accent/10" : "border-white/15",
+            dragging ? "border-accent bg-accent/10" : "border-foreground/15",
           )}
         >
           <Upload className={cn("h-4 w-4", dragging ? "text-accent-text" : "text-zinc-600")} />
@@ -374,7 +374,7 @@ export function BetSlipUpload({
         <button
           type="button"
           onClick={() => fileInput.current?.click()}
-          className="flex-none rounded-lg border border-white/10 bg-[var(--color-surface-2)] px-3 py-2 text-[11px] font-medium transition-colors hover:border-accent/50"
+          className="flex-none rounded-lg border border-foreground/10 bg-[var(--color-surface-2)] px-3 py-2 text-[11px] font-medium transition-colors hover:border-accent/50"
         >
           Escolher imagens
         </button>
@@ -390,7 +390,7 @@ export function BetSlipUpload({
           "rounded-xl border p-3 transition-colors",
           dragging
             ? "border-accent bg-accent/10"
-            : "border-white/10 bg-[var(--color-surface)]",
+            : "border-foreground/10 bg-[var(--color-surface)]",
           status === "error" && !dragging && "border-amber-400/40",
         )}
       >

@@ -105,7 +105,7 @@ export default function DashboardPreferencesPage() {
                     if (event.key === "Escape") endDrag(true);
                     if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); reorder(index, index + (event.key === "ArrowUp" ? -1 : 1)); }
                   }}><DotsSixVertical size={22} /></button>
-                <button type="button" disabled={saving || !!drag} aria-label={`Alterar ícone de ${meta.label}`} onClick={() => setIconKpi(kpi.id)} className="h-11 w-11 shrink-0 rounded-xl bg-white/[0.04] flex items-center justify-center text-zinc-400"><IconComponent size={21} /></button>
+                <button type="button" disabled={saving || !!drag} aria-label={`Alterar ícone de ${meta.label}`} onClick={() => setIconKpi(kpi.id)} className="h-11 w-11 shrink-0 rounded-xl bg-foreground/[0.04] flex items-center justify-center text-zinc-400"><IconComponent size={21} /></button>
                 <span className={cn("flex-1 min-w-0 pl-2 text-sm", !kpi.visible && "text-zinc-400")}>{meta.label}</span>
                 <div className="flex shrink-0">
                   <button type="button" disabled={saving || !!drag || index === 0} aria-label={`Mover ${meta.label} para cima`} onClick={() => reorder(index, index - 1)} className="w-11 h-11 flex items-center justify-center text-zinc-400 disabled:opacity-25"><ArrowUp size={14} /></button>

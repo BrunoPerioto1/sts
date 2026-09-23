@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
@@ -42,6 +43,9 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
+  // Escuro e o padrao: quem nunca escolheu continua vendo o app como sempre.
+  // attribute="class" poe `dark`/`light` no <html>, que e o que o index.css le.
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
   <QueryClientProvider client={queryClient}>
     <Sonner />
     <BrowserRouter>
@@ -76,6 +80,7 @@ const App = () => (
       </Routes>
     </BrowserRouter>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

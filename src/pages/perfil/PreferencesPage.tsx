@@ -25,7 +25,7 @@ export default function PreferencesPage() {
       hideBottomNav
       mobileHeader={
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-foreground">
             <CaretLeft size={20} />
           </button>
           <h1 className="text-lg font-semibold truncate">Preferências de aposta</h1>

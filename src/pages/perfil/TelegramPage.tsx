@@ -93,7 +93,7 @@ export default function TelegramPage() {
             type="button"
             onClick={() => (code ? setCode(null) : navigate(-1))}
             aria-label="Voltar"
-            className="p-1 -ml-1 text-zinc-400 hover:text-white"
+            className="p-1 -ml-1 text-zinc-400 hover:text-foreground"
           >
             <CaretLeft size={20} />
           </button>
@@ -102,7 +102,7 @@ export default function TelegramPage() {
             <span
               className={cn(
                 "text-[11px] uppercase tracking-wider px-2 py-1 rounded-md shrink-0",
-                isLinked ? "bg-positive/[0.16] text-positive" : "border border-white/10 text-zinc-400"
+                isLinked ? "bg-positive/[0.16] text-positive" : "border border-foreground/10 text-zinc-400"
               )}
             >
               {isLinked ? "Vinculado" : "Não vinculado"}
@@ -124,7 +124,7 @@ export default function TelegramPage() {
             {code.value.split("").map((digit, i) => (
               <span
                 key={i}
-                className="flex-1 h-14 rounded-lg border border-white/10 bg-card flex items-center justify-center text-xl font-semibold tabular-nums"
+                className="flex-1 h-14 rounded-lg border border-foreground/10 bg-card flex items-center justify-center text-xl font-semibold tabular-nums"
               >
                 {digit}
               </span>
@@ -173,7 +173,7 @@ export default function TelegramPage() {
               <PaperPlaneTilt size={18} className="text-accent" />
             </span>
             <div className="min-w-0">
-              <p className="text-base font-medium text-white truncate">Conta vinculada</p>
+              <p className="text-base font-medium text-foreground truncate">Conta vinculada</p>
               <p className="text-sm text-zinc-500 truncate">
                 {me.telegramLinkedAt
                   ? `vinculado em ${new Date(me.telegramLinkedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
@@ -213,7 +213,7 @@ export default function TelegramPage() {
               <div key={item.title} className="flex items-start gap-3 py-3.5">
                 <item.icon size={18} className="text-zinc-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-white">{item.title}</p>
+                  <p className="text-sm text-foreground">{item.title}</p>
                   <p className="text-xs text-zinc-500">{item.text}</p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function TelegramPage() {
 
           <div>
             <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Exemplo de mensagem</p>
-            <p className="rounded-lg bg-white/[0.04] p-3.5 text-sm text-zinc-300">
+            <p className="rounded-lg bg-foreground/[0.04] p-3.5 text-sm text-zinc-300">
               “100 na Betano, Flamengo vitória, odd 2.10”
             </p>
           </div>

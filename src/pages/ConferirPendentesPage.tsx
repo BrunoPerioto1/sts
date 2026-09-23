@@ -29,7 +29,7 @@ export default function ConferirPendentesPage() {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Voltar"
-            className="-ml-1 p-1 text-zinc-400 hover:text-white"
+            className="-ml-1 p-1 text-zinc-400 hover:text-foreground"
           >
             <CaretLeft size={20} />
           </button>
@@ -44,9 +44,9 @@ export default function ConferirPendentesPage() {
           ))}
         </div>
       ) : (
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
-          <header className="border-b border-white/[0.06] px-4 py-3">
-            <h2 className="text-xl font-semibold text-white">Nada pra confirmar</h2>
+        <section className="overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
+          <header className="border-b border-foreground/[0.06] px-4 py-3">
+            <h2 className="text-xl font-semibold text-foreground">Nada pra confirmar</h2>
             <p className="mt-0.5 text-xs text-zinc-500">
               {n
                 ? `${n === 1 ? "Esta o bot não resolveu" : `Estas ${n} o bot não resolveu`} — liquide na mão quando quiser.`
@@ -57,7 +57,7 @@ export default function ConferirPendentesPage() {
             {data?.map((b) => (
               <li
                 key={b.betId}
-                className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 last:border-b-0"
+                className="flex items-center gap-3 border-b border-foreground/[0.06] px-4 py-3 last:border-b-0"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs text-zinc-500">
@@ -65,7 +65,7 @@ export default function ConferirPendentesPage() {
                       `${diaRelativo(b.eventStartAt)} ${formatTime(b.eventStartAt)} · `}
                     {stakeCurta(Number(b.stake))} @ {Number(b.odd).toFixed(2)}
                   </p>
-                  <p className="truncate text-sm font-medium text-white">{b.game}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{b.game}</p>
                   <p className="truncate text-xs text-zinc-400">{b.market}</p>
                   {b.explanation && (
                     <p className="truncate text-[11px] text-zinc-600">{b.explanation}</p>

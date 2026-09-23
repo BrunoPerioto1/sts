@@ -124,7 +124,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
                   onClick={() => setDraft((d) => ({ ...d, period: { preset: chip.value, ...periodRangeFor(chip.value) } }))}
                   className={cn(
                     "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
-                    isActive ? "bg-accent text-white" : "border border-white/10 text-zinc-400"
+                    isActive ? "bg-accent text-white" : "border border-foreground/10 text-zinc-400"
                   )}
                 >
                   {chip.label}
@@ -165,7 +165,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
             className="flex w-full items-center gap-2.5 min-h-[44px] rounded-md border border-input bg-card px-[10px] py-[8px] text-left"
           >
             <CalendarBlank className="h-4 w-4 text-zinc-500 shrink-0" />
-            <span className="flex-1 text-sm text-white truncate">{periodLabel}</span>
+            <span className="flex-1 text-sm text-foreground truncate">{periodLabel}</span>
             <CaretRight className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
           </button>
         </section>

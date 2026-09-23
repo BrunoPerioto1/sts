@@ -58,10 +58,10 @@ export function LiquidarSheet({
                       key={r.resultId}
                       type="button"
                       onClick={() => finalize(r.resultId)}
-                      className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
+                      className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-foreground/[0.04]"
                     >
                       <OptionBar color={colorByResultId[String(r.resultId)]} />
-                      <span className="flex-1 text-sm text-white">{r.label}</span>
+                      <span className="flex-1 text-sm text-foreground">{r.label}</span>
                       <span className={cn("text-sm font-medium tabular-nums", value >= 0 ? "text-positive" : "text-negative")}>
                         {formatSignedCurrency(value)}
                       </span>
@@ -78,19 +78,19 @@ export function LiquidarSheet({
             <button
               type="button"
               onClick={() => setCashoutOpen(true)}
-              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-foreground/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CASHOUT)]} />
-              <span className="flex-1 text-sm text-white">Cashout</span>
+              <span className="flex-1 text-sm text-foreground">Cashout</span>
               <span className="text-sm text-zinc-500">Informar valor</span>
             </button>
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.CANCELED)}
-              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-foreground/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
-              <span className="flex-1 text-sm text-white">Cancelada</span>
+              <span className="flex-1 text-sm text-foreground">Cancelada</span>
               <span className="text-sm font-medium tabular-nums text-zinc-300">{formatCurrency(0)}</span>
             </button>
           </div>
@@ -102,10 +102,10 @@ export function LiquidarSheet({
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.PENDING)}
-              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-white/[0.04]"
+              className="press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] text-left hover:bg-foreground/[0.04]"
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.PENDING)]} />
-              <span className="flex-1 text-sm text-white">Pendente</span>
+              <span className="flex-1 text-sm text-foreground">Pendente</span>
               <span className="text-sm text-zinc-500">Sem resultado</span>
             </button>
           </div>

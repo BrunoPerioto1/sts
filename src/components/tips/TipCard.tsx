@@ -49,7 +49,7 @@ export function TipCard({
             {formatTime(tip.createdAt)}
             {tip.house && ` · ${tip.house}`}
           </p>
-          <h3 className="mt-1 text-[17px] font-semibold leading-tight text-white">
+          <h3 className="mt-1 text-[17px] font-semibold leading-tight text-foreground">
             {tip.game ?? "Jogo não identificado"}
           </h3>
           {tip.market && <p className="mt-0.5 text-sm text-zinc-400">{tip.market}</p>}
@@ -107,7 +107,7 @@ export function TipCard({
           disabled={!tip.link}
           // min-w-0: sem isso o rótulo longo ("Apostar R$ 1.000,00") impede o
           // botão de encolher e empurra o "..." pra fora da tela no mobile.
-          className="h-11 min-w-0 flex-1 truncate border-transparent bg-accent text-white hover:bg-accent-700"
+          className="h-11 min-w-0 flex-1 truncate border-transparent bg-accent text-white hover:bg-accent/90"
         >
           {tip.link ? (
             // noreferrer junto do _blank: sem ele a aba da casa recebe

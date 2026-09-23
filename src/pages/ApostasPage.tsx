@@ -242,7 +242,7 @@ export default function ApostasPage() {
           setCreateModalOpen(true);
         }}
         aria-label="Nova aposta"
-        className="press animate-pop-in md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-white text-zinc-900 flex items-center justify-center"
+        className="press animate-pop-in md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-foreground text-background flex items-center justify-center"
         style={{ bottom: "calc(72px + env(safe-area-inset-bottom))", boxShadow: "var(--shadow-lg)" }}
       >
         <Plus size={22} weight="bold" />

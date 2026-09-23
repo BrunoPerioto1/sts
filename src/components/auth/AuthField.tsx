@@ -53,7 +53,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
             "border transition-colors outline-none",
             "placeholder:text-zinc-600",
             "focus:ring-2 focus:ring-accent/25",
-            error ? "border-negative focus:border-negative" : "border-white/[0.14] focus:border-accent",
+            error ? "border-negative focus:border-negative" : "border-foreground/[0.14] focus:border-accent",
             (isPassword || valid) && "pr-11"
           )}
         />

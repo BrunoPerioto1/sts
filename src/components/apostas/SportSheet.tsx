@@ -39,7 +39,7 @@ export function SportSheet({ open, onOpenChange, sports, selected, onChange, mul
           <button
             type="button"
             onClick={() => onChange([])}
-            className="text-sm text-zinc-400 hover:text-white min-h-[44px] px-1"
+            className="text-sm text-zinc-400 hover:text-foreground min-h-[44px] px-1"
           >
             Limpar
           </button>
@@ -58,7 +58,7 @@ export function SportSheet({ open, onOpenChange, sports, selected, onChange, mul
           <OptionRow
             key={s.id}
             leading={
-              <span className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center bg-white/[0.06] text-zinc-300">
+              <span className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center bg-foreground/[0.06] text-zinc-300">
                 <SportIcon name={s.name} />
               </span>
             }

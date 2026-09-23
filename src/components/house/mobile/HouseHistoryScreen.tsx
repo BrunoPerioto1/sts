@@ -71,7 +71,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
       style={{ backgroundColor: "var(--color-bg)" }}
     >
       <div className="flex items-center gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
-        <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-white">
+        <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-foreground">
           <CaretLeft size={20} />
         </button>
         <div className="min-w-0">
@@ -123,7 +123,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                     <div key={t.id} className="flex items-center gap-3 rounded-lg px-1 py-3 min-h-[56px]">
                       <Icon size={18} className="text-accent shrink-0" />
                       <span className="flex-1 min-w-0">
-                        <span className="block text-base text-white truncate">{meta.label}</span>
+                        <span className="block text-base text-foreground truncate">{meta.label}</span>
                         <span className="block text-sm text-zinc-400 truncate">
                           {formatTime(t.createdAt)}
                         </span>

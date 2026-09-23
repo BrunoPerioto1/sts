@@ -32,7 +32,7 @@ export function PeriodPopover({ preset, firstBetDate, from, to, onSelect, onCust
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="press flex items-center gap-1.5 h-9 px-3 rounded-lg border border-white/10 text-[13px] text-zinc-200 hover:border-white/20"
+          className="press flex items-center gap-1.5 h-9 px-3 rounded-lg border border-foreground/10 text-[13px] text-zinc-200 hover:border-foreground/20"
         >
           {PRESET_LABEL[preset]} <CaretDown size={12} />
         </button>
@@ -48,8 +48,8 @@ export function PeriodPopover({ preset, firstBetDate, from, to, onSelect, onCust
                 setOpen(false);
               }}
               className={cn(
-                "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-white/[0.05]",
-                preset === opt.value && "bg-white/[0.06]"
+                "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-foreground/[0.05]",
+                preset === opt.value && "bg-foreground/[0.06]"
               )}
             >
               <span className="min-w-0">

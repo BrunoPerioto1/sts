@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { ThemeSelect } from "./ThemeSelect";
 import { CaretRight, IdentificationCard, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -123,12 +124,16 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
               {/* Nome inteiro em cima e valor embaixo: em uma linha só,
                   "Preferências de aposta" era cortado no meio. */}
               <span className="flex-1 min-w-0">
-                <span className="block text-sm text-white truncate">{row.label}</span>
+                <span className="block text-sm text-foreground truncate">{row.label}</span>
                 <span className={cn("block text-xs truncate", row.valueTone ?? "text-zinc-500")}>{row.value}</span>
               </span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />
             </Link>
           ))}
+          <div className="h-16 flex items-center gap-3">
+            <span className="flex-1 text-sm text-foreground">Tema</span>
+            <ThemeSelect />
+          </div>
         </div>
       </div>
 
@@ -137,7 +142,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
       <button
         type="button"
         onClick={() => navigate("/logout")}
-        className="press w-full h-12 rounded-xl border border-white/10 flex items-center justify-center gap-2 text-sm text-white"
+        className="press w-full h-12 rounded-xl border border-foreground/10 flex items-center justify-center gap-2 text-sm text-foreground"
       >
         <SignOut size={16} /> Sair da conta
       </button>

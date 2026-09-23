@@ -62,17 +62,17 @@ export function HouseFiltersBar({
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
-        <button type="button" aria-pressed={onlyWithBalance} onClick={onToggleWithBalance} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+        <button type="button" aria-pressed={onlyWithBalance} onClick={onToggleWithBalance} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
           Com saldo {withBalanceCount}
         </button>
-        <button type="button" aria-pressed={onlyNegative} onClick={onToggleNegative} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+        <button type="button" aria-pressed={onlyNegative} onClick={onToggleNegative} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
           Negativas
         </button>
-        <button type="button" aria-pressed={selectedHousesCount > 0} onClick={onOpenCasas} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium flex items-center gap-1.5", selectedHousesCount > 0 ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400")}>
+        <button type="button" aria-pressed={selectedHousesCount > 0} onClick={onOpenCasas} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium flex items-center gap-1.5", selectedHousesCount > 0 ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
           <Buildings size={13} /> Casas
           {selectedHousesCount > 0 && <span className="tabular-nums opacity-75">{selectedHousesCount}</span>}
         </button>
-        <button type="button" onClick={onOpenSort} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-white/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
+        <button type="button" onClick={onOpenSort} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-foreground/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
           <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
         </button>
       </div>

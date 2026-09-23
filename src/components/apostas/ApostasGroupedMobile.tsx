@@ -44,7 +44,7 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
               const dayIds = day.bets.map((bet) => bet.id);
               const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);
               return (
-                <section key={day.key} aria-label={day.label} className="ml-2 border-l border-white/[0.06] pl-2">
+                <section key={day.key} aria-label={day.label} className="ml-2 border-l border-foreground/[0.06] pl-2">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 min-h-8 py-1">
                     {selection.selectionMode && (
                       <Checkbox checked={groupCheckState(dayIds, selection.selected)}

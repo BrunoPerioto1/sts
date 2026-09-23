@@ -70,7 +70,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               key={i}
               className={cn(
                 "h-[3px] flex-1 rounded-full transition-colors",
-                i < strength.score ? "bg-accent" : "bg-white/10"
+                i < strength.score ? "bg-accent" : "bg-foreground/10"
               )}
             />
           ))}

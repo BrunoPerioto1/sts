@@ -65,7 +65,7 @@ export function TipsBulkActionBar({
       role="toolbar"
       aria-label="Ações das tips selecionadas"
       className={cn(
-        "fixed z-50 p-3 space-y-3 rounded-2xl border border-white/10 bg-zinc-900/95 backdrop-blur-md",
+        "fixed z-50 p-3 space-y-3 rounded-2xl border border-foreground/10 bg-zinc-900/95 backdrop-blur-md",
         "animate-in slide-in-from-bottom-4 duration-200",
         "inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))]",
         "md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:w-full md:max-w-[480px]",
@@ -75,7 +75,7 @@ export function TipsBulkActionBar({
       <div className="flex items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-2 min-w-0">
           <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
-          <span aria-live="polite" className="text-base font-semibold text-white truncate">
+          <span aria-live="polite" className="text-base font-semibold text-foreground truncate">
             {count} selecionada{plural}
           </span>
         </div>
@@ -83,7 +83,7 @@ export function TipsBulkActionBar({
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
+          className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
         >
           Cancelar
         </button>
@@ -114,7 +114,7 @@ export function TipsBulkActionBar({
           onClick={onUndismiss}
           disabled={loading}
           pending={loading}
-          className="w-full bg-white/[0.06] border border-white/10 text-zinc-200 hover:bg-white/[0.1]"
+          className="w-full bg-foreground/[0.06] border border-foreground/10 text-zinc-200 hover:bg-foreground/[0.1]"
         />
       )}
     </div>

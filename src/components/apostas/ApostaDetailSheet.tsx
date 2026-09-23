@@ -97,7 +97,7 @@ export function ApostaDetailSheet({
           {onFinalize && (
             <Button
               className={cn(
-                "w-full min-h-[44px] gap-2 border-transparent text-white font-bold hover:opacity-90 active:opacity-90",
+                "w-full min-h-[44px] gap-2 border-transparent text-foreground font-bold hover:opacity-90 active:opacity-90",
                 profit == null ? "bg-accent" : profit >= 0 ? "bg-green-600" : "bg-red-600"
               )}
               style={{ boxShadow: "var(--shadow-sm)" }}

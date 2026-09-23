@@ -22,7 +22,7 @@ export function MobileStatusPills({ value, onChange }: { value: string[]; onChan
             onClick={() => onChange(pill.value)}
             className={cn(
               "shrink-0 h-11 px-3.5 rounded-full text-sm font-medium transition-colors",
-              isActive ? "bg-accent text-white" : "border border-white/10 bg-transparent text-zinc-400"
+              isActive ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400"
             )}
           >
             {pill.label}

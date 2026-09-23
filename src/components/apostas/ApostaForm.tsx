@@ -210,7 +210,7 @@ export function ApostaForm({
         </div>
       )}
 
-      <div className="-mx-6 -mb-6 mt-1 flex items-center justify-between gap-3 border-t border-white/10 px-6 py-4">
+      <div className="-mx-6 -mb-6 mt-1 flex items-center justify-between gap-3 border-t border-foreground/10 px-6 py-4">
         <p className={cn("text-[11px] leading-snug text-amber-400", !checking && "invisible")}>
           Confira os campos marcados em amarelo antes de registrar
         </p>

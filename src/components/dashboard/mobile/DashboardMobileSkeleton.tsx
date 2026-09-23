@@ -32,7 +32,7 @@ export function DashboardMobileSkeleton() {
           <div
             key={i}
             className={[
-              "min-h-[76px] rounded-xl border border-white/[0.07] p-3 flex items-center gap-2",
+              "min-h-[76px] rounded-xl border border-foreground/[0.07] p-3 flex items-center gap-2",
             ].join(" ")}
           >
             <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />

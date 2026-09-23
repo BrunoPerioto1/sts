@@ -113,7 +113,7 @@ export function TipDetailPanel({
         {tip.link && (
           <Button
             asChild
-            className="mt-5 w-full justify-center gap-2 border-transparent bg-accent text-white hover:bg-accent-700"
+            className="mt-5 w-full justify-center gap-2 border-transparent bg-accent text-white hover:bg-accent/90"
           >
             {/* noreferrer junto do _blank: sem ele a aba da casa recebe
                 window.opener e pode navegar esta de volta. */}

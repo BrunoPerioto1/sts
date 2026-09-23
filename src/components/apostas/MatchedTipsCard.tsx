@@ -21,7 +21,7 @@ export function MatchedTipsCard({ tips, selected, onSelect }: MatchedTipsCardPro
   if (!tips.length) return null;
 
   return (
-    <section className="space-y-2 rounded-lg border border-white/10 bg-[var(--color-surface)] p-3">
+    <section className="space-y-2 rounded-lg border border-foreground/10 bg-[var(--color-surface)] p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-xs font-medium">
           {tips.length === 1
@@ -33,7 +33,7 @@ export function MatchedTipsCard({ tips, selected, onSelect }: MatchedTipsCardPro
           onClick={() => onSelect(undefined)}
           className={cn(
             "rounded px-2 py-1 text-[11px] transition-colors",
-            selected === undefined ? "bg-white/10 text-white" : "text-zinc-400 hover:text-white",
+            selected === undefined ? "bg-foreground/10 text-foreground" : "text-zinc-400 hover:text-foreground",
           )}
         >
           Não vincular
@@ -53,16 +53,16 @@ export function MatchedTipsCard({ tips, selected, onSelect }: MatchedTipsCardPro
                   "flex w-full items-start gap-3 rounded-[11px] border p-3 text-left transition-colors",
                   on
                     ? "border-accent/50 bg-accent/10"
-                    : "border-white/10 bg-[var(--color-bg)] hover:border-white/20",
+                    : "border-foreground/10 bg-[var(--color-bg)] hover:border-foreground/20",
                 )}
               >
                 <span
                   className={cn(
                     "mt-0.5 flex h-[18px] w-[18px] flex-none items-center justify-center rounded-[5px]",
-                    on ? "bg-accent" : "border border-white/25",
+                    on ? "bg-accent" : "border border-foreground/25",
                   )}
                 >
-                  {on && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                  {on && <Check className="h-3 w-3 text-foreground" strokeWidth={3} />}
                 </span>
                 <span className="min-w-0 flex-1 space-y-0.5">
                   <span className="block truncate text-xs font-medium">{tip.event}</span>

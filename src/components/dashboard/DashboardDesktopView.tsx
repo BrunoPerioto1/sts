@@ -65,7 +65,7 @@ function Panel({ label, right, children, className }: {
 
 function StatRow({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-2.5 border-t border-white/[0.05]">
+    <div className="flex items-baseline justify-between gap-4 py-2.5 border-t border-foreground/[0.05]">
       <span className="text-[13px] text-zinc-400">{label}</span>
       <span className="text-[13px] tabular-nums font-medium" style={{ color }}>{value}</span>
     </div>
@@ -116,11 +116,11 @@ export function DashboardDesktopView({
 
   return (
     <div
-      className="rounded-xl border border-white/[0.06] bg-white/[0.012] overflow-hidden animate-rise stagger"
+      className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] overflow-hidden animate-rise stagger"
       style={stagger(0)}
     >
       <div className="grid lg:grid-cols-[minmax(280px,340px)_1fr]">
-        <div className="p-6 border-b border-white/[0.05] lg:border-b-0 lg:border-r">
+        <div className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r">
           <DashboardProfitHero
             size="desktop"
             profit={profit}
@@ -188,14 +188,14 @@ export function DashboardDesktopView({
         </Panel>
       </div>
 
-      <div className="border-t border-white/[0.05]">
+      <div className="border-t border-foreground/[0.05]">
         <DashboardKpiGrid metrics={metrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-white/[0.05]">
+      <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-foreground/[0.05]">
         <Panel
           label="Banca acumulada"
-          className="p-6 border-b border-white/[0.05] lg:border-b-0 lg:border-r"
+          className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r"
           right={
             bankroll.length > 0 ? (
               <span className="text-[13px] text-zinc-300 tabular-nums">

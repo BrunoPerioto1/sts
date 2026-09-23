@@ -39,7 +39,7 @@ export function StatusMultiSelect({ selected, onChange, className, disabled }: S
           )}
         >
           <span className="text-zinc-500 shrink-0">Status</span>
-          {selectedLabel && <span className="text-white truncate">{selectedLabel}</span>}
+          {selectedLabel && <span className="text-foreground truncate">{selectedLabel}</span>}
           <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
         </button>
       </DropdownMenuTrigger>

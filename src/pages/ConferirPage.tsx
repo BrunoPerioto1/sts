@@ -59,7 +59,7 @@ const BADGES: Record<number, { label: string; cls: string }> = {
   },
   [ResultIdEnum.CANCELED]: {
     label: "ANULADA",
-    cls: "bg-white/[0.06] border-white/10 text-zinc-300",
+    cls: "bg-foreground/[0.06] border-foreground/10 text-zinc-300",
   },
 };
 
@@ -125,7 +125,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
       onClick={onDismiss}
       disabled={busy}
       aria-label={`Descartar a proposta de ${suggestion.game}`}
-      className="shrink-0 rounded-md p-1 text-zinc-600 transition-colors hover:bg-white/[0.06] hover:text-zinc-300 disabled:opacity-40"
+      className="shrink-0 rounded-md p-1 text-zinc-600 transition-colors hover:bg-foreground/[0.06] hover:text-zinc-300 disabled:opacity-40"
     >
       <X size={14} />
     </button>
@@ -134,8 +134,8 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
   return (
     <li
       className={cn(
-        "border-b border-white/[0.06] transition-colors last:border-b-0",
-        checked ? "bg-white/[0.035]" : "hover:bg-white/[0.02]",
+        "border-b border-foreground/[0.06] transition-colors last:border-b-0",
+        checked ? "bg-foreground/[0.035]" : "hover:bg-foreground/[0.02]",
       )}
     >
       {/* Mobile: cartão empilhado. A explicação ganha caixa própria porque é o
@@ -158,9 +158,9 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
               <ResultBadge resultId={suggestion.suggestedResultId} />
             </div>
 
-            <p className="truncate text-sm font-medium text-white">{suggestion.game}</p>
+            <p className="truncate text-sm font-medium text-foreground">{suggestion.game}</p>
 
-            <p className="rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-xs text-zinc-400">
+            <p className="rounded-lg bg-foreground/[0.04] px-2.5 py-1.5 text-xs text-zinc-400">
               <span className="mr-1.5 font-semibold text-zinc-200">{placar}</span>
               {suggestion.explanation}
             </p>
@@ -201,7 +201,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
           className="min-w-0 cursor-pointer md:col-span-3 md:grid md:grid-cols-subgrid md:items-center"
         >
         <div className="min-w-0">
-          <p className="truncate font-medium text-white hover:underline">{suggestion.game}</p>
+          <p className="truncate font-medium text-foreground hover:underline">{suggestion.game}</p>
           <p className="truncate text-xs text-zinc-500">{suggestion.market}</p>
         </div>
 
@@ -246,7 +246,7 @@ function FilaNotes({
   const n = fila.undecided;
 
   return (
-    <div className="flex flex-col gap-2 border-b border-white/[0.06] px-4 py-2.5 text-xs md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-2 border-b border-foreground/[0.06] px-4 py-2.5 text-xs md:flex-row md:items-center md:justify-between">
       {fila.hasMore ? (
         <p className="flex items-start gap-2 text-zinc-400">
           <Info size={14} className="mt-px shrink-0 text-zinc-500" />
@@ -281,13 +281,13 @@ function SemProposta({ enabled }: { enabled: boolean }) {
   return (
     <Link
       to="/settlement/review"
-      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.05]"
+      className="flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-3 transition-colors hover:bg-foreground/[0.05]"
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-zinc-300">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-foreground/[0.06] text-zinc-300">
         <HandPointing size={20} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-white">
+        <span className="block text-sm font-medium text-foreground">
           {n} espera{n === 1 ? "" : "m"} você
         </span>
         <span className="block text-xs text-zinc-500">Liquidar na mão em Apostas</span>
@@ -302,13 +302,13 @@ function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-base font-medium text-white">Lendo os placares</p>
+        <p className="text-base font-medium text-foreground">Lendo os placares</p>
         <p className="text-xs text-zinc-500">
           {fila?.settleable
             ? `${fila.settleable} de ${fila.pending} apostas pendentes · pode levar alguns segundos`
             : "pode levar alguns segundos"}
         </p>
-        <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-1 overflow-hidden rounded-full bg-foreground/[0.06]">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
         </div>
       </div>
@@ -338,7 +338,7 @@ function Vazio({
     // rodape: ali ele e' a unica saida, em vez de mais um bloco na pilha.
     <div className="flex min-h-[calc(100svh-13rem)] flex-col gap-3 md:min-h-[calc(100vh-11rem)]">
       {fila?.hasMore && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+        <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4">
           <p className="text-[11px] font-semibold tracking-wide text-zinc-500">
             FILA RESTANTE
           </p>
@@ -364,11 +364,11 @@ function Vazio({
           {buscando ? (
             <ArrowsClockwise size={32} className="mx-auto mb-3 animate-spin text-zinc-500" />
           ) : (
-            <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-white/[0.04] text-zinc-500">
+            <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-foreground/[0.04] text-zinc-500">
               <CheckCircle size={26} />
             </span>
           )}
-          <p className="text-lg font-semibold text-white" aria-live="polite">
+          <p className="text-lg font-semibold text-foreground" aria-live="polite">
             {buscando ? "Buscando resultados…" : "Nenhuma proposta nova"}
           </p>
           <p className="mx-auto mt-1 max-w-[320px] text-sm text-zinc-500">
@@ -485,10 +485,10 @@ export default function ConferirPage() {
             onCompute={() => compute.mutate()}
           />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
+          <div className="overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
             <FilaNotes fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
 
-            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2.5">
+            <div className="flex items-center justify-between gap-3 border-b border-foreground/[0.06] px-4 py-2.5">
               <div className="flex min-w-0 items-center gap-3">
                 <Checkbox
                   checked={todasMarcadas}
@@ -499,7 +499,7 @@ export default function ConferirPage() {
                   }
                   aria-label={todasMarcadas ? "Desmarcar todas" : "Selecionar todas"}
                 />
-                <span className="truncate text-sm font-medium text-white">
+                <span className="truncate text-sm font-medium text-foreground">
                   {selected.size} de {lista.length} selecionada
                   {selected.size === 1 ? "" : "s"}
                 </span>
@@ -541,10 +541,10 @@ export default function ConferirPage() {
               aria-label="Confirmar propostas"
               className={cn(
                 "fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-50",
-                "space-y-3 rounded-2xl border border-white/10 bg-zinc-900/95 p-3 backdrop-blur-md",
+                "space-y-3 rounded-2xl border border-foreground/10 bg-zinc-900/95 p-3 backdrop-blur-md",
                 "animate-in slide-in-from-bottom-4 duration-200",
                 "md:static md:inset-auto md:flex md:items-center md:justify-between md:gap-4",
-                "md:space-y-0 md:rounded-none md:border-0 md:border-t md:border-white/[0.06]",
+                "md:space-y-0 md:rounded-none md:border-0 md:border-t md:border-foreground/[0.06]",
                 "md:bg-transparent md:px-4 md:py-3 md:backdrop-blur-none",
               )}
               style={{ boxShadow: "var(--shadow-lg)" }}
@@ -553,7 +553,7 @@ export default function ConferirPage() {
                 {selected.size ? (
                   <>
                     <span className="truncate text-zinc-400">
-                      <span className="font-semibold text-white">
+                      <span className="font-semibold text-foreground">
                         {selected.size} aposta{selected.size === 1 ? "" : "s"}
                       </span>
                       {resumoSelecao && `: ${resumoSelecao}`}

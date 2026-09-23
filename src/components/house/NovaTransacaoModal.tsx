@@ -109,7 +109,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-1">
-          <Button type="button" variant="ghost" className="text-zinc-400 hover:text-white" onClick={onClose}>
+          <Button type="button" variant="ghost" className="text-zinc-400 hover:text-foreground" onClick={onClose}>
             Cancelar
           </Button>
           <Button type="submit" disabled={!valid || loading} className="bg-accent text-white hover:bg-accent/90">

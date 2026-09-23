@@ -21,7 +21,7 @@ interface HousesSearchProps {
   isLoading?: boolean;
 }
 
-const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
+const divider = <div className="h-5 w-px bg-foreground/10 shrink-0" />;
 
 // Mesma barra única da tela de apostas — antes eram três controles soltos
 // flutuando com alturas diferentes.
@@ -39,7 +39,7 @@ export function HousesSearch({
   isLoading = false,
 }: HousesSearchProps) {
   return (
-    <div className="h-11 rounded-xl border border-white/10 bg-white/[0.02] flex items-center overflow-x-auto">
+    <div className="h-11 rounded-xl border border-foreground/10 bg-foreground/[0.02] flex items-center overflow-x-auto">
       <div className="flex items-center gap-2 px-3.5 flex-1 min-w-0">
         <MagnifyingGlass className="h-4 w-4 text-zinc-500 shrink-0" />
         <Input
@@ -47,7 +47,7 @@ export function HousesSearch({
           value={searchTerm}
           onChange={(e) => onChange(e.target.value)}
           disabled={isLoading}
-          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-foreground placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
         />
       </div>
 
@@ -74,7 +74,7 @@ export function HousesSearch({
 
       <div className="px-3.5 shrink-0">
         <Select value={sort} onValueChange={(v) => onSortChange(v as HouseSort)} disabled={isLoading}>
-          <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-white">
+          <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-foreground">
             <span className="text-zinc-500 shrink-0">Ordenar</span>
             <SelectValue />
           </SelectTrigger>
@@ -93,7 +93,7 @@ export function HousesSearch({
             type="button"
             onClick={onExportCsv}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+            className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-foreground transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
           >
             <DownloadSimple className="h-4 w-4" /> CSV
           </button>

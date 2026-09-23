@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ThemeSelect } from "./ThemeSelect";
 import { CaretRight, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { formatSignedCurrency } from "@/lib/format";
@@ -31,6 +32,10 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
         <span className="flex-1"><span className="block text-sm">Dashboard</span><span className="block text-xs text-zinc-400">Indicadores, ícones e cores</span></span>
         <CaretRight size={16} />
       </Link>
+      <div className="flex items-center gap-3 card bg-card rounded-md p-4 mb-[14px]">
+        <span className="flex-1"><span className="block text-sm">Tema</span><span className="block text-xs text-zinc-400">Vale só neste aparelho</span></span>
+        <ThemeSelect />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-[14px] items-start">
         <div className="flex flex-col gap-[14px]">
           <ProfileIdentityCard me={me} onSaved={setMe} />

@@ -16,7 +16,7 @@ const stripColors: Record<Status, string> = {
   meiaGanha: "bg-green-500/40",
   perdida: "bg-red-500/60",
   meiaPerdida: "bg-red-500/30",
-  pendente: "bg-accent-700",
+  pendente: "bg-accent",
   cancelada: "bg-neutral-500/40",
   cashout: "bg-accent-500",
 };
@@ -29,8 +29,8 @@ function StatusStrip({ status }: { status: Status }) {
 }
 
 // Horário com contraste próprio para facilitar a leitura durante a rolagem.
-const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-white/15 bg-white/10 px-2.5 text-xs font-semibold tabular-nums text-white shrink-0";
-const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-white/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
+const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-foreground/15 bg-foreground/10 px-2.5 text-xs font-semibold tabular-nums text-foreground shrink-0";
+const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-foreground/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
 const houseChipClass = "inline-flex items-center min-w-0 h-6 text-xs leading-none px-2.5 rounded-full border border-accent/25 bg-accent/[0.08] text-accent-100";
 
 export function BetCardMobile({
@@ -91,7 +91,7 @@ export function BetCardMobile({
         {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}
       </div>
 
-      <p className="text-base font-medium text-white truncate">{aposta.game}</p>
+      <p className="text-base font-medium text-foreground truncate">{aposta.game}</p>
 
       <div className="flex items-end justify-between gap-2">
         <p className="text-sm text-zinc-400 truncate min-w-0">{aposta.market}</p>

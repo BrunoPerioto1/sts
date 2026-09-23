@@ -31,7 +31,7 @@ interface ApostasFilterProps {
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
 
-const divider = <div className="h-5 w-px bg-white/10 shrink-0" />;
+const divider = <div className="h-5 w-px bg-foreground/10 shrink-0" />;
 
 export function ApostasFilter({
   houses,
@@ -121,7 +121,7 @@ export function ApostasFilter({
 
   return (
     <div className={cn("w-full space-y-2", className)}>
-      <div className="h-11 rounded-xl border border-white/10 bg-white/[0.02] flex items-center overflow-x-auto">
+      <div className="h-11 rounded-xl border border-foreground/10 bg-foreground/[0.02] flex items-center overflow-x-auto">
         <div className="flex items-center gap-2 px-3.5 flex-1 min-w-0">
           <MagnifyingGlass className="h-4 w-4 text-zinc-500 shrink-0" />
           <Input
@@ -129,7 +129,7 @@ export function ApostasFilter({
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
             disabled={isLoading}
-            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-white placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-foreground placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
           />
         </div>
 
@@ -142,7 +142,7 @@ export function ApostasFilter({
             onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
             placeholder="Período"
             disabled={isLoading}
-            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-sm text-white"
+            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-sm text-foreground"
             iconClassName="h-4 w-4 text-zinc-500 shrink-0"
           />
         </div>
@@ -191,7 +191,7 @@ export function ApostasFilter({
               type="button"
               onClick={onExportCsv}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-white transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+              className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-foreground transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
             >
               <DownloadSimple className="h-4 w-4" /> Exportar CSV
             </button>
@@ -207,7 +207,7 @@ export function ApostasFilter({
               key={chip.key}
               className={cn(
                 "h-7 inline-flex items-center gap-1 rounded-full px-3 text-xs",
-                chip.solid ? "bg-accent text-white" : "border border-white/10 bg-white/[0.03] text-zinc-300"
+                chip.solid ? "bg-accent text-white" : "border border-foreground/10 bg-foreground/[0.03] text-zinc-300"
               )}
             >
               {chip.label}

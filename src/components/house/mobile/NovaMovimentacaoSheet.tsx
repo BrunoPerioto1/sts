@@ -113,7 +113,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-sm whitespace-nowrap transition-colors",
                     i > 0 && "border-l border-border",
-                    active ? "text-white" : "text-zinc-400 hover:bg-white/[0.04]"
+                    active ? "text-foreground" : "text-zinc-400 hover:bg-foreground/[0.04]"
                   )}
                   style={active ? { background: "var(--color-accent)" } : undefined}
                 >
@@ -146,7 +146,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
                 key={amount}
                 type="button"
                 onClick={() => addAmount(amount)}
-                className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
+                className="px-3 py-1.5 rounded-full text-sm font-medium border border-foreground/10 text-zinc-300 hover:bg-foreground/[0.06]"
               >
                 +{amount}
               </button>
@@ -154,7 +154,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             <button
               type="button"
               onClick={useFullBalance}
-              className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/10 text-zinc-300 hover:bg-white/[0.06]"
+              className="px-3 py-1.5 rounded-full text-sm font-medium border border-foreground/10 text-zinc-300 hover:bg-foreground/[0.06]"
             >
               Tudo
             </button>

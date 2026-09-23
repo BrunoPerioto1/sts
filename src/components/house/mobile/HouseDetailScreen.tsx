@@ -47,7 +47,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-white">
+          <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-foreground">
             <CaretLeft size={20} />
           </button>
           <h1 className="text-lg font-semibold truncate">{house.houseName}</h1>
@@ -79,7 +79,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
       </div>
 
       <div
-        className="shrink-0 border-t border-white/10 px-4 pt-3 flex flex-col gap-2"
+        className="shrink-0 border-t border-foreground/10 px-4 pt-3 flex flex-col gap-2"
         style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
         <Button

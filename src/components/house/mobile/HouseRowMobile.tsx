@@ -53,7 +53,7 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRo
       type="button"
       onClick={handleClick}
       {...longPress}
-      className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-white/[0.04]"
+      className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-foreground/[0.04]"
       style={stagger(index)}
     >
       <span

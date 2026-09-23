@@ -67,10 +67,10 @@ function WheelColumn({
               className={cn(
                 "flex w-full snap-center items-center justify-center tabular-nums transition-all",
                 distance === 0
-                  ? "text-2xl font-semibold text-white"
+                  ? "text-2xl font-semibold text-foreground"
                   : distance === 1
-                    ? "text-xl text-white/45"
-                    : "text-xl text-white/20"
+                    ? "text-xl text-foreground/45"
+                    : "text-xl text-foreground/20"
               )}
             >
               {pad(v)}
@@ -120,7 +120,7 @@ export function DataHoraSheet({ open, onOpenChange, value, onApply, nested = tru
       title="Data e hora"
       footer={
         <div className="flex flex-col gap-3">
-          <p className="flex items-center gap-2 text-base font-semibold text-white">
+          <p className="flex items-center gap-2 text-base font-semibold text-foreground">
             <CalendarBlank size={18} weight="bold" className="shrink-0 text-zinc-400" />
             {format(date, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
           </p>
@@ -163,7 +163,7 @@ export function DataHoraSheet({ open, onOpenChange, value, onApply, nested = tru
         }}
       />
 
-      <div className="mt-3 border-t border-white/10 pt-3">
+      <div className="mt-3 border-t border-foreground/10 pt-3">
         <div className="flex gap-2 pb-2 text-center text-xs uppercase tracking-wider text-zinc-500">
           <span className="flex-1">Hora</span>
           <span className="flex-1">Minuto</span>
@@ -173,10 +173,10 @@ export function DataHoraSheet({ open, onOpenChange, value, onApply, nested = tru
           <div
             aria-hidden
             style={{ height: ITEM_H }}
-            className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-xl bg-white/[0.06]"
+            className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-xl bg-foreground/[0.06]"
           />
           <WheelColumn values={HOURS} selected={date.getHours()} onSelect={(h) => setTime(h, date.getMinutes())} />
-          <div aria-hidden className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/10" />
+          <div aria-hidden className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-foreground/10" />
           <WheelColumn values={MINUTES} selected={date.getMinutes()} onSelect={(m) => setTime(date.getHours(), m)} />
         </div>
       </div>

@@ -26,7 +26,7 @@ const VISUAL = {
   [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", cor: "text-emerald-400", caixa: "border-emerald-500/25 bg-emerald-500/[0.07]", Icone: CheckCircle },
   [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", cor: "text-red-400", caixa: "border-red-500/25 bg-red-500/[0.07]", Icone: XCircle },
 } as const;
-const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", cor: "text-zinc-300", caixa: "border-white/10 bg-white/[0.04]", Icone: MinusCircle };
+const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", cor: "text-zinc-300", caixa: "border-foreground/10 bg-foreground/[0.04]", Icone: MinusCircle };
 
 function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }: Props & { suggestion: SettlementSuggestion }) {
   const v = VISUAL[s.suggestedResultId as keyof typeof VISUAL] ?? ANULADA;
@@ -56,7 +56,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       <div>
         <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Placar final</p>
         <p className="flex items-baseline gap-3">
-          <span className="text-3xl font-semibold tabular-nums text-white">
+          <span className="text-3xl font-semibold tabular-nums text-foreground">
             {temPlacar ? `${s.homeScore}×${s.awayScore}` : "—"}
           </span>
           {casa && fora && <span className="text-sm text-zinc-500">{casa} · {fora}</span>}
@@ -67,7 +67,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Seleção</p>
         <ul className="space-y-1.5">
           {itens(s.market, " / ").map((m, i) => (
-            <li key={i} className="rounded-lg bg-white/[0.04] px-3 py-2.5 text-sm text-zinc-200">
+            <li key={i} className="rounded-lg bg-foreground/[0.04] px-3 py-2.5 text-sm text-zinc-200">
               {m}
             </li>
           ))}
@@ -121,12 +121,12 @@ export function SuggestionDetail(props: Props) {
     <DialogPrimitive.Root open onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-white/10 bg-zinc-950 p-6 animate-in slide-in-from-right duration-200">
+        <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l border-foreground/10 bg-zinc-950 p-6 animate-in slide-in-from-right duration-200">
           <div className="mb-3 flex items-start justify-between gap-3">
-            <DialogPrimitive.Title className="text-lg font-semibold text-white">
+            <DialogPrimitive.Title className="text-lg font-semibold text-foreground">
               {suggestion.game}
             </DialogPrimitive.Title>
-            <DialogPrimitive.Close className="rounded-md p-1 text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-200">
+            <DialogPrimitive.Close className="rounded-md p-1 text-zinc-500 hover:bg-foreground/[0.06] hover:text-zinc-200">
               <X size={18} />
             </DialogPrimitive.Close>
           </div>

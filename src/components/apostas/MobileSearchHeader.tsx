@@ -15,7 +15,7 @@ export function MobileSearchToggle({ expanded, onToggle }: MobileSearchTogglePro
       type="button"
       onClick={onToggle}
       aria-label={expanded ? "Fechar busca" : "Buscar apostas"}
-      className={cn("press h-11 w-11 flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] hover:text-white", expanded ? "text-accent" : "text-zinc-300")}
+      className={cn("press h-11 w-11 flex items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.04] hover:text-foreground", expanded ? "text-accent" : "text-zinc-300")}
     >
       <MagnifyingGlass size={19} />
     </button>
@@ -59,8 +59,8 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, 
     <div className="pb-3">
       <div
         className={cn(
-          "relative flex items-center h-10 rounded-md border bg-white/[0.03] transition-colors",
-          focused ? "border-accent" : "border-white/10"
+          "relative flex items-center h-10 rounded-md border bg-foreground/[0.03] transition-colors",
+          focused ? "border-accent" : "border-foreground/10"
         )}
       >
         <MagnifyingGlass className="absolute left-3 h-4 w-4 text-zinc-500 pointer-events-none" />
@@ -82,13 +82,13 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, 
             }
           }}
           placeholder={placeholder}
-          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-white placeholder:text-zinc-500 outline-none"
+          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-foreground placeholder:text-zinc-500 outline-none"
         />
         <button
           type="button"
           onClick={handleClear}
           aria-label="Limpar busca"
-          className="absolute right-1.5 h-8 w-8 flex items-center justify-center text-zinc-500 hover:text-white"
+          className="absolute right-1.5 h-8 w-8 flex items-center justify-center text-zinc-500 hover:text-foreground"
         >
           <X className="h-3.5 w-3.5" />
         </button>

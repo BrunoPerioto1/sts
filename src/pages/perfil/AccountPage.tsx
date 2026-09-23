@@ -69,7 +69,7 @@ export default function AccountPage() {
       hideBottomNav
       mobileHeader={
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-white">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-foreground">
             <CaretLeft size={20} />
           </button>
           <h1 className="text-lg font-semibold truncate">Dados da conta</h1>
@@ -119,7 +119,7 @@ export default function AccountPage() {
             <Link to="/profile/password" className="press h-14 flex items-center gap-3">
               <Lock size={19} className="text-zinc-400 shrink-0" />
               <span className="flex-1 min-w-0">
-                <span className="block text-sm text-white truncate">Alterar senha</span>
+                <span className="block text-sm text-foreground truncate">Alterar senha</span>
                 <span className="block text-xs text-zinc-500 truncate">pede a senha atual</span>
               </span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />

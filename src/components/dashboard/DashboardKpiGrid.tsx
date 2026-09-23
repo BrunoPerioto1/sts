@@ -36,7 +36,7 @@ export function DashboardKpiGrid({ metrics, stake, preferences, desktop = false 
         const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
         const data: { value: string; signed?: number } = values[kpi.id];
         const color = meta.semanticType === "performance" ? performanceColor(data.signed, preferences.performanceColors) : undefined;
-        return <div key={kpi.id} className="flex-1 min-w-fit px-5 py-4 border-l border-white/[0.05] first:border-l-0">
+        return <div key={kpi.id} className="flex-1 min-w-fit px-5 py-4 border-l border-foreground/[0.05] first:border-l-0">
           <p className="text-[11px] uppercase tracking-wide text-zinc-400 mb-1.5 whitespace-nowrap">{meta.label}</p>
           <p className="text-2xl leading-tight font-semibold tabular-nums whitespace-nowrap" style={{ color }}>{data.value}</p>
         </div>;

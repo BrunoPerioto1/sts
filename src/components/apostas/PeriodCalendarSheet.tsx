@@ -76,7 +76,7 @@ export function PeriodCalendarSheet({ open, onOpenChange, from, to, onApply, nes
             )}
           >
             <span className="block text-xs uppercase tracking-wide text-zinc-500">{field === "from" ? "De" : "Até"}</span>
-            <span className="block text-sm text-white truncate">{fieldLabel(field === "from" ? range?.from : range?.to)}</span>
+            <span className="block text-sm text-foreground truncate">{fieldLabel(field === "from" ? range?.from : range?.to)}</span>
           </button>
         ))}
       </div>

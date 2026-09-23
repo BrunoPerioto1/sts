@@ -26,7 +26,7 @@ export function ScreenFooter({ onSave, onDiscard, saving, disabled, saveLabel = 
       >
         {saving ? "Salvando…" : saveLabel}
       </Button>
-      <button type="button" onClick={onDiscard} className="px-4 py-3 text-sm text-zinc-400 hover:text-white">
+      <button type="button" onClick={onDiscard} className="px-4 py-3 text-sm text-zinc-400 hover:text-foreground">
         Descartar
       </button>
     </div>

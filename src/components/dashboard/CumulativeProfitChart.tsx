@@ -4,8 +4,9 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatCurrency, formatSignedCurrency } from "@/lib/format";
 
-const POS = "#4ade9e";
-const NEG = "#f0797e";
+// Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
+const POS = "rgb(var(--rgb-positive))";
+const NEG = "rgb(var(--rgb-negative))";
 
 /** Lucro acumulado dia a dia: a leitura mostra o dia tocado e o total até ele. */
 export function CumulativeProfitChart({ data, height = 200 }: { data: { date: string; profitDay: number }[]; height?: number }) {
@@ -27,10 +28,10 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2.5 text-sm">
+      <div className="mb-3 flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2.5 text-sm">
         <span className="flex items-center gap-2.5">
           <span className="text-zinc-400">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
-          <span className="h-4 w-px bg-white/10" />
+          <span className="h-4 w-px bg-foreground/10" />
           <span className="text-zinc-400">
             Acum. <span className="font-medium tabular-nums text-zinc-100">{formatCurrency(atual.acum)}</span>
           </span>

@@ -59,7 +59,7 @@ export function BottomSheet({
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl border-t border-white/10 bg-background outline-none",
+            "fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl border-t border-foreground/10 bg-background outline-none",
             contentClassName
           )}
           style={
@@ -74,7 +74,7 @@ export function BottomSheet({
               : undefined
           }
         >
-          <DrawerPrimitive.Handle className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-full bg-white/15" />
+          <DrawerPrimitive.Handle className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-full bg-foreground/15" />
 
           <div className="flex shrink-0 items-center justify-between gap-2 pl-4 pr-2 pb-3 pt-3">
             <div className="flex items-center gap-2 min-w-0">
@@ -87,7 +87,7 @@ export function BottomSheet({
               <DrawerPrimitive.Close
                 onClick={() => onOpenChange(false)}
                 aria-label="Fechar"
-                className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-white shrink-0"
+                className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-foreground shrink-0"
               >
                 <X size={18} />
               </DrawerPrimitive.Close>
@@ -100,7 +100,7 @@ export function BottomSheet({
 
           {footer && (
             <div
-              className="shrink-0 border-t border-white/10 px-4 pt-3 bg-background"
+              className="shrink-0 border-t border-foreground/10 px-4 pt-3 bg-background"
               style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
             >
               {footer}

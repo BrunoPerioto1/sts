@@ -23,7 +23,7 @@ export function ConferenciaCallout() {
         <ClipboardText size={18} weight="fill" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-white">
+        <span className="block truncate text-sm font-medium text-foreground">
           {n} resultado{n === 1 ? "" : "s"} pra conferir
         </span>
         <span className="block truncate text-xs text-zinc-400">

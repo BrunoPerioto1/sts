@@ -33,7 +33,7 @@ export function SheetSelectField({ summary, onOpen, className, leading }: SheetS
     >
       <span className="flex items-center gap-2 min-w-0">
         {leading}
-        <span className="text-white truncate">{summary}</span>
+        <span className="text-foreground truncate">{summary}</span>
       </span>
       <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
     </button>

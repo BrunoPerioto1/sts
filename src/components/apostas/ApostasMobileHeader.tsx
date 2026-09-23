@@ -23,7 +23,7 @@ export function ApostasMobileHeader({ searchExpanded, onToggleSearch, onOpenFilt
           type="button"
           onClick={onOpenFilters}
           aria-label="Abrir filtros"
-          className="press relative h-11 w-11 flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 hover:text-white"
+          className="press relative h-11 w-11 flex items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.04] text-zinc-300 hover:text-foreground"
         >
           <SlidersHorizontal size={19} />
           {activeFilterCount > 0 && (

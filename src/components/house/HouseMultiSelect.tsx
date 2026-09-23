@@ -63,7 +63,7 @@ export function HouseMultiSelect({
           )}
         >
           <span className="text-zinc-500 shrink-0">{label}</span>
-          <span className={cn("truncate", summary ? "text-white" : "text-zinc-400")}>
+          <span className={cn("truncate", summary ? "text-foreground" : "text-zinc-400")}>
             {summary ?? allLabel}
           </span>
           <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
@@ -85,7 +85,7 @@ export function HouseMultiSelect({
           {filtered.map((h) => (
             <label
               key={h.id}
-              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm text-zinc-200 hover:bg-white/[0.04]"
+              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm text-zinc-200 hover:bg-foreground/[0.04]"
             >
               <Checkbox checked={selected.includes(h.id)} onCheckedChange={() => toggle(h.id)} />
               <span className="truncate">{h.name}</span>
@@ -100,7 +100,7 @@ export function HouseMultiSelect({
           <button
             type="button"
             onClick={() => onChange([])}
-            className="mt-2 w-full border-t border-white/10 pt-2 text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+            className="mt-2 w-full border-t border-foreground/10 pt-2 text-xs text-zinc-500 transition-colors hover:text-zinc-300"
           >
             Limpar seleção
           </button>
