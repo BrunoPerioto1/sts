@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken } from '@/lib/auth-session';
+import { clearToken, getToken } from '@/lib/auth-session';
 
 export const apiClient = () => {
 
@@ -49,6 +49,21 @@ export const apiClient = () => {
       const token = getToken();
       if (token) config.headers.set('Authorization', `Bearer ${token}`);
       return config;
+    });
+    // Token recusado pelo backend (secret trocado, vencido no meio da sessão):
+    // volta pro login. Só o 401 do Passport ("Unauthorized"/"TokenExpiredError")
+    // — "Senha atual incorreta" também é 401 e não pode derrubar a sessão.
+    instance.interceptors.response.use(undefined, (error) => {
+      const message = error?.response?.data?.message;
+      if (
+        error?.response?.status === 401 &&
+        (message === 'Unauthorized' || message === 'TokenExpiredError') &&
+        window.location.pathname !== '/login'
+      ) {
+        clearToken();
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
     });
     return instance;
   };
