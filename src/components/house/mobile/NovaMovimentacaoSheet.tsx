@@ -35,8 +35,12 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
     setTyped(false);
     getTransactionTypes()
       .then((txTypes) => {
-        setTypes(txTypes);
-        setTypeId(txTypes[0]?.id ?? null);
+        // Ordem fixa: a API devolve ADJUSTMENT primeiro e o modal abria com
+        // "Saldo real" marcado. Deposito e o caso comum, entao vem na frente.
+        const ORDER = ["DEPOSIT", "WITHDRAWAL", "ADJUSTMENT"];
+        const sorted = [...txTypes].sort((a, b) => ORDER.indexOf(a.name) - ORDER.indexOf(b.name));
+        setTypes(sorted);
+        setTypeId(sorted[0]?.id ?? null);
       })
       .catch(() => undefined);
   }, [house]);

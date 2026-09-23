@@ -33,8 +33,12 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
     setTyped(false);
     getTransactionTypes()
       .then((txTypes) => {
-        setTypes(txTypes);
-        setTypeId(txTypes[0]?.id ?? 0);
+        // Ordem fixa: a API devolve ADJUSTMENT primeiro e o modal abria com
+        // "Saldo real" marcado. Deposito e o caso comum, entao vem na frente.
+        const ORDER = ["DEPOSIT", "WITHDRAWAL", "ADJUSTMENT"];
+        const sorted = [...txTypes].sort((a, b) => ORDER.indexOf(a.name) - ORDER.indexOf(b.name));
+        setTypes(sorted);
+        setTypeId(sorted[0]?.id ?? 0);
       })
       .catch(() => undefined);
   }, [isOpen]);

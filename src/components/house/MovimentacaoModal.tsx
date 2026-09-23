@@ -4,7 +4,7 @@ import { getTransactions, type TransactionDto } from "@/api/routes/get-transacti
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDate, formatTime } from "@/lib/format";
+import { formatDate, formatSignedCurrency, formatTime } from "@/lib/format";
 import { HouseDialog } from "./HouseDialog";
 
 interface MovimentacaoModalProps {
@@ -76,7 +76,6 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
           {ordered.map((mov) => {
             const meta = TYPE_MAP[mov.transactionType] ?? { label: mov.transactionType, icon: SlidersHorizontal, className: "opacity-55" };
             const Icon = meta.icon;
-            const isWithdrawal = mov.transactionType === "WITHDRAWAL";
             return (
               <div key={mov.id} className="flex items-center gap-3 py-2.5 border-b border-border last:border-b-0">
                 <Icon size={15} className={cn("shrink-0", meta.className)} />
@@ -87,8 +86,9 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
                   </p>
                 </div>
                 <span className={cn("text-sm font-medium tabular-nums shrink-0", meta.className)}>
-                  {isWithdrawal ? "−" : "+"}
-                  {formatCurrency(mov.value)}
+                  {/* O valor ja vem com sinal do banco (saque negativo); somar um
+                      "−" pelo tipo dava "−−R$ 6,81". Igual ao historico mobile. */}
+                  {formatSignedCurrency(Number(mov.value))}
                 </span>
               </div>
             );
