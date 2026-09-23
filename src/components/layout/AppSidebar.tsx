@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
@@ -6,52 +5,72 @@ import {
   SquaresFour,
   Receipt,
   Buildings,
-  UserCircle,
+  BuildingOffice,
   PaperPlaneTilt,
   SignOut,
   ClipboardText,
-  ShieldCheck,
-  CaretDown,
+  UsersThree,
+  GitFork,
+  GearSix,
+  DotsThreeVertical,
+  type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { initialsOf } from "@/lib/format";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: SquaresFour, path: "/dashboard" },
-  { id: "apostas", label: "Apostas", icon: Receipt, path: "/bets" },
-  { id: "tips", label: "Tips", icon: PaperPlaneTilt, path: "/tips" },
-  { id: "conferir", label: "Conferência", icon: ClipboardText, path: "/settlement" },
-  { id: "casas", label: "Casas de Apostas", icon: Buildings, path: "/houses" },
-  { id: "perfil", label: "Perfil", icon: UserCircle, path: "/profile" },
-];
+type BadgeKey = "pending" | "suggestions";
 
-// Só pra role 1. O que protege de verdade é o AdminGuard do backend; esconder
-// aqui evita oferecer uma tela que responderia 403.
-const adminItems = [
-  { label: "Casas de Apostas", path: "/admin/houses" },
-  { label: "Usuários", path: "/admin/users" },
-  { label: "Pipeline", path: "/admin/pipeline" },
-];
+interface NavItem {
+  label: string;
+  icon: PhosphorIcon;
+  href: string;
+  badge?: BadgeKey;
+  // Badge em destaque (azul) em vez de neutro: pede ação do usuário.
+  badgeHighlight?: boolean;
+}
 
-const IDLE_COLOR = "color-mix(in srgb, var(--color-text) 62%, transparent)";
+interface NavSection {
+  title: string;
+  // Esconder aqui só evita oferecer tela que daria 403; quem protege de
+  // verdade é o AdminGuard do backend.
+  adminOnly?: boolean;
+  items: NavItem[];
+}
 
-// Hover por JS porque a cor de repouso é inline (color-mix): classe de hover
-// do Tailwind perderia pra ela.
-const hoverHandlers = (isActive: boolean) => ({
-  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
-    if (isActive) return;
-    e.currentTarget.style.background = "color-mix(in srgb, var(--color-text) 7%, transparent)";
-    e.currentTarget.style.color = "var(--color-text)";
+const sections: NavSection[] = [
+  {
+    title: "Gestão",
+    items: [
+      { label: "Dashboard", icon: SquaresFour, href: "/dashboard" },
+      { label: "Apostas", icon: Receipt, href: "/bets", badge: "pending" },
+      { label: "Tips", icon: PaperPlaneTilt, href: "/tips" },
+      { label: "Conferência", icon: ClipboardText, href: "/settlement", badge: "suggestions", badgeHighlight: true },
+      { label: "Casas de Apostas", icon: Buildings, href: "/houses" },
+    ],
   },
-  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-    if (isActive) return;
-    e.currentTarget.style.background = "transparent";
-    e.currentTarget.style.color = IDLE_COLOR;
+  {
+    title: "Administração",
+    adminOnly: true,
+    items: [
+      { label: "Gerenciar Casas", icon: BuildingOffice, href: "/admin/houses" },
+      { label: "Usuários", icon: UsersThree, href: "/admin/users" },
+      { label: "Pipeline", icon: GitFork, href: "/admin/pipeline" },
+    ],
   },
-});
+  {
+    title: "Conta",
+    items: [{ label: "Configurações", icon: GearSix, href: "/profile" }],
+  },
+];
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -63,44 +82,45 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
   const location = useLocation();
   const isInDrawer = !!onNavigate;
   const { me: user } = useMe();
+  const isAdmin = user?.roleId === ADMIN_ROLE_ID;
   // Proposta esperando confirmação é dinheiro parado: o número no menu é o que
   // faz o usuário voltar na conferência sem precisar lembrar dela sozinho.
   const { data: fila } = useSettlementQueue();
-  const inAdmin = location.pathname.startsWith("/admin");
-  const [adminOpen, setAdminOpen] = useState(inAdmin);
-  const contagem: Record<string, number | undefined> = {
-    conferir: fila?.suggestions,
-    apostas: fila?.pending,
+  const visible = sections.filter((s) => !s.adminOnly || isAdmin);
+
+  const logout = () => {
+    onNavigate?.();
+    window.location.href = "/logout";
   };
 
   return (
     <div
-      className="flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200"
+      className="flex flex-col bg-sidebar text-sidebar-foreground border-r border-border transition-[width] duration-200"
       style={{
-        width: collapsed ? "72px" : "248px",
+        width: collapsed ? "72px" : "256px",
         position: isInDrawer ? "relative" : "fixed",
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
         height: "100dvh",
-        padding: "18px 12px",
+        padding: "20px 12px 14px",
         zIndex: isInDrawer ? "auto" : 50,
       }}
     >
-      <div className={cn("flex items-center mb-6 px-1", collapsed ? "justify-center" : "justify-between")}>
-        <div className="flex items-center gap-2 overflow-hidden">
-          <div className="w-[26px] h-[26px] rounded-md border border-accent flex items-center justify-center shrink-0">
-            <ChartLineUp size={16} className="text-accent" />
+      <div className={cn("flex items-center mb-7 px-1.5", collapsed ? "justify-center" : "justify-between")}>
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg border border-accent bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] flex items-center justify-center shrink-0">
+            <ChartLineUp size={18} className="text-accent-text" />
           </div>
           {!collapsed && (
-            <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="text-[15px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
               SportsBet Manager
             </span>
           )}
         </div>
         {!isInDrawer && !collapsed && (
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-foreground/50 hover:text-foreground shrink-0 transition-transform"
+            onClick={() => setCollapsed(true)}
+            className="text-foreground/50 hover:text-foreground shrink-0 transition-colors"
             aria-label="Colapsar menu"
             title="Colapsar menu"
           >
@@ -111,8 +131,8 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
 
       {!isInDrawer && collapsed && (
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-foreground/50 hover:text-foreground mb-4 self-center transition-transform"
+          onClick={() => setCollapsed(false)}
+          className="text-foreground/50 hover:text-foreground mb-4 self-center transition-colors"
           aria-label="Expandir menu"
           title="Expandir menu"
           style={{ transform: "scaleX(-1)" }}
@@ -121,132 +141,106 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         </button>
       )}
 
-      <nav className="flex flex-col gap-[2px] flex-1 min-h-0 overflow-y-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname.startsWith(item.path);
-          const badge = contagem[item.id];
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-2 rounded-lg py-2 text-sm transition-colors",
-                collapsed ? "justify-center px-0" : "px-[10px]"
-              )}
-              style={{
-                color: isActive ? "var(--color-accent)" : IDLE_COLOR,
-                background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
-                boxShadow: isActive ? "inset 2px 0 0 var(--color-accent)" : "none",
-              }}
-              {...hoverHandlers(isActive)}
-            >
-              <div className="relative shrink-0">
-                <Icon size={18} weight={isActive ? "fill" : "regular"} />
-                {/* Colapsado não sobra largura pro número: vira só o ponto, que
-                    ainda diz "tem coisa aqui". */}
-                {collapsed && !!badge && item.id === "conferir" && (
-                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
-                )}
+      <nav className="flex flex-col gap-5 flex-1 min-h-0 overflow-y-auto">
+        {visible.map((section, i) => (
+          <div key={section.title} className="flex flex-col gap-0.5">
+            {collapsed ? (
+              i > 0 && <div className="mx-3 mb-1 border-t border-border" />
+            ) : (
+              <div className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+                {section.title}
               </div>
-              {!collapsed && (
-                <>
-                  <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
-                  {!!badge && (
-                    <span
-                      className={cn(
-                        "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
-                        item.id === "conferir"
-                          ? "bg-accent/15 text-accent"
-                          : "bg-foreground/[0.07] text-foreground/55",
-                      )}
-                    >
-                      {badge}
-                    </span>
+            )}
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname.startsWith(item.href);
+              const badge = item.badge ? fila?.[item.badge] : undefined;
+              return (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  onClick={onNavigate}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+                    collapsed ? "justify-center px-0" : "px-3",
+                    isActive
+                      ? "bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] text-accent-text"
+                      : "text-foreground/65 hover:bg-foreground/[0.06] hover:text-foreground",
                   )}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-
-        {user?.roleId === ADMIN_ROLE_ID &&
-          (collapsed ? (
-            // Colapsado não há onde abrir a lista: o ícone leva direto pro admin.
-            <NavLink
-              to="/admin"
-              onClick={onNavigate}
-              title="Admin"
-              className="flex items-center justify-center rounded-lg py-2"
-              style={{ color: inAdmin ? "var(--color-accent)" : IDLE_COLOR }}
-              {...hoverHandlers(inAdmin)}
-            >
-              <ShieldCheck size={18} weight={inAdmin ? "fill" : "regular"} />
-            </NavLink>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setAdminOpen((o) => !o)}
-                aria-expanded={adminOpen}
-                className="flex items-center gap-2 rounded-lg py-2 px-[10px] text-sm transition-colors"
-                style={{ color: inAdmin ? "var(--color-accent)" : IDLE_COLOR }}
-                {...hoverHandlers(false)}
-              >
-                <ShieldCheck size={18} weight={inAdmin ? "fill" : "regular"} className="shrink-0" />
-                <span>Admin</span>
-                <CaretDown
-                  size={14}
-                  className={cn("ml-auto opacity-60 transition-transform", adminOpen && "rotate-180")}
-                />
-              </button>
-              {adminOpen &&
-                adminItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.path);
-                  return (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      onClick={onNavigate}
-                      className="flex items-center rounded-lg py-1.5 pl-[38px] pr-[10px] text-sm transition-colors"
-                      style={{
-                        color: isActive ? "var(--color-accent)" : IDLE_COLOR,
-                        background: isActive ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "transparent",
-                        boxShadow: isActive ? "inset 2px 0 0 var(--color-accent)" : "none",
-                      }}
-                      {...hoverHandlers(isActive)}
-                    >
+                >
+                  <div className="relative shrink-0">
+                    <Icon size={19} />
+                    {/* Colapsado não sobra largura pro número: vira só o ponto. */}
+                    {collapsed && !!badge && item.badgeHighlight && (
+                      <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
+                    )}
+                  </div>
+                  {!collapsed && (
+                    <>
                       <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
-                    </NavLink>
-                  );
-                })}
-            </>
-          ))}
+                      {!!badge && (
+                        <span
+                          className={cn(
+                            "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                            item.badgeHighlight ? "bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] text-accent-text" : "bg-foreground/[0.08] text-foreground/70",
+                          )}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div className="pt-3 mt-2 border-t border-border shrink-0">
-        <button
-          onClick={() => {
-            if (onNavigate) onNavigate();
-            window.location.href = "/logout";
-          }}
+      <div className="pt-3 shrink-0">
+        <div
           className={cn(
-            "flex items-center gap-2 w-full rounded-lg py-1 hover:bg-foreground/[0.07] transition-colors",
-            collapsed ? "justify-center px-0" : "px-1"
+            "flex items-center gap-2.5 rounded-xl border border-border bg-foreground/[0.03]",
+            collapsed ? "justify-center p-1.5" : "p-2.5",
           )}
         >
-          <div className="w-7 h-7 rounded-full bg-accent-800 text-accent-100 flex items-center justify-center text-xs font-medium shrink-0">
+          {/* Colapsado não cabe o ⋮: o avatar vira o botão de sair. */}
+          <button
+            type="button"
+            onClick={collapsed ? logout : undefined}
+            tabIndex={collapsed ? 0 : -1}
+            title={collapsed ? "Sair" : undefined}
+            className={cn(
+              "w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold shrink-0",
+              !collapsed && "cursor-default",
+            )}
+          >
             {user ? initialsOf(user.username) : "?"}
-          </div>
+          </button>
           {!collapsed && (
-            <div className="text-left overflow-hidden flex-1">
-              <div className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
-              <div className="text-xs opacity-55 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
+            <div className="overflow-hidden flex-1 min-w-0">
+              <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
+              <div className="text-xs text-foreground/50 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
             </div>
           )}
-          {!collapsed && <SignOut size={16} className="opacity-55 shrink-0" />}
-        </button>
+          {!collapsed && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="rounded-md p-1 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07] transition-colors shrink-0"
+                aria-label="Opções da conta"
+              >
+                <DotsThreeVertical size={18} weight="bold" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top">
+                <DropdownMenuItem onSelect={logout}>
+                  <SignOut size={16} className="mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
     </div>
   );
