@@ -3,28 +3,29 @@ import { Button } from "@/components/ui/button";
 import { exportAllBetsCsv, exportMonthlyCsv, exportTransactionsCsv } from "@/lib/bet-exports";
 
 export function ExportDataCard({ totalBets }: { totalBets: number }) {
-  const blocks = [
-    { label: "Apostas", sub: `${totalBets.toLocaleString("pt-BR")} linhas`, onClick: exportAllBetsCsv },
-    { label: "Movimentações", sub: "histórico completo", onClick: exportTransactionsCsv },
-    { label: "Resumo mensal", sub: "por mês", onClick: exportMonthlyCsv },
+  const rows = [
+    { label: "Apostas", sub: `${totalBets.toLocaleString("pt-BR")} linhas · todas as casas`, onClick: exportAllBetsCsv },
+    { label: "Movimentações", sub: "depósitos, saques e ajustes", onClick: exportTransactionsCsv },
+    { label: "Resumo mensal", sub: "lucro e ROI por mês", onClick: exportMonthlyCsv },
   ];
 
   return (
-    <div className="card elev-sm bg-card rounded-md p-[16px]">
-      <h3 className="text-base font-medium mb-1">Exportar dados</h3>
-      <p className="text-sm opacity-55 mb-3">Baixe seus registros em CSV para planilha ou imposto de renda.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        {blocks.map((block) => (
-          <div key={block.label} className="rounded-md p-[14px] flex flex-col gap-2" style={{ background: "var(--color-bg)" }}>
-            <span className="text-sm font-medium">{block.label}</span>
-            <span className="text-xs opacity-55">{block.sub}</span>
-            <Button size="sm" variant="outline" className="gap-2 self-start" onClick={block.onClick}>
-              <DownloadSimple size={14} /> Baixar CSV
+    <section aria-labelledby="export-title">
+      <h2 id="export-title" className="text-base font-semibold">Dados</h2>
+      <p className="text-[13px] text-zinc-400 mt-1 mb-3">Arquivos CSV com separador ";", que abrem direto no Excel.</p>
+      <ul className="rounded-xl border border-border divide-y divide-border">
+        {rows.map((row) => (
+          <li key={row.label} className="flex items-center gap-3 px-4 py-3">
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm">{row.label}</span>
+              <span className="block text-xs text-zinc-500">{row.sub}</span>
+            </span>
+            <Button size="sm" variant="outline" className="gap-2" onClick={row.onClick} aria-label={`Baixar ${row.label}`}>
+              <DownloadSimple size={14} /> Baixar
             </Button>
-          </div>
+          </li>
         ))}
-      </div>
-      <p className="text-xs opacity-40 mt-3">Exporta todos os registros · separador ponto-e-vírgula (;)</p>
-    </div>
+      </ul>
+    </section>
   );
 }

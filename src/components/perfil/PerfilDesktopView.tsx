@@ -1,91 +1,142 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ThemeSelect } from "./ThemeSelect";
-import { CaretRight, SignOut, SquaresFour } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { SignOut } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { formatSignedCurrency } from "@/lib/format";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { actionToast } from "@/lib/action-toast";
+import { getErrorMessage } from "@/lib/api-error";
+import { patchMe, type UpdateMeParams } from "@/api/routes/patch-me";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { useMe } from "@/hooks/queries/use-me";
 import type { MeResponse } from "@/api/routes/get-me";
 import type { ProfileSummary } from "@/hooks/perfil/use-profile-summary";
-import { PreferencesFields } from "./PreferencesFields";
-import { ProfileIdentityCard } from "./ProfileIdentityCard";
+import { ThemeSelect } from "./ThemeSelect";
+import { BankrollSignalsCard } from "./BankrollSignalsCard";
 import { ExportDataCard } from "./ExportDataCard";
 import { TelegramCard } from "./TelegramCard";
+
+const labelClass = "text-[13px] font-normal text-zinc-400";
 
 export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: ProfileSummary }) {
   const navigate = useNavigate();
   const { setMe, reloadMe } = useMe();
   const prefsForm = usePreferencesForm(me, setMe);
+  const [account, setAccount] = useState({ username: me.username, email: me.email, currentPassword: "" });
+  const [saving, setSaving] = useState(false);
 
-  // Hidrata o form de preferências quando o usuario chega — do cache
-  // (instantaneo) ou da rede.
+  // Hidrata os dois formulários quando o usuario chega — do cache
+  // (instantaneo), da rede ou da resposta do salvar.
   useEffect(() => {
     prefsForm.resetFrom(me);
+    setAccount({ username: me.username, email: me.email, currentPassword: "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
 
+  const emailChanged = account.email !== me.email;
+  const accountDirty = account.username !== me.username || emailChanged;
+  const dirty = accountDirty || prefsForm.dirty;
+  // E-mail é o login: o servidor só troca com a senha atual.
+  const canSave =
+    !saving && prefsForm.valid && account.username.trim() !== "" && (!emailChanged || account.currentPassword !== "");
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    const payload: UpdateMeParams = {};
+    if (accountDirty) {
+      payload.username = account.username;
+      payload.email = account.email;
+      if (emailChanged) payload.currentPassword = account.currentPassword;
+    }
+    if (prefsForm.dirty) Object.assign(payload, prefsForm.buildPayload());
+    setSaving(true);
+    try {
+      setMe(await patchMe(payload));
+      actionToast.success({ title: "Alterações salvas" });
+    } catch (error) {
+      actionToast.error({ description: getErrorMessage(error, "Falha ao salvar.") });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDiscard = () => {
+    prefsForm.resetFrom(me);
+    setAccount({ username: me.username, email: me.email, currentPassword: "" });
+  };
+
   return (
-    <>
-      <Link to="/profile/dashboard" className="press flex items-center gap-3 card bg-card rounded-md p-4 mb-[14px]">
-        <SquaresFour size={20} className="text-zinc-400" />
-        <span className="flex-1"><span className="block text-sm">Dashboard</span><span className="block text-xs text-zinc-400">Indicadores, ícones e cores</span></span>
-        <CaretRight size={16} />
-      </Link>
-      <div className="flex items-center gap-3 card bg-card rounded-md p-4 mb-[14px]">
-        <span className="flex-1"><span className="block text-sm">Tema</span><span className="block text-xs text-zinc-400">Vale só neste aparelho</span></span>
-        <ThemeSelect />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-[14px] items-start">
-        <div className="flex flex-col gap-[14px]">
-          <ProfileIdentityCard me={me} onSaved={setMe} />
-
-          <div className="card elev-sm bg-card rounded-md p-[16px]">
-            <h3 className="text-base font-medium mb-1">Preferências de aposta</h3>
-            <p className="text-sm opacity-55 mb-3">Usadas pelo bot do Telegram nas recomendações e notificações de sinal, e na lista de casas.</p>
-            <div className="grid grid-cols-2 gap-3">
-              <PreferencesFields form={prefsForm} />
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,560px)_280px] gap-10 items-start pb-4">
+      <div className="flex flex-col gap-8 min-w-0">
+        <section aria-labelledby="account-title">
+          <h2 id="account-title" className="text-base font-semibold mb-3">Conta</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="account-name" className={labelClass}>Nome</Label>
+              <Input id="account-name" className="h-10 rounded-lg" value={account.username} onChange={(e) => setAccount((p) => ({ ...p, username: e.target.value }))} />
             </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={prefsForm.handleDiscard}>Descartar</Button>
-              <Button onClick={prefsForm.handleSave} disabled={!prefsForm.canSave}>{prefsForm.saving ? "Salvando…" : "Salvar alterações"}</Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="account-email" className={labelClass}>E-mail</Label>
+              <Input id="account-email" type="email" className="h-10 rounded-lg" value={account.email} onChange={(e) => setAccount((p) => ({ ...p, email: e.target.value }))} />
             </div>
-          </div>
-
-          <ExportDataCard totalBets={summary.totalBets} />
-        </div>
-
-        <div className="flex flex-col gap-[14px]">
-          <TelegramCard isLinked={!!me.telegramUserId} onUnlinked={reloadMe} />
-
-          <div className="card elev-sm bg-card rounded-md p-[16px]">
-            <h3 className="text-base font-medium mb-2">Resumo da banca</h3>
-            <div className="divide-y divide-border">
-              <div className="flex justify-between py-2 text-sm"><span className="opacity-60">Apostas</span><span className="font-medium tabular-nums">{summary.totalBets.toLocaleString("pt-BR")}</span></div>
-              <div className="flex justify-between py-2 text-sm">
-                <span className="opacity-60">Lucro acumulado</span>
-                <span className={`font-medium tabular-nums ${summary.totalProfit >= 0 ? "text-positive" : "text-negative"}`}>
-                  {formatSignedCurrency(summary.totalProfit)}
-                </span>
+            {emailChanged && (
+              <div className="space-y-1.5 col-span-2">
+                <Label htmlFor="account-password" className={labelClass}>Senha atual (para trocar o e-mail)</Label>
+                <Input
+                  id="account-password"
+                  type="password"
+                  autoComplete="current-password"
+                  className="h-10 rounded-lg"
+                  value={account.currentPassword}
+                  onChange={(e) => setAccount((p) => ({ ...p, currentPassword: e.target.value }))}
+                />
               </div>
-              <div className="flex justify-between py-2 text-sm">
-                <span className="opacity-60">ROI histórico</span>
-                <span className={`font-medium tabular-nums ${summary.roi >= 0 ? "text-positive" : "text-negative"}`}>
-                  {(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
-                </span>
-              </div>
-              <div className="flex justify-between py-2 text-sm"><span className="opacity-60">Casas</span><span className="font-medium tabular-nums">{summary.totalHouses.toLocaleString("pt-BR")}</span></div>
-            </div>
+            )}
           </div>
+          {me.createdAt && (
+            <p className="text-xs text-zinc-500 mt-3">
+              Conta criada em {new Date(me.createdAt).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+            </p>
+          )}
+        </section>
 
-          <div className="card elev-sm bg-card rounded-md p-[16px]">
-            <h3 className="text-base font-medium mb-3">Sessão</h3>
-            <Button variant="outline" className="w-full gap-2" onClick={() => navigate("/logout")}>
-              <SignOut size={16} /> Sair da conta
-            </Button>
+        <BankrollSignalsCard form={prefsForm} />
+
+        <section className="flex items-center justify-between gap-4" aria-labelledby="theme-title">
+          <div>
+            <h2 id="theme-title" className="text-base font-semibold">Tema</h2>
+            <p className="text-[13px] text-zinc-400 mt-1">Vale só para este aparelho.</p>
           </div>
-        </div>
+          <ThemeSelect />
+        </section>
+
+        <ExportDataCard totalBets={summary.totalBets} />
+
+        {/* Some quando não há o que salvar: depois de salvar, o `me` novo
+            reidrata os formulários e o "sujo" volta a falso. */}
+        {dirty && (
+          <div
+            role="region"
+            aria-label="Alterações não salvas"
+            className="sticky bottom-4 z-20 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-lg animate-rise"
+          >
+            <span className="flex-1 text-sm text-zinc-300">Alterações não salvas</span>
+            <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={saving}>Descartar</Button>
+            <Button size="sm" onClick={handleSave} disabled={!canSave}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+          </div>
+        )}
       </div>
-    </>
+
+      <div className="flex flex-col gap-4">
+        <TelegramCard me={me} onUnlinked={reloadMe} />
+        <button
+          type="button"
+          onClick={() => navigate("/logout")}
+          className="press self-start flex items-center gap-2 px-2 py-1.5 text-[13px] text-zinc-400 hover:text-foreground"
+        >
+          <SignOut size={15} /> Sair da conta
+        </button>
+      </div>
+    </div>
   );
 }

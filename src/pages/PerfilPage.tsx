@@ -5,6 +5,7 @@ import { useProfileSummary } from "@/hooks/perfil/use-profile-summary";
 import { PerfilSkeleton } from "@/components/perfil/PerfilSkeleton";
 import { PerfilMobileView } from "@/components/perfil/PerfilMobileView";
 import { PerfilDesktopView } from "@/components/perfil/PerfilDesktopView";
+import { SettingsLayout } from "@/components/perfil/SettingsLayout";
 
 export default function PerfilPage() {
   const isMobile = useIsMobile();
@@ -12,10 +13,14 @@ export default function PerfilPage() {
   const metrics = useProfileSummary();
 
   if (!me) {
-    return (
-      <MainLayout title="Perfil" hideHeaderBorder={isMobile} mobileHeader={isMobile ? <div className="skeleton h-7 w-32 rounded" /> : undefined}>
-        <PerfilSkeleton className={isMobile ? "min-h-[calc(100dvh-190px)]" : "max-w-xl"} />
+    return isMobile ? (
+      <MainLayout title="Perfil" hideHeaderBorder mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
+        <PerfilSkeleton className="min-h-[calc(100dvh-190px)]" />
       </MainLayout>
+    ) : (
+      <SettingsLayout>
+        <PerfilSkeleton className="max-w-xl" />
+      </SettingsLayout>
     );
   }
 
@@ -45,8 +50,8 @@ export default function PerfilPage() {
   }
 
   return (
-    <MainLayout title="Perfil">
+    <SettingsLayout>
       <PerfilDesktopView me={me} summary={metrics.summary} />
-    </MainLayout>
+    </SettingsLayout>
   );
 }

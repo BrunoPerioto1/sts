@@ -10,6 +10,8 @@ export type MeResponse = {
   createdAt?: string | null;
   telegramUserId?: number | null;
   telegramLinkedAt?: string | null;
+  /** @ do Telegram sem o arroba; null se a conta não tem @ ou não está vinculada. */
+  telegramUsername?: string | null;
   stake?: string | number | null;
   minPercentFilter?: string | number | null;
   /** Dias sem apostar numa casa até sugerir saque; null = padrão (20). */

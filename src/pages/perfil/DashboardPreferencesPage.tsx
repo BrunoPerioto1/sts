@@ -12,8 +12,17 @@ import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
 import { DASHBOARD_KPI_REGISTRY, ICON_IDS, POSITIVE_COLORS, NEGATIVE_COLORS, defaultDashboardPreferences, performanceColor, moveKpi, toggleKpi, type KpiId, type KpiPreference, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { SettingsLayout } from "@/components/perfil/SettingsLayout";
+import { DashboardSettingsDesktop } from "@/components/perfil/DashboardSettingsDesktop";
 
 export default function DashboardPreferencesPage() {
+  const isMobile = useIsMobile();
+  if (isMobile) return <DashboardPreferencesMobile />;
+  return <SettingsLayout><DashboardSettingsDesktop /></SettingsLayout>;
+}
+
+function DashboardPreferencesMobile() {
   const { me, preferences, save, saving, error, reloadMe } = useDashboardPreferences();
   const [iconKpi, setIconKpi] = useState<KpiId | null>(null);
   const [colorSide, setColorSide] = useState<"positive" | "negative" | null>(null);
