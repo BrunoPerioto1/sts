@@ -12,6 +12,8 @@ export type MeResponse = {
   telegramLinkedAt?: string | null;
   stake?: string | number | null;
   minPercentFilter?: string | number | null;
+  /** Dias sem apostar numa casa até sugerir saque; null = padrão (20). */
+  staleHouseDays?: number | null;
 };
 
 export async function getMe(): Promise<MeResponse> {

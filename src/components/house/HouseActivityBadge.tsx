@@ -6,7 +6,7 @@ const badge =
 
 /**
  * Selo ao lado do nome da casa: "sacar" em amarelo quando a casa está parada
- * há mais de STALE_BET_DAYS com saldo, "sem apostas" neutro quando ela só
+ * além do prazo configurado com saldo, "sem apostas" neutro quando ela só
  * recebeu depósito. Casa ativa ou parada sem saldo não ganha selo.
  */
 export function HouseActivityBadge({ activity }: { activity: HouseActivity }) {

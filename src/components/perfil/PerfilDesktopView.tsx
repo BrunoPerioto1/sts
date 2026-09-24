@@ -42,7 +42,7 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
 
           <div className="card elev-sm bg-card rounded-md p-[16px]">
             <h3 className="text-base font-medium mb-1">Preferências de aposta</h3>
-            <p className="text-sm opacity-55 mb-3">Usadas pelo bot do Telegram ao calcular recomendações e notificações de sinal.</p>
+            <p className="text-sm opacity-55 mb-3">Usadas pelo bot do Telegram nas recomendações e notificações de sinal, e na lista de casas.</p>
             <div className="grid grid-cols-2 gap-3">
               <PreferencesFields form={prefsForm} />
             </div>

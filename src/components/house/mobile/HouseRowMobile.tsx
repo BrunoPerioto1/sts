@@ -26,9 +26,11 @@ interface HouseRowMobileProps {
   onLongPress: () => void;
   /** Posicao na lista — define o degrau da cascata de entrada. */
   index?: number;
+  /** Dias sem apostar até sugerir saque (preferência do usuário). */
+  staleDays: number;
 }
 
-export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRowMobileProps) {
+export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays }: HouseRowMobileProps) {
   const profit = Number(house.totalBetProfit);
   // Saldo clampado em zero: casa no vermelho é lançamento faltando, o valor
   // real negativo aparece como "a conferir" e no detalhe da casa.
@@ -68,7 +70,7 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0 }: HouseRo
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="text-sm font-medium truncate">{house.houseName}</span>
-          <HouseActivityBadge activity={houseActivity(house.lastBetAt, real)} />
+          <HouseActivityBadge activity={houseActivity(house.lastBetAt, real, staleDays)} />
         </span>
         <span className="block text-xs text-zinc-400 leading-snug truncate">{betsSubtitle(house)}</span>
         {real < 0 && (

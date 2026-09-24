@@ -11,7 +11,8 @@ import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { exportHousesCsv } from "@/lib/bet-exports";
 import { metricsFromBalances } from "@/lib/house-metrics";
-import { idleDays } from "@/lib/house-activity";
+import { idleDays, staleDaysFrom } from "@/lib/house-activity";
+import { useMe } from "@/hooks/queries/use-me";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 
@@ -23,6 +24,8 @@ export function CasasApostaView() {
   const balancesQuery = useHouseBalances();
   const metricsQuery = useHouseMetrics();
   const invalidate = useInvalidateBetData();
+  const { me } = useMe();
+  const staleDays = staleDaysFrom(me?.staleHouseDays);
 
   const houses = balancesQuery.data ?? EMPTY_HOUSES;
   const metrics = metricsQuery.data ?? null;
@@ -107,6 +110,7 @@ export function CasasApostaView() {
               key={house.houseId}
               house={house}
               maxBalance={maxBalance}
+              staleDays={staleDays}
               onViewDetails={() => { setSelectedHouse(house); setIsDetailsModalOpen(true); }}
               onNewTransaction={() => { setSelectedHouse(house); setIsNovaTransacaoModalOpen(true); }}
               onOpenHistory={() => { setSelectedHouse(house); setIsMovimentacaoModalOpen(true); }}

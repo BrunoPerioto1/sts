@@ -17,6 +17,8 @@ interface HouseListItemProps {
   // Maior saldo exibido na lista — a barra é proporcional a ele, então a
   // escala é a mesma pra todas as linhas.
   maxBalance: number;
+  /** Dias sem apostar até sugerir saque (preferência do usuário). */
+  staleDays: number;
   onViewDetails?: (houseId: number) => void;
   onOpenHistory?: (house: HouseBalanceDto) => void;
   onNewTransaction?: (house: HouseBalanceDto) => void;
@@ -25,7 +27,7 @@ interface HouseListItemProps {
 export const HOUSE_GRID =
   "grid items-center gap-3 grid-cols-[28px_minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px]";
 
-export function HouseListItem({ house, maxBalance, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
+export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
   // Casa não fica te devendo: saldo real negativo é lançamento faltando, não
   // dinheiro. A linha mostra o saldo clampado em zero e marca "a conferir"; o
   // valor negativo em si fica no detalhe da casa.
@@ -37,7 +39,7 @@ export function HouseListItem({ house, maxBalance, onViewDetails, onOpenHistory,
   const bets = Number(house.totalBets);
   // Saldo zerado não ganha barra: um traço de 2px em "R$ 0,00" só polui.
   const width = maxBalance > 0 ? (balance / maxBalance) * 100 : 0;
-  const activity = houseActivity(house.lastBetAt, real);
+  const activity = houseActivity(house.lastBetAt, real, staleDays);
 
   return (
     <div className={cn(HOUSE_GRID, "px-2 -mx-2 py-2.5 rounded-md border-b border-border last:border-b-0 hover:bg-foreground/[0.03] transition-colors")}>

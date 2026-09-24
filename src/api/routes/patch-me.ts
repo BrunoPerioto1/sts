@@ -9,6 +9,7 @@ export interface UpdateMeParams {
   fullName?: string;
   stake?: number;
   minPercentFilter?: number;
+  staleHouseDays?: number;
   // Exigida pelo servidor só quando o e-mail muda.
   currentPassword?: string;
 }

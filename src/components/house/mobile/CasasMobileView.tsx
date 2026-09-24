@@ -17,6 +17,8 @@ import { HouseTotalsHeader } from "./HouseTotalsHeader";
 import { HouseFiltersBar } from "./HouseFiltersBar";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { metricsFromBalances } from "@/lib/house-metrics";
+import { staleDaysFrom } from "@/lib/house-activity";
+import { useMe } from "@/hooks/queries/use-me";
 import { SortSheet } from "./SortSheet";
 import { HouseActionsSheet } from "./HouseActionsSheet";
 import { NovaMovimentacaoSheet } from "./NovaMovimentacaoSheet";
@@ -29,6 +31,8 @@ const EMPTY_HOUSES: HouseBalanceDto[] = [];
 
 export function CasasMobileView() {
   const navigate = useNavigate();
+  const { me } = useMe();
+  const staleDays = staleDaysFrom(me?.staleHouseDays);
 
   const balancesQuery = useHouseBalances();
   const metricsQuery = useHouseMetrics();
@@ -119,6 +123,7 @@ export function CasasMobileView() {
               key={house.houseId}
               index={index}
               house={house}
+              staleDays={staleDays}
               onTap={() => panel.pushDetail(house)}
               onLongPress={() => setActionsHouse(house)}
             />

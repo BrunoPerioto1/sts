@@ -1,5 +1,8 @@
-// Quantos dias sem apostar numa casa até ela virar candidata a saque.
-export const STALE_BET_DAYS = 20;
+// Dias sem apostar numa casa até ela virar candidata a saque, quando o
+// usuário não configurou outro valor em Preferências.
+export const DEFAULT_STALE_BET_DAYS = 20;
+export const STALE_BET_DAYS_MIN = 1;
+export const STALE_BET_DAYS_MAX = 365;
 
 const DAY_MS = 86_400_000;
 
@@ -11,14 +14,21 @@ export type HouseActivity =
   | { kind: "idle"; days: number }
   | { kind: "never" };
 
+// Valor salvo no usuário (`me.staleHouseDays`); null ou inválido = padrão.
+export function staleDaysFrom(value: string | number | null | undefined): number {
+  const days = Number(value);
+  return value != null && Number.isInteger(days) && days >= STALE_BET_DAYS_MIN ? days : DEFAULT_STALE_BET_DAYS;
+}
+
 export function houseActivity(
   lastBetAt: string | null,
   balance: number,
+  staleDays: number = DEFAULT_STALE_BET_DAYS,
   now: number = Date.now()
 ): HouseActivity {
   if (!lastBetAt) return { kind: "never" };
   const days = Math.floor((now - new Date(lastBetAt).getTime()) / DAY_MS);
-  if (days <= STALE_BET_DAYS) return { kind: "active", days };
+  if (days <= staleDays) return { kind: "active", days };
   // Parada sem saldo não tem o que sacar.
   return balance > 0 ? { kind: "withdraw", days } : { kind: "idle", days };
 }
