@@ -11,6 +11,7 @@ import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { actionToast } from "@/lib/action-toast";
 import { exportHousesCsv } from "@/lib/bet-exports";
 import { metricsFromBalances } from "@/lib/house-metrics";
+import { idleDays } from "@/lib/house-activity";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 
@@ -50,6 +51,8 @@ export function CasasApostaView() {
     list = [...list].sort((a, b) => {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);
       if (sort === "profit") return Number(b.totalBetProfit) - Number(a.totalBetProfit);
+      if (sort === "bets") return Number(b.totalBets) - Number(a.totalBets);
+      if (sort === "idle") return idleDays(b.lastBetAt) - idleDays(a.lastBetAt);
       return Number(b.realHouseBalance) - Number(a.realHouseBalance);
     });
     return list;

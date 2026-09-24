@@ -35,6 +35,8 @@ export interface HouseBalanceDto {
   wonBets: string | number;
   lostBets: string | number;
   lastMovementAt: string | null;
+  /** Hora da aposta mais recente na casa; null = nunca apostou nela. */
+  lastBetAt: string | null;
 }
 
 export interface HouseBalanceFilter {

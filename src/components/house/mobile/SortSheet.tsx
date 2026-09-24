@@ -2,13 +2,14 @@ import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { OptionRow } from "@/components/apostas/OptionRow";
 import { Button } from "@/components/ui/button";
 
-export type HouseSortMobile = "balance" | "profit" | "name" | "bets" | "lastMovement";
+export type HouseSortMobile = "balance" | "profit" | "name" | "bets" | "idle" | "lastMovement";
 
 const OPTIONS: { value: HouseSortMobile; label: string; subtitle: string }[] = [
   { value: "balance", label: "Saldo", subtitle: "maior saldo primeiro" },
   { value: "profit", label: "Lucro", subtitle: "melhor desempenho primeiro" },
   { value: "name", label: "Nome", subtitle: "A → Z" },
   { value: "bets", label: "Apostas", subtitle: "mais movimentadas primeiro" },
+  { value: "idle", label: "Parada há mais tempo", subtitle: "mais dias sem apostar primeiro" },
   { value: "lastMovement", label: "Última movimentação", subtitle: "mais recente primeiro" },
 ];
 
