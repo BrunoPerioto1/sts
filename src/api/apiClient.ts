@@ -53,15 +53,19 @@ export const apiClient = () => {
     // Token recusado pelo backend (secret trocado, vencido no meio da sessão):
     // volta pro login. Só o 401 do Passport ("Unauthorized"/"TokenExpiredError")
     // — "Senha atual incorreta" também é 401 e não pode derrubar a sessão.
+    // 402 = acesso vencido (backend confere a cada request): leva pra tela do PIX.
     instance.interceptors.response.use(undefined, (error) => {
+      const status = error?.response?.status;
       const message = error?.response?.data?.message;
       if (
-        error?.response?.status === 401 &&
+        status === 401 &&
         (message === 'Unauthorized' || message === 'TokenExpiredError') &&
         window.location.pathname !== '/login'
       ) {
         clearToken();
         window.location.href = '/login';
+      } else if (status === 402 && window.location.pathname !== '/renovar') {
+        window.location.href = '/renovar';
       }
       return Promise.reject(error);
     });

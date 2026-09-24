@@ -22,6 +22,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminTipsPage = lazy(() => import("./pages/AdminTipsPage"));
 const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
+const RenovarPage = lazy(() => import("./pages/RenovarPage"));
 import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
@@ -76,6 +77,7 @@ const App = () => (
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />
+        <Route path="/renovar" element={<Suspense fallback={<RouteFallback />}><RenovarPage /></Suspense>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

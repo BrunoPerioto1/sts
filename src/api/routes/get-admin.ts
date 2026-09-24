@@ -36,6 +36,7 @@ export type AdminUser = {
   lockedUntil: string | null;
   failedLoginAttempts: number;
   telegramLinkedAt: string | null;
+  accessUntil: string | null;
   hasTelegram: boolean;
   betCount: number;
 };
@@ -57,6 +58,7 @@ export type UpdateAdminUserParams = {
   roleId?: number;
   unlock?: boolean;
   unlinkTelegram?: boolean;
+  extendDays?: number;
 };
 
 export async function getAdminOverview(): Promise<AdminOverview> {

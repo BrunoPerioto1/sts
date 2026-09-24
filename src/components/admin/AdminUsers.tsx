@@ -10,20 +10,59 @@ import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin-health";
 import { initialsOf } from "@/lib/format";
-import type { AdminUser } from "@/api/routes/get-admin";
+import type { AdminUser, UpdateAdminUserParams } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
-const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_110px]";
+const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_150px_110px]";
 
 const FILTERS = [
   { id: "all", label: "Todos", test: () => true },
   { id: "admin", label: "Admin", test: (u: AdminUser) => u.roleId === 1 },
   { id: "user", label: "Usuário", test: (u: AdminUser) => u.roleId === 3 },
   { id: "locked", label: "Bloqueados", test: (u: AdminUser) => isLocked(u.lockedUntil) },
+  { id: "expired", label: "Vencidos", test: (u: AdminUser) => isExpired(u.accessUntil) },
 ] as const;
 
 type FilterId = (typeof FILTERS)[number]["id"];
+
+const ACCESS_DAYS = 30;
+
+function isExpired(accessUntil: string | null) {
+  return !!accessUntil && new Date(accessUntil).getTime() <= Date.now();
+}
+
+// Vencimento + "+30d". Sem prazo = conta antiga ou admin; o primeiro clique
+// já põe o cliente no ciclo de cobrança.
+function AccessCell({
+  user,
+  isMe,
+  pending,
+  onExtend,
+}: {
+  user: AdminUser;
+  isMe: boolean;
+  pending: boolean;
+  onExtend: () => void;
+}) {
+  const date = user.accessUntil
+    ? new Date(user.accessUntil).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" })
+    : null;
+  const expired = isExpired(user.accessUntil);
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={cn("text-sm", expired ? "text-negative" : "opacity-55")}>
+        {date ? `${expired ? "venceu" : "até"} ${date}` : "sem prazo"}
+      </span>
+      {!isMe && (
+        <Button variant="outline" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
+          +{ACCESS_DAYS}d
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function RoleChoice({
   user,
@@ -153,7 +192,7 @@ export function AdminUsers() {
     );
   }, [users, search, filter]);
 
-  const run = (id: number, params: { roleId?: number; unlock?: boolean; unlinkTelegram?: boolean }, done: string) =>
+  const run = (id: number, params: UpdateAdminUserParams, done: string) =>
     update.mutate(
       { id, ...params },
       {
@@ -194,6 +233,7 @@ export function AdminUsers() {
           <span className="text-right">Apostas</span>
           <span>Último login</span>
           <span>Telegram</span>
+          <span>Acesso</span>
           <span className="text-right">Ações</span>
         </div>
         {filtered.map((user) => (
@@ -210,6 +250,12 @@ export function AdminUsers() {
             <span className="text-sm opacity-55">
               {user.hasTelegram ? `vinculado ${formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}` : "—"}
             </span>
+            <AccessCell
+              user={user}
+              isMe={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+            />
             <div className="flex justify-end">
               <Actions
                 user={user}
@@ -222,7 +268,7 @@ export function AdminUsers() {
         ))}
       </div>
 
-      {/* Mobile: tabela de seis colunas não cabe em 390px. */}
+      {/* Mobile: tabela de sete colunas não cabe em 390px. */}
       <div className="space-y-2 p-3 sm:hidden">
         {filtered.map((user) => (
           <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
@@ -233,6 +279,13 @@ export function AdminUsers() {
               <span>{formatSaoPaulo(user.lastLogin)}</span>
               <span>{user.hasTelegram ? "Telegram vinculado" : "sem Telegram"}</span>
             </div>
+
+            <AccessCell
+              user={user}
+              isMe={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+            />
 
             <RoleChoice
               user={user}
@@ -265,7 +318,7 @@ export function AdminUsers() {
       title={users ? `${users.length} ${users.length === 1 ? "usuário" : "usuários"}` : "Usuários"}
       description={
         <>
-          Papel, bloqueio de login e vínculo com o Telegram.
+          Papel, bloqueio de login, vínculo com o Telegram e vencimento do acesso (PIX).
           <br />
           Você não altera o próprio papel — o servidor recusa o auto-rebaixamento.
         </>
