@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
+import { AccessExpiryBanner } from "./AccessExpiryBanner";
 
 interface ShellContextValue {
   setBottomNavHidden: (hidden: boolean) => void;
@@ -65,6 +66,7 @@ export function AppShell() {
               div permanece a mesma entre rotas e o CSS nunca redispara.
               So entrada, sem saida — animar a saida obrigaria a esperar a tela
               velha sumir antes de montar a nova, o que ai sim seria atraso. */}
+          <AccessExpiryBanner />
           <div key={pathname} className="animate-route-in">
             <Outlet />
           </div>

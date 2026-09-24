@@ -12,6 +12,8 @@ import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin
 import { initialsOf } from "@/lib/format";
 import type { AdminUser, UpdateAdminUserParams } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { formatAccessDate, fromSaoPauloInput, isExpired, toSaoPauloInput } from "@/lib/access";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
 const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_150px_110px]";
@@ -28,38 +30,75 @@ type FilterId = (typeof FILTERS)[number]["id"];
 
 const ACCESS_DAYS = 30;
 
-function isExpired(accessUntil: string | null) {
-  return !!accessUntil && new Date(accessUntil).getTime() <= Date.now();
-}
-
 // Vencimento + "+30d". Sem prazo = conta antiga ou admin; o primeiro clique
-// já põe o cliente no ciclo de cobrança.
+// já põe o cliente no ciclo de cobrança. Clicar na data abre o ajuste exato
+// (hora de Brasília) — pra acertar quem pagou em outro dia sem ir no banco.
 function AccessCell({
   user,
   isMe,
   pending,
   onExtend,
+  onSetDate,
 }: {
   user: AdminUser;
   isMe: boolean;
   pending: boolean;
   onExtend: () => void;
+  onSetDate: (accessUntil: string | null) => void;
 }) {
-  const date = user.accessUntil
-    ? new Date(user.accessUntil).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" })
-    : null;
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
   const expired = isExpired(user.accessUntil);
+  const label = user.accessUntil ? `${expired ? "venceu" : "até"} ${formatAccessDate(user.accessUntil)}` : "sem prazo";
+  const labelClass = cn("text-sm whitespace-nowrap", expired ? "text-negative" : "opacity-55");
+
+  if (isMe) return <span className={labelClass}>{label}</span>;
+
+  const apply = (accessUntil: string | null) => {
+    onSetDate(accessUntil);
+    setOpen(false);
+  };
 
   return (
     <div className="flex items-center gap-2">
-      <span className={cn("text-sm", expired ? "text-negative" : "opacity-55")}>
-        {date ? `${expired ? "venceu" : "até"} ${date}` : "sem prazo"}
-      </span>
-      {!isMe && (
-        <Button variant="outline" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
-          +{ACCESS_DAYS}d
-        </Button>
-      )}
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          if (next) setValue(user.accessUntil ? toSaoPauloInput(user.accessUntil) : "");
+          setOpen(next);
+        }}
+      >
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            disabled={pending}
+            aria-label={`Ajustar vencimento de ${user.username}`}
+            className={cn(labelClass, "underline decoration-dotted underline-offset-4 hover:opacity-100 disabled:opacity-40")}
+          >
+            {label}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-72 space-y-3">
+          <div className="space-y-1.5">
+            <label htmlFor={`access-${user.id}`} className="text-xs text-zinc-400">Vence em (horário de Brasília)</label>
+            <Input
+              id={`access-${user.id}`}
+              type="datetime-local"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            {user.accessUntil ? (
+              <Button variant="ghost" size="sm" className="text-zinc-400" onClick={() => apply(null)}>Sem prazo</Button>
+            ) : <span />}
+            <Button size="sm" disabled={!value} onClick={() => apply(fromSaoPauloInput(value))}>Salvar</Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <Button variant="outline" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
+        +{ACCESS_DAYS}d
+      </Button>
     </div>
   );
 }
@@ -255,6 +294,7 @@ export function AdminUsers() {
               isMe={user.id === me?.id}
               pending={pendingFor(user.id)}
               onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
             />
             <div className="flex justify-end">
               <Actions
@@ -285,6 +325,7 @@ export function AdminUsers() {
               isMe={user.id === me?.id}
               pending={pendingFor(user.id)}
               onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
             />
 
             <RoleChoice

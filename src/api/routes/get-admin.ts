@@ -59,6 +59,8 @@ export type UpdateAdminUserParams = {
   unlock?: boolean;
   unlinkTelegram?: boolean;
   extendDays?: number;
+  /** Vencimento exato (ISO com fuso); null = sem prazo. */
+  accessUntil?: string | null;
 };
 
 export async function getAdminOverview(): Promise<AdminOverview> {

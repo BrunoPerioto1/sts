@@ -16,6 +16,8 @@ export type MeResponse = {
   minPercentFilter?: string | number | null;
   /** Dias sem apostar numa casa até sugerir saque; null = padrão (20). */
   staleHouseDays?: number | null;
+  /** Vencimento do acesso (PIX); null = sem prazo. */
+  accessUntil?: string | null;
 };
 
 export async function getMe(): Promise<MeResponse> {
