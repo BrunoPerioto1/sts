@@ -22,6 +22,8 @@ export interface HouseMetricsDto {
 export interface HouseBalanceDto {
   houseId: number;
   houseName: string;
+  /** Site da casa (.bet.br, federal); null = sem link cadastrado. */
+  websiteUrl: string | null;
   totalBets: string | number;
   settledBets: string | number;
   totalStake: string | number;

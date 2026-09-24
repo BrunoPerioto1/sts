@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowCounterClockwise, ArrowRight, MagnifyingGlass, PencilSimple, Plus, Prohibit, X } from "@phosphor-icons/react";
+import { siteLabel } from "@/lib/house-url";
+import { ArrowCounterClockwise, ArrowRight, ArrowSquareOut, MagnifyingGlass, PencilSimple, Plus, Prohibit, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +29,7 @@ const PAGE = 10;
 const FILTERS = [
   { id: "noAlias", label: "Sem apelido", test: (h: AdminHouse) => h.aliases.length === 0 },
   { id: "alias", label: "Com apelido", test: (h: AdminHouse) => h.aliases.length > 0 },
+  { id: "noSite", label: "Sem site", test: (h: AdminHouse) => h.isActive && !h.websiteUrl },
   { id: "inactive", label: "Inativas", test: (h: AdminHouse) => !h.isActive },
   { id: "all", label: "Todas", test: () => true },
 ] as const;
@@ -42,10 +44,11 @@ function HouseRow({ house }: { house: AdminHouse }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(house.name);
   const [aliases, setAliases] = useState(house.aliases.join(", "));
+  const [site, setSite] = useState(house.websiteUrl ?? "");
   const [adding, setAdding] = useState(false);
   const [newAlias, setNewAlias] = useState("");
 
-  const save = (params: { name?: string; aliases: string[] }, done: () => void) =>
+  const save = (params: { name?: string; aliases: string[]; websiteUrl?: string | null }, done: () => void) =>
     update.mutate(
       { id: house.id, ...params },
       {
@@ -59,7 +62,10 @@ function HouseRow({ house }: { house: AdminHouse }) {
     );
 
   const saveEdit = () =>
-    save({ name: name.trim() || house.name, aliases: splitAliases(aliases) }, () => setEditing(false));
+    save(
+      { name: name.trim() || house.name, aliases: splitAliases(aliases), websiteUrl: site.trim() || null },
+      () => setEditing(false),
+    );
 
   const addAlias = () => {
     const alias = newAlias.trim();
@@ -82,6 +88,7 @@ function HouseRow({ house }: { house: AdminHouse }) {
   const cancelEdit = () => {
     setName(house.name);
     setAliases(house.aliases.join(", "));
+    setSite(house.websiteUrl ?? "");
     setEditing(false);
   };
 
@@ -94,6 +101,16 @@ function HouseRow({ house }: { house: AdminHouse }) {
           onChange={(e) => setAliases(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && saveEdit()}
           placeholder="Apelidos separados por vírgula"
+        />
+        {/* Linha de baixo, embaixo de nome + apelidos: nas colunas estreitas de
+            apostas/ações o domínio não caberia. */}
+        <Input
+          value={site}
+          onChange={(e) => setSite(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+          placeholder="Site .bet.br (ex.: betano.bet.br)"
+          inputMode="url"
+          className="sm:col-start-1 sm:col-span-2"
         />
         <div className="flex gap-2 sm:col-span-2 sm:justify-end">
           <Button size="sm" disabled={update.isPending} onClick={saveEdit}>
@@ -116,6 +133,18 @@ function HouseRow({ house }: { house: AdminHouse }) {
     >
       <div className="flex items-center gap-2 min-w-0">
         <span className={cn("text-sm font-medium truncate", !house.isActive && "opacity-40")}>{house.name}</span>
+        {house.websiteUrl && (
+          <a
+            href={house.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 opacity-45 hover:opacity-100 hover:text-accent-text transition"
+            title={siteLabel(house.websiteUrl)}
+            aria-label={`Abrir ${siteLabel(house.websiteUrl)}`}
+          >
+            <ArrowSquareOut size={13} />
+          </a>
+        )}
         {!house.isActive && (
           <span className="text-[10px] font-medium tracking-wider px-1.5 py-0.5 rounded bg-foreground/[0.07] opacity-50">
             INATIVA
@@ -185,13 +214,14 @@ function NewHouseForm({ onDone }: { onDone: () => void }) {
   const create = useCreateAdminHouse();
   const [name, setName] = useState("");
   const [aliases, setAliases] = useState("");
+  const [site, setSite] = useState("");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     create.mutate(
-      { name: name.trim(), aliases: splitAliases(aliases) },
+      { name: name.trim(), aliases: splitAliases(aliases), websiteUrl: site.trim() || null },
       {
         onSuccess: (house) => {
           actionToast.success({ title: `${house.name} cadastrada` });
@@ -212,6 +242,13 @@ function NewHouseForm({ onDone }: { onDone: () => void }) {
         value={aliases}
         onChange={(e) => setAliases(e.target.value)}
         placeholder="Apelidos separados por vírgula (opcional)"
+      />
+      <Input
+        value={site}
+        onChange={(e) => setSite(e.target.value)}
+        placeholder="Site .bet.br (opcional)"
+        inputMode="url"
+        className="sm:col-start-1 sm:col-span-2"
       />
       <div className="flex gap-2 sm:col-span-2 sm:justify-end">
         <Button type="submit" size="sm" disabled={create.isPending || !name.trim()}>
@@ -271,6 +308,8 @@ export function AdminHouses() {
         <>
           O apelido é a grafia que aparece na tip — “Superbet Brasil” aponta para{" "}
           <span className="font-medium text-foreground">SUPERBET</span>.
+          <br />
+          Site: só domínio .bet.br (autorização federal) — vira o botão de abrir a casa.
           <br />
           Cadastro global: vale para todos os usuários.
         </>

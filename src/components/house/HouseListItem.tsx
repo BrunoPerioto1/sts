@@ -6,7 +6,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { DotsThreeOutline, Plus } from "@phosphor-icons/react";
+import { ArrowSquareOut, DotsThreeOutline, Plus } from "@phosphor-icons/react";
+import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { cn } from "@/lib/utils";
 import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { formatIdleDays, houseActivity } from "@/lib/house-activity";
@@ -25,7 +26,7 @@ interface HouseListItemProps {
 }
 
 export const HOUSE_GRID =
-  "grid items-center gap-3 grid-cols-[28px_minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px]";
+  "grid items-center gap-3 grid-cols-[28px_minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px_32px]";
 
 export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
   // Casa não fica te devendo: saldo real negativo é lançamento faltando, não
@@ -89,6 +90,28 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
         )}
       </span>
 
+      {/* Célula vazia quando não há link: a coluna fica, pra grade não desalinhar. */}
+      {house.websiteUrl ? (
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]"
+        >
+          <a
+            href={house.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Abrir site da ${house.houseName}`}
+            title={`Abrir ${siteLabel(house.websiteUrl)}`}
+          >
+            <ArrowSquareOut size={16} />
+          </a>
+        </Button>
+      ) : (
+        <span />
+      )}
+
       <Button
         variant="ghost"
         size="icon"
@@ -109,6 +132,9 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
           <DropdownMenuItem onClick={() => onViewDetails?.(house.houseId)}>Ver detalhes</DropdownMenuItem>
           <DropdownMenuItem onClick={() => onNewTransaction?.(house)}>Nova movimentação</DropdownMenuItem>
           <DropdownMenuItem onClick={() => onOpenHistory?.(house)}>Histórico</DropdownMenuItem>
+          {house.websiteUrl && (
+            <DropdownMenuItem onClick={() => openHouseSite(house.websiteUrl!)}>Abrir site</DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

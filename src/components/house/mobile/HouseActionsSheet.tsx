@@ -1,4 +1,5 @@
-import { ClockCounterClockwise, ListBullets, PlusCircle } from "@phosphor-icons/react";
+import { ArrowSquareOut, ClockCounterClockwise, ListBullets, PlusCircle } from "@phosphor-icons/react";
+import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
@@ -22,6 +23,9 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
     { icon: PlusCircle, label: "Nova movimentação", onClick: () => onNewTransaction(house) },
     { icon: ListBullets, label: "Ver apostas", onClick: () => onViewBets(house) },
     { icon: ClockCounterClockwise, label: "Histórico de movimentações", onClick: () => onOpenHistory(house) },
+    ...(house.websiteUrl
+      ? [{ icon: ArrowSquareOut, label: `Abrir ${siteLabel(house.websiteUrl)}`, onClick: () => openHouseSite(house.websiteUrl!) }]
+      : []),
   ];
 
   return (

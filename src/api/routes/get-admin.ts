@@ -45,11 +45,13 @@ export type AdminHouse = {
   name: string;
   isActive: boolean;
   aliases: string[];
+  websiteUrl: string | null;
   betCount: number;
 };
 
-export type CreateAdminHouseParams = { name: string; aliases?: string[] };
-export type UpdateAdminHouseParams = { name?: string; aliases?: string[]; isActive?: boolean };
+// websiteUrl: só .bet.br (o servidor recusa o resto); "" ou null apaga o link.
+export type CreateAdminHouseParams = { name: string; aliases?: string[]; websiteUrl?: string | null };
+export type UpdateAdminHouseParams = { name?: string; aliases?: string[]; isActive?: boolean; websiteUrl?: string | null };
 
 export type UpdateAdminUserParams = {
   roleId?: number;

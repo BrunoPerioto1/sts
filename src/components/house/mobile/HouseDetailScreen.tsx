@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { CaretLeft } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
@@ -88,13 +88,20 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
         >
           Nova movimentação
         </Button>
-        <div className="grid grid-cols-2 gap-2">
+        <div className={house.websiteUrl ? "grid grid-cols-3 gap-2" : "grid grid-cols-2 gap-2"}>
           <Button variant="outline" className="min-h-[44px]" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
             Ver apostas
           </Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenHistory(house)}>
             Histórico
           </Button>
+          {house.websiteUrl && (
+            <Button asChild variant="outline" className="min-h-[44px] gap-1.5">
+              <a href={house.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Abrir site da ${house.houseName}`}>
+                Site <ArrowSquareOut size={15} />
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </div>,
