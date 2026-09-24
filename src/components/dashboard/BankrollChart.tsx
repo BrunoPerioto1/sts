@@ -57,6 +57,7 @@ export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; h
             stroke="var(--color-accent-2)"
             strokeWidth={1.5}
             fill="url(#bankroll-fill)"
+            baseValue="dataMin"
             animationDuration={650}
           />
         </AreaChart>

@@ -66,7 +66,7 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,560px)_280px] gap-10 items-start pb-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px] gap-10 max-w-[1180px] items-start pb-4">
       <div className="flex flex-col gap-8 min-w-0">
         <section aria-labelledby="account-title">
           <h2 id="account-title" className="text-base font-semibold mb-3">Conta</h2>

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { format, parseISO, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMe } from "@/hooks/queries/use-me";
-import { useHouseMetrics } from "@/hooks/queries/use-houses";
+import { useBankrollSeries } from "@/hooks/dashboard/use-bankroll-series";
 import { useHouseProfit } from "@/hooks/dashboard/use-house-profit";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -14,7 +14,7 @@ import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { DashboardProfitHero, daysSummary } from "./DashboardProfitHero";
 import { ProfitBarChart } from "./ProfitBarChart";
-import { BankrollChart, type BankrollPoint } from "./BankrollChart";
+import { BankrollChart } from "./BankrollChart";
 import { HouseProfitBars } from "./HouseProfitBars";
 
 // Até um mês cabe uma barra por dia; acima disso a leitura só funciona por
@@ -29,24 +29,6 @@ function groupByWeek(data: DailySummaryPoint[]) {
   return Array.from(buckets.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, profitDay]) => ({ date, profitDay }));
-}
-
-/**
- * Banca ao fim de cada dia, reconstruída de trás pra frente a partir do saldo
- * atual das casas.
- *
- * ponytail: depósitos e saques dentro do período não entram na conta (só o
- * lucro das apostas), então a curva mostra a forma da evolução, não o extrato.
- * Corrigir isso exige o histórico de transações por dia no backend.
- */
-function bankrollSeries(daily: DailySummaryPoint[], currentBalance: number): BankrollPoint[] {
-  const points: BankrollPoint[] = [];
-  let balance = currentBalance;
-  for (let i = daily.length - 1; i >= 0; i--) {
-    points.unshift({ date: daily[i].date, balance });
-    balance -= daily[i].profitDay;
-  }
-  return points;
 }
 
 function Panel({ label, right, children, className }: {
@@ -94,16 +76,12 @@ export function DashboardDesktopView({
   onPresetChange,
 }: DashboardDesktopViewProps) {
   const { me } = useMe();
-  const houseMetrics = useHouseMetrics();
   const byHouse = useHouseProfit(filters.startDate, filters.endDate);
   const preferences = normalizeDashboardPreferences(me?.dashboardPreferences);
 
   const profit = Number(metrics.totalProfit);
   const chartData = useMemo(() => groupByWeek(dailyData), [dailyData]);
-  const bankroll = useMemo(
-    () => bankrollSeries(dailyData, Number(houseMetrics.data?.totalBalance ?? 0)),
-    [dailyData, houseMetrics.data]
-  );
+  const bankroll = useBankrollSeries(filters.startDate, filters.endDate);
   const bestDay = dailyData.reduce<DailySummaryPoint | null>(
     (best, day) => (best == null || day.profitDay > best.profitDay ? day : best),
     null
