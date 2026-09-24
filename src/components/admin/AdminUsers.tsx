@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatAccessDate, fromSaoPauloInput, isExpired, toSaoPauloInput } from "@/lib/access";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
-const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_150px_110px]";
+const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_196px_110px]";
 
 const FILTERS = [
   { id: "all", label: "Todos", test: () => true },
@@ -50,7 +50,8 @@ function AccessCell({
   const [value, setValue] = useState("");
   const expired = isExpired(user.accessUntil);
   const label = user.accessUntil ? `${expired ? "venceu" : "até"} ${formatAccessDate(user.accessUntil)}` : "sem prazo";
-  const labelClass = cn("text-sm whitespace-nowrap", expired ? "text-negative" : "opacity-55");
+  // Largura fixa no rótulo: o +30d fica na mesma coluna em todas as linhas.
+  const labelClass = cn("w-[132px] shrink-0 text-left text-sm tabular-nums whitespace-nowrap", expired ? "text-negative" : "opacity-55");
 
   if (isMe) return <span className={labelClass}>{label}</span>;
 
