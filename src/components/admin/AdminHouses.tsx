@@ -309,7 +309,7 @@ export function AdminHouses() {
           O apelido é a grafia que aparece na tip — “Superbet Brasil” aponta para{" "}
           <span className="font-medium text-foreground">SUPERBET</span>.
           <br />
-          Site: só domínio .bet.br (autorização federal) — vira o botão de abrir a casa.
+          Site: só domínio .bet.br (autorização federal) ou de casa com liminar liberada (Zeroum) — vira o botão de abrir a casa.
           <br />
           Cadastro global: vale para todos os usuários.
         </>
