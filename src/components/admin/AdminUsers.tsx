@@ -208,9 +208,7 @@ function Actions({
     );
   }
 
-  // Centralizado na coluna, que tem a largura do botão: o traço cai no meio de
-  // onde estaria o "Desvincular", não colado na borda direita.
-  return <span className="w-full text-center text-sm opacity-25">—</span>;
+  return <span className="text-sm opacity-25">—</span>;
 }
 
 export function AdminUsers() {
@@ -288,10 +286,18 @@ export function AdminUsers() {
               onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
             />
             <span className="text-sm tabular-nums text-right">{user.betCount}</span>
-            <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
-            <span className="text-sm opacity-55">
-              {user.hasTelegram ? `vinculado ${formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}` : "—"}
-            </span>
+            {/* Sem valor, o traço fica no meio da largura que a data ocuparia,
+                e não colado na esquerda da coluna. */}
+            {user.lastLogin ? (
+              <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
+            ) : (
+              <span className="w-[80px] text-center text-sm opacity-25">—</span>
+            )}
+            {user.hasTelegram ? (
+              <span className="text-sm opacity-55">vinculado {formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}</span>
+            ) : (
+              <span className="w-[108px] text-center text-sm opacity-25">—</span>
+            )}
             <AccessCell
               user={user}
               isMe={user.id === me?.id}
