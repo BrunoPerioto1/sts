@@ -208,7 +208,9 @@ function Actions({
     );
   }
 
-  return <span className="text-sm opacity-25">—</span>;
+  // Centralizado na coluna, que tem a largura do botão: o traço cai no meio de
+  // onde estaria o "Desvincular", não colado na borda direita.
+  return <span className="w-full text-center text-sm opacity-25">—</span>;
 }
 
 export function AdminUsers() {
