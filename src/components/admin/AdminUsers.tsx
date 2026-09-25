@@ -13,10 +13,14 @@ import { initialsOf } from "@/lib/format";
 import type { AdminUser, UpdateAdminUserParams } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatAccessDate, fromSaoPauloInput, isExpired, toSaoPauloInput } from "@/lib/access";
+import { formatAccessDate, fromSaoPauloInput, isExpired, tipsGroupAction, toSaoPauloInput } from "@/lib/access";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
-const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_196px_110px]";
+// Ações em 128px: "Tirar do grupo" é o rótulo mais largo da coluna.
+const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_196px_128px]";
+
+const INVITE_FAILED =
+  "Confira se o bot é admin do grupo e se a pessoa não bloqueou o bot. Dá pra repetir pelo botão Convidar.";
 
 const FILTERS = [
   { id: "all", label: "Todos", test: () => true },
@@ -186,16 +190,35 @@ function Actions({
   pending,
   onUnlock,
   onUnlink,
+  onTipsGroup,
 }: {
   user: AdminUser;
   pending: boolean;
   onUnlock: () => void;
   onUnlink: () => void;
+  onTipsGroup: (action: "remove" | "invite") => void;
 }) {
   if (isLocked(user.lockedUntil)) {
     return (
       <Button variant="outline" size="sm" disabled={pending} onClick={onUnlock} className="text-[var(--dashboard-orange)] border-[var(--dashboard-orange)]/40">
         Desbloquear
+      </Button>
+    );
+  }
+
+  // Na frente do Desvincular: vencido e ainda no grupo, a pessoa segue lendo
+  // as tips lá — é a ação que está faltando nessa linha.
+  const groupAction = tipsGroupAction(user);
+  if (groupAction) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={pending}
+        onClick={() => onTipsGroup(groupAction)}
+        className={cn(groupAction === "remove" && "text-negative border-negative/40")}
+      >
+        {groupAction === "remove" ? "Tirar do grupo" : "Convidar"}
       </Button>
     );
   }
@@ -236,12 +259,24 @@ export function AdminUsers() {
     update.mutate(
       { id, ...params },
       {
-        onSuccess: () => actionToast.success({ title: done }),
+        // Liberar acesso de quem estava fora do grupo Tips também manda o
+        // convite: o toast diz se ele chegou.
+        onSuccess: ({ groupInvite }) =>
+          groupInvite === "failed"
+            ? actionToast.error({ title: "O convite do grupo Tips não saiu", description: INVITE_FAILED, duration: 6000 })
+            : actionToast.success({
+                title: done,
+                description: groupInvite === "sent" ? "Convite do grupo Tips enviado no Telegram." : undefined,
+                duration: groupInvite === "sent" ? 3000 : undefined,
+              }),
         onError: (err) => actionToast.error({ description: getErrorMessage(err, "Não foi possível aplicar a mudança.") }),
       },
     );
 
   const pendingFor = (id: number) => update.isPending && update.variables?.id === id;
+
+  const tipsGroup = (id: number, action: "remove" | "invite") =>
+    run(id, { tipsGroup: action }, action === "remove" ? "Tirado do grupo Tips" : "Liberado no grupo Tips");
 
   const body = isPending ? (
     <div className="p-4 space-y-2">
@@ -294,7 +329,11 @@ export function AdminUsers() {
               <span className="w-[80px] text-center text-sm opacity-25">—</span>
             )}
             {user.hasTelegram ? (
-              <span className="text-sm opacity-55">vinculado {formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}</span>
+              user.tipsGroupRemovedAt ? (
+                <span className="text-sm text-negative">fora do grupo</span>
+              ) : (
+                <span className="text-sm opacity-55">vinculado {formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}</span>
+              )
             ) : (
               <span className="w-[108px] text-center text-sm opacity-25">—</span>
             )}
@@ -311,6 +350,7 @@ export function AdminUsers() {
                 pending={pendingFor(user.id)}
                 onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
                 onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+                onTipsGroup={(action) => tipsGroup(user.id, action)}
               />
             </div>
           </div>
@@ -326,7 +366,7 @@ export function AdminUsers() {
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-55">
               <span>{user.betCount} apostas</span>
               <span>{formatSaoPaulo(user.lastLogin)}</span>
-              <span>{user.hasTelegram ? "Telegram vinculado" : "sem Telegram"}</span>
+              <span>{user.hasTelegram ? (user.tipsGroupRemovedAt ? "fora do grupo Tips" : "Telegram vinculado") : "sem Telegram"}</span>
             </div>
 
             <AccessCell
@@ -351,6 +391,7 @@ export function AdminUsers() {
                   pending={pendingFor(user.id)}
                   onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
                   onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+                  onTipsGroup={(action) => tipsGroup(user.id, action)}
                 />
               </div>
             )}
@@ -368,7 +409,7 @@ export function AdminUsers() {
       title={users ? `${users.length} ${users.length === 1 ? "usuário" : "usuários"}` : "Usuários"}
       description={
         <>
-          Papel, bloqueio de login, vínculo com o Telegram e vencimento do acesso (PIX).
+          Papel, bloqueio de login, vínculo com o Telegram, vencimento do acesso (PIX) e quem fica no grupo Tips.
           <br />
           Você não altera o próprio papel — o servidor recusa o auto-rebaixamento.
         </>

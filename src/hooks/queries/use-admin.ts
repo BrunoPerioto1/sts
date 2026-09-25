@@ -39,7 +39,8 @@ export function useUpdateAdminUser() {
       patchAdminUser(id, params),
     // A rota devolve a linha já atualizada (com contagem de apostas): escreve
     // no cache em vez de refazer o GET da lista inteira por causa de um select.
-    onSuccess: (updated) => {
+    // groupInvite é do momento (vira toast), não da linha: fica fora do cache.
+    onSuccess: ({ groupInvite, ...updated }) => {
       qc.setQueryData<AdminUser[]>(USERS_KEY, (old) =>
         old?.map((u) => (u.id === updated.id ? updated : u)),
       );

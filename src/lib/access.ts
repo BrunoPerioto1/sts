@@ -35,3 +35,24 @@ export function daysUntilAccess(accessUntil: string, now = new Date()): number {
   const day = (d: Date) => Date.parse(d.toLocaleDateString("en-CA", { timeZone: TZ }));
   return Math.round((day(new Date(accessUntil)) - day(now)) / 86_400_000);
 }
+
+type TipsGroupFields = {
+  hasTelegram: boolean;
+  isActive: boolean | null;
+  accessUntil: string | null;
+  tipsGroupRemovedAt: string | null;
+};
+
+/**
+ * Botão do grupo Tips na linha do usuário. O Telegram não esconde mensagem de
+ * membro: quem não pagou só deixa de ler saindo do grupo. Sem vínculo o bot não
+ * sabe quem é a pessoa lá dentro, então não há o que oferecer.
+ * "invite" é a sobra de um convite automático (do +30d) que não saiu.
+ */
+export function tipsGroupAction(user: TipsGroupFields): "remove" | "invite" | null {
+  if (!user.hasTelegram) return null;
+  const noAccess = user.isActive === false || isExpired(user.accessUntil);
+  if (noAccess && !user.tipsGroupRemovedAt) return "remove";
+  if (!noAccess && user.tipsGroupRemovedAt) return "invite";
+  return null;
+}

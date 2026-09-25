@@ -24,6 +24,8 @@ interface ActionToastSuccessOptions {
 interface ActionToastErrorOptions {
   description: ReactNode;
   title?: ReactNode;
+  /** Texto longo precisa de mais tempo que o padrão de 2.4s. */
+  duration?: number;
 }
 
 const SUCCESS_DURATION = 1500;
@@ -121,12 +123,12 @@ export const actionToast = {
       { duration: duration ?? (action ? SUCCESS_WITH_ACTION_DURATION : SUCCESS_DURATION) }
     );
   },
-  error({ title = "Erro", description }: ActionToastErrorOptions) {
+  error({ title = "Erro", description, duration }: ActionToastErrorOptions) {
     return sonnerToast.custom(
       (id) => (
         <ActionToastCard variant="error" icon={Warning} title={title} description={description} onClose={() => sonnerToast.dismiss(id)} />
       ),
-      { duration: ERROR_DURATION }
+      { duration: duration ?? ERROR_DURATION }
     );
   },
 };
