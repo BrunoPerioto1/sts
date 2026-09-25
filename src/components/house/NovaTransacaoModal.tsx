@@ -45,8 +45,14 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
 
   // "Saldo real": o usuario digita o que a casa mostra e grava so' a diferenca
   // como ajuste. Fecha casa no vermelho por deposito nunca lancado.
+  // A casa mostra o saldo ja' sem o stake das apostas em aberto; aqui a
+  // pendente ainda conta como saldo (lucro null). Comparar com o saldo cheio
+  // gravava um ajuste negativo do tamanho das pendentes, que ficava pra sempre
+  // depois que elas liquidavam.
   const isAdjust = types.find((t) => t.id === typeId)?.name === "ADJUSTMENT";
-  const diff = Math.round(cents - Number(house.realHouseBalance) * 100) / 100;
+  const openStake = Number(house.openStake ?? 0);
+  const available = Number(house.realHouseBalance) - openStake;
+  const diff = Math.round(cents - available * 100) / 100;
   const value = isAdjust ? diff : cents / 100;
   const valid = typeId > 0 && (isAdjust ? typed && diff !== 0 : cents > 0);
 
@@ -107,9 +113,16 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
             <span className="text-xs opacity-45 shrink-0 whitespace-nowrap">
               {isAdjust && typed
                 ? `Ajuste ${diff > 0 ? "+" : ""}${formatCurrency(diff)}`
-                : `Saldo atual ${formatCurrency(house.realHouseBalance)}`}
+                : isAdjust
+                  ? `Disponível ${formatCurrency(available)}`
+                  : `Saldo atual ${formatCurrency(house.realHouseBalance)}`}
             </span>
           </div>
+          {isAdjust && openStake > 0 && (
+            <p className="text-xs opacity-45 mt-1.5">
+              Digite o saldo disponível que a casa mostra. {formatCurrency(openStake)} em apostas abertas já ficam de fora.
+            </p>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-1">

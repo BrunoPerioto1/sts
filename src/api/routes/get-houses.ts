@@ -27,6 +27,12 @@ export interface HouseBalanceDto {
   totalBets: string | number;
   settledBets: string | number;
   totalStake: string | number;
+  /** Stake das liquidadas: a base do ROI. */
+  settledStake: string | number;
+  /** Stake das pendentes. A casa já tirou isso do saldo que ela mostra. */
+  openStake: string | number;
+  /** Lucro / stake liquidado (fração: 0.12 = 12%). */
+  roi: string | number;
   totalBetProfit: string | number;
   totalDeposit: string | number;
   totalWithdrawal: string | number;

@@ -231,7 +231,27 @@ function Actions({
     );
   }
 
-  return <span className="text-sm opacity-25">—</span>;
+  return null;
+}
+
+// Fica fora do Actions: desativar vale pra qualquer linha, e não pode tomar o
+// lugar da ação principal (desbloquear, tirar do grupo). A própria conta não
+// tem o link — o servidor recusa, igual ao papel.
+function ActiveToggle({ user, pending, onToggle }: { user: AdminUser; pending: boolean; onToggle: () => void }) {
+  const inactive = user.isActive === false;
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={onToggle}
+      className={cn(
+        "text-xs underline-offset-4 hover:underline disabled:opacity-40",
+        inactive ? "text-accent-text" : "text-zinc-500 hover:text-negative",
+      )}
+    >
+      {inactive ? "Reativar conta" : "Desativar conta"}
+    </button>
+  );
 }
 
 export function AdminUsers() {
@@ -255,7 +275,12 @@ export function AdminUsers() {
     );
   }, [users, search, filter]);
 
-  const run = (id: number, params: UpdateAdminUserParams, done: string) =>
+  const run = (
+    id: number,
+    params: UpdateAdminUserParams,
+    done: string,
+    action?: { label: string; onClick: () => void },
+  ) =>
     update.mutate(
       { id, ...params },
       {
@@ -268,6 +293,7 @@ export function AdminUsers() {
                 title: done,
                 description: groupInvite === "sent" ? "Convite do grupo Tips enviado no Telegram." : undefined,
                 duration: groupInvite === "sent" ? 3000 : undefined,
+                action,
               }),
         onError: (err) => actionToast.error({ description: getErrorMessage(err, "Não foi possível aplicar a mudança.") }),
       },
@@ -277,6 +303,14 @@ export function AdminUsers() {
 
   const tipsGroup = (id: number, action: "remove" | "invite") =>
     run(id, { tipsGroup: action }, action === "remove" ? "Tirado do grupo Tips" : "Liberado no grupo Tips");
+
+  // Desativar derruba login, API e tips na hora: sem diálogo de confirmação,
+  // mas com Desfazer no toast pro clique errado.
+  const toggleActive = (user: AdminUser) => {
+    const reactivate = () => run(user.id, { isActive: true }, "Conta reativada");
+    if (user.isActive === false) return reactivate();
+    run(user.id, { isActive: false }, "Conta desativada", { label: "Desfazer", onClick: reactivate });
+  };
 
   const body = isPending ? (
     <div className="p-4 space-y-2">
@@ -344,7 +378,7 @@ export function AdminUsers() {
               onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
               onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
             />
-            <div className="flex justify-end">
+            <div className="flex flex-col items-end gap-1">
               <Actions
                 user={user}
                 pending={pendingFor(user.id)}
@@ -352,6 +386,11 @@ export function AdminUsers() {
                 onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
                 onTipsGroup={(action) => tipsGroup(user.id, action)}
               />
+              {user.id !== me?.id ? (
+                <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
+              ) : (
+                !isLocked(user.lockedUntil) && !user.hasTelegram && <span className="text-sm opacity-25">—</span>
+              )}
             </div>
           </div>
         ))}
@@ -394,6 +433,10 @@ export function AdminUsers() {
                   onTipsGroup={(action) => tipsGroup(user.id, action)}
                 />
               </div>
+            )}
+
+            {user.id !== me?.id && (
+              <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
             )}
           </div>
         ))}

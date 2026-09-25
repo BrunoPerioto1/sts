@@ -60,6 +60,8 @@ export type UpdateAdminUserParams = {
   roleId?: number;
   unlock?: boolean;
   unlinkTelegram?: boolean;
+  /** false desativa a conta (sem login, sem API, sem tips); true reativa. */
+  isActive?: boolean;
   extendDays?: number;
   /** Vencimento exato (ISO com fuso); null = sem prazo. */
   accessUntil?: string | null;

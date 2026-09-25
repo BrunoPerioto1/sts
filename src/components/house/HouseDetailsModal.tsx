@@ -32,13 +32,14 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
   const realBalance = Number(house.realHouseBalance);
   const deposit = Number(house.totalDeposit);
   const withdrawal = Number(house.totalWithdrawal);
-  const stake = Number(house.totalStake);
   const bets = Number(house.totalBets);
   const settledBets = Number(house.settledBets ?? Math.max(0, bets - Number(house.pendingBets)));
   // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
   const decided = Number(house.wonBets) + Number(house.lostBets);
   const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
-  const roi = stake > 0 ? (profit / stake) * 100 : 0;
+  // Vem pronto da API (lucro / stake liquidado), a mesma base do dashboard e
+  // do ranking. Dividir pelo total apostado contava as pendentes.
+  const roi = Number(house.roi ?? 0) * 100;
   const noMovement = deposit === 0 && withdrawal === 0;
   const signClass = (v: number) => (v >= 0 ? "text-positive" : "text-negative");
   // pt-BR: 70,0% e não 70.0%.

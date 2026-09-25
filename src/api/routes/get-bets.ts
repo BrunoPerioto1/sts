@@ -22,7 +22,6 @@ export interface UpdateApostaDto {
   game?: string;
   stake?: number;
   odd?: number;
-  house?: string;
   houseId?: number;
   market?: string;
   sport?: string;

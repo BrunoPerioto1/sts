@@ -14,6 +14,8 @@ export interface DashboardMetrics {
   pendingBets: string | number;
   canceledBets: string | number;
   totalStaked: string | number;
+  /** Stake das liquidadas: a base do ROI. */
+  settledStake: string | number;
   totalReturn: string | number;
   averageStake: string | number;
   averageOdd: string | number;

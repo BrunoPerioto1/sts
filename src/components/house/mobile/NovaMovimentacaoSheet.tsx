@@ -54,10 +54,14 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   // projetaria o saldo errado depois do depósito.
   const balance = Number(house.realHouseBalance);
   const projectedBalance = selectedType?.name === "WITHDRAWAL" ? balance - numericValue : balance + numericValue;
+  // A casa mostra o saldo ja' sem o stake das apostas em aberto; aqui a
+  // pendente ainda conta (lucro null). "Saldo real" e "Tudo" usam o disponivel.
+  const openStake = Number(house.openStake ?? 0);
+  const available = balance - openStake;
   // "Saldo real": o valor digitado e' o saldo que a casa mostra; grava so' a
   // diferenca como ajuste. Fecha casa no vermelho por deposito nunca lancado.
   const isAdjust = selectedType?.name === "ADJUSTMENT";
-  const diff = Math.round(cents - balance * 100) / 100;
+  const diff = Math.round(cents - available * 100) / 100;
   const valid = isAdjust ? typed && diff !== 0 : numericValue > 0;
 
   const addAmount = (amount: number) => {
@@ -67,7 +71,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
 
   const useFullBalance = () => {
     setTyped(true);
-    setCents(Math.round(Math.max(balance, 0) * 100));
+    setCents(Math.round(Math.max(available, 0) * 100));
   };
 
   const handleSubmit = async () => {
@@ -132,7 +136,9 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
           <div className="flex items-center justify-between px-1 pb-1.5">
             <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isAdjust ? "Saldo na casa" : "Valor"}</p>
             {isAdjust ? (
-              typed && <p className="text-xs text-zinc-500">Ajuste {diff > 0 ? "+" : ""}{formatCurrency(diff)}</p>
+              <p className="text-xs text-zinc-500">
+                {typed ? `Ajuste ${diff > 0 ? "+" : ""}${formatCurrency(diff)}` : `Disponível ${formatCurrency(available)}`}
+              </p>
             ) : numericValue > 0 && (
               <p className="text-xs text-zinc-500">Saldo passa a {formatCurrency(projectedBalance)}</p>
             )}
@@ -144,6 +150,11 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             onChange={(e) => { setTyped(e.target.value !== ""); setCents(Number(e.target.value.replace(/\D/g, "")) || 0); }}
             className="text-3xl font-semibold h-auto py-2 tabular-nums"
           />
+          {isAdjust && openStake > 0 && (
+            <p className="text-xs text-zinc-500 px-1 pt-1.5">
+              Digite o saldo disponível que a casa mostra. {formatCurrency(openStake)} em apostas abertas já ficam de fora.
+            </p>
+          )}
           <div className="flex gap-2 pt-2">
             {QUICK_AMOUNTS.map((amount) => (
               <button

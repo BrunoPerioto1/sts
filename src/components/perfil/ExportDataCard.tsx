@@ -1,8 +1,26 @@
+import { useState } from "react";
 import { DownloadSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { actionToast } from "@/lib/action-toast";
+import { getErrorMessage } from "@/lib/api-error";
 import { exportAllBetsCsv, exportMonthlyCsv, exportTransactionsCsv } from "@/lib/bet-exports";
 
 export function ExportDataCard({ totalBets }: { totalBets: number }) {
+  const [running, setRunning] = useState<string | null>(null);
+
+  // Sem isso a falha (rede, 400) virava promise rejeitada solta: o botão não
+  // fazia nada e ninguém ficava sabendo.
+  const download = async (label: string, run: () => Promise<void>) => {
+    setRunning(label);
+    try {
+      await run();
+    } catch (err) {
+      actionToast.error({ description: getErrorMessage(err, `Não foi possível baixar ${label.toLowerCase()}.`) });
+    } finally {
+      setRunning(null);
+    }
+  };
+
   const rows = [
     { label: "Apostas", sub: `${totalBets.toLocaleString("pt-BR")} linhas · todas as casas`, onClick: exportAllBetsCsv },
     { label: "Movimentações", sub: "depósitos, saques e ajustes", onClick: exportTransactionsCsv },
@@ -20,8 +38,15 @@ export function ExportDataCard({ totalBets }: { totalBets: number }) {
               <span className="block text-sm">{row.label}</span>
               <span className="block text-xs text-zinc-500">{row.sub}</span>
             </span>
-            <Button size="sm" variant="outline" className="gap-2" onClick={row.onClick} aria-label={`Baixar ${row.label}`}>
-              <DownloadSimple size={14} /> Baixar
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              disabled={running !== null}
+              onClick={() => void download(row.label, row.onClick)}
+              aria-label={`Baixar ${row.label}`}
+            >
+              <DownloadSimple size={14} /> {running === row.label ? "Baixando…" : "Baixar"}
             </Button>
           </li>
         ))}

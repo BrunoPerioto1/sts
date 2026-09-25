@@ -19,6 +19,7 @@ const emptyMetrics: DashboardMetrics = {
   pendingBets: 0,
   canceledBets: 0,
   totalStaked: 0,
+  settledStake: 0,
   totalReturn: 0,
   averageStake: 0,
   averageOdd: 0,

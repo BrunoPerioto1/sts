@@ -28,13 +28,23 @@ export function exportBetsListCsv(bets: BetItem[]) {
   );
 }
 
-// Exportações do perfil: buscam tudo do backend, sem filtro de tela.
+// Teto do `perPage` na API (bet-filter.dto). Pedir mais que isso volta 400.
+const EXPORT_PAGE_SIZE = 1000;
+
+// Exportações do perfil: buscam tudo do backend, sem filtro de tela, uma
+// página de cada vez.
 export async function exportAllBetsCsv() {
-  const res = await getBets({ perPage: 5000, page: 1 });
+  const first = await getBets({ perPage: EXPORT_PAGE_SIZE, page: 1 });
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, (first.totalPages ?? 1) - 1) }, (_, i) =>
+      getBets({ perPage: EXPORT_PAGE_SIZE, page: i + 2 })
+    )
+  );
+  const bets = [first, ...rest].flatMap((res) => res.data ?? []);
   downloadCsv(
     "apostas.csv",
     ["Data", "Evento", "Mercado", "Casa", "Odd", "Stake", "Status", "Lucro"],
-    (res.data ?? []).map((b) => [formatDate(betDate(b)), ...betRow(b)])
+    bets.map((b) => [formatDate(betDate(b)), ...betRow(b)])
   );
 }
 

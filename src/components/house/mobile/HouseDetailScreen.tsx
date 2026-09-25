@@ -33,7 +33,8 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
   const decided = Number(house.wonBets) + Number(house.lostBets);
   const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
-  const roi = Number(house.totalStake) > 0 ? (profit / Number(house.totalStake)) * 100 : 0;
+  // Lucro / stake liquidado, calculado na API (mesma base do dashboard).
+  const roi = Number(house.roi ?? 0) * 100;
 
   // Portal pro body: essa tela e um overlay de tela cheia, mas era montada
   // dentro do <div className="space-y-4"> do CasasMobileView — e o space-y do
