@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { endOfMonth, format } from "date-fns";
-import { getAllBets, getBetMonths, getBetTotals, type BetFilterDto, type BetItem } from "@/api/routes/get-bets";
+import { getAllBets, getBetMonths, type BetFilterDto, type BetItem } from "@/api/routes/get-bets";
 
 export interface BetsQueryFilters {
   statusFilter: string[];
@@ -45,14 +45,6 @@ export function useBetMonths(filters: BetsQueryFilters) {
   return useQuery({
     queryKey: betMonthsQueryKey(filters),
     queryFn: () => getBetMonths(paramsFrom(filters)),
-  });
-}
-
-/** Totais do filtro inteiro (apostado, lucro, ROI, acerto) pra faixa do topo. */
-export function useBetTotals(filters: BetsQueryFilters) {
-  return useQuery({
-    queryKey: ["bets", "totals", ...filterKey(filters)],
-    queryFn: () => getBetTotals(paramsFrom(filters)),
   });
 }
 

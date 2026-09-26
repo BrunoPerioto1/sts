@@ -119,26 +119,6 @@ export async function getBetMonths(params?: Omit<BetFilterDto, "page" | "perPage
   return response.data;
 }
 
-export interface BetTotals {
-  count: number;
-  staked: number;
-  settledStake: number;
-  profit: number;
-  won: number;
-  lost: number;
-  pending: number;
-  /** Fração sobre o stake liquidado (0.12 = 12%). */
-  roi: number;
-  /** Ganhas / (ganhas + perdidas). */
-  hitRate: number;
-}
-
-/** Totais do filtro inteiro, pra faixa do topo da lista. */
-export async function getBetTotals(params?: Omit<BetFilterDto, "page" | "perPage">): Promise<BetTotals> {
-  const response = await api.bets.get<BetTotals>('/totals', { params: toQueryParams(params) });
-  return response.data;
-}
-
 
 // O enum mora em result-id.ts (sem import de HTTP, pra ser testável com
 // `node --test`). Continua saindo daqui pra não mexer nos imports existentes.

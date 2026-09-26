@@ -8,7 +8,6 @@ import { pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { ConferenciaCallout } from "@/components/apostas/ConferenciaCallout";
-import { BetTotalsStrip } from "@/components/apostas/BetTotalsStrip";
 import { ApostasMobileHeader } from "@/components/apostas/ApostasMobileHeader";
 import { BulkActionBar } from "@/components/apostas/BulkActionBar";
 import { MobileFiltersSheet } from "@/components/apostas/MobileFiltersSheet";
@@ -209,8 +208,6 @@ export default function ApostasPage() {
         {/* Breakpoint alinhado com o mobileHeader/sheets (isMobile, 640px) — antes
             usava md: (768px) e deixava 640-767px sem nenhum filtro visível. */}
         {!isMobile && <ApostasFilter {...filterProps} />}
-
-        <BetTotalsStrip filters={filters.queryFilters} />
 
         {/* Sem card em volta: a lista agrupada desenha as próprias divisões, e
             a caixa cinza só criava uma moldura dentro de outra. */}
