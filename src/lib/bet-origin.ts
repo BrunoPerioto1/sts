@@ -1,12 +1,9 @@
-// Origem da aposta, igual ao BET_ORIGINS do back. Tip vence a fonte: o
-// Planilhar do bot grava source=telegram, mas pra quem filtra veio do canal.
-// Print x digitada só vale para apostas registradas depois do `fromImage`;
-// as antigas do site contam como digitadas.
+// Origem da aposta, subconjunto do BET_ORIGINS do back. Print vale no geral
+// (lido no site ou mandado pro bot); manual é a digitada no site. Apostas
+// antigas do site, anteriores ao `fromImage`, contam como digitadas.
 export const ORIGIN_OPTIONS = [
-  { value: "tip", label: "Tip do canal" },
-  { value: "telegram", label: "Mensagem no bot" },
-  { value: "print", label: "Print no site" },
-  { value: "manual", label: "Digitada no site" },
+  { value: "print", label: "Print" },
+  { value: "manual", label: "Manual" },
 ] as const;
 
 export type BetOrigin = (typeof ORIGIN_OPTIONS)[number]["value"];

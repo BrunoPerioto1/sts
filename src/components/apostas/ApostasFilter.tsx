@@ -8,7 +8,6 @@ import { StatusMultiSelect } from "./StatusMultiSelect";
 import { useSports } from "@/hooks/queries/use-sports";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { ORIGIN_LABEL, ORIGIN_OPTIONS } from "@/lib/bet-origin";
-import { DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -227,18 +226,15 @@ export function ApostasFilter({
             onChange={(next) => { setOrigins(next); onFilterOrigins?.(next); }}
             disabled={isLoading}
             className="min-h-0 text-sm"
-            extraLabel={unmatched ? "Sem jogo" : null}
-            extra={
-              // Aposta sem jogo casado não tem horário nem placar automático:
-              // é a que a conferência não resolve sozinha.
-              <DropdownMenuCheckboxItem
-                checked={unmatched}
-                onSelect={(e) => e.preventDefault()}
-                onCheckedChange={() => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); }}
-              >
-                Sem jogo identificado
-              </DropdownMenuCheckboxItem>
-            }
+            noun={["origem", "origens"]}
+            allLabel="Todas"
+            // Aposta sem jogo casado não tem horário nem placar automático:
+            // é a que a conferência não resolve sozinha.
+            extra={{
+              label: "Sem jogo identificado",
+              checked: unmatched,
+              onToggle: () => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); },
+            }}
           />
         </div>
 

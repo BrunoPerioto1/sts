@@ -1,12 +1,6 @@
-import type { ReactNode } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { CaretDown } from "@phosphor-icons/react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 
@@ -18,12 +12,15 @@ interface StatusMultiSelectProps {
   // Reaproveitado pelo filtro de origem: mesma caixa, outras opções.
   options?: readonly { value: string; label: string }[];
   label?: string;
-  /** Itens depois de um separador (ex.: "Sem jogo identificado" na origem). */
-  extra?: ReactNode;
-  /** Texto a mais no resumo do gatilho quando `extra` está marcado. */
-  extraLabel?: string | null;
+  // Singular/plural do resumo, como no HouseMultiSelect.
+  noun?: [string, string];
+  allLabel?: string;
+  /** Opção fora da lista, depois de um separador (ex.: "Sem jogo identificado" na origem). */
+  extra?: { label: string; checked: boolean; onToggle: () => void };
 }
 
+// Mesmo visual do HouseMultiSelect (Casas/Esportes), sem a busca: a lista é
+// curta e fixa.
 export function StatusMultiSelect({
   selected,
   onChange,
@@ -31,22 +28,34 @@ export function StatusMultiSelect({
   disabled,
   options = STATUS_OPTIONS,
   label = "Status",
+  noun = ["status", "status"],
+  allLabel = "Todos",
   extra,
-  extraLabel,
 }: StatusMultiSelectProps) {
-  const toggle = (value: string) => {
+  const toggle = (value: string) =>
     onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
-  };
 
-  const selectedLabel =
-    [
-      ...options.filter((o) => selected.includes(o.value)).map((o) => o.label),
-      ...(extraLabel ? [extraLabel] : []),
-    ].join(", ") || null;
+  const labels = [
+    ...options.filter((o) => selected.includes(o.value)).map((o) => o.label),
+    ...(extra?.checked ? [extra.label] : []),
+  ];
+  const summary =
+    labels.length === 0 ? null : labels.length === 1 ? labels[0] : `${labels.length} ${noun[1]}`;
+  const hasSelection = labels.length > 0;
+
+  const row = (key: string, text: string, checked: boolean, onToggle: () => void) => (
+    <label
+      key={key}
+      className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm text-zinc-200 hover:bg-foreground/[0.04]"
+    >
+      <Checkbox checked={checked} onCheckedChange={onToggle} />
+      <span className="truncate">{text}</span>
+    </label>
+  );
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <button
           type="button"
           disabled={disabled}
@@ -56,28 +65,35 @@ export function StatusMultiSelect({
           )}
         >
           <span className="text-zinc-500 shrink-0">{label}</span>
-          {selectedLabel && <span className="text-foreground truncate max-w-[180px]">{selectedLabel}</span>}
+          <span className={cn("truncate", summary ? "text-foreground" : "text-zinc-400")}>
+            {summary ?? allLabel}
+          </span>
           <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[220px]">
-        {options.map((opt) => (
-          <DropdownMenuCheckboxItem
-            key={opt.value}
-            checked={selected.includes(opt.value)}
-            onSelect={(e) => e.preventDefault()}
-            onCheckedChange={() => toggle(opt.value)}
-          >
-            {opt.label}
-          </DropdownMenuCheckboxItem>
-        ))}
+      </PopoverTrigger>
+
+      <PopoverContent align="start" className="w-[260px] p-2">
+        {options.map((opt) => row(opt.value, opt.label, selected.includes(opt.value), () => toggle(opt.value)))}
+
         {extra && (
-          <>
-            <DropdownMenuSeparator />
-            {extra}
-          </>
+          <div className="mt-1 border-t border-foreground/10 pt-1">
+            {row("extra", extra.label, extra.checked, extra.onToggle)}
+          </div>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+
+        {hasSelection && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange([]);
+              if (extra?.checked) extra.onToggle();
+            }}
+            className="mt-2 w-full border-t border-foreground/10 pt-2 text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+          >
+            Limpar seleção
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
