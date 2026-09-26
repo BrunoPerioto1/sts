@@ -85,7 +85,7 @@ export function HouseMultiSelect({
           {filtered.map((h) => (
             <label
               key={h.id}
-              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm text-zinc-200 hover:bg-foreground/[0.04]"
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-200 hover:bg-foreground/[0.03]"
             >
               <Checkbox checked={selected.includes(h.id)} onCheckedChange={() => toggle(h.id)} />
               <span className="truncate">{h.name}</span>

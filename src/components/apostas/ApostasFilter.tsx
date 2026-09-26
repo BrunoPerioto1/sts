@@ -231,6 +231,7 @@ export function ApostasFilter({
             // Aposta sem jogo casado não tem horário nem placar automático:
             // é a que a conferência não resolve sozinha.
             extra={{
+              section: "Jogo",
               label: "Sem jogo identificado",
               checked: unmatched,
               onToggle: () => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); },
