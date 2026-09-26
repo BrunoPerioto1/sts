@@ -1,11 +1,31 @@
-// Chaves de sessão no localStorage. Estavam escritas à mão em seis arquivos
-// (interceptor do axios, App, login, cadastro, excluir conta).
+// Chaves de sessão. Estavam escritas à mão em seis arquivos (interceptor do
+// axios, App, login, cadastro, excluir conta).
 const TOKEN_KEY = "token";
 const REMEMBERED_EMAIL_KEY = "remembered_email";
+const ACCESS_BLOCK_KEY = "access_block";
 
-// Token vencido (o JWT dura 1d) conta como ausente: sem isso o RequireAuth
-// deixava entrar numa URL salva e a tela abria vazia, com tudo dando 401.
-// Só lê o `exp` — quem valida a assinatura é o backend.
+// Storage pode estar bloqueado (aba anônima, dado do site apagado): a sessão
+// só não persiste, a tela não quebra.
+function read(storage: Storage, key: string): string | null {
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function write(storage: Storage, key: string, value: string | null) {
+  try {
+    if (value === null) storage.removeItem(key);
+    else storage.setItem(key, value);
+  } catch {
+    /* sem storage, sem persistência */
+  }
+}
+
+// Token vencido conta como ausente: sem isso o RequireAuth deixava entrar numa
+// URL salva e a tela abria vazia, com tudo dando 401. Só lê o `exp` — quem
+// valida a assinatura é o backend.
 function isExpired(token: string): boolean {
   try {
     const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
@@ -16,7 +36,7 @@ function isExpired(token: string): boolean {
 }
 
 export function getToken(): string | null {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = read(localStorage, TOKEN_KEY) ?? read(sessionStorage, TOKEN_KEY);
   if (token && isExpired(token)) {
     clearToken();
     return null;
@@ -24,20 +44,50 @@ export function getToken(): string | null {
   return token;
 }
 
-export function saveToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
+/**
+ * "Manter conectado" marcado: localStorage (sobrevive a fechar o navegador) e
+ * o backend emite um token de 30 dias. Desmarcado: sessionStorage, que some
+ * com a aba — antes a caixa só lembrava o e-mail.
+ */
+export function saveToken(token: string, remember = true) {
+  write(remember ? localStorage : sessionStorage, TOKEN_KEY, token);
+  write(remember ? sessionStorage : localStorage, TOKEN_KEY, null);
+  saveAccessBlock(null);
 }
 
 export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+  write(localStorage, TOKEN_KEY, null);
+  write(sessionStorage, TOKEN_KEY, null);
 }
 
 export function getRememberedEmail(): string | null {
-  return localStorage.getItem(REMEMBERED_EMAIL_KEY);
+  return read(localStorage, REMEMBERED_EMAIL_KEY);
 }
 
 // `null` esquece o e-mail — é o "Manter conectado" desmarcado.
 export function setRememberedEmail(email: string | null) {
-  if (email) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
-  else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+  write(localStorage, REMEMBERED_EMAIL_KEY, email);
+}
+
+/**
+ * Corpo da resposta 402 (acesso vencido ou conta nova). A tela de renovação
+ * não tem sessão válida: é com o `payToken` daqui que ela pede o PIX desta
+ * conta e avisa "Já paguei".
+ */
+export interface AccessBlock {
+  status?: "new" | "expired";
+  payToken?: string;
+  accessUntil?: string;
+}
+
+export function saveAccessBlock(block: AccessBlock | null) {
+  write(sessionStorage, ACCESS_BLOCK_KEY, block ? JSON.stringify(block) : null);
+}
+
+export function getAccessBlock(): AccessBlock | null {
+  try {
+    return JSON.parse(read(sessionStorage, ACCESS_BLOCK_KEY) ?? "null") as AccessBlock | null;
+  } catch {
+    return null;
+  }
 }

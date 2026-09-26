@@ -7,7 +7,8 @@ export type DatePreset = "7d" | "14d" | "currentMonth" | "lastMonth" | "60d" | "
 const PRESET_KEY = "dashboard_date_preset";
 
 interface Filters {
-  houseId?: number;
+  houseIds: number[];
+  sportIds: number[];
   startDate: string;
   endDate: string;
 }
@@ -24,7 +25,8 @@ export function useDashboardFilters() {
   const [ready, setReady] = useState(false);
 
   const [filters, setFiltersState] = useState<Filters>({
-    houseId: undefined,
+    houseIds: [],
+    sportIds: [],
     startDate: format(startOfMonth(new Date()), "yyyy-MM-dd"),
     endDate: format(endOfMonth(new Date()), "yyyy-MM-dd"),
   });
@@ -83,8 +85,14 @@ export function useDashboardFilters() {
     setFiltersState((prev) => ({ ...prev, startDate, endDate }));
   };
 
-  const setHouseId = (houseId?: number) => {
-    setFiltersState((prev) => ({ ...prev, houseId }));
+  // Recorte por casa/esporte vale só enquanto a tela está aberta: um filtro
+  // esquecido de ontem faria o dashboard mostrar um lucro que não é o total.
+  const setHouseIds = (houseIds: number[]) => {
+    setFiltersState((prev) => ({ ...prev, houseIds }));
+  };
+
+  const setSportIds = (sportIds: number[]) => {
+    setFiltersState((prev) => ({ ...prev, sportIds }));
   };
 
   return {
@@ -92,7 +100,8 @@ export function useDashboardFilters() {
     preset,
     setPreset,
     setCustomRange,
-    setHouseId,
+    setHouseIds,
+    setSportIds,
     firstBetDate,
     lastBetDate,
     hasNoBets,

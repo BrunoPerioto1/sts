@@ -6,6 +6,7 @@ import { PerfilSkeleton } from "@/components/perfil/PerfilSkeleton";
 import { PerfilMobileView } from "@/components/perfil/PerfilMobileView";
 import { PerfilDesktopView } from "@/components/perfil/PerfilDesktopView";
 import { SettingsLayout } from "@/components/perfil/SettingsLayout";
+import { displayName } from "@/lib/format";
 
 export default function PerfilPage() {
   const isMobile = useIsMobile();
@@ -36,7 +37,7 @@ export default function PerfilPage() {
       <MainLayout
         title="Perfil"
         hideHeaderBorder
-        mobileHeader={<h1 className="text-2xl font-semibold tracking-tight truncate">{me.username}</h1>}
+        mobileHeader={<h1 className="text-2xl font-semibold tracking-tight truncate">{displayName(me)}</h1>}
       >
         <PerfilMobileView
           me={me}

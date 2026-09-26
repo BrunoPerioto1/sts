@@ -7,9 +7,9 @@ import { getMe } from "@/api/routes/get-me";
 import { actionToast } from "@/lib/action-toast";
 import { clearToken, getRememberedEmail, getToken, saveToken, setRememberedEmail } from "@/lib/auth-session";
 
-// Corpo de erro que o backend manda no login: 401 traz `attemptsLeft` quando a
-// conta existe, 429 traz `lockedUntil`.
-type LoginErrorBody = { message?: string; attemptsLeft?: number; lockedUntil?: string };
+// Corpo de erro que o backend manda no login: 429 traz `lockedUntil`. O 401 é
+// o mesmo exista ou não o e-mail (não revela quem tem conta).
+type LoginErrorBody = { message?: string; lockedUntil?: string };
 
 export function useLoginForm() {
   const navigate = useNavigate();
@@ -59,9 +59,11 @@ export function useLoginForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await postLogin({ email: data.email, password: data.password });
+      // "Manter conectado": token de 30 dias guardado no localStorage.
+      // Desmarcado, a sessão dura até fechar a aba (e no máximo 1 dia).
+      const res = await postLogin({ email: data.email, password: data.password, remember: data.rememberMe });
       queryClient.clear();
-      saveToken(res.access_token);
+      saveToken(res.access_token, data.rememberMe);
       setRememberedEmail(data.rememberMe ? data.email : null);
 
       await getMe().catch(() => undefined);
@@ -70,21 +72,16 @@ export function useLoginForm() {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       const body = axios.isAxiosError(err) ? (err.response?.data as LoginErrorBody | undefined) : undefined;
 
-      // 429 = conta travada; 401 com `attemptsLeft` = ainda dá pra tentar.
-      // O aviso fica embaixo do campo, não num toast que some sozinho.
+      // 429 = conta travada. O aviso fica embaixo do campo, não num toast que
+      // some sozinho.
       if (status === 429 && body?.lockedUntil) {
         setLockedUntil(new Date(body.lockedUntil));
         setNow(Date.now());
         setError(null);
-      } else if (typeof body?.attemptsLeft === "number") {
-        const left = body.attemptsLeft;
-        setError(
-          `Senha incorreta. Resta${left === 1 ? "" : "m"} ${left} tentativa${left === 1 ? "" : "s"} antes do bloqueio temporário.`
-        );
       } else if (status === 402) {
         // Senha certa, acesso vencido: o interceptor já leva pra /renovar.
       } else if (status === 401) {
-        setError("E-mail ou senha incorretos.");
+        setError("E-mail ou senha incorretos. Depois de 5 erros seguidos o login trava por 15 minutos.");
       } else {
         actionToast.error({ description: body?.message || "Não foi possível entrar. Tente de novo." });
       }

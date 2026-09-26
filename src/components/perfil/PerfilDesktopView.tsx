@@ -22,29 +22,30 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
   const navigate = useNavigate();
   const { setMe, reloadMe } = useMe();
   const prefsForm = usePreferencesForm(me, setMe);
-  const [account, setAccount] = useState({ username: me.username, email: me.email, currentPassword: "" });
+  // "Nome" é o fullName: o username é gerado pelo servidor no cadastro.
+  const [account, setAccount] = useState({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
   const [saving, setSaving] = useState(false);
 
   // Hidrata os dois formulários quando o usuario chega — do cache
   // (instantaneo), da rede ou da resposta do salvar.
   useEffect(() => {
     prefsForm.resetFrom(me);
-    setAccount({ username: me.username, email: me.email, currentPassword: "" });
+    setAccount({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
 
   const emailChanged = account.email !== me.email;
-  const accountDirty = account.username !== me.username || emailChanged;
+  const accountDirty = account.name !== (me.fullName ?? "") || emailChanged;
   const dirty = accountDirty || prefsForm.dirty;
   // E-mail é o login: o servidor só troca com a senha atual.
   const canSave =
-    !saving && prefsForm.valid && account.username.trim() !== "" && (!emailChanged || account.currentPassword !== "");
+    !saving && prefsForm.valid && account.name.trim() !== "" && (!emailChanged || account.currentPassword !== "");
 
   const handleSave = async () => {
     if (!canSave) return;
     const payload: UpdateMeParams = {};
     if (accountDirty) {
-      payload.username = account.username;
+      payload.fullName = account.name.trim();
       payload.email = account.email;
       if (emailChanged) payload.currentPassword = account.currentPassword;
     }
@@ -62,7 +63,7 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
 
   const handleDiscard = () => {
     prefsForm.resetFrom(me);
-    setAccount({ username: me.username, email: me.email, currentPassword: "" });
+    setAccount({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
   };
 
   return (
@@ -73,7 +74,7 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="account-name" className={labelClass}>Nome</Label>
-              <Input id="account-name" className="h-10 rounded-lg" value={account.username} onChange={(e) => setAccount((p) => ({ ...p, username: e.target.value }))} />
+              <Input id="account-name" className="h-10 rounded-lg" value={account.name} onChange={(e) => setAccount((p) => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="account-email" className={labelClass}>E-mail</Label>

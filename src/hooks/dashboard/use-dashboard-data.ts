@@ -6,7 +6,8 @@ import { getDashboardMetricsComparison } from "@/api/routes/get-dashboard-metric
 import { getDashboardDailySummary } from "@/api/routes/get-dashboard-daily";
 
 interface Params {
-  houseId?: number;
+  houseIds?: number[];
+  sportIds?: number[];
   startDate: string;
   endDate: string;
 }
@@ -41,7 +42,7 @@ function previousRange(startDate: string, endDate: string) {
 }
 
 export function useDashboardData(filters: Params) {
-  const { houseId, startDate, endDate } = filters;
+  const { houseIds = [], sportIds = [], startDate, endDate } = filters;
 
   // A chave é montada a partir dos VALORES, não do objeto `filters`. Isso
   // importa: o useDashboardFilters chama setFiltersState na montagem para
@@ -49,14 +50,18 @@ export function useDashboardData(filters: Params) {
   // dependência de objeto isso disparava um segundo par de requisições
   // idêntico ao primeiro; com chave por valor, o react-query reconhece a
   // mesma query e serve do cache.
-  const key = [houseId ?? null, startDate, endDate] as const;
+  // Sem recorte a chave segue `null` na primeira posição: a série da banca
+  // (use-bankroll-series) reaproveita o mesmo cache do daily-summary.
+  const scope = houseIds.length || sportIds.length ? `${houseIds.join(",")}|${sportIds.join(",")}` : null;
+  const key = [scope, startDate, endDate] as const;
 
   const comparison = useQuery({
     queryKey: ["dashboard", "metrics-comparison", ...key],
     queryFn: () => {
       const prev = previousRange(startDate, endDate);
       return getDashboardMetricsComparison({
-        houseId,
+        houseIds,
+        sportIds,
         startDate,
         endDate,
         previousStartDate: prev.startDate,
@@ -69,7 +74,7 @@ export function useDashboardData(filters: Params) {
   const daily = useQuery({
     queryKey: ["dashboard", "daily-summary", ...key],
     queryFn: () =>
-      getDashboardDailySummary({ house_id: houseId, startDate, endDate }),
+      getDashboardDailySummary({ houseIds, sportIds, startDate, endDate }),
     enabled: Boolean(startDate && endDate),
   });
 

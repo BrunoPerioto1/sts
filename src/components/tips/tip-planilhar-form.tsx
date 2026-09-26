@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatOdd } from "@/lib/format";
 import { toInput, type TipPlanilharForm } from "./use-tip-planilhar";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -10,7 +10,7 @@ const chipClass =
 export function TipContextLine({ tip }: { tip: TipItem }) {
   return (
     <p className="text-sm text-zinc-500">
-      {[tip.market, tip.house, tip.odd !== null && `odd ${tip.odd.toFixed(2)}`]
+      {[tip.market, tip.house, tip.odd !== null && `odd ${formatOdd(tip.odd)}`]
         .filter(Boolean)
         .join(" · ")}
     </p>

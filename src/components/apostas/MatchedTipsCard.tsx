@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import { type MatchedTip } from "@/api/routes/post-parse-image";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface MatchedTipsCardProps {
@@ -68,7 +68,7 @@ export function MatchedTipsCard({ tips, selected, onSelect }: MatchedTipsCardPro
                   <span className="block truncate text-xs font-medium">{tip.event}</span>
                   <span className="block truncate text-[11px] text-zinc-400">{tip.market}</span>
                   <span className="block text-[11px] tabular-nums text-zinc-500">
-                    {tip.odd !== null && `odd ${tip.odd.toFixed(2)}`}
+                    {tip.odd !== null && `odd ${formatOdd(tip.odd)}`}
                     {tip.stake !== null && ` · stake sugerida ${formatCurrency(tip.stake)}`}
                     {` · ${time(tip.at)}`}
                   </span>

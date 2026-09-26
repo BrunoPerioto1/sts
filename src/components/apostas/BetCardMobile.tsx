@@ -1,7 +1,7 @@
 import { Clock } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatTime, formatOdd } from "@/lib/format";
 import { stagger } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import { mapResultToStatus, statusLabel, type Status } from "@/lib/bet-status";
@@ -87,7 +87,7 @@ export function BetCardMobile({
         <span className={timeChipClass}>
           <Clock size={12} weight="bold" /> {formatTime(betDate(aposta))}
         </span>
-        <span className={oddChipClass}>@{Number(aposta.odd).toFixed(2)} · {formatCurrency(Number(aposta.stake))}</span>
+        <span className={oddChipClass}>@{formatOdd(aposta.odd)} · {formatCurrency(Number(aposta.stake))}</span>
         {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}
       </div>
 

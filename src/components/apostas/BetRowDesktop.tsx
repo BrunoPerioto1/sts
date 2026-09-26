@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatTime, formatOdd } from "@/lib/format";
 import { mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -73,7 +73,7 @@ export function BetRowDesktop({
         <p className="text-xs opacity-55 truncate">{aposta.market}</p>
       </div>
 
-      <span className="text-right text-sm tabular-nums opacity-80">{Number(aposta.odd).toFixed(2)}</span>
+      <span className="text-right text-sm tabular-nums opacity-80">{formatOdd(aposta.odd)}</span>
       <span className="text-right text-sm tabular-nums opacity-80">{formatCurrency(Number(aposta.stake))}</span>
       <ReturnValue aposta={aposta} className="text-sm text-right" />
 

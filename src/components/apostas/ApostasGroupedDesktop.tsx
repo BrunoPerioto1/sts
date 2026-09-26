@@ -1,5 +1,6 @@
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatSignedCurrency } from "@/lib/format";
 import { betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";
@@ -20,6 +21,17 @@ interface ApostasGroupedDesktopProps {
 }
 
 const totalClass = (v: number) => (v >= 0 ? "text-positive" : "text-negative");
+
+// Linhas do mês chegando: o mês abre na hora e as linhas entram depois.
+function MonthRowsSkeleton() {
+  return (
+    <div className="pb-4 space-y-2" aria-label="Carregando apostas do mês">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} className="h-9 rounded-md" delay={i * 60} />
+      ))}
+    </div>
+  );
+}
 
 // Cabeçalho de colunas. O `px-2 -mx-2` repete o das linhas — sem ele o
 // cabeçalho ficava 8px deslocado e as colunas pareciam tortas.
@@ -62,7 +74,8 @@ export function ApostasGroupedDesktop({
         return (
           <section key={month.key} className="min-w-0 border-b border-border last:border-b-0">
             <div className="w-full flex items-center gap-2 py-3 min-w-0">
-              {selection.selectionMode && (
+              {/* Mês fechado não tem linhas carregadas: não há o que marcar. */}
+              {selection.selectionMode && monthIds.length > 0 && (
                 <Checkbox
                   checked={monthCheckState}
                   onCheckedChange={() => selection.toggleMany(monthIds)}
@@ -84,7 +97,8 @@ export function ApostasGroupedDesktop({
               </span>
             </div>
 
-            {isOpen && (
+            {isOpen && month.loading && days.length === 0 && <MonthRowsSkeleton />}
+            {isOpen && days.length > 0 && (
               <div className="pb-4 min-w-0">
                 <ColumnHeader />
                 {days.map((day) => {

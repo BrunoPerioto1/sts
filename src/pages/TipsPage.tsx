@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowsClockwise, Buildings, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
@@ -7,7 +7,8 @@ import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
-import { TipsListDesktop } from "@/components/tips/TipsListDesktop";
+import { TipsListDesktop, type TipListGroup } from "@/components/tips/TipsListDesktop";
+import { groupPendingTips } from "@/lib/tip-schedule";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
@@ -19,7 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { actionToast } from "@/lib/action-toast";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useTipActions, useTips } from "@/hooks/queries/use-tips";
+import { useTips } from "@/hooks/queries/use-tips";
+import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/tips/use-tips-page";
 import { useHouses } from "@/hooks/queries/use-houses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
@@ -65,15 +67,11 @@ export default function TipsPage() {
   // Mesmo debounce da busca de Apostas (250 ms): sem ele cada tecla vira uma
   // pagina nova no infinite query.
   const [busca, setBusca] = useState("");
-  const [buscaDebounced, setBuscaDebounced] = useState("");
+  const buscaDebounced = useDebouncedValue(busca, 250);
   const buscaRef = useRef<HTMLInputElement>(null!);
-  useEffect(() => {
-    const t = setTimeout(() => setBuscaDebounced(busca), 250);
-    return () => clearTimeout(t);
-  }, [busca]);
 
   const {
-    tips,
+    tips: tipsDoServidor,
     summary,
     total,
     isPending,
@@ -81,112 +79,69 @@ export default function TipsPage() {
     refetch,
   } = useTips(tab, buscaDebounced || undefined, houseIds);
 
+  // Relógio da fila: "começa em 40 min" e a troca de bloco (dá tempo → já
+  // começou) acompanham o tempo sem precisar recarregar.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Pendentes por horário do jogo; as outras abas seguem por chegada. A
+  // lista achatada vira a ordem de tudo (primeira selecionada, shift+clique).
+  const grupos = useMemo(
+    () => (tab === "pending" ? groupPendingTips(tipsDoServidor, now) : null),
+    [tab, tipsDoServidor, now],
+  );
+  const tips = useMemo(() => (grupos ? grupos.flatMap((g) => g.tips) : tipsDoServidor), [grupos, tipsDoServidor]);
+
   // Só no desktop: a linha clicada abre o painel da direita. Guarda o id, não
   // a tip — depois de planilhar/descartar a lista é refeita, e um objeto
   // guardado ficaria com o status velho.
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
   const selecionada = tips.find((t) => t.id === selecionadaId) ?? tips[0] ?? null;
-  const { dismiss, undismiss, planilhar, batch } = useTipActions();
-  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
-  const selectionAnchor = useRef<number | null>(null);
   const [batchReview, setBatchReview] = useState<TipItem[] | null>(null);
-  // Nada de `busy` global travando a tela: as ações são otimistas (a tip sai da
-  // lista no clique, ver use-tips), então a gravação corre por baixo e a fila
-  // continua clicável. Travar tudo até a resposta era o que fazia cada
-  // "Planilhar"/"Caiu" parecer lento.
   const canSelect = tab !== "planilhada";
-  const checkedTips = tips.filter((tip) => checkedIds.has(tip.id));
-  const allChecked = tips.length > 0 && checkedTips.length === tips.length;
+  const selection = useTipSelection(tips, [tab, buscaDebounced, houseIds.join(",")].join("|"));
+  const { checkedIds, setCheckedIds, checkedTips, allChecked } = selection;
+  const toggleChecked = selection.toggle;
+  const clearSelection = selection.clear;
+  // Trocar aba/filtro também fecha a revisão do lote.
+  useEffect(() => setBatchReview(null), [tab, buscaDebounced, houseIds]);
 
-  // Seleção pertence à lista atual: filtros, abas e refetch não deixam ids ocultos.
-  useEffect(() => {
-    selectionAnchor.current = null;
-    setCheckedIds(new Set());
-    setBatchReview(null);
-  }, [tab, buscaDebounced, houseIds]);
-  useEffect(() => {
-    if (!tips.some((tip) => tip.id === selectionAnchor.current)) selectionAnchor.current = null;
-    setCheckedIds((current) => {
-      const next = new Set(tips.filter((tip) => current.has(tip.id)).map((tip) => tip.id));
-      return next.size === current.size ? current : next;
+  const { dismiss, undismiss, runBatch: runBatchWith, run, doPlanilhar } = useTipPageActions({
+    onStart: () => setPlanilhando(null),
+  });
+  const runBatch = (action: "planilhar" | "dismiss" | "undismiss", items = checkedTips) =>
+    runBatchWith(action, items, () => {
+      setBatchReview(null);
+      clearSelection();
     });
-  }, [tips]);
 
-  const clearSelection = () => {
-    selectionAnchor.current = null;
-    setCheckedIds(new Set());
-  };
+  // Jogo que já começou quase sempre é tip perdida: um clique limpa o bloco.
+  // Não mexe em saldo nem cria aposta, e a aba Caíram devolve qualquer uma.
+  const marcarComecadas = (items: TipItem[]) => (
+    <button
+      type="button"
+      onClick={() => runBatch("dismiss", items)}
+      className="press ml-2 rounded-md border border-foreground/10 px-2 py-1 text-xs text-zinc-300 hover:text-foreground"
+    >
+      Marcar {items.length === 1 ? "como caiu" : `as ${items.length} como caiu`}
+    </button>
+  );
 
-  const toggleChecked = (id: number, shiftKey = false) => {
-    const anchorIndex = tips.findIndex((tip) => tip.id === selectionAnchor.current);
-    const targetIndex = tips.findIndex((tip) => tip.id === id);
-    if (targetIndex < 0) return;
-    const range = shiftKey && anchorIndex >= 0
-      ? tips.slice(Math.min(anchorIndex, targetIndex), Math.max(anchorIndex, targetIndex) + 1)
-      : [tips[targetIndex]];
-    if (!shiftKey || anchorIndex < 0) selectionAnchor.current = id;
-    setCheckedIds((current) => {
-      const next = new Set(current);
-      const remove = current.has(id);
-      for (const tip of range) {
-        if (remove) next.delete(tip.id);
-        else next.add(tip.id);
-      }
-      return next;
-    });
-  };
-
-  // Fecha o diálogo, limpa a seleção e sai: o lote roda em background e o toast
-  // chega quando terminar. Quem clicou já pode continuar varrendo a fila.
-  const runBatch = (action: "planilhar" | "dismiss" | "undismiss", items = checkedTips) => {
-    if (!items.length) return;
-    setBatchReview(null);
-    clearSelection();
-    batch.mutate(
-      { tips: items, action },
-      {
-        onSuccess: (result) => {
-          if (result.succeeded.length) {
-            const label = action === "planilhar" ? "planilhadas" : action === "dismiss" ? "marcadas como caiu" : "devolvidas para a fila";
-            actionToast.success({ title: `${result.succeeded.length} tips ${label}` });
-          }
-          // As que falharem voltam pra lista sozinhas na revalidação.
-          if (result.failed.length) {
-            actionToast.error({
-              title: `${result.failed.length} tips não concluídas`,
-              description: `Continuam na fila. ${result.failed[0].message}`,
-            });
-          }
-        },
-        onError: (error: Error) =>
-          actionToast.error({ description: error.message || "Não foi possível concluir o lote." }),
-      },
-    );
-  };
-
-  // O sheet fecha antes da resposta, não no onSuccess: a tip já saiu da lista
-  // e deixar o modal aberto em "Planilhando…" era a espera mais visível da tela.
-  const run = (mutation: typeof dismiss, id: number, title: string) => {
-    setPlanilhando(null);
-    mutation.mutate(id, {
-      onSuccess: () => actionToast.success({ title }),
-      onError: (e: Error) => actionToast.error({ description: e.message }),
-    });
-  };
-
-  const doPlanilhar = (id: number, overrides: PlanilharTipDto) => {
-    setPlanilhando(null);
-    planilhar.mutate(
-      { id, ...overrides },
-      {
-        onSuccess: (res: { alreadyExisted: boolean }) =>
-          actionToast.success({
-            title: res.alreadyExisted ? "Essa tip já estava planilhada" : "Aposta planilhada",
-          }),
-        onError: (e: Error) => actionToast.error({ description: e.message }),
-      },
-    );
-  };
+  const gruposDaLista: TipListGroup[] | undefined = grupos?.map((g) => ({
+    key: g.id,
+    label: g.label,
+    hint:
+      g.id === "upcoming"
+        ? "o primeiro jogo em cima"
+        : g.id === "started"
+          ? "provavelmente sem odd"
+          : "confronto não reconhecido",
+    tips: g.tips,
+    action: g.id === "started" ? marcarComecadas(g.tips) : undefined,
+  }));
 
   // Recarregar é puxar a lista pra baixo, como no resto do app — não sobra
   // botão de reload competindo com o "..." na largura do header.
@@ -303,7 +258,7 @@ export default function TipsPage() {
             <Checkbox aria-label="Selecionar todas da página"
               checked={allChecked ? true : checkedTips.length > 0 ? "indeterminate" : false}
               onCheckedChange={() => {
-                selectionAnchor.current = null;
+                selection.setAnchor(null);
                 setCheckedIds(allChecked ? new Set() : new Set(tips.map((tip) => tip.id)));
               }} />
             Selecionar todas da página ({tips.length})
@@ -338,10 +293,11 @@ export default function TipsPage() {
             <div className="min-w-0">
               <TipsListDesktop
                 tips={tips}
+                groups={gruposDaLista}
                 selectedId={selecionada?.id ?? null}
                 onSelect={(tip) => {
                   setSelecionadaId(tip.id);
-                  selectionAnchor.current = tip.id;
+                  selection.setAnchor(tip.id);
                 }}
                 checkedIds={checkedIds}
                 onToggle={canSelect ? toggleChecked : undefined}
@@ -363,8 +319,17 @@ export default function TipsPage() {
           <div className="md:hidden">
             {/* Container único com divisórias, não cards soltos: a fila é pra
                 varrer de cima a baixo, e sombra por item vira ruído nisso. */}
+            {(gruposDaLista ?? [{ key: "all", label: "", tips } as TipListGroup]).map((grupo) => (
+            <section key={grupo.key} className="mb-4 last:mb-0">
+            {grupo.label && (
+              <div className="mb-2 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-semibold tracking-tight">{grupo.label}</span>
+                <span className="text-xs tabular-nums text-zinc-500">{grupo.tips.length}</span>
+                <span className="ml-auto">{grupo.action}</span>
+              </div>
+            )}
             <div className="overflow-hidden rounded-xl border border-border">
-              {tips.map((tip) => (
+              {grupo.tips.map((tip) => (
                 <div
                   key={tip.id}
                   className={cn(
@@ -392,6 +357,8 @@ export default function TipsPage() {
                 </div>
               ))}
             </div>
+            </section>
+            ))}
           </div>
         </>
       )}

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { formatIdleDays, houseActivity } from "@/lib/house-activity";
 import { HouseActivityBadge } from "./HouseActivityBadge";
+import { houseMoney } from "@/lib/house-groups";
 
 interface HouseListItemProps {
   house: HouseBalanceDto;
@@ -23,18 +24,21 @@ interface HouseListItemProps {
   onViewDetails?: (houseId: number) => void;
   onOpenHistory?: (house: HouseBalanceDto) => void;
   onNewTransaction?: (house: HouseBalanceDto) => void;
+  /** Casa no vermelho: abre a movimentação já em "Saldo real". */
+  onConciliate?: (house: HouseBalanceDto) => void;
 }
 
 export const HOUSE_GRID =
   "grid items-center gap-3 grid-cols-[28px_minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px_32px]";
 
-export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onOpenHistory, onNewTransaction }: HouseListItemProps) {
+export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onOpenHistory, onNewTransaction, onConciliate }: HouseListItemProps) {
   // Casa não fica te devendo: saldo real negativo é lançamento faltando, não
   // dinheiro. A linha mostra o saldo clampado em zero e marca "a conferir"; o
   // valor negativo em si fica no detalhe da casa.
   const real = Number(house.realHouseBalance);
-  const balance = Math.max(0, real);
-  const shortfall = Math.min(0, real);
+  // Número grande = disponível (o que o site da casa mostra); o que está
+  // preso em aposta aberta vem separado na linha de baixo.
+  const { available: balance, open, shortfall } = houseMoney(house);
   const profit = Number(house.totalBetProfit);
   const stake = Number(house.totalStake);
   const bets = Number(house.totalBets);
@@ -58,8 +62,23 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
         </div>
         <p className="text-xs opacity-45 truncate">
           {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatCurrency(stake)}
+          {open > 0 && <span> · {formatCurrency(open)} em aberto</span>}
           {shortfall < 0 && (
-            <span className="text-negative opacity-100"> · a conferir {formatCurrency(shortfall)}</span>
+            <span className="text-negative opacity-100">
+              {" "}· a conferir {formatCurrency(shortfall)}
+              {onConciliate && (
+                <>
+                  {" "}·{" "}
+                  <button
+                    type="button"
+                    onClick={() => onConciliate(house)}
+                    className="underline underline-offset-2 hover:no-underline"
+                  >
+                    Conciliar
+                  </button>
+                </>
+              )}
+            </span>
           )}
         </p>
       </div>
@@ -71,7 +90,10 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
       </div>
 
       <span className="text-right">
-        <span className={cn("block text-sm tabular-nums", balance === 0 && "opacity-45")}>
+        <span
+          className={cn("block text-sm tabular-nums", balance === 0 && "opacity-45")}
+          title={open > 0 ? `Disponível · ${formatCurrency(open)} em apostas abertas` : "Disponível"}
+        >
           {formatCurrency(balance)}
         </span>
         <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>

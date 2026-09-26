@@ -18,22 +18,23 @@ import { clearToken } from "@/lib/auth-session";
 export default function AccountPage() {
   const navigate = useNavigate();
   const { me, setMe } = useMe();
-  const [form, setForm] = useState({ username: "", email: "", currentPassword: "" });
+  // "Nome" é o fullName: o username é gerado pelo servidor no cadastro.
+  const [form, setForm] = useState({ name: "", email: "", currentPassword: "" });
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   // Hidrata o form quando o usuario chega — do cache (instantaneo) ou da rede.
   useEffect(() => {
-    if (me) setForm({ username: me.username, email: me.email, currentPassword: "" });
+    if (me) setForm({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
   }, [me]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const updated = await patchMe({
-        username: form.username,
+        fullName: form.name.trim(),
         email: form.email,
         currentPassword: form.currentPassword || undefined,
       });
@@ -47,13 +48,13 @@ export default function AccountPage() {
   };
 
   const handleDiscard = () => {
-    if (me) setForm({ username: me.username, email: me.email, currentPassword: "" });
+    if (me) setForm({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
   };
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await deleteMe();
+      await deleteMe(deletePassword);
       clearToken();
       navigate("/login", { replace: true });
     } catch (error) {
@@ -87,8 +88,8 @@ export default function AccountPage() {
               <Label className="text-sm font-normal text-zinc-400">Nome</Label>
               <Input
                 className="min-h-[48px] rounded-lg px-3.5"
-                value={form.username}
-                onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
@@ -139,14 +140,14 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* Confirmacao no padrao do app: sheet de baixo pra cima. Digitar o
-          e-mail e' de proposito — excluir a conta apaga apostas, casas e
-          historico, entao um toque so nao basta. */}
+      {/* Confirmacao no padrao do app: sheet de baixo pra cima. Pede a senha:
+          excluir a conta apaga apostas, casas e historico, e so' o token
+          (sessao aberta num aparelho alheio) nao pode bastar. */}
       <BottomSheet
         open={confirmOpen}
         onOpenChange={(open) => {
           setConfirmOpen(open);
-          if (!open) setConfirmEmail("");
+          if (!open) setDeletePassword("");
         }}
         title="Excluir a conta?"
         footer={
@@ -154,7 +155,7 @@ export default function AccountPage() {
             <Button
               variant="destructive"
               className="w-full min-h-[48px] text-base"
-              disabled={deleting || confirmEmail.trim().toLowerCase() !== me?.email.toLowerCase()}
+              disabled={deleting || deletePassword.length === 0}
               onClick={handleDelete}
             >
               {deleting ? "Excluindo…" : "Excluir para sempre"}
@@ -170,15 +171,17 @@ export default function AccountPage() {
             Apaga suas apostas, saldos de casas e movimentações. Não dá pra desfazer nem recuperar depois.
           </p>
           <div className="space-y-1.5">
-            <Label className="text-sm font-normal text-zinc-400">
-              Digite <span className="text-foreground">{me?.email}</span> para confirmar
+            <Label htmlFor="delete-password" className="text-sm font-normal text-zinc-400">
+              Digite sua senha para confirmar
             </Label>
             <Input
-              value={confirmEmail}
-              onChange={(e) => setConfirmEmail(e.target.value)}
-              placeholder="seu@email.com"
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Sua senha"
               className="min-h-[48px] rounded-lg px-3.5"
-              autoComplete="off"
+              autoComplete="current-password"
             />
           </div>
         </div>

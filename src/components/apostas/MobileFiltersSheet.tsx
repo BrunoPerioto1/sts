@@ -11,6 +11,7 @@ import { SportIcon } from "./SportIcon";
 import { useSports } from "@/hooks/queries/use-sports";
 import { PeriodCalendarSheet } from "./PeriodCalendarSheet";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
+import { ORIGIN_OPTIONS } from "@/lib/bet-origin";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { defaultPeriod, periodRangeFor, type ApostasFilterState, type PeriodPreset } from "@/types/apostas-filters";
@@ -53,7 +54,13 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
   // botao 1 com os mesmos filtros.
   const dflt = defaultPeriod();
   const periodChanged = draft.period.from !== dflt.from || draft.period.to !== dflt.to;
-  const activeCount = [periodChanged, draft.status.length > 0, draft.houseIds.length > 0, draft.sportIds.length > 0].filter(Boolean).length;
+  const activeCount = [
+    periodChanged,
+    draft.status.length > 0,
+    draft.houseIds.length > 0,
+    draft.sportIds.length > 0,
+    draft.origins.length > 0 || draft.unmatched,
+  ].filter(Boolean).length;
 
   const statusSummary =
     draft.status.length === 0
@@ -81,7 +88,14 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
       ? `${format(parseISO(draft.period.from), "dd MMM", { locale: ptBR })} – ${format(parseISO(draft.period.to), "dd MMM", { locale: ptBR })}`
       : "Selecionar período";
 
-  const handleClear = () => setDraft({ period: defaultPeriod(), status: [], houseIds: [], sportIds: [] });
+  const handleClear = () =>
+    setDraft({ period: defaultPeriod(), status: [], houseIds: [], sportIds: [], origins: [], unmatched: false });
+
+  const toggleOrigin = (value: string) =>
+    setDraft((d) => ({
+      ...d,
+      origins: d.origins.includes(value) ? d.origins.filter((v) => v !== value) : [...d.origins, value],
+    }));
 
   const handleApply = () => {
     onApply(draft);
@@ -155,6 +169,34 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
               )
             }
           />
+        </section>
+
+        <section className="space-y-2">
+          <p className={sectionLabel}>Origem</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ...ORIGIN_OPTIONS.map((o) => ({ key: o.value, label: o.label, active: draft.origins.includes(o.value), toggle: () => toggleOrigin(o.value) })),
+              {
+                key: "unmatched",
+                label: "Sem jogo identificado",
+                active: draft.unmatched,
+                toggle: () => setDraft((d) => ({ ...d, unmatched: !d.unmatched })),
+              },
+            ].map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                aria-pressed={chip.active}
+                onClick={chip.toggle}
+                className={cn(
+                  "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
+                  chip.active ? "bg-accent text-white" : "border border-foreground/10 text-zinc-400"
+                )}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
         </section>
 
         <section className="space-y-1.5">

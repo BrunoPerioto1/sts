@@ -13,6 +13,10 @@ export interface ApostasFilterState {
   status: string[];
   houseIds: number[];
   sportIds: number[];
+  /** Origem (tip, telegram, app); vazio = todas. */
+  origins: string[];
+  /** Só apostas sem jogo identificado (sem horário nem placar automático). */
+  unmatched: boolean;
 }
 
 export function defaultPeriod(): ApostasPeriod {

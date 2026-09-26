@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDate, formatSignedCurrency, formatTime } from "@/lib/format";
 import { HouseDialog } from "./HouseDialog";
+import { TransactionActions } from "./TransactionActions";
 
 interface MovimentacaoModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
   const [movimentacoes, setMovimentacoes] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Sobe a cada correção/exclusão: refaz o GET com a lista nova.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -34,7 +37,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
       .then((txs) => setMovimentacoes(txs || []))
       .catch(() => setError("Não foi possível carregar o histórico."))
       .finally(() => setIsLoading(false));
-  }, [isOpen, houseId]);
+  }, [isOpen, houseId, reloadKey]);
 
   const ordered = [...movimentacoes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -90,6 +93,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
                       "−" pelo tipo dava "−−R$ 6,81". Igual ao historico mobile. */}
                   {formatSignedCurrency(Number(mov.value))}
                 </span>
+                <TransactionActions tx={mov} onChanged={() => setReloadKey((k) => k + 1)} />
               </div>
             );
           })}

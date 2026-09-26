@@ -1,9 +1,29 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { AppSidebar } from "./AppSidebar";
+import { AppSidebar, SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_WIDTH } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
 import { AccessExpiryBanner } from "./AccessExpiryBanner";
+
+const COLLAPSED_KEY = "sidebar_collapsed";
+
+// Preferência de conveniência: sem storage (aba anônima, bloqueio) a sidebar
+// só abre expandida, como antes.
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(collapsed: boolean) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch {
+    // sem storage o estado vale só nesta aba
+  }
+}
 
 interface ShellContextValue {
   setBottomNavHidden: (hidden: boolean) => void;
@@ -33,8 +53,13 @@ export function useShell(): ShellContextValue {
  */
 export function AppShell() {
   const { pathname } = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsedState] = useState(readCollapsed);
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
+
+  const setSidebarCollapsed = useCallback((collapsed: boolean) => {
+    setSidebarCollapsedState(collapsed);
+    writeCollapsed(collapsed);
+  }, []);
 
   const setBottomNavHiddenStable = useCallback((hidden: boolean) => {
     setBottomNavHidden(hidden);
@@ -55,7 +80,7 @@ export function AppShell() {
         // clip contém o excesso horizontal sem criar um scroll container que
         // prende os headers e painéis sticky enquanto quem rola é a página.
         className="min-h-dvh flex w-full bg-background overflow-x-clip"
-        style={{ "--sidebar-w": sidebarCollapsed ? "72px" : "248px" } as CSSProperties}
+        style={{ "--sidebar-w": `${sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH}px` } as CSSProperties}
       >
         <div className="hidden sm:block">
           <AppSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />

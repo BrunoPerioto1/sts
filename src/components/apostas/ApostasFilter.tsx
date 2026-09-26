@@ -7,6 +7,8 @@ import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { StatusMultiSelect } from "./StatusMultiSelect";
 import { useSports } from "@/hooks/queries/use-sports";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
+import { ORIGIN_LABEL, ORIGIN_OPTIONS } from "@/lib/bet-origin";
+import { DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,8 @@ interface ApostasFilterProps {
   onFilterStatus?: (status: string[]) => void;
   onFilterHouses?: (houseIds: number[]) => void;
   onFilterSports?: (sportIds: number[]) => void;
+  onFilterOrigins?: (origins: string[]) => void;
+  onFilterUnmatched?: (unmatched: boolean) => void;
   onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
   onExportCsv?: () => void;
@@ -27,6 +31,8 @@ interface ApostasFilterProps {
   initialStatus?: string[];
   initialHouseIds?: number[];
   initialSportIds?: number[];
+  initialOrigins?: string[];
+  initialUnmatched?: boolean;
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
@@ -39,6 +45,8 @@ export function ApostasFilter({
   onFilterStatus,
   onFilterHouses,
   onFilterSports,
+  onFilterOrigins,
+  onFilterUnmatched,
   onDateRangeChange,
   onClearFilters,
   onExportCsv,
@@ -50,6 +58,8 @@ export function ApostasFilter({
   initialStatus = [],
   initialHouseIds = [],
   initialSportIds = [],
+  initialOrigins = [],
+  initialUnmatched = false,
 }: ApostasFilterProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [dateFrom, setDateFrom] = useState(initialDateFrom);
@@ -57,6 +67,8 @@ export function ApostasFilter({
   const [status, setStatus] = useState<string[]>(initialStatus);
   const [houseIds, setHouseIds] = useState<number[]>(initialHouseIds);
   const [sportIds, setSportIds] = useState<number[]>(initialSportIds);
+  const [origins, setOrigins] = useState<string[]>(initialOrigins);
+  const [unmatched, setUnmatched] = useState(initialUnmatched);
   const sports = useSports();
 
   const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
@@ -109,6 +121,25 @@ export function ApostasFilter({
     });
   }
 
+  for (const o of origins) {
+    activeChips.push({
+      key: `origin-${o}`,
+      label: ORIGIN_LABEL[o] ?? o,
+      clear: () => {
+        const next = origins.filter((v) => v !== o);
+        setOrigins(next);
+        onFilterOrigins?.(next);
+      },
+    });
+  }
+  if (unmatched) {
+    activeChips.push({
+      key: "unmatched",
+      label: "Sem jogo identificado",
+      clear: () => { setUnmatched(false); onFilterUnmatched?.(false); },
+    });
+  }
+
   const handleClear = () => {
     setSearchTerm("");
     setDateFrom("");
@@ -116,6 +147,8 @@ export function ApostasFilter({
     setStatus([]);
     setHouseIds([]);
     setSportIds([]);
+    setOrigins([]);
+    setUnmatched(false);
     onClearFilters?.();
   };
 
@@ -181,6 +214,31 @@ export function ApostasFilter({
             label="Esportes"
             noun={["esporte", "esportes"]}
             allLabel="Todos"
+          />
+        </div>
+
+        {divider}
+
+        <div className="px-3.5 shrink-0">
+          <StatusMultiSelect
+            label="Origem"
+            options={ORIGIN_OPTIONS}
+            selected={origins}
+            onChange={(next) => { setOrigins(next); onFilterOrigins?.(next); }}
+            disabled={isLoading}
+            className="min-h-0 text-sm"
+            extraLabel={unmatched ? "Sem jogo" : null}
+            extra={
+              // Aposta sem jogo casado não tem horário nem placar automático:
+              // é a que a conferência não resolve sozinha.
+              <DropdownMenuCheckboxItem
+                checked={unmatched}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={() => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); }}
+              >
+                Sem jogo identificado
+              </DropdownMenuCheckboxItem>
+            }
           />
         </div>
 

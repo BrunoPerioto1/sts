@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTime, kickoffParts } from "@/lib/format";
+import { compactStartLabel, startLabel } from "@/lib/tip-schedule";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
 
 // Uma definição de colunas só, usada pelo cabeçalho e pelas linhas — mesmo
@@ -44,20 +45,24 @@ export function TipColumnHeaderDesktop({ selectable = false }: { selectable?: bo
   );
 }
 
-function kickoff(value: string | null) {
+function kickoff(value: string | null, relative: boolean) {
   if (!value) return <span className="text-xs opacity-30">—</span>;
   const { dia, hora, eHoje } = kickoffParts(value);
+  // Na fila pendente a linha de cima vira "em 40 min" / "há 2h": é a resposta
+  // direta pra "ainda dá tempo?", sem conta de cabeça com o relógio.
+  const rel = relative ? compactStartLabel(value) : null;
   return (
     <>
       {/* Hoje em destaque: é a única linha em que "dá tempo de entrar?" tem
           resposta na hora, e é o que se procura varrendo a coluna. */}
       <span
+        title={relative ? startLabel(value) : undefined}
         className={cn(
           "block truncate text-[11px] leading-tight",
-          eHoje ? "font-medium opacity-70" : "opacity-45",
+          rel ? "font-medium opacity-80" : eHoje ? "font-medium opacity-70" : "opacity-45",
         )}
       >
-        {dia}
+        {rel ?? dia}
       </span>
       <span className="block text-xs leading-tight tabular-nums opacity-90">{hora}</span>
     </>
@@ -119,7 +124,7 @@ export function TipRowDesktop({
       {/* Dia em cima, hora embaixo. A linha já tem duas alturas por causa do
           mercado no Evento, então empilhar aqui não custa altura nenhuma — e
           resolve o corte de "Amanhã 11:30" numa coluna estreita. */}
-      <span className="min-w-0">{kickoff(tip.eventStartAt)}</span>
+      <span className="min-w-0">{kickoff(tip.eventStartAt, tip.status === "pending")}</span>
 
       <span className="min-w-0">
         <span className="block truncate text-sm font-medium">

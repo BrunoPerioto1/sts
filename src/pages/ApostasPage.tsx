@@ -1,5 +1,6 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ApostasGrouped } from "@/components/apostas/ApostasGrouped";
 import { ApostaFormModal } from "@/components/apostas/ApostaFormModal";
@@ -7,28 +8,27 @@ import { pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { ConferenciaCallout } from "@/components/apostas/ConferenciaCallout";
+import { BetTotalsStrip } from "@/components/apostas/BetTotalsStrip";
 import { ApostasMobileHeader } from "@/components/apostas/ApostasMobileHeader";
-import { ApostasPagination } from "@/components/apostas/ApostasPagination";
 import { BulkActionBar } from "@/components/apostas/BulkActionBar";
 import { MobileFiltersSheet } from "@/components/apostas/MobileFiltersSheet";
 import { MobileStatusPills } from "@/components/apostas/MobileStatusPills";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { useBulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { exportBetsListCsv } from "@/lib/bet-exports";
-import { type BetItem, type PaginatedBetsResponseDto } from "@/api/routes/get-bets";
+import { takeSharedImages } from "@/lib/shared-images";
+import { type BetItem } from "@/api/routes/get-bets";
 import { useHouses } from "@/hooks/queries/use-houses";
-import { betsQueryKey, useBetsQuery } from "@/hooks/apostas/use-bets-query";
+import { paramsFrom, useBetMonths } from "@/hooks/apostas/use-bets-query";
 import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
 import { Button } from "@/components/ui/button";
-import { CaretDown, Plus } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
+import { actionToast } from "@/lib/action-toast";
 import { tapHaptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
-
-// Referencia estavel pro useMemo de `apostas` enquanto a query nao respondeu.
-const EMPTY_PAGES: PaginatedBetsResponseDto[] = [];
 
 export default function ApostasPage() {
   const isMobile = useIsMobile();
@@ -62,21 +62,36 @@ export default function ApostasPage() {
   }, [createModalOpen, editModalOpen]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const betsQuery = useBetsQuery(filters.queryFilters);
-  const queryKey = betsQueryKey(filters.queryFilters);
+  // Print compartilhado pelo Android ("Compartilhar → SportsBet"): o service
+  // worker guardou a imagem e mandou pra cá com ?compartilhado=1. Abre a Nova
+  // aposta já lendo o print, igual ao Ctrl+V, e tira o parâmetro da URL pra um
+  // recarregar não repetir.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("compartilhado") !== "1") return;
+    void takeSharedImages().then((files) => {
+      if (files.length) {
+        setPastedImages(files);
+        setCreateModalOpen(true);
+      }
+    });
+    const next = new URLSearchParams(searchParams);
+    next.delete("compartilhado");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const pages = betsQuery.data?.pages ?? EMPTY_PAGES;
-  const apostas = useMemo(() => pages.flatMap((p) => p.data ?? []), [pages]);
-  const total = pages[0]?.total ?? 0;
-  const totalPages = pages[0]?.totalPages ?? 1;
-  const page = filters.pageStart + Math.max(0, pages.length - 1);
+  // Meses com quantidade e lucro vêm do banco; as linhas só do mês aberto
+  // (ApostasGrouped). Antes a tela baixava o filtro inteiro a cada troca.
+  const monthsQuery = useBetMonths(filters.queryFilters);
+  const months = monthsQuery.data ?? [];
+  const total = months.reduce((sum, m) => sum + m.count, 0);
 
-  const actions = useBetActions({ queryKey, apostas });
+  const actions = useBetActions();
   // isPending, não isFetching: com a lista já em cache a tela aparece pronta e
   // a revalidação roda por baixo. Usar isFetching aqui traria o skeleton de
   // volta a cada volta pra tela — exatamente o que o cache veio evitar.
-  const loading = betsQuery.isPending || actions.mutating;
-  const refreshing = betsQuery.isFetching || actions.mutating;
+  const loading = monthsQuery.isPending || actions.mutating;
 
   // Antes o fetch limpava a seleção; agora a query é declarativa, então limpa
   // quando o conjunto exibido muda — trocar filtro com apostas marcadas
@@ -84,7 +99,7 @@ export default function ApostasPage() {
   useEffect(() => {
     selection.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.statusFilter, filters.houseIds, filters.sportIds, filters.startDate, filters.endDate, filters.debouncedSearch]);
+  }, [filters.statusFilter, filters.houseIds, filters.sportIds, filters.origins, filters.unmatched, filters.startDate, filters.endDate, filters.debouncedSearch]);
 
   useEffect(() => {
     if (!selection.selectionMode) return;
@@ -120,18 +135,27 @@ export default function ApostasPage() {
     initialStatus: filters.statusFilter,
     initialHouseIds: filters.houseIds,
     initialSportIds: filters.sportIds,
+    initialOrigins: filters.origins,
+    initialUnmatched: filters.unmatched,
     onSearch: filters.setSearch,
     onFilterStatus: filters.setStatus,
     onFilterHouses: filters.setHouses,
     onFilterSports: filters.setSports,
+    onFilterOrigins: filters.setOrigins,
+    onFilterUnmatched: filters.setUnmatched,
     onDateRangeChange: filters.setDateRange,
     onClearFilters: filters.clearFilters,
-    onExportCsv: () => exportBetsListCsv(apostas),
+    // A tela só tem as linhas dos meses abertos: o CSV busca o filtro inteiro.
+    onExportCsv: () =>
+      exportBetsListCsv(paramsFrom(filters.queryFilters)).catch(() =>
+        actionToast.error({ description: "Não deu pra exportar agora. Tente de novo." })
+      ),
     isLoading: loading,
   };
 
   const listProps = {
-    apostas,
+    filters: filters.queryFilters,
+    months,
     isLoading: loading,
     hasFilters: filters.hasFilters,
     onClearFilters: filters.clearFilters,
@@ -186,6 +210,8 @@ export default function ApostasPage() {
             usava md: (768px) e deixava 640-767px sem nenhum filtro visível. */}
         {!isMobile && <ApostasFilter {...filterProps} />}
 
+        <BetTotalsStrip filters={filters.queryFilters} />
+
         {/* Sem card em volta: a lista agrupada desenha as próprias divisões, e
             a caixa cinza só criava uma moldura dentro de outra. */}
         <div className="space-y-3 min-w-0">
@@ -194,26 +220,6 @@ export default function ApostasPage() {
             selection={selection}
             onDelete={(id) => actions.deleteOne(id)}
           />
-
-          {isMobile ? (
-            apostas.length > 0 && page < totalPages && (
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" onClick={() => void betsQuery.fetchNextPage()} disabled={refreshing} className="gap-2">
-                  <CaretDown size={14} />
-                  Carregar mais ({apostas.length}/{total})
-                </Button>
-              </div>
-            )
-          ) : (
-            <ApostasPagination
-              page={page}
-              totalPages={totalPages}
-              perPage={filters.perPage}
-              loadedCount={apostas.length}
-              total={total}
-              onPageChange={filters.setPageStart}
-            />
-          )}
         </div>
 
         <ApostaFormModal

@@ -18,6 +18,7 @@ import { HouseFiltersBar } from "./HouseFiltersBar";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { metricsFromBalances } from "@/lib/house-metrics";
 import { staleDaysFrom } from "@/lib/house-activity";
+import { groupHouses } from "@/lib/house-groups";
 import { useMe } from "@/hooks/queries/use-me";
 import { SortSheet } from "./SortSheet";
 import { HouseActionsSheet } from "./HouseActionsSheet";
@@ -117,16 +118,31 @@ export function CasasMobileView() {
           ) : undefined}
         />
       ) : (
-        <div className="flex flex-col divide-y divide-border">
-          {filters.filteredHouses.map((house, index) => (
-            <HouseRowMobile
-              key={house.houseId}
-              index={index}
-              house={house}
-              staleDays={staleDays}
-              onTap={() => panel.pushDetail(house)}
-              onLongPress={() => setActionsHouse(house)}
-            />
+        <div className="space-y-4">
+          {/* Com "negativas" ligado a lista já é o recorte; sem ele, os três
+              blocos (em uso, paradas, sem uso) separam o que merece olhar. */}
+          {(filters.onlyNegative
+            ? [{ id: "negative", label: "A conferir", houses: filters.filteredHouses }]
+            : groupHouses(filters.filteredHouses, staleDays)
+          ).map((group) => (
+            <section key={group.id}>
+              <p className="flex items-baseline gap-2 text-xs font-medium uppercase tracking-wider text-zinc-400 pb-1">
+                {group.label}
+                <span className="tabular-nums opacity-70">{group.houses.length}</span>
+              </p>
+              <div className="flex flex-col divide-y divide-border">
+                {group.houses.map((house, index) => (
+                  <HouseRowMobile
+                    key={house.houseId}
+                    index={index}
+                    house={house}
+                    staleDays={staleDays}
+                    onTap={() => panel.pushDetail(house)}
+                    onLongPress={() => setActionsHouse(house)}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, Hourglass, X } from "@phosphor-icons/react";
-import { getBilling } from "@/api/routes/get-billing";
+import { getMyBilling, postMyPaymentClaim } from "@/api/routes/get-billing";
 import { useMe } from "@/hooks/queries/use-me";
 import { actionToast } from "@/lib/action-toast";
 import { daysUntilAccess, isExpired } from "@/lib/access";
@@ -30,7 +30,9 @@ export function AccessExpiryBanner() {
   const days = accessUntil && !isExpired(accessUntil) ? daysUntilAccess(accessUntil) : null;
   const show = days !== null && days <= WARN_DAYS && dismissed !== accessUntil;
 
-  const billing = useQuery({ queryKey: ["access", "billing"], queryFn: getBilling, enabled: show, staleTime: Infinity });
+  const queryClient = useQueryClient();
+  // PIX copia-e-cola da conta (valor + identificador), não só a chave.
+  const billing = useQuery({ queryKey: ["access", "billing", "me"], queryFn: getMyBilling, enabled: show, staleTime: Infinity });
 
   if (!show || !accessUntil) return null;
 
@@ -39,14 +41,25 @@ export function AccessExpiryBanner() {
     days === 0 ? `hoje às ${time}`
     : days === 1 ? `amanhã às ${time}`
     : `em ${days} dias (${new Date(accessUntil).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" })} às ${time})`;
-  const pixKey = billing.data?.pixKey;
+  const pixText = billing.data?.pixCode ?? billing.data?.pixKey;
   const price = billing.data?.price;
+  const claimed = !!billing.data?.paymentClaimedAt;
+
+  const claim = async () => {
+    try {
+      await postMyPaymentClaim();
+      void queryClient.invalidateQueries({ queryKey: ["access", "billing", "me"] });
+      actionToast.success({ title: "Administrador avisado", description: "O vencimento é estendido assim que ele conferir." });
+    } catch {
+      actionToast.error({ description: "Não deu pra avisar agora. Tente de novo." });
+    }
+  };
 
   const copy = async () => {
-    if (!pixKey) return;
+    if (!pixText) return;
     try {
-      await navigator.clipboard.writeText(pixKey);
-      actionToast.success({ title: "Chave PIX copiada" });
+      await navigator.clipboard.writeText(pixText);
+      actionToast.success({ title: billing.data?.pixCode ? "PIX copia e cola copiado" : "Chave PIX copiada" });
     } catch {
       /* clipboard é best-effort; a chave continua na tela de renovação */
     }
@@ -66,13 +79,22 @@ export function AccessExpiryBanner() {
           <span className="text-zinc-400"> Renove com {price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} no PIX.</span>
         )}
       </p>
-      {pixKey && (
+      {pixText && (
         <button
           type="button"
           onClick={copy}
           className="press shrink-0 flex items-center gap-1.5 rounded-md border border-amber-500/30 px-2.5 py-1 text-xs hover:bg-amber-500/10"
         >
           <Copy size={13} /> Copiar PIX
+        </button>
+      )}
+      {pixText && !claimed && (
+        <button
+          type="button"
+          onClick={claim}
+          className="press shrink-0 hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-zinc-300 hover:bg-amber-500/10"
+        >
+          Já paguei
         </button>
       )}
       <button type="button" onClick={dismiss} aria-label="Fechar aviso" className="shrink-0 h-7 w-7 flex items-center justify-center text-zinc-400 hover:text-foreground">

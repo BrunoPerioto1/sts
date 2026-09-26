@@ -11,8 +11,9 @@ import {
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
+import { formatCurrency, formatKickoff, formatTime, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { compactStartLabel, startLabel } from "@/lib/tip-schedule";
 import type { TipItem } from "@/api/routes/get-tips";
 
 // % da banca sugerido, nao retorno: sem sinal e sem verde, que liam como EV.
@@ -60,6 +61,9 @@ export function TipCard({
             <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
               <Clock size={13} weight="bold" />
               {formatKickoff(tip.eventStartAt)}
+              {tip.status === "pending" && compactStartLabel(tip.eventStartAt) && (
+                <span className="font-medium text-zinc-400">· {startLabel(tip.eventStartAt)}</span>
+              )}
             </p>
           )}
         </div>
@@ -83,7 +87,7 @@ export function TipCard({
                   <Calculator size={16} weight="bold" />
                 </a>
               )}
-              <p className="text-2xl font-semibold leading-none tabular-nums">{tip.odd.toFixed(2)}</p>
+              <p className="text-2xl font-semibold leading-none tabular-nums">{formatOdd(tip.odd)}</p>
             </div>
           )}
           {tip.percent !== null && (

@@ -2,16 +2,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AuthField } from "./AuthField";
-import { actionToast } from "@/lib/action-toast";
 import { formatCountdown } from "@/lib/format";
 import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
 import { useLoginForm } from "@/hooks/auth/use-login-form";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  /** Abre o "Esqueci a senha" já com o e-mail digitado aqui. */
+  onForgotPassword: (email: string) => void;
 }
 
-export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormProps) {
   const { data, setData, error, setError, submitting, locked, lockRemainingMs, submit } = useLoginForm();
 
   return (
@@ -64,7 +65,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         </div>
         <button
           type="button"
-          onClick={() => actionToast.error({ title: "Ainda não disponível", description: "Recuperação de senha ainda não foi implementada." })}
+          onClick={() => onForgotPassword(data.email)}
           className="text-sm text-accent underline underline-offset-4 hover:no-underline"
         >
           Esqueci a senha

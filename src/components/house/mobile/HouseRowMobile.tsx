@@ -4,6 +4,7 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
 import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
 import { houseActivity } from "@/lib/house-activity";
+import { houseMoney } from "@/lib/house-groups";
 import { HouseActivityBadge } from "../HouseActivityBadge";
 import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
   // Saldo clampado em zero: casa no vermelho é lançamento faltando, o valor
   // real negativo aparece como "a conferir" e no detalhe da casa.
   const real = Number(house.realHouseBalance);
+  const money = houseMoney(house);
   // O toque longo dispara onLongPress, mas o navegador ainda emite o click
   // logo depois (ao soltar o dedo) — sem essa flag, esse click "fantasma"
   // também chamaria onTap e navegaria pro detalhe por cima do sheet aberto.
@@ -79,7 +81,12 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
       </span>
 
       <span className="shrink-0 text-right">
-        <span className="block text-sm font-medium tabular-nums">{formatCurrency(Math.max(0, real))}</span>
+        {/* Disponível, como o site da casa mostra; o preso em aposta aberta
+            vem embaixo quando existe. */}
+        <span className="block text-sm font-medium tabular-nums">{formatCurrency(money.available)}</span>
+        {money.open > 0 && (
+          <span className="block text-xs text-zinc-400 tabular-nums">+{formatCurrency(money.open)} em aberto</span>
+        )}
         <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
           Lucro {formatSignedCurrency(profit)}
         </span>

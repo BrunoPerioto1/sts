@@ -37,11 +37,22 @@ export function useSettlementSuggestions() {
  * Contadores da fila. Toda acao (compute/confirm/dismiss) mexe neles, entao
  * invalidam junto com a lista — senao o badge do menu continuaria anunciando
  * proposta que o usuario acabou de planilhar.
+ *
+ * A API calcula sozinha quando tem placar esperando (sem clique). Se calculou
+ * algo, a lista que ja' estava em cache ficou velha: recarrega.
  */
 export function useSettlementQueue() {
+  const queryClient = useQueryClient();
   return useQuery<SettlementQueue>({
     queryKey: QUEUE_KEY,
-    queryFn: getSettlementQueue,
+    queryFn: async () => {
+      const fila = await getSettlementQueue();
+      if (fila.computed) {
+        void queryClient.invalidateQueries({ queryKey: SETTLEMENT_KEY });
+        void queryClient.invalidateQueries({ queryKey: REVIEW_KEY });
+      }
+      return fila;
+    },
   });
 }
 
@@ -89,7 +100,7 @@ export function useSettlementActions() {
       actionToast.success({
         icon: CalendarCheck,
         title: "Tudo conferido",
-        description: "Nenhum jogo com aposta pendente terminou desde a última busca. Os placares chegam todo dia às 6h.",
+        description: "Nenhum jogo com aposta pendente terminou desde a última busca. Os placares chegam às 6h, 16h e 22h.",
         duration: 3500,
       });
     },

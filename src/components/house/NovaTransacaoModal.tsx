@@ -12,6 +12,8 @@ interface NovaTransacaoModalProps {
   isOpen: boolean;
   onClose: () => void;
   house: HouseBalanceDto;
+  // "Conciliar" (casa a conferir) abre direto em Saldo real.
+  initialType?: "DEPOSIT" | "WITHDRAWAL" | "ADJUSTMENT";
 }
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> = {
@@ -20,7 +22,7 @@ const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> =
   ADJUSTMENT: { label: "Saldo real", icon: SlidersHorizontal },
 };
 
-export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModalProps) {
+export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: NovaTransacaoModalProps) {
   const [types, setTypes] = useState<TransactionTypeDto[]>([]);
   const [typeId, setTypeId] = useState(0);
   const [cents, setCents] = useState(0);
@@ -38,10 +40,10 @@ export function NovaTransacaoModal({ isOpen, onClose, house }: NovaTransacaoModa
         const ORDER = ["DEPOSIT", "WITHDRAWAL", "ADJUSTMENT"];
         const sorted = [...txTypes].sort((a, b) => ORDER.indexOf(a.name) - ORDER.indexOf(b.name));
         setTypes(sorted);
-        setTypeId(sorted[0]?.id ?? 0);
+        setTypeId((sorted.find((t) => t.name === initialType) ?? sorted[0])?.id ?? 0);
       })
       .catch(() => undefined);
-  }, [isOpen]);
+  }, [isOpen, initialType]);
 
   // "Saldo real": o usuario digita o que a casa mostra e grava so' a diferenca
   // como ajuste. Fecha casa no vermelho por deposito nunca lancado.

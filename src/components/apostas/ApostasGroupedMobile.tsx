@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatSignedCurrency } from "@/lib/format";
 import { settledProfit } from "@/lib/bet-status";
@@ -27,7 +28,7 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
         return (
           <section key={month.key} className="space-y-3">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
-              {selection.selectionMode && (
+              {selection.selectionMode && monthIds.length > 0 && (
                 <Checkbox checked={groupCheckState(monthIds, selection.selected)}
                   onCheckedChange={() => selection.toggleMany(monthIds)}
                   aria-label={`Selecionar todas as apostas de ${month.label}`} />
@@ -40,6 +41,13 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
               </button>
               <span className={cn("text-sm tabular-nums shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(month.total)}</span>
             </div>
+            {isOpen && month.loading && month.weeks.length === 0 && (
+              <div className="space-y-2" aria-label="Carregando apostas do mês">
+                {[0, 1].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-xl" delay={i * 60} />
+                ))}
+              </div>
+            )}
             {isOpen && month.weeks.flatMap((week) => week.days).map((day) => {
               const dayIds = day.bets.map((bet) => bet.id);
               const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);

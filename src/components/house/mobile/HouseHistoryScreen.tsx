@@ -5,6 +5,7 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
 import { formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TransactionActions } from "../TransactionActions";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft }> = {
   DEPOSIT: { label: "Depósito", icon: ArrowDownLeft },
@@ -31,6 +32,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -39,7 +41,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
       .then((txs) => setTransactions(txs || []))
       .catch(() => setError("Não foi possível carregar o histórico."))
       .finally(() => setLoading(false));
-  }, [house.houseId]);
+  }, [house.houseId, reloadKey]);
 
   const entrou = transactions.filter((t) => Number(t.value) > 0).reduce((sum, t) => sum + Number(t.value), 0);
   const saiu = transactions.filter((t) => Number(t.value) < 0).reduce((sum, t) => sum + Number(t.value), 0);
@@ -134,6 +136,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                         </span>
                         <span className="block text-sm text-zinc-400 tabular-nums">{formatCurrency(t.runningBalance)}</span>
                       </span>
+                      <TransactionActions tx={t} onChanged={() => setReloadKey((k) => k + 1)} />
                     </div>
                   );
                 })}

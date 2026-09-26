@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatCurrency, formatSignedCurrency, formatOdd } from "@/lib/format";
 import { colorByResultId, mapResultToStatus, previewProfit } from "@/lib/bet-status";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { BottomSheet } from "./BottomSheet";
@@ -42,7 +42,7 @@ export function LiquidarSheet({
     <BottomSheet nested open={open} onOpenChange={onOpenChange} title="Liquidar">
       <div className="pb-4 space-y-4">
         <p className="text-sm text-zinc-500 -mt-1 truncate">
-          {aposta.game} · {formatCurrency(stake)} @ {odd.toFixed(2)}
+          {aposta.game} · {formatCurrency(stake)} @ {formatOdd(odd)}
         </p>
 
         {(["RESULTADO", "PARCIAL"] as const).map((section) => (

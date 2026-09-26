@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createBet,
   deleteBet,
@@ -7,7 +7,6 @@ import {
   finalizeBet,
   finalizeMultipleBets,
   type BetItem,
-  type PaginatedBetsResponseDto,
   ResultIdEnum,
 } from "@/api/routes/get-bets";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
@@ -25,12 +24,6 @@ function errText(e: unknown, fallback: string) {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-interface UseBetActionsArgs {
-  // Chave da lista exibida — o optimistic update em lote escreve nela.
-  queryKey: readonly unknown[];
-  apostas: BetItem[];
-}
-
 /**
  * Mutações da tela de apostas: chamada de API, toast, invalidação de cache e
  * (no lote de status) optimistic update com desfazer. A tela fica só com a UI.
@@ -39,7 +32,7 @@ interface UseBetActionsArgs {
  * de seleção diferentes (checkbox da Tabela e seleção múltipla do Agrupado) e o
  * ponto exato em que cada um limpa faz parte do comportamento atual.
  */
-export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
+export function useBetActions() {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateBetData();
   // `mutating` cobre a janela do próprio request de excluir/liquidar, antes do
@@ -52,11 +45,17 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
   // próprio invalidate já a refaz.
   const reload = () => invalidate();
 
-  // Optimistic update da lista sem sair do cache do react-query.
+  // A lista guarda as linhas por mês aberto (useMonthBets): o optimistic
+  // update escreve em todos esses caches, e o status anterior sai deles.
+  const MONTH_ROWS = ["bets", "month"];
   const patchCachedBets = (fn: (b: BetItem) => BetItem) => {
-    queryClient.setQueryData<InfiniteData<PaginatedBetsResponseDto>>(queryKey, (old) =>
-      old ? { ...old, pages: old.pages.map((p) => ({ ...p, data: (p.data ?? []).map(fn) })) } : old
-    );
+    queryClient.setQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }, (old) => old?.map(fn));
+  };
+  const cachedBets = () => {
+    const byId = new Map<number, BetItem>();
+    for (const [, rows] of queryClient.getQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }))
+      for (const bet of rows ?? []) byId.set(bet.id, bet);
+    return [...byId.values()];
   };
 
   const deleteOne = async (id: number, onSuccess?: () => void) => {
@@ -108,7 +107,7 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
   // desfazer, já que aí os valores realmente diferem por item).
   const bulkFinalize = async (ids: number[], resultId: ResultIdEnum, onSuccess?: () => void) => {
     if (ids.length === 0) return;
-    const previous = apostas
+    const previous = cachedBets()
       .filter((a) => ids.includes(a.id))
       .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName }));
 

@@ -39,6 +39,8 @@ export type AdminUser = {
   accessUntil: string | null;
   /** Tirado do grupo Tips pelo painel; null = dentro ou convidado de volta. */
   tipsGroupRemovedAt: string | null;
+  /** Apertou "Já paguei" (renovação/bot); some quando o acesso é liberado. */
+  paymentClaimedAt: string | null;
   hasTelegram: boolean;
   betCount: number;
 };

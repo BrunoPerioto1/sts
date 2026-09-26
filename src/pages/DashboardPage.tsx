@@ -1,8 +1,11 @@
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarSlash, WarningCircle } from "@phosphor-icons/react";
+import { WarningCircle } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Link } from "react-router-dom";
+import { DashboardChecklist } from "@/components/dashboard/DashboardChecklist";
+import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
+import { useHouses } from "@/hooks/queries/use-houses";
+import { useSports } from "@/hooks/queries/use-sports";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
 import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { DashboardDesktopSkeleton } from "@/components/dashboard/DashboardDesktopSkeleton";
@@ -50,14 +53,7 @@ function DashboardPageContent({
   }
 
   if (ready && hasNoBets) {
-    return (
-      <EmptyState
-        icon={<CalendarSlash size={30} />}
-        title="Nenhuma aposta registrada ainda"
-        description="Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas."
-        action={<Button asChild><Link to="/bets">Nova aposta</Link></Button>}
-      />
-    );
+    return <div className="px-4 pt-6 sm:p-0"><DashboardChecklist /></div>;
   }
 
   return <>{mobileView ?? desktopView}</>;
@@ -65,8 +61,11 @@ function DashboardPageContent({
 
 export function DashboardPage() {
   const isMobile = useIsMobile();
-  const { filters, preset, setPreset, setCustomRange, firstBetDate, hasNoBets, ready } = useDashboardFilters();
+  const { filters, preset, setPreset, setCustomRange, setHouseIds, setSportIds, firstBetDate, hasNoBets, ready } =
+    useDashboardFilters();
   const { metrics, previousMetrics, dailyData, loading, error, reload } = useDashboardData(filters);
+  const houses = useHouses();
+  const sports = useSports();
 
   const rangeLabel =
     ready && filters.startDate && filters.endDate
@@ -83,15 +82,36 @@ export function DashboardPage() {
     .filter(Boolean)
     .join(" · ");
 
-  const periodButton = (
-    <PeriodPopover
-      preset={preset}
-      firstBetDate={firstBetDate}
-      from={filters.startDate}
-      to={filters.endDate}
-      onSelect={setPreset}
-      onCustomRange={setCustomRange}
-    />
+  // Recorte por casa/esporte só no desktop: o header do mobile é a própria
+  // tela (mobileFullBleed) e o seletor de casas de lá é outro (CasaSheet).
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {!hasNoBets && (
+        <>
+          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+            <HouseMultiSelect houses={houses} selected={filters.houseIds} onChange={setHouseIds} label="Casas" />
+          </div>
+          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+            <HouseMultiSelect
+              houses={sports}
+              selected={filters.sportIds}
+              onChange={setSportIds}
+              label="Esportes"
+              noun={["esporte", "esportes"]}
+              allLabel="Todos"
+            />
+          </div>
+        </>
+      )}
+      <PeriodPopover
+        preset={preset}
+        firstBetDate={firstBetDate}
+        from={filters.startDate}
+        to={filters.endDate}
+        onSelect={setPreset}
+        onCustomRange={setCustomRange}
+      />
+    </div>
   );
 
   return (
@@ -105,7 +125,7 @@ export function DashboardPage() {
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
       mobileFullBleed
-      actions={periodButton}
+      actions={headerActions}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
@@ -117,6 +137,7 @@ export function DashboardPage() {
             filters={filters}
             preset={preset}
             metrics={metrics}
+            previousMetrics={previousMetrics}
             dailyData={dailyData}
             onPresetChange={setPreset}
           />

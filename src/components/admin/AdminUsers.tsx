@@ -13,7 +13,17 @@ import { initialsOf } from "@/lib/format";
 import type { AdminUser, UpdateAdminUserParams } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatAccessDate, fromSaoPauloInput, isExpired, tipsGroupAction, toSaoPauloInput } from "@/lib/access";
+import { daysUntilAccess, formatAccessDate, fromSaoPauloInput, isExpired, tipsGroupAction, toSaoPauloInput } from "@/lib/access";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
 // Ações em 128px: "Tirar do grupo" é o rótulo mais largo da coluna.
@@ -28,6 +38,14 @@ const FILTERS = [
   { id: "user", label: "Usuário", test: (u: AdminUser) => u.roleId === 3 },
   { id: "locked", label: "Bloqueados", test: (u: AdminUser) => isLocked(u.lockedUntil) },
   { id: "expired", label: "Vencidos", test: (u: AdminUser) => isExpired(u.accessUntil) },
+  // Quem cobrar esta semana: vence nos próximos 7 dias e ainda está em dia.
+  {
+    id: "expiring",
+    label: "Vence em 7 dias",
+    test: (u: AdminUser) => !!u.accessUntil && !isExpired(u.accessUntil) && daysUntilAccess(u.accessUntil) <= 7,
+  },
+  // Apertou "Já paguei": conferir o extrato pelo identificador STS<id>.
+  { id: "claimed", label: "Avisou pagamento", test: (u: AdminUser) => !!u.paymentClaimedAt },
 ] as const;
 
 type FilterId = (typeof FILTERS)[number]["id"];
@@ -178,6 +196,11 @@ function Identity({ user, isMe }: { user: AdminUser; isMe: boolean }) {
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/10 opacity-50 shrink-0">inativo</span>
           )}
         </p>
+        {user.paymentClaimedAt && (
+          <p className="text-xs text-[var(--dashboard-orange)]">
+            avisou que pagou · {formatSaoPaulo(user.paymentClaimedAt)} · PIX STS{user.id}
+          </p>
+        )}
         <p className="text-xs opacity-45 truncate">{user.email}</p>
         <LockLine user={user} />
       </div>
@@ -260,6 +283,10 @@ export function AdminUsers() {
   const update = useUpdateAdminUser();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
+  // Promover dá acesso ao painel inteiro: pede confirmação. Rebaixar não.
+  const [promoting, setPromoting] = useState<AdminUser | null>(null);
+  const changeRole = (user: AdminUser, roleId: number) =>
+    roleId === 1 ? setPromoting(user) : run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`);
 
   // Doze linhas: filtrar aqui é mais barato que uma rota de busca.
   const filtered = useMemo(() => {
@@ -334,8 +361,11 @@ export function AdminUsers() {
     <EmptyState bare title="Nenhum usuário encontrado" description={search ? `Nada bate com "${search}".` : "Ninguém neste filtro."} />
   ) : (
     <>
-      {/* Desktop */}
-      <div className="hidden sm:block">
+      {/* Desktop: sete colunas pedem ~1120px. Abaixo de xl (com a sidebar
+          aberta) a tabela era cortada pelo overflow-hidden do painel — os
+          cartões cobrem até lá, e a rolagem lateral segura o resto. */}
+      <div className="hidden xl:block overflow-x-auto">
+        <div className="min-w-[1120px]">
         <div className={cn(GRID, "px-6 py-2.5 border-b border-border bg-foreground/[0.02] [&>span]:text-[11px] [&>span]:uppercase [&>span]:tracking-[0.1em] [&>span]:opacity-40")}>
           <span>Usuário</span>
           <span>Papel</span>
@@ -352,7 +382,7 @@ export function AdminUsers() {
               user={user}
               disabled={user.id === me?.id}
               pending={pendingFor(user.id)}
-              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+              onChange={(roleId) => changeRole(user, roleId)}
             />
             <span className="text-sm tabular-nums text-right">{user.betCount}</span>
             {/* Sem valor, o traço fica no meio da largura que a data ocuparia,
@@ -394,10 +424,11 @@ export function AdminUsers() {
             </div>
           </div>
         ))}
+        </div>
       </div>
 
-      {/* Mobile: tabela de sete colunas não cabe em 390px. */}
-      <div className="space-y-2 p-3 sm:hidden">
+      {/* Cartões: tabela de sete colunas não cabe no celular nem no notebook. */}
+      <div className="grid gap-2 p-3 sm:grid-cols-2 xl:hidden">
         {filtered.map((user) => (
           <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
             <Identity user={user} isMe={user.id === me?.id} />
@@ -420,7 +451,7 @@ export function AdminUsers() {
               user={user}
               disabled={user.id === me?.id}
               pending={pendingFor(user.id)}
-              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+              onChange={(roleId) => changeRole(user, roleId)}
             />
 
             {(isLocked(user.lockedUntil) || user.hasTelegram) && (
@@ -479,6 +510,27 @@ export function AdminUsers() {
       footer={users && !isError && <span className="opacity-45">{filtered.length} de {users.length}</span>}
     >
       {body}
+      <AlertDialog open={!!promoting} onOpenChange={(open) => !open && setPromoting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tornar {promoting?.fullName || promoting?.username} administrador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Admin vê e altera todos os usuários, casas e o pipeline de tips. Dá pra desfazer depois, mudando o papel de volta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (promoting) run(promoting.id, { roleId: 1 }, `Papel alterado para ${ROLE_LABELS[1]}`);
+                setPromoting(null);
+              }}
+            >
+              Tornar admin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminPanel>
   );
 }
