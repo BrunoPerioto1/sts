@@ -2,7 +2,7 @@ import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatSignedCurrency } from "@/lib/format";
+import { AnimatedSignedCurrency } from "@/components/ui/animated-currency";
 import { betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
@@ -19,8 +19,6 @@ interface ApostasGroupedDesktopProps {
   onDuplicate?: (aposta: BetItem) => void;
   onFinalize?: (id: number, resultId: ResultIdEnum, cashoutValue?: number) => void;
 }
-
-const totalClass = (v: number) => (v >= 0 ? "text-positive" : "text-negative");
 
 // Linhas do mês chegando: o mês abre na hora e as linhas entram depois.
 function MonthRowsSkeleton() {
@@ -92,9 +90,7 @@ export function ApostasGroupedDesktop({
                 <span className="font-semibold text-[15px] tracking-tight truncate">{month.label}</span>
                 <span className="text-xs opacity-45 shrink-0">{month.count} apostas</span>
               </button>
-              <span className={cn("tabular-nums text-sm font-semibold shrink-0", totalClass(month.total))}>
-                {formatSignedCurrency(month.total)}
-              </span>
+              <AnimatedSignedCurrency value={month.total} className="text-sm font-semibold shrink-0" />
             </div>
 
             {isOpen && month.loading && days.length === 0 && <MonthRowsSkeleton />}
@@ -117,22 +113,24 @@ export function ApostasGroupedDesktop({
                         )}
                         <span className="text-xs font-medium uppercase tracking-wider opacity-55 truncate">{day.label}</span>
                         <span className="h-px flex-1 bg-border" />
-                        <span className={cn("tabular-nums text-xs font-medium shrink-0", totalClass(day.total))}>
-                          {formatSignedCurrency(day.total)}
-                        </span>
+                        <AnimatedSignedCurrency value={day.total} className="text-xs font-medium shrink-0" />
                       </div>
-                      {day.bets.map((bet) => (
-                        <BetRowDesktop
-                          key={bet.id}
-                          aposta={bet}
-                          onEdit={onEdit}
-                          onDelete={onDelete}
-                          onDuplicate={onDuplicate}
-                          onFinalize={onFinalize}
-                          selection={selection}
-                          orderedIds={orderedIds}
-                        />
-                      ))}
+                      {/* Respiro entre linhas: selecionadas em sequência não
+                          viram um bloco só. */}
+                      <div className="space-y-1">
+                        {day.bets.map((bet) => (
+                          <BetRowDesktop
+                            key={bet.id}
+                            aposta={bet}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            onDuplicate={onDuplicate}
+                            onFinalize={onFinalize}
+                            selection={selection}
+                            orderedIds={orderedIds}
+                          />
+                        ))}
+                      </div>
                     </div>
                   );
                 })}

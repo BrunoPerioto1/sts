@@ -10,7 +10,7 @@ import {
   ResultIdEnum,
 } from "@/api/routes/get-bets";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
-import { statusLabelByResultId } from "@/lib/bet-status";
+import { previewProfit, statusLabelByResultId } from "@/lib/bet-status";
 import { actionToast, ArrowCounterClockwise, Check, CheckCircle, Copy, Trash as TrashIcon } from "@/lib/action-toast";
 
 // Verde/vermelho no toast de finalização em lote são reservados pro resultado
@@ -51,6 +51,25 @@ export function useBetActions() {
   const patchCachedBets = (fn: (b: BetItem) => BetItem) => {
     queryClient.setQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }, (old) => old?.map(fn));
   };
+  // Liquidação otimista: status e lucro estimado na hora, pro valor já correr
+  // até o resultado em vez de mostrar R$ 0,00 até o refetch. O refetch traz o
+  // lucro do backend, que é o autoritativo.
+  const settle = (a: BetItem, resultId: ResultIdEnum, cashoutValue?: number): BetItem => {
+    const stake = Number(a.stake ?? 0);
+    const profit =
+      resultId === ResultIdEnum.PENDING
+        ? null
+        : resultId === ResultIdEnum.CASHOUT
+          ? cashoutValue != null ? cashoutValue - stake : a.profit
+          : previewProfit(resultId, stake, Number(a.odd ?? 0));
+    return {
+      ...a,
+      resultId,
+      resultName: statusLabelByResultId[resultId] ?? a.resultName,
+      profit,
+      ...(resultId === ResultIdEnum.CASHOUT && cashoutValue != null ? { cashoutValue } : {}),
+    };
+  };
   const cachedBets = () => {
     const byId = new Map<number, BetItem>();
     for (const [, rows] of queryClient.getQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }))
@@ -73,13 +92,15 @@ export function useBetActions() {
   };
 
   const finalizeOne = async (id: number, resultId: ResultIdEnum, cashoutValue?: number) => {
+    patchCachedBets((a) => (a.id === id ? settle(a, resultId, cashoutValue) : a));
     try {
       await finalizeBet(id, { resultId, cashoutValue });
-      await reload();
       actionToast.success({ icon: Check, title: "Aposta liquidada" });
     } catch (e) {
       actionToast.error({ description: errText(e, "Falha ao liquidar aposta") });
     }
+    // Com erro também: o refetch desfaz o otimista.
+    await reload();
   };
 
   const duplicate = async (aposta: BetItem) => {
@@ -109,9 +130,9 @@ export function useBetActions() {
     if (ids.length === 0) return;
     const previous = cachedBets()
       .filter((a) => ids.includes(a.id))
-      .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName }));
+      .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName, profit: a.profit }));
 
-    patchCachedBets((a) => (ids.includes(a.id) ? { ...a, resultId, resultName: statusLabelByResultId[resultId] ?? a.resultName } : a));
+    patchCachedBets((a) => (ids.includes(a.id) ? settle(a, resultId) : a));
     setBulkLoading(true);
     try {
       await finalizeMultipleBets({ betIds: ids, resultId });
@@ -142,7 +163,7 @@ export function useBetActions() {
     } catch (e) {
       patchCachedBets((a) => {
         const orig = previous.find((p) => p.id === a.id);
-        return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName } : a;
+        return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName, profit: orig.profit } : a;
       });
       actionToast.error({ description: errText(e, "Falha ao atualizar status") });
     } finally {

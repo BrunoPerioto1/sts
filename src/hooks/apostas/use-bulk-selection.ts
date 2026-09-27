@@ -50,24 +50,24 @@ export function useBulkSelection() {
     });
   }, []);
 
-  // Shift+clique: seleciona o intervalo entre a última marcada e a atual,
-  // usando a ordem visual da lista (orderedIds) pra achar os índices.
+  // Shift+clique: aplica o intervalo entre a última clicada e a atual, usando
+  // a ordem visual da lista (orderedIds). Igual à tela de Tips: se a atual já
+  // estava marcada, o intervalo é desmarcado; senão, marcado. Também serve
+  // pra começar a seleção, sem precisar entrar no modo antes.
   const selectRange = useCallback(
     (orderedIds: number[], toId: number) => {
+      setSelectionMode(true);
       setSelected((prev) => {
         const next = new Set(prev);
-        if (lastId === null) {
-          next.add(toId);
-          return next;
-        }
-        const from = orderedIds.indexOf(lastId);
+        const remove = prev.has(toId);
+        const from = lastId === null ? -1 : orderedIds.indexOf(lastId);
         const to = orderedIds.indexOf(toId);
-        if (from === -1 || to === -1) {
-          next.add(toId);
-          return next;
+        const range =
+          from === -1 || to === -1 ? [toId] : orderedIds.slice(Math.min(from, to), Math.max(from, to) + 1);
+        for (const id of range) {
+          if (remove) next.delete(id);
+          else next.add(id);
         }
-        const [start, end] = from < to ? [from, to] : [to, from];
-        for (let i = start; i <= end; i++) next.add(orderedIds[i]);
         return next;
       });
       setLastId(toId);

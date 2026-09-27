@@ -128,11 +128,18 @@ export default {
                 'accordion-up': {
                     from: { height: 'var(--radix-accordion-content-height)' },
                     to: { height: '0' }
+                },
+                // Destaque do valor que acabou de mudar (lucro ao liquidar).
+                'value-pop': {
+                    '0%': { transform: 'scale(1)', filter: 'brightness(1)' },
+                    '35%': { transform: 'scale(1.08)', filter: 'brightness(1.35)' },
+                    '100%': { transform: 'scale(1)', filter: 'brightness(1)' }
                 }
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
-                'accordion-up': 'accordion-up 0.2s ease-out'
+                'accordion-up': 'accordion-up 0.2s ease-out',
+                'value-pop': 'value-pop 0.65s ease-out'
             }
         }
     },

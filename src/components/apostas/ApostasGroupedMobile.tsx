@@ -4,7 +4,7 @@ import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatSignedCurrency } from "@/lib/format";
+import { AnimatedSignedCurrency } from "@/components/ui/animated-currency";
 import { settledProfit } from "@/lib/bet-status";
 import { betDate, betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";
 import type { BetItem } from "@/api/routes/get-bets";
@@ -39,7 +39,7 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
                 <span className="font-semibold text-lg truncate">{month.label}</span>
                 <span className="text-xs font-normal text-zinc-400 shrink-0">{month.count}</span>
               </button>
-              <span className={cn("text-sm tabular-nums shrink-0", month.total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(month.total)}</span>
+              <AnimatedSignedCurrency value={month.total} className="text-sm shrink-0" />
             </div>
             {isOpen && month.loading && month.weeks.length === 0 && (
               <div className="space-y-2" aria-label="Carregando apostas do mês">
@@ -61,7 +61,7 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
                     )}
                     <h2 className="text-base font-medium text-zinc-300">{format(betDate(day.bets[0]), "dd MMM yyyy", { locale: ptBR })}</h2>
                     <span className="text-[11px] text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
-                    <span className={cn("ml-auto text-xs tabular-nums shrink-0", total >= 0 ? "text-positive" : "text-negative")}>{formatSignedCurrency(total)}</span>
+                    <AnimatedSignedCurrency value={total} className="ml-auto text-xs shrink-0" />
                   </div>
                   <div className="space-y-2">
                     {day.bets.map((bet) => (

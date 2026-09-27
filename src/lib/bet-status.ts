@@ -62,6 +62,10 @@ export const colorByResultId: Record<string, string> = Object.fromEntries(
 export const statusLabelByResultId: Record<number, string> = {
   [ResultIdEnum.WON]: "Ganha",
   [ResultIdEnum.LOST]: "Perdida",
+  [ResultIdEnum.CANCELED]: "Cancelada",
+  [ResultIdEnum.HALF_WON]: "Meia Ganha",
+  [ResultIdEnum.HALF_LOST]: "Meia Perdida",
+  [ResultIdEnum.CASHOUT]: "Cashout",
   [ResultIdEnum.PENDING]: "Pendente",
 };
 
