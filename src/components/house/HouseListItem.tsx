@@ -60,27 +60,31 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
           <p className="text-sm font-medium uppercase tracking-wide truncate">{house.houseName}</p>
           <HouseActivityBadge activity={activity} />
         </div>
-        <p className="text-xs opacity-45 truncate">
-          {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatCurrency(stake)}
-          {open > 0 && <span> · {formatCurrency(open)} em aberto</span>}
-          {shortfall < 0 && (
-            <span className="text-negative opacity-100">
-              {" "}· a conferir {formatCurrency(shortfall)}
-              {onConciliate && (
-                <>
-                  {" "}·{" "}
-                  <button
-                    type="button"
-                    onClick={() => onConciliate(house)}
-                    className="underline underline-offset-2 hover:no-underline"
-                  >
-                    Conciliar
-                  </button>
-                </>
-              )}
+        {/* A opacidade fica só no texto de apoio: no <p> inteiro ela apagava
+            também o "a conferir" e o botão (opacity-100 no filho não desfaz a
+            do pai). O botão sai do truncate pra nunca ser cortado. */}
+        <div className="flex min-w-0 items-center gap-2 text-xs">
+          <p className="min-w-0 truncate">
+            <span className="opacity-45">
+              {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatCurrency(stake)}
+              {open > 0 && <> · {formatCurrency(open)} em aberto</>}
             </span>
+            {shortfall < 0 && (
+              <span className="text-negative">
+                <span className="opacity-45 text-foreground"> · </span>a conferir {formatCurrency(shortfall)}
+              </span>
+            )}
+          </p>
+          {shortfall < 0 && onConciliate && (
+            <button
+              type="button"
+              onClick={() => onConciliate(house)}
+              className="press inline-flex h-6 shrink-0 items-center rounded-md border border-foreground/15 px-2 text-[11px] font-medium text-zinc-200 transition-colors hover:border-foreground/30 hover:bg-foreground/[0.05]"
+            >
+              Conciliar
+            </button>
           )}
-        </p>
+        </div>
       </div>
 
       {/* A barra é o que faz a lista ser lida de relance: compara saldos sem

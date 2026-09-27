@@ -30,6 +30,40 @@ export function compactStartLabel(eventStartAt: string, now: Date = new Date()):
     : `há ${duration(Math.max(1, Math.round(-diffMin)))}`;
 }
 
+export type TipTimingTone = "upcoming" | "soon" | "live" | "old" | "unknown";
+
+// Cor do destaque por tom, sem exagero: neutro, azul perto de começar, âmbar
+// provavelmente ao vivo, cinza antigo / sem horário.
+export const TIP_TIMING_TONE_CLASS: Record<TipTimingTone, string> = {
+  upcoming: "text-foreground",
+  soon: "text-accent-text",
+  live: "text-amber-400/90",
+  old: "text-zinc-500",
+  // Menos que os estados normais: é ausência de dado, não um estado do jogo.
+  unknown: "text-zinc-500 font-normal opacity-70",
+};
+
+// Janela em que "começou há" ainda sugere jogo rolando. Não temos o fim do
+// jogo, então passou disso a linha só apaga (não afirma "encerrado").
+const LIVE_WINDOW_MIN = 3 * 60;
+const SOON_MIN = 30;
+
+/**
+ * O tempo que importa na fila, em destaque: quanto falta ou há quanto começou.
+ * O tom só colore (perto de começar, provavelmente ao vivo, antigo).
+ */
+export function tipTiming(
+  eventStartAt: string | null,
+  now: Date = new Date(),
+): { headline: string; tone: TipTimingTone } {
+  if (!eventStartAt) return { headline: "Sem horário identificado", tone: "unknown" };
+  const label = startLabel(eventStartAt, now);
+  const headline = label.charAt(0).toUpperCase() + label.slice(1);
+  const diffMin = (new Date(eventStartAt).getTime() - now.getTime()) / 60_000;
+  if (diffMin > 0) return { headline, tone: diffMin <= SOON_MIN ? "soon" : "upcoming" };
+  return { headline, tone: -diffMin <= LIVE_WINDOW_MIN ? "live" : "old" };
+}
+
 export function hasStarted(eventStartAt: string | null, now: Date = new Date()): boolean {
   return eventStartAt != null && new Date(eventStartAt).getTime() <= now.getTime();
 }

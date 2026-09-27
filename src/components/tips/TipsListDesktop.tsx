@@ -76,16 +76,19 @@ export function TipsListDesktop({
             </span>
             {grupo.action && <span className="ml-auto self-center">{grupo.action}</span>}
           </div>
-          {grupo.tips.map((tip) => (
-            <TipRowDesktop
-              key={tip.id}
-              tip={tip}
-              selected={tip.id === selectedId}
-              onSelect={() => onSelect(tip)}
-              checked={checkedIds.has(tip.id)}
-              onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
-            />
-          ))}
+          {/* Respiro entre linhas: marcadas em sequência não viram um bloco só. */}
+          <div className="space-y-1 py-1">
+            {grupo.tips.map((tip) => (
+              <TipRowDesktop
+                key={tip.id}
+                tip={tip}
+                selected={tip.id === selectedId}
+                onSelect={() => onSelect(tip)}
+                checked={checkedIds.has(tip.id)}
+                onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
+              />
+            ))}
+          </div>
         </section>
       ))}
       </div>

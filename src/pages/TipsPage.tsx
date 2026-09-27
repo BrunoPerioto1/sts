@@ -419,8 +419,9 @@ export default function TipsPage() {
                   key={tip.id}
                   className={cn(
                     "relative border-b border-border transition-colors last:border-b-0",
-                    checkedIds.has(tip.id) &&
-                      "bg-accent/[0.16] shadow-[inset_4px_0_0_0_var(--color-accent)]",
+                    // Mesmo tom da seleção no desktop (color-mix: bg-accent/[x]
+                    // não gera CSS com o accent em var()).
+                    checkedIds.has(tip.id) && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
                   )}
                 >
                 {canSelect && (

@@ -13,8 +13,9 @@ import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatKickoff, formatTime, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { compactStartLabel, startLabel } from "@/lib/tip-schedule";
+import { TIP_TIMING_TONE_CLASS, tipTiming } from "@/lib/tip-schedule";
 import type { TipItem } from "@/api/routes/get-tips";
+import { TipKickoffBadge } from "./TipKickoffBadge";
 
 // % da banca sugerido, nao retorno: sem sinal e sem verde, que liam como EV.
 function formatPercent(value: number) {
@@ -47,7 +48,7 @@ export function TipCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs text-zinc-500">
-            {formatTime(tip.createdAt)}
+            Recebida {formatTime(tip.createdAt)}
             {tip.house && ` · ${tip.house}`}
           </p>
           <h3 className="mt-1 text-[17px] font-semibold leading-tight text-foreground">
@@ -57,14 +58,25 @@ export function TipCard({
           {/* Hora do jogo, não da tip: é ela que diz se ainda dá tempo de
               entrar. Só aparece quando o confronto casou com o cache de
               eventos — data chutada aqui seria pior que nenhuma. */}
-          {tip.eventStartAt && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
-              <Clock size={13} weight="bold" />
-              {formatKickoff(tip.eventStartAt)}
-              {tip.status === "pending" && compactStartLabel(tip.eventStartAt) && (
-                <span className="font-medium text-zinc-400">· {startLabel(tip.eventStartAt)}</span>
+          {/* O horário do jogo é o destaque (branco, semibold); na fila
+              pendente o relativo (quanto falta / há quanto começou) vem ao
+              lado, na cor de urgência — nunca número solto. */}
+          {tip.eventStartAt ? (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
+              <TipKickoffBadge label={formatKickoff(tip.eventStartAt)} />
+              {tip.status === "pending" && (
+                <span className={cn("min-w-0 truncate font-medium", tipTiming(tip.eventStartAt).tone === "upcoming" ? "text-zinc-400" : TIP_TIMING_TONE_CLASS[tipTiming(tip.eventStartAt).tone])}>
+                  {tipTiming(tip.eventStartAt).headline}
+                </span>
               )}
             </p>
+          ) : (
+            tip.status === "pending" && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
+                <Clock size={13} weight="bold" className="shrink-0" />
+                <span className={cn("font-medium", TIP_TIMING_TONE_CLASS.unknown)}>Sem horário identificado</span>
+              </p>
+            )
           )}
         </div>
 

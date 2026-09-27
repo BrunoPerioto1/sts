@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compactStartLabel, groupPendingTips, startLabel } from '../src/lib/tip-schedule.ts';
+import { compactStartLabel, groupPendingTips, startLabel, tipTiming } from '../src/lib/tip-schedule.ts';
 
 const NOW = new Date('2026-09-25T18:00:00Z');
 const at = (min) => new Date(NOW.getTime() + min * 60_000).toISOString();
@@ -40,4 +40,12 @@ test('separa quem ainda dá tempo, quem não tem horário e quem já começou', 
 test('grupo vazio não aparece', () => {
   const grupos = groupPendingTips([{ id: 1, eventStartAt: at(5) }], NOW);
   assert.deepEqual(grupos.map((g) => g.id), ['upcoming']);
+});
+
+test('tempo em destaque: quanto falta, há quanto começou, ou sem horário', () => {
+  assert.deepEqual(tipTiming(at(329), NOW), { headline: 'Começa em 5h29', tone: 'upcoming' });
+  assert.deepEqual(tipTiming(at(18), NOW), { headline: 'Começa em 18 min', tone: 'soon' });
+  assert.deepEqual(tipTiming(at(-72), NOW), { headline: 'Começou há 1h12', tone: 'live' });
+  assert.deepEqual(tipTiming(at(-405), NOW), { headline: 'Começou há 6h45', tone: 'old' });
+  assert.deepEqual(tipTiming(null, NOW), { headline: 'Sem horário identificado', tone: 'unknown' });
 });

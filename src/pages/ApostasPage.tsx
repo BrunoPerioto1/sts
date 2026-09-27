@@ -182,9 +182,9 @@ export default function ApostasPage() {
       actions={
         <Button
           onClick={() => setCreateModalOpen(true)}
-          className="hidden md:flex gap-2 bg-accent text-white hover:bg-accent/90"
+          className="btn-cta hidden md:flex h-9 sm:h-9 gap-1.5 rounded-md px-4 sm:px-4 font-semibold bg-[#2f5cc9] text-white hover:bg-[#3565d4] hover:opacity-100 active:opacity-100 [&_svg]:size-3.5"
         >
-          <Plus size={16} /> Nova aposta
+          <Plus weight="bold" /> Nova aposta
         </Button>
       }
     >

@@ -2,17 +2,19 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTime, kickoffParts } from "@/lib/format";
-import { compactStartLabel, startLabel } from "@/lib/tip-schedule";
+import { TIP_TIMING_TONE_CLASS, tipTiming, type TipTimingTone } from "@/lib/tip-schedule";
+import { TipKickoffBadge } from "./TipKickoffBadge";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
 
 // Uma definição de colunas só, usada pelo cabeçalho e pelas linhas — mesmo
 // arranjo de BetRowDesktop, que é a outra lista densa do app.
-// gap-4 e não gap-3: com oito colunas, 12px de respiro entre elas fazia a
+// gap-4 e não gap-3: com sete colunas, 12px de respiro entre elas fazia a
 // linha ler como um bloco só. As larguras saem do conteúdo mais largo que cada
-// uma precisa mostrar inteiro — "R$ 1.000,00" na stake, o badge "Planilhada"
-// no status. Início e casa são estreitos porque quebram em duas linhas.
+// uma precisa mostrar inteiro — "Começou há mais de um dia" no tempo,
+// "R$ 1.000,00" na stake, o badge "Planilhada" no status. A casa é estreita
+// porque quebra em duas linhas.
 export const TIP_GRID =
-  "grid items-center gap-4 grid-cols-[52px_72px_minmax(0,1fr)_108px_56px_88px_52px_96px]";
+  "grid items-center gap-4 grid-cols-[212px_minmax(0,1fr)_108px_56px_88px_52px_96px]";
 
 const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" | "canceled" }> = {
   pending: { label: "Pendente", variant: "pending" },
@@ -46,10 +48,8 @@ export function TipColumnHeaderDesktop({
         "flex-1 px-3 text-[11px] uppercase tracking-wider opacity-60",
       )}
     >
-      {/* Com duas colunas de horário, "Hora" sozinho não dizia de qual:
-          esta é quando a tip chegou, a outra é quando o jogo começa. */}
-      <span>Chegou</span>
-      <span>Início</span>
+      {/* Os três tempos (quanto falta, jogo, recebida) numa coluna, com rótulo. */}
+      <span>Tempo</span>
       <span>Evento</span>
       <span>Casa</span>
       <span className="text-right">Odd</span>
@@ -61,27 +61,60 @@ export function TipColumnHeaderDesktop({
   );
 }
 
-function kickoff(value: string | null, relative: boolean) {
-  if (!value) return <span className="text-xs opacity-30">—</span>;
-  const { dia, hora, eHoje } = kickoffParts(value);
-  // Na fila pendente a linha de cima vira "em 40 min" / "há 2h": é a resposta
-  // direta pra "ainda dá tempo?", sem conta de cabeça com o relógio.
-  const rel = relative ? compactStartLabel(value) : null;
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/**
+ * "18:30" (hoje implícito), "ontem 18:30", "amanhã 18:30", "28/09 18:30".
+ * Ontem é o caso comum no bloco dos iniciados, e a data inteira ali é o que
+ * cortava a linha.
+ */
+function jogoParts(eventStartAt: string) {
+  const { dia, hora, eHoje } = kickoffParts(eventStartAt);
+  const ontem = new Date();
+  ontem.setDate(ontem.getDate() - 1);
+  const eOntem = new Date(eventStartAt).toDateString() === ontem.toDateString();
+  const prefixo = eHoje ? "" : eOntem ? "ontem " : `${dia.toLowerCase()} `;
+  return { prefixo, hora };
+}
+
+// Uma coluna só pros três tempos. Em destaque, num chip, o horário do
+// jogo — é o que se procura ao bater o olho na fila; ao lado, na cor de
+// urgência, o relativo que responde "ainda dá tempo?"; embaixo quando a tip foi
+// recebida. Número solto ("há 5h29") não dizia de qual dos três tempos era.
+function TipTimeCell({ tip }: { tip: TipItem }) {
+  // "Recebida" (do canal), não "planilhada": é o createdAt da tip, e o mesmo
+  // termo vale no card do mobile. Maiúscula nos dois lados do "·", como rótulos.
+  const recebida = `Recebida ${formatTime(tip.createdAt)}`;
+  const jogo = tip.eventStartAt ? jogoParts(tip.eventStartAt) : null;
+
+  // Fora da fila pendente o relativo não ajuda (o jogo já foi): sai da linha
+  // de baixo e fica só a hora recebida.
+  const timing: { headline: string; tone: TipTimingTone } | null =
+    tip.status === "pending" && jogo ? tipTiming(tip.eventStartAt) : null;
+
+  const jogoTexto = jogo ? `Jogo ${jogo.prefixo}${jogo.hora}` : "Sem horário identificado";
+  const title = [jogoTexto, timing?.headline, recebida].filter(Boolean).join(" · ");
+
   return (
-    <>
-      {/* Hoje em destaque: é a única linha em que "dá tempo de entrar?" tem
-          resposta na hora, e é o que se procura varrendo a coluna. */}
-      <span
-        title={relative ? startLabel(value) : undefined}
-        className={cn(
-          "block truncate text-[11px] leading-tight",
-          rel ? "font-medium opacity-80" : eHoje ? "font-medium opacity-70" : "opacity-45",
-        )}
-      >
-        {rel ?? dia}
+    <span className="min-w-0" title={title}>
+      {jogo ? (
+        <span className="flex min-w-0 items-center gap-1.5 leading-tight">
+          <TipKickoffBadge label={capitalize(`${jogo.prefixo}${jogo.hora}`)} />
+          {timing && (
+            <span className={cn("min-w-0 truncate text-[12px] font-medium", timing.tone === "upcoming" ? "text-zinc-400" : TIP_TIMING_TONE_CLASS[timing.tone])}>
+              {timing.headline}
+            </span>
+          )}
+        </span>
+      ) : (
+        <span className="block truncate text-[13px] font-medium leading-tight text-zinc-500">
+          Sem horário identificado
+        </span>
+      )}
+      <span className="mt-1 block truncate text-[11px] leading-tight tabular-nums text-zinc-500">
+        {recebida}
       </span>
-      <span className="block text-xs leading-tight tabular-nums opacity-90">{hora}</span>
-    </>
+    </span>
   );
 }
 
@@ -101,21 +134,25 @@ export function TipRowDesktop({
   const status = statusMeta[tip.status];
 
   return (
-    // Marcada pra lote: fundo accent mais firme + contorno + barra grossa na
-    // borda esquerda, cobrindo a linha inteira (checkbox incluso). Precisa dar
-    // pra varrer a lista e ver o que está no lote sem ler cada checkbox.
+    // Marcada pra lote: mesmo padrão das linhas de Apostas — fundo azul leve
+    // cobrindo a linha inteira (checkbox incluso), sem contorno nem barra, e o
+    // checkbox como indicador principal. Seleção clara, não dominante.
+    // color-mix e não bg-accent/[x]: o accent é var() e o Tailwind 3 não gera
+    // a opacidade (a classe saía vazia e sobrava só o ring padrão, azul forte).
     <div
       className={cn(
-        "flex items-center rounded-md transition-colors",
-        checked &&
-          "bg-accent/[0.16] ring-1 ring-inset ring-accent/45 shadow-[inset_4px_0_0_0_var(--color-accent)]",
+        "group flex items-center rounded-md transition-colors duration-150",
+        checked
+          ? "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)]"
+          : "hover:bg-foreground/[0.025]",
       )}
     >
       {onToggle && (
         <div className="flex w-10 shrink-0 justify-center">
           <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)}
             onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
-            aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`} />
+            aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`}
+            className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-positive)_62%,var(--color-bg))]" />
         </div>
       )}
       <button
@@ -128,19 +165,16 @@ export function TipRowDesktop({
       aria-current={selected}
       className={cn(
         TIP_GRID,
-        "min-w-0 flex-1 rounded-md px-3 py-3 text-left transition-colors hover:bg-foreground/[0.03]",
-        // Barra à esquerda em vez de fundo forte: a linha selecionada precisa
-        // se distinguir do hover sem virar o elemento mais claro da tela.
-        selected && "bg-foreground/[0.05]",
-        selected && !checked && "shadow-[inset_2px_0_0_0_var(--color-accent)]",
+        // O hover mora no container (linha inteira, checkbox incluso); aqui
+        // só o foco de teclado, sem o contorno do clique.
+        "min-w-0 flex-1 rounded-md px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-foreground/25",
+        // Linha aberta no painel: barra fina à esquerda, a mesma marcada ou não
+        // — antes somava um fundo e um contorno por cima do da seleção.
+        selected && "shadow-[inset_2px_0_0_0_var(--color-accent)]",
+        selected && !checked && "bg-foreground/[0.04]",
       )}
     >
-      <span className="text-xs tabular-nums opacity-50">{formatTime(tip.createdAt)}</span>
-
-      {/* Dia em cima, hora embaixo. A linha já tem duas alturas por causa do
-          mercado no Evento, então empilhar aqui não custa altura nenhuma — e
-          resolve o corte de "Amanhã 11:30" numa coluna estreita. */}
-      <span className="min-w-0">{kickoff(tip.eventStartAt, tip.status === "pending")}</span>
+      <TipTimeCell tip={tip} />
 
       <span className="min-w-0">
         <span className="block truncate text-sm font-medium">
