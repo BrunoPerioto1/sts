@@ -77,9 +77,18 @@ export const TIP_GROUP_LABEL: Record<TipGroupId, string> = {
   started: "Iniciados",
 };
 
-export const TIP_GROUP_OPTIONS = (["upcoming", "unknown", "started"] as const).map((id) => ({
+const TIP_GROUP_DESCRIPTION: Record<TipGroupId, string> = {
+  upcoming: "Ainda não começaram",
+  started: "Já começaram",
+  unknown: "Horário de início indisponível",
+};
+
+// No filtro "Sem horário" vem por último: não é um momento do jogo como os
+// outros dois. A ordem dos blocos na lista é outra (groupPendingTips).
+export const TIP_GROUP_OPTIONS = (["upcoming", "started", "unknown"] as const).map((id) => ({
   value: id,
   label: TIP_GROUP_LABEL[id],
+  description: TIP_GROUP_DESCRIPTION[id],
 }));
 
 export interface TipGroup<T> {

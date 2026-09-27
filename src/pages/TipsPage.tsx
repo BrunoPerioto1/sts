@@ -28,10 +28,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
 
-const tabs: { value: TipStatus; label: string; countKey: "pending" | "planilhadas" | "caidas" }[] = [
-  { value: "pending", label: "Pendentes", countKey: "pending" },
-  { value: "planilhada", label: "Planilhadas", countKey: "planilhadas" },
-  { value: "caiu", label: "Caíram", countKey: "caidas" },
+const tabs: { value: TipStatus; label: string; description: string; countKey: "pending" | "planilhadas" | "caidas" }[] = [
+  { value: "pending", label: "Pendentes", description: "Esperando planilhar ou marcar que caiu", countKey: "pending" },
+  { value: "planilhada", label: "Planilhadas", description: "Viraram aposta", countKey: "planilhadas" },
+  // "Caiu" = a odd saiu e a tip não foi apostada — não é aposta perdida.
+  { value: "caiu", label: "Caíram", description: "Odd saiu antes de apostar", countKey: "caidas" },
 ];
 
 // Chip de filtro do mobile: preenchido quando o filtro está fora do padrão.
@@ -172,7 +173,7 @@ export default function TipsPage() {
     summary && summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} em stake sugerida` : "";
   const subtitle = summary ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${stakeSugerida}` : undefined;
 
-  const statusOptions = tabs.map((t) => ({ value: t.value, label: t.label, count: summary?.[t.countKey] }));
+  const statusOptions = tabs.map((t) => ({ value: t.value, label: t.label, description: t.description, count: summary?.[t.countKey] }));
   const casaResumo =
     houseIds.length === 0
       ? null
