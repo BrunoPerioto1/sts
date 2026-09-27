@@ -59,7 +59,7 @@ export function useApostasFilters() {
   const setOriginsFilter = (next: string[]) => setOrigins(next);
   const setUnmatchedFilter = (next: boolean) => setUnmatched(next);
   const setDateRange = (from: string, to: string) => {
-    setStartDate(from); setEndDate(to); setPeriodPreset("custom");
+    setStartDate(from); setEndDate(to); setPeriodPreset(!from && !to ? "tudo" : "custom");
   };
   const applyMobileFilters = (next: ApostasFilterState) => {
     setPeriodPreset(next.period.preset);

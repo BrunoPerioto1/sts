@@ -2,7 +2,7 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
-import { DateRangeField } from "@/components/ui/date-range-field";
+import { PeriodPopover } from "@/components/dashboard/PeriodPopover";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { StatusMultiSelect } from "./StatusMultiSelect";
 import { useSports } from "@/hooks/queries/use-sports";
@@ -10,6 +10,8 @@ import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { ORIGIN_LABEL, ORIGIN_OPTIONS } from "@/lib/bet-origin";
 import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { PERIOD_OPTIONS, presetRange, type SheetPreset } from "@/lib/dashboard-periods";
+import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 
 interface ApostasFilterProps {
   houses: { id: number; name: string }[];
@@ -35,6 +37,21 @@ interface ApostasFilterProps {
 }
 
 const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
+
+// Na lista de apostas "Tudo" é sem recorte de data (inclui jogo futuro), não
+// "da primeira aposta até hoje" como no dashboard.
+function rangeFor(preset: SheetPreset): { from: string; to: string } {
+  return preset === "allTime" ? { from: "", to: "" } : presetRange(preset, null);
+}
+
+// A tela guarda só as datas; o preset marcado no popover é o que bate com elas.
+function presetFor(from: string, to: string): DatePreset {
+  const match = PERIOD_OPTIONS.find((opt) => {
+    const r = rangeFor(opt.value);
+    return r.from === from && r.to === to;
+  });
+  return match?.value ?? "custom";
+}
 
 const divider = <div className="h-5 w-px bg-foreground/10 shrink-0" />;
 
@@ -70,15 +87,23 @@ export function ApostasFilter({
   const [unmatched, setUnmatched] = useState(initialUnmatched);
   const sports = useSports();
 
+  const applyRange = ({ from, to }: { from: string; to: string }) => {
+    setDateFrom(from);
+    setDateTo(to);
+    onDateRangeChange?.(from, to);
+  };
+  const periodPreset = presetFor(dateFrom, dateTo);
+  const fromLabel = dateFrom ? format(parseISO(dateFrom), "dd MMM", { locale: ptBR }) : null;
+  const toLabel = dateTo ? format(parseISO(dateTo), "dd MMM", { locale: ptBR }) : null;
+  const rangeLabel = fromLabel && toLabel ? `${fromLabel} – ${toLabel}` : fromLabel ? `De ${fromLabel}` : `Até ${toLabel}`;
+
   const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
   if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
   if (dateFrom || dateTo) {
-    const fromLabel = dateFrom ? format(parseISO(dateFrom), "dd MMM", { locale: ptBR }) : null;
-    const toLabel = dateTo ? format(parseISO(dateTo), "dd MMM", { locale: ptBR }) : null;
     activeChips.push({
       key: "range",
-      label: fromLabel && toLabel ? `${fromLabel} – ${toLabel}` : fromLabel ? `De ${fromLabel}` : `Até ${toLabel}`,
-      clear: () => { setDateFrom(""); setDateTo(""); onDateRangeChange?.("", ""); },
+      label: rangeLabel,
+      clear: () => applyRange({ from: "", to: "" }),
     });
   }
   // Chips de status vêm sólidas (é a seleção multi-select em si); as demais
@@ -168,14 +193,20 @@ export function ApostasFilter({
         {divider}
 
         <div className="px-3.5 shrink-0">
-          <DateRangeField
-            startDate={dateFrom}
-            endDate={dateTo}
-            onChange={(from, to) => { setDateFrom(from); setDateTo(to); onDateRangeChange?.(from, to); }}
-            placeholder="Período"
+          <PeriodPopover
+            preset={periodPreset}
+            firstBetDate={null}
+            from={dateFrom}
+            to={dateTo}
+            onSelect={(preset) => {
+              if (preset !== "custom") applyRange(rangeFor(preset as SheetPreset));
+            }}
+            onCustomRange={(from, to) => applyRange({ from, to })}
+            // Intervalo solto mostra as datas; "Personalizado" não diz nada.
+            label={periodPreset === "custom" ? rangeLabel : undefined}
+            align="start"
             disabled={isLoading}
-            className="h-auto min-h-0 w-auto border-transparent bg-transparent hover:bg-transparent hover:border-transparent p-0 gap-1.5 text-sm text-foreground"
-            iconClassName="h-4 w-4 text-zinc-500 shrink-0"
+            className="h-auto border-0 px-0 text-sm text-foreground hover:border-0"
           />
         </div>
 

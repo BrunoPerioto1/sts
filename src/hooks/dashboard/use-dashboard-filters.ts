@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
+import { endOfMonth, format, startOfMonth } from "date-fns";
 import { getDashboardDateRange } from "@/api/routes/get-dashboard-daterange";
+import { presetRange } from "@/lib/dashboard-periods";
 
 export type DatePreset = "7d" | "14d" | "currentMonth" | "lastMonth" | "60d" | "90d" | "allTime" | "custom";
 
@@ -49,28 +50,9 @@ export function useDashboardFilters() {
   // firstDate: passado direto pelo fetch inicial, quando o estado firstBetDate
   // ainda não foi comitado (setState é assíncrono).
   function applyPreset(p: DatePreset, firstDate?: string | null) {
-    const today = new Date();
-    const setRange = (start: Date | string, end: Date | string = today) =>
-      setFiltersState((prev) => ({
-        ...prev,
-        startDate: typeof start === "string" ? start : format(start, "yyyy-MM-dd"),
-        endDate: typeof end === "string" ? end : format(end, "yyyy-MM-dd"),
-      }));
-
-    if (p === "7d" || p === "14d") {
-      // Intervalo inclusivo nas duas pontas: 7 dias = hoje + os 6 anteriores.
-      setRange(subDays(today, p === "7d" ? 6 : 13));
-    } else if (p === "currentMonth") {
-      // Fim do mes, nao hoje: aposta de jogo futuro cai no filtro do mes atual.
-      setRange(startOfMonth(today), endOfMonth(today));
-    } else if (p === "lastMonth") {
-      const lastMonth = subMonths(today, 1);
-      setRange(startOfMonth(lastMonth), endOfMonth(lastMonth));
-    } else if (p === "60d" || p === "90d") {
-      setRange(subDays(today, p === "60d" ? 60 : 90));
-    } else if (p === "allTime") {
-      setRange(firstDate ?? firstBetDate ?? "2000-01-01");
-    }
+    if (p === "custom") return;
+    const { from, to } = presetRange(p, firstDate ?? firstBetDate);
+    setFiltersState((prev) => ({ ...prev, startDate: from, endDate: to }));
   }
 
   const setPreset = (p: DatePreset) => {
