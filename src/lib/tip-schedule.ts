@@ -36,6 +36,18 @@ export function hasStarted(eventStartAt: string | null, now: Date = new Date()):
 
 export type TipGroupId = "upcoming" | "unknown" | "started";
 
+// Nome de cada bloco, também usado como opção do filtro "Início" da fila.
+export const TIP_GROUP_LABEL: Record<TipGroupId, string> = {
+  upcoming: "A iniciar",
+  unknown: "Sem horário",
+  started: "Iniciados",
+};
+
+export const TIP_GROUP_OPTIONS = (["upcoming", "unknown", "started"] as const).map((id) => ({
+  value: id,
+  label: TIP_GROUP_LABEL[id],
+}));
+
 export interface TipGroup<T> {
   id: TipGroupId;
   label: string;
@@ -57,9 +69,9 @@ export function groupPendingTips<T extends { eventStartAt: string | null }>(
   const unknown = tips.filter((t) => t.eventStartAt == null);
 
   const grupos: TipGroup<T>[] = [
-    { id: "upcoming", label: "Ainda dá tempo", tips: [...upcoming].sort((a, b) => time(a) - time(b)) },
-    { id: "unknown", label: "Sem horário identificado", tips: unknown },
-    { id: "started", label: "Jogo já começou", tips: [...started].sort((a, b) => time(b) - time(a)) },
+    { id: "upcoming", label: TIP_GROUP_LABEL.upcoming, tips: [...upcoming].sort((a, b) => time(a) - time(b)) },
+    { id: "unknown", label: TIP_GROUP_LABEL.unknown, tips: unknown },
+    { id: "started", label: TIP_GROUP_LABEL.started, tips: [...started].sort((a, b) => time(b) - time(a)) },
   ];
   return grupos.filter((g) => g.tips.length > 0);
 }

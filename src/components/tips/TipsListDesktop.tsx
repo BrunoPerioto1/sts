@@ -42,6 +42,7 @@ export function TipsListDesktop({
   onSelect,
   checkedIds,
   onToggle,
+  selectAll,
 }: {
   tips: TipItem[];
   /** Agrupamento pronto (fila pendente, por horário do jogo). Sem ele, por dia de chegada. */
@@ -50,6 +51,7 @@ export function TipsListDesktop({
   onSelect: (tip: TipItem) => void;
   checkedIds: Set<number>;
   onToggle?: (id: number, shiftKey: boolean) => void;
+  selectAll?: { checked: boolean | "indeterminate"; onToggle: () => void; count: number };
 }) {
   const grupos: TipListGroup[] =
     groups ??
@@ -63,16 +65,16 @@ export function TipsListDesktop({
   return (
     <div className="min-w-0 overflow-x-auto">
       <div className="min-w-[900px]">
-      <TipColumnHeaderDesktop selectable={!!onToggle} />
+      <TipColumnHeaderDesktop selectAll={onToggle ? selectAll : undefined} />
       {grupos.map((grupo) => (
         <section key={grupo.key} className="min-w-0">
-          <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <div className="flex items-baseline gap-2 border-b border-border px-3 py-2.5">
             <span className="text-[13px] font-semibold tracking-tight">{grupo.label}</span>
-            {grupo.hint && <span className="text-xs opacity-40">· {grupo.hint}</span>}
-            <span className="ml-auto text-xs opacity-40">
-              {grupo.tips.length} {grupo.tips.length === 1 ? "tip" : "tips"}
+            <span className="text-xs text-zinc-500">
+              {grupo.hint ? `${grupo.hint} · ` : ""}
+              <span className="tabular-nums">{grupo.tips.length}</span>
             </span>
-            {grupo.action}
+            {grupo.action && <span className="ml-auto self-center">{grupo.action}</span>}
           </div>
           {grupo.tips.map((tip) => (
             <TipRowDesktop

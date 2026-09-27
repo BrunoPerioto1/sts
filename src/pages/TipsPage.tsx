@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowsClockwise, Buildings, CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
+import { format } from "date-fns";
+import { ArrowsClockwise, Buildings, CaretDown, CheckCircle, Clock, ListChecks, MagnifyingGlass, PaperPlaneTilt, X } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCard } from "@/components/tips/TipCard";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
@@ -8,7 +9,8 @@ import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { TipsListDesktop, type TipListGroup } from "@/components/tips/TipsListDesktop";
-import { groupPendingTips } from "@/lib/tip-schedule";
+import { TipInicioSheet, TipStatusSheet } from "@/components/tips/TipFilterSheets";
+import { groupPendingTips, TIP_GROUP_OPTIONS } from "@/lib/tip-schedule";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
@@ -32,6 +34,13 @@ const tabs: { value: TipStatus; label: string; countKey: "pending" | "planilhada
   { value: "planilhada", label: "Planilhadas", countKey: "planilhadas" },
   { value: "caiu", label: "Caíram", countKey: "caidas" },
 ];
+
+// Chip de filtro do mobile: preenchido quando o filtro está fora do padrão.
+const chipClass = (ativo: boolean) =>
+  cn(
+    "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
+    ativo ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-300",
+  );
 
 const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
   pending: {
@@ -63,6 +72,8 @@ export default function TipsPage() {
   const houses = useHouses();
   const [houseIds, setHouseIds] = useState<number[]>([]);
   const [casaSheetOpen, setCasaSheetOpen] = useState(false);
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false);
+  const [inicioSheetOpen, setInicioSheetOpen] = useState(false);
 
   // Mesmo debounce da busca de Apostas (250 ms): sem ele cada tecla vira uma
   // pagina nova no infinite query.
@@ -77,6 +88,7 @@ export default function TipsPage() {
     isPending,
     isFetching,
     refetch,
+    dataUpdatedAt,
   } = useTips(tab, buscaDebounced || undefined, houseIds);
 
   // Relógio da fila: "começa em 40 min" e a troca de bloco (dá tempo → já
@@ -89,10 +101,20 @@ export default function TipsPage() {
 
   // Pendentes por horário do jogo; as outras abas seguem por chegada. A
   // lista achatada vira a ordem de tudo (primeira selecionada, shift+clique).
-  const grupos = useMemo(
+  // Filtro "Início" (a iniciar / sem horário / iniciados): só faz sentido na
+  // fila pendente, que é a agrupada pelo relógio. Vazio = todos os blocos.
+  const [inicio, setInicio] = useState<string[]>([]);
+  const inicioAtivo = tab === "pending" && inicio.length > 0;
+  const todosGrupos = useMemo(
     () => (tab === "pending" ? groupPendingTips(tipsDoServidor, now) : null),
     [tab, tipsDoServidor, now],
   );
+  const grupos = useMemo(
+    () => (todosGrupos && inicio.length > 0 ? todosGrupos.filter((g) => inicio.includes(g.id)) : todosGrupos),
+    [todosGrupos, inicio],
+  );
+  // Contagem de cada bloco antes do filtro: é o que as opções de Início mostram.
+  const contagemInicio = Object.fromEntries((todosGrupos ?? []).map((g) => [g.id, g.tips.length]));
   const tips = useMemo(() => (grupos ? grupos.flatMap((g) => g.tips) : tipsDoServidor), [grupos, tipsDoServidor]);
 
   // Só no desktop: a linha clicada abre o painel da direita. Guarda o id, não
@@ -102,12 +124,12 @@ export default function TipsPage() {
   const selecionada = tips.find((t) => t.id === selecionadaId) ?? tips[0] ?? null;
   const [batchReview, setBatchReview] = useState<TipItem[] | null>(null);
   const canSelect = tab !== "planilhada";
-  const selection = useTipSelection(tips, [tab, buscaDebounced, houseIds.join(",")].join("|"));
+  const selection = useTipSelection(tips, [tab, buscaDebounced, houseIds.join(","), inicio.join(",")].join("|"));
   const { checkedIds, setCheckedIds, checkedTips, allChecked } = selection;
   const toggleChecked = selection.toggle;
   const clearSelection = selection.clear;
   // Trocar aba/filtro também fecha a revisão do lote.
-  useEffect(() => setBatchReview(null), [tab, buscaDebounced, houseIds]);
+  useEffect(() => setBatchReview(null), [tab, buscaDebounced, houseIds, inicio]);
 
   const { dismiss, undismiss, runBatch: runBatchWith, run, doPlanilhar } = useTipPageActions({
     onStart: () => setPlanilhando(null),
@@ -135,9 +157,9 @@ export default function TipsPage() {
     label: g.label,
     hint:
       g.id === "upcoming"
-        ? "o primeiro jogo em cima"
+        ? "por horário de início"
         : g.id === "started"
-          ? "provavelmente sem odd"
+          ? "odd provavelmente indisponível"
           : "confronto não reconhecido",
     tips: g.tips,
     action: g.id === "started" ? marcarComecadas(g.tips) : undefined,
@@ -147,58 +169,44 @@ export default function TipsPage() {
   // botão de reload competindo com o "..." na largura do header.
   const pull = usePullToRefresh(() => refetch(), isMobile);
 
-  // Mesmos chips nos dois lugares: no desktop moram no header (a fila ocupa a
-  // largura toda abaixo), no mobile ficam acima da lista.
-  const abas = (
-    <div className="flex gap-2">
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          onClick={() => setTab(t.value)}
-          className={cn(
-            "press h-9 shrink-0 rounded-full px-3 text-[13px] font-medium transition-colors",
-            tab === t.value
-              ? "bg-accent text-white"
-              : "border border-foreground/10 bg-transparent text-zinc-400 hover:text-foreground",
-          )}
-        >
-          {t.label}
-          {summary && <span className="ml-1.5 tabular-nums opacity-60">{summary[t.countKey]}</span>}
-        </button>
-      ))}
-    </div>
-  );
+  const stakeSugerida =
+    summary && summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} em stake sugerida` : "";
+  const subtitle = summary ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${stakeSugerida}` : undefined;
 
-  const subtitle = summary
-    ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${
-        summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} sugeridos` : ""
-      }`
-    : undefined;
+  const statusOptions = tabs.map((t) => ({ value: t.value, label: t.label, count: summary?.[t.countKey] }));
+  const casaResumo =
+    houseIds.length === 0
+      ? null
+      : houseIds.length === 1
+        ? (houses.find((h) => h.id === houseIds[0])?.name ?? "1 casa")
+        : `${houseIds.length} casas`;
+  const toggleInicio = (id: string) =>
+    setInicio(inicio.includes(id) ? inicio.filter((v) => v !== id) : [...inicio, id]);
 
   return (
     <MainLayout
       title="Tips"
       hideBottomNav={checkedTips.length > 0}
+      hideHeaderBorder
       subtitle={subtitle}
       actions={
-        <div className="hidden items-center gap-2 md:flex">
-          {abas}
-          {/* No desktop nao ha pull-to-refresh: a tip chega de fora do app, e
-              sem isso a unica forma de buscar a proxima e' recarregar a pagina. */}
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            aria-label="Atualizar tips"
-            className="press flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 text-zinc-400 transition-colors hover:text-foreground disabled:opacity-50"
-          >
-            <ArrowsClockwise size={16} weight="bold" className={cn(isFetching && "animate-spin")} />
-          </button>
-        </div>
+        // No desktop nao ha pull-to-refresh: a tip chega de fora do app, e sem
+        // isso a unica forma de buscar a proxima e' recarregar a pagina. Texto
+        // discreto com a hora da última busca, não um botão competindo.
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+          aria-label="Atualizar tips"
+          className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-foreground/[0.04] hover:text-zinc-300 disabled:opacity-60 md:flex"
+        >
+          <ArrowsClockwise size={13} className={cn(isFetching && "animate-spin")} />
+          {isFetching ? "atualizando…" : dataUpdatedAt ? `atualizado ${format(dataUpdatedAt, "HH:mm")}` : "atualizar"}
+        </button>
       }
-      titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
+      titleWrapperClassName="flex items-baseline gap-3 min-w-0"
       titleClassName="text-2xl font-semibold tracking-tight"
-      subtitleClassName="text-sm text-zinc-500 truncate"
+      subtitleClassName="text-sm text-zinc-400 truncate"
       mobileHeader={
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">Tips</h1>
@@ -208,64 +216,131 @@ export default function TipsPage() {
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
-      {/* Busca sempre aberta, sem botao de alternar no header: reusa a barra
-          de Apostas, e do lado dela mora a multi-selecao de casas. */}
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1 md:max-w-sm">
-          <MobileSearchBar
+      {/* Desktop: abas sublinhadas logo abaixo do título (são a visão da
+          página), depois a linha de filtros, cada uma entre divisórias de
+          largura cheia. */}
+      <div role="tablist" className="-mx-6 -mt-6 hidden items-end gap-6 border-b border-border px-6 md:flex">
+        {tabs.map((t) => {
+          const ativa = tab === t.value;
+          return (
+            <button
+              key={t.value}
+              role="tab"
+              aria-selected={ativa}
+              onClick={() => setTab(t.value)}
+              className={cn(
+                "-mb-px flex items-center gap-2 border-b-2 pb-2.5 text-sm transition-colors duration-150",
+                ativa ? "border-accent font-medium text-foreground" : "border-transparent text-zinc-400 hover:text-foreground",
+              )}
+            >
+              {t.label}
+              {summary && (
+                <span
+                  className={cn(
+                    "min-w-[20px] rounded px-1.5 py-px text-center text-[11px] tabular-nums leading-4",
+                    ativa
+                      ? "bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] text-foreground"
+                      : "bg-foreground/[0.06] text-zinc-400",
+                  )}
+                >
+                  {summary[t.countKey]}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="-mx-6 hidden items-center gap-3 border-b border-border px-6 py-3.5 md:flex">
+        <div className="flex h-10 w-[340px] items-center gap-2 rounded-md border border-foreground/10 bg-foreground/[0.03] px-3 transition-colors focus-within:border-foreground/25">
+          <MagnifyingGlass className="h-4 w-4 shrink-0 text-zinc-500" />
+          <input
             value={busca}
-            onChange={setBusca}
-            resultsCount={total}
-            open
-            onClose={() => setBusca("")}
-            inputRef={buscaRef}
-            placeholder="Buscar por evento ou mercado..."
+            onChange={(e) => setBusca(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setBusca("");
+            }}
+            placeholder="Buscar evento ou mercado"
+            className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-zinc-500"
           />
-        </div>
-
-        {/* Mesma caixa dos filtros de Apostas pra barra não ficar com dois
-            controles de altura diferente. */}
-        <div className="hidden h-11 shrink-0 items-center rounded-xl border border-foreground/10 bg-foreground/[0.02] px-3.5 md:flex">
-          <HouseMultiSelect
-            houses={houses}
-            selected={houseIds}
-            onChange={setHouseIds}
-            label="Casas"
-          />
-        </div>
-      </div>
-
-      <div className="mb-4 flex items-center gap-2 overflow-x-auto md:hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {abas}
-        <button
-          type="button"
-          onClick={() => setCasaSheetOpen(true)}
-          className={cn(
-            "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
-            houseIds.length > 0
-              ? "bg-accent text-white"
-              : "border border-foreground/10 bg-transparent text-zinc-400",
+          {busca && (
+            <button type="button" onClick={() => setBusca("")} aria-label="Limpar busca" className="text-zinc-500 hover:text-zinc-300">
+              <X className="h-3.5 w-3.5" />
+            </button>
           )}
-        >
-          <Buildings size={13} /> Casas
-          {houseIds.length > 0 && <span className="tabular-nums opacity-75">{houseIds.length}</span>}
-        </button>
+        </div>
+
+        <HouseMultiSelect
+          houses={houses}
+          selected={houseIds}
+          onChange={setHouseIds}
+          label="Casa"
+          className="h-10 rounded-md border border-foreground/10 px-3 transition-colors hover:bg-foreground/[0.03]"
+        />
+
+        {tab === "pending" && (
+          <>
+            <span className="mx-1 h-5 w-px bg-foreground/10" />
+            <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Início</span>
+            <div className="flex items-center gap-0.5">
+              {TIP_GROUP_OPTIONS.map((o) => {
+                const ativo = inicio.includes(o.value);
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    aria-pressed={ativo}
+                    onClick={() => toggleInicio(o.value)}
+                    className={cn(
+                      "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] transition-colors duration-150",
+                      ativo
+                        ? "bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-foreground"
+                        : "text-zinc-300 hover:bg-foreground/[0.04]",
+                    )}
+                  >
+                    {o.label}
+                    <span className="tabular-nums text-zinc-500">{contagemInicio[o.value] ?? 0}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
-      {canSelect && tips.length > 0 && (
-        <div className="mb-3 flex items-center gap-3 text-sm">
-          <label className="flex min-h-11 cursor-pointer items-center gap-2">
-            <Checkbox aria-label="Selecionar todas da página"
-              checked={allChecked ? true : checkedTips.length > 0 ? "indeterminate" : false}
-              onCheckedChange={() => {
-                selection.setAnchor(null);
-                setCheckedIds(allChecked ? new Set() : new Set(tips.map((tip) => tip.id)));
-              }} />
-            Selecionar todas da página ({tips.length})
-          </label>
-          <span className="hidden text-xs text-zinc-500 md:inline">Shift + clique seleciona um intervalo</span>
+      {/* Mobile: busca e, embaixo, os filtros como chips com ícone. Cada chip
+          abre um bottom sheet (mesmo padrão do de Casas). Chip preenchido =
+          fora do padrão, pra ver de relance o que está filtrando. */}
+      <div className="md:hidden">
+        <MobileSearchBar
+          value={busca}
+          onChange={setBusca}
+          resultsCount={total}
+          open
+          onClose={() => setBusca("")}
+          inputRef={buscaRef}
+          placeholder="Buscar por evento ou mercado..."
+        />
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <button type="button" onClick={() => setStatusSheetOpen(true)} className={chipClass(tab !== "pending")}>
+            <ListChecks size={13} /> {tabs.find((t) => t.value === tab)?.label}
+            {summary && <span className="tabular-nums opacity-60">{summary[tabs.find((t) => t.value === tab)!.countKey]}</span>}
+            <CaretDown size={11} className="opacity-60" />
+          </button>
+          <button type="button" onClick={() => setCasaSheetOpen(true)} className={chipClass(houseIds.length > 0)}>
+            <Buildings size={13} /> {casaResumo ?? "Casas"}
+            <CaretDown size={11} className="opacity-60" />
+          </button>
+          {tab === "pending" && (
+            <button type="button" onClick={() => setInicioSheetOpen(true)} className={chipClass(inicio.length > 0)}>
+              <Clock size={13} />{" "}
+              {inicio.length === 1 ? TIP_GROUP_OPTIONS.find((o) => o.value === inicio[0])?.label : "Início"}
+              {inicio.length > 1 && <span className="tabular-nums opacity-75">{inicio.length}</span>}
+              <CaretDown size={11} className="opacity-60" />
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {isPending ? (
         <div className="space-y-2" role="status" aria-label="Carregando tips">
@@ -276,12 +351,14 @@ export default function TipsPage() {
       ) : tips.length === 0 ? (
         <EmptyState
           icon={tab === "pending" ? <CheckCircle size={32} /> : <PaperPlaneTilt size={32} />}
-          {...(buscaDebounced || houseIds.length > 0
+          {...(buscaDebounced || houseIds.length > 0 || inicioAtivo
             ? {
                 title: "Nada encontrado",
                 description: buscaDebounced
                   ? `Nenhuma tip com "${buscaDebounced}" nesta aba.`
-                  : "Nenhuma tip das casas selecionadas nesta aba.",
+                  : houseIds.length > 0
+                    ? "Nenhuma tip das casas selecionadas nesta aba."
+                    : "Nenhuma tip no horário de início selecionado.",
               }
             : emptyByTab[tab])}
         />
@@ -301,6 +378,14 @@ export default function TipsPage() {
                 }}
                 checkedIds={checkedIds}
                 onToggle={canSelect ? toggleChecked : undefined}
+                selectAll={{
+                  checked: allChecked ? true : checkedTips.length > 0 ? "indeterminate" : false,
+                  onToggle: () => {
+                    selection.setAnchor(null);
+                    setCheckedIds(allChecked ? new Set() : new Set(tips.map((tip) => tip.id)));
+                  },
+                  count: tips.length,
+                }}
               />
             </div>
 
@@ -399,6 +484,20 @@ export default function TipsPage() {
         </DialogContent>
       </Dialog>
 
+      <TipStatusSheet
+        open={statusSheetOpen}
+        onOpenChange={setStatusSheetOpen}
+        value={tab}
+        onChange={setTab}
+        options={statusOptions}
+      />
+      <TipInicioSheet
+        open={inicioSheetOpen}
+        onOpenChange={setInicioSheetOpen}
+        selected={inicio}
+        onChange={setInicio}
+        options={TIP_GROUP_OPTIONS.map((o) => ({ ...o, count: contagemInicio[o.value] ?? 0 }))}
+      />
       <CasaSheet
         nested={false}
         open={casaSheetOpen}

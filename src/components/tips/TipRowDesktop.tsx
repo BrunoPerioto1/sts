@@ -20,15 +20,30 @@ const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" 
   caiu: { label: "Caiu", variant: "canceled" },
 };
 
-export function TipColumnHeaderDesktop({ selectable = false }: { selectable?: boolean }) {
+export function TipColumnHeaderDesktop({
+  selectAll,
+}: {
+  /** Checkbox de "selecionar todas" na coluna de seleção (no lugar da linha à parte). */
+  selectAll?: { checked: boolean | "indeterminate"; onToggle: () => void; count: number };
+}) {
   return (
+    <div className="flex items-center border-b border-border py-2.5">
+      {selectAll && (
+        <div className="flex w-10 shrink-0 justify-center">
+          <Checkbox
+            checked={selectAll.checked}
+            onCheckedChange={selectAll.onToggle}
+            aria-label={`Selecionar todas (${selectAll.count})`}
+            title={`Selecionar todas (${selectAll.count}) · Shift + clique seleciona um intervalo`}
+          />
+        </div>
+      )}
     <div
       className={cn(
         TIP_GRID,
         // opacity-40 sumia contra o fundo escuro; o cabeçalho precisa ser
         // legível pra coluna ter nome, não só posição.
-        "px-3 pb-2 text-[11px] uppercase tracking-wider opacity-60",
-        selectable && "ml-10",
+        "flex-1 px-3 text-[11px] uppercase tracking-wider opacity-60",
       )}
     >
       {/* Com duas colunas de horário, "Hora" sozinho não dizia de qual:
@@ -41,6 +56,7 @@ export function TipColumnHeaderDesktop({ selectable = false }: { selectable?: bo
       <span className="text-right">Stake</span>
       <span className="text-right">%</span>
       <span>Status</span>
+    </div>
     </div>
   );
 }
