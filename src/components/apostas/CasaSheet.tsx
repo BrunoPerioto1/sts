@@ -109,6 +109,17 @@ export function CasaSheet({
     onOpenChange(false);
   };
 
+  const renderRow = (h: { id: number; name: string }) => (
+    <OptionRow
+      key={h.id}
+      leading={<HouseAvatar name={h.name} color={colorForHouse(h.id)} />}
+      label={h.name}
+      subtitle={balances[h.id] != null ? `${balances[h.id]} apostas` : undefined}
+      selected={houseIds.includes(h.id)}
+      onToggle={() => toggle(h.id)}
+    />
+  );
+
   return (
     <BottomSheet
       nested={nested}
@@ -148,16 +159,7 @@ export function CasaSheet({
         <div className="pb-2">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
           <div className="flex flex-col gap-1">
-            {fallbackRecent.map((h) => (
-              <OptionRow
-                key={h.id}
-                leading={<HouseAvatar name={h.name} color={colorForHouse(h.id)} />}
-                label={h.name}
-                subtitle={balances[h.id] != null ? `${balances[h.id]} apostas` : undefined}
-                selected={houseIds.includes(h.id)}
-                onToggle={() => toggle(h.id)}
-              />
-            ))}
+            {fallbackRecent.map(renderRow)}
           </div>
         </div>
       )}
@@ -167,16 +169,7 @@ export function CasaSheet({
           {term ? `Todas · "${search}"` : "Todas"}
         </p>
         <div className="flex flex-col gap-1">
-          {filtered.map((h) => (
-            <OptionRow
-              key={h.id}
-              leading={<HouseAvatar name={h.name} color={colorForHouse(h.id)} />}
-              label={h.name}
-              subtitle={balances[h.id] != null ? `${balances[h.id]} apostas` : undefined}
-              selected={houseIds.includes(h.id)}
-              onToggle={() => toggle(h.id)}
-            />
-          ))}
+          {filtered.map(renderRow)}
           {filtered.length === 0 && <p className="text-center py-6 text-sm text-zinc-500">Nenhuma casa encontrada.</p>}
         </div>
       </div>

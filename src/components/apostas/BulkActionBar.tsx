@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
+import { BulkActionButton, BulkActionShell } from "./BulkActionShell";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch, type Icon } from "@phosphor-icons/react";
+import { CheckCircle, XCircle, Clock, Trash } from "@phosphor-icons/react";
 import { ResultIdEnum } from "@/api/routes/get-bets";
-import { cn } from "@/lib/utils";
 
 interface BulkActionBarProps {
   count: number;
@@ -14,41 +14,6 @@ interface BulkActionBarProps {
 }
 
 type PendingAction = "won" | "lost" | "pending" | "delete" | null;
-
-// Só o símbolo: as quatro ações são reconhecíveis pelo ícone + cor e o texto
-// embaixo duplicava a informação num espaço apertado. `aria-label` continua
-// nomeando o botão pra leitor de tela.
-function BulkActionButton({
-  icon: Icon,
-  ariaLabel,
-  onClick,
-  disabled,
-  pending,
-  className,
-}: {
-  icon: Icon;
-  ariaLabel: string;
-  onClick: () => void;
-  disabled?: boolean;
-  pending?: boolean;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      className={cn(
-        "h-12 rounded-xl flex items-center justify-center transition-colors disabled:pointer-events-none",
-        disabled && !pending && "opacity-40",
-        className
-      )}
-    >
-      {pending ? <CircleNotch size={20} className="animate-spin" /> : <Icon size={20} />}
-    </button>
-  );
-}
 
 export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel }: BulkActionBarProps) {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
@@ -75,38 +40,13 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
 
   return (
     <>
-      <div
-        role="toolbar"
-        aria-label="Ações em lote"
-        className={cn(
-          "fixed z-50 p-3 space-y-3 rounded-2xl border border-foreground/10 bg-zinc-900/95 backdrop-blur-md",
-          "animate-in slide-in-from-bottom-4 duration-200",
-          "inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))]",
-          "md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:w-full md:max-w-[480px]"
-        )}
-        style={{ boxShadow: "var(--shadow-lg)" }}
-      >
-        <div className="flex items-center justify-between gap-3 px-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
-            <span aria-live="polite" className="text-base font-semibold text-foreground truncate">
-              {count} selecionada{plural}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
-          >
-            Cancelar
-          </button>
-        </div>
-
+      {/* Só o símbolo: as quatro ações são reconhecíveis pelo ícone + cor e o
+          texto embaixo duplicava a informação num espaço apertado. */}
+      <BulkActionShell count={count} loading={loading} ariaLabel="Ações em lote" onCancel={onCancel}>
         <div className="grid grid-cols-4 gap-2">
           <BulkActionButton
             icon={CheckCircle}
-            ariaLabel={`Marcar ${count} aposta${plural} como ganha`}
+            label={`Marcar ${count} aposta${plural} como ganha`}
             onClick={() => handleStatus("won", ResultIdEnum.WON)}
             disabled={loading}
             pending={pendingAction === "won"}
@@ -114,7 +54,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={XCircle}
-            ariaLabel={`Marcar ${count} aposta${plural} como perdida`}
+            label={`Marcar ${count} aposta${plural} como perdida`}
             onClick={() => handleStatus("lost", ResultIdEnum.LOST)}
             disabled={loading}
             pending={pendingAction === "lost"}
@@ -122,7 +62,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Clock}
-            ariaLabel={`Marcar ${count} aposta${plural} como pendente`}
+            label={`Marcar ${count} aposta${plural} como pendente`}
             onClick={() => handleStatus("pending", ResultIdEnum.PENDING)}
             disabled={loading}
             pending={pendingAction === "pending"}
@@ -130,14 +70,14 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Trash}
-            ariaLabel={`Excluir ${count} aposta${plural}`}
+            label={`Excluir ${count} aposta${plural}`}
             onClick={() => setConfirmOpen(true)}
             disabled={loading}
             pending={pendingAction === "delete"}
             className="bg-red-500 text-white hover:bg-red-600"
           />
         </div>
-      </div>
+      </BulkActionShell>
 
       {/* Confirmacao no mesmo padrao dos outros sheets do app: sobe de baixo,
           na altura do polegar. O dialogo centralizado era o unico que ainda

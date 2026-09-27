@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type BetItem } from "@/api/routes/get-bets";
-import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
+import { useApostaFormScan } from "@/hooks/apostas/use-aposta-form-scan";
 import { useSports, findSport } from "@/hooks/queries/use-sports";
-import { useBetSlipScan, pickImages } from "@/hooks/apostas/use-bet-slip-scan";
+import { pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { BetSlipUpload } from "./BetSlipUpload";
 import { AiFieldLabel } from "./AiFieldLabel";
 import { aiFieldRing } from "@/lib/ai-field";
@@ -34,21 +34,6 @@ export function ApostaForm({
   onPendingImageConsumed,
   onCancel,
 }: ApostaFormProps) {
-  const scan = useBetSlipScan();
-
-  // Lote: enquanto sobrar bilhete na fila, salvar não fecha o modal — limpa o
-  // formulário e já começa a ler o próximo.
-  function handleSaved(aposta: BetItem) {
-    if (scan.remaining === 0) {
-      onApostaAdded(aposta);
-      return;
-    }
-    resetForm();
-    // Só a legenda digitada segue pro próximo: a casa do bilhete anterior não
-    // vale pro seguinte, e sem hint a IA lê a logo do próprio print.
-    void scan.next(caption.trim() || undefined).then((p) => p && applyAiFields(p));
-  }
-
   const {
     formData,
     setField,
@@ -60,37 +45,13 @@ export function ApostaForm({
     originalOdd,
     tipId,
     setTipId,
-    applyAiFields,
-    resetForm,
-  } = useApostaForm({ onApostaAdded: handleSaved, initialData, isEditing });
+    scan,
+    hint,
+    read,
+    uploadProps,
+  } = useApostaFormScan({ onDone: onApostaAdded, initialData, isEditing, pendingImage, onPendingImageConsumed });
   const sports = useSports();
   const sportValue = findSport(sports, formData.sport)?.name ?? formData.sport;
-  // Legenda da casa, como no Telegram: digitar "kto" antes de colar o print
-  // evita que a IA tenha que adivinhar a casa pela logo.
-  const [caption, setCaption] = useState("");
-  const houseName = houses.find((h) => h.id === formData.houseId)?.name;
-  // A legenda digitada vence o select: é o gesto mais recente do usuário.
-  const hint = caption.trim() || houseName;
-
-  const read = async (files: File | Blob | File[]) => {
-    const parsed = await scan.scan(files, hint);
-    if (parsed) applyAiFields(parsed);
-  };
-
-  /** Mais uma imagem do MESMO bilhete: relê tudo junto e reescreve os campos. */
-  const addPart = async (file: File) => {
-    const parsed = await scan.addPart(file, hint);
-    if (parsed) applyAiFields(parsed);
-  };
-
-  // Print colado na tela de Apostas antes do modal existir: o arquivo viaja
-  // como prop e a leitura começa assim que o form monta.
-  useEffect(() => {
-    if (!pendingImage || (Array.isArray(pendingImage) && !pendingImage.length)) return;
-    void read(pendingImage);
-    onPendingImageConsumed?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingImage]);
 
   // Ctrl+V funciona a qualquer momento com o modal aberto, sem precisar focar
   // a faixa de upload.
@@ -112,27 +73,7 @@ export function ApostaForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
       {/* Edição de aposta já registrada não lê print — só o cadastro novo. */}
-      {!isEditing && (
-        <BetSlipUpload
-          status={scan.status}
-          preview={scan.preview}
-          error={scan.error}
-          houseName={houseName}
-          caption={caption}
-          onCaptionChange={setCaption}
-          onFiles={(files) => void read(files)}
-          onAddPart={(file) => void addPart(file)}
-          missing={scan.result?.missing}
-          oddFromSelections={scan.result?.oddFromSelections}
-          batch={{ index: scan.index, total: scan.total }}
-          onRetry={() => void scan.retry(hint).then((p) => p && applyAiFields(p))}
-          onReset={() => {
-            scan.reset();
-            resetForm();
-            setCaption("");
-          }}
-        />
-      )}
+      {!isEditing && <BetSlipUpload {...uploadProps} />}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1.5">

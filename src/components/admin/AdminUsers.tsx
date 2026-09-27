@@ -339,6 +339,35 @@ export function AdminUsers() {
     run(user.id, { isActive: false }, "Conta desativada", { label: "Desfazer", onClick: reactivate });
   };
 
+  // Mesmas ações na linha da tabela e no cartão: só a disposição muda.
+  const cellProps = (user: AdminUser) => {
+    const pending = pendingFor(user.id);
+    return {
+      role: {
+        user,
+        disabled: user.id === me?.id,
+        pending,
+        onChange: (roleId: number) => changeRole(user, roleId),
+      },
+      access: {
+        user,
+        isMe: user.id === me?.id,
+        pending,
+        onExtend: () => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`),
+        onSetDate: (accessUntil: string | null) =>
+          run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido"),
+      },
+      actions: {
+        user,
+        pending,
+        onUnlock: () => run(user.id, { unlock: true }, "Conta desbloqueada"),
+        onUnlink: () => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado"),
+        onTipsGroup: (action: "remove" | "invite") => tipsGroup(user.id, action),
+      },
+      active: { user, pending, onToggle: () => toggleActive(user) },
+    };
+  };
+
   const body = isPending ? (
     <div className="p-4 space-y-2">
       {Array.from({ length: 6 }).map((_, i) => (
@@ -375,15 +404,12 @@ export function AdminUsers() {
           <span>Acesso</span>
           <span className="text-right">Ações</span>
         </div>
-        {filtered.map((user) => (
+        {filtered.map((user) => {
+          const p = cellProps(user);
+          return (
           <div key={user.id} className={cn(GRID, "px-6 py-3 border-b border-border last:border-b-0")}>
             <Identity user={user} isMe={user.id === me?.id} />
-            <RoleChoice
-              user={user}
-              disabled={user.id === me?.id}
-              pending={pendingFor(user.id)}
-              onChange={(roleId) => changeRole(user, roleId)}
-            />
+            <RoleChoice {...p.role} />
             <span className="text-sm tabular-nums text-right">{user.betCount}</span>
             {/* Sem valor, o traço fica no meio da largura que a data ocuparia,
                 e não colado na esquerda da coluna. */}
@@ -401,35 +427,26 @@ export function AdminUsers() {
             ) : (
               <span className="w-[108px] text-center text-sm opacity-25">—</span>
             )}
-            <AccessCell
-              user={user}
-              isMe={user.id === me?.id}
-              pending={pendingFor(user.id)}
-              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
-              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
-            />
+            <AccessCell {...p.access} />
             <div className="flex flex-col items-end gap-1">
-              <Actions
-                user={user}
-                pending={pendingFor(user.id)}
-                onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
-                onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
-                onTipsGroup={(action) => tipsGroup(user.id, action)}
-              />
+              <Actions {...p.actions} />
               {user.id !== me?.id ? (
-                <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
+                <ActiveToggle {...p.active} />
               ) : (
                 !isLocked(user.lockedUntil) && !user.hasTelegram && <span className="text-sm opacity-25">—</span>
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
         </div>
       </div>
 
       {/* Cartões: tabela de sete colunas não cabe no celular nem no notebook. */}
       <div className="grid gap-2 p-3 sm:grid-cols-2 xl:hidden">
-        {filtered.map((user) => (
+        {filtered.map((user) => {
+          const p = cellProps(user);
+          return (
           <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
             <Identity user={user} isMe={user.id === me?.id} />
 
@@ -439,38 +456,20 @@ export function AdminUsers() {
               <span>{user.hasTelegram ? (user.tipsGroupRemovedAt ? "fora do grupo Tips" : "Telegram vinculado") : "sem Telegram"}</span>
             </div>
 
-            <AccessCell
-              user={user}
-              isMe={user.id === me?.id}
-              pending={pendingFor(user.id)}
-              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
-              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
-            />
+            <AccessCell {...p.access} />
 
-            <RoleChoice
-              user={user}
-              disabled={user.id === me?.id}
-              pending={pendingFor(user.id)}
-              onChange={(roleId) => changeRole(user, roleId)}
-            />
+            <RoleChoice {...p.role} />
 
             {(isLocked(user.lockedUntil) || user.hasTelegram) && (
               <div className="[&>button]:w-full">
-                <Actions
-                  user={user}
-                  pending={pendingFor(user.id)}
-                  onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
-                  onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
-                  onTipsGroup={(action) => tipsGroup(user.id, action)}
-                />
+                <Actions {...p.actions} />
               </div>
             )}
 
-            {user.id !== me?.id && (
-              <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
-            )}
+            {user.id !== me?.id && <ActiveToggle {...p.active} />}
           </div>
-        ))}
+          );
+        })}
       </div>
     </>
   )}

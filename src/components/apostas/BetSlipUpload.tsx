@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { pickImages, type ScanPreview, type ScanStatus } from "@/hooks/apostas/use-bet-slip-scan";
 
-interface BetSlipUploadProps {
+export interface BetSlipUploadProps {
   status: ScanStatus;
   preview: ScanPreview | null;
   error: string | null;

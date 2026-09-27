@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Segmented } from "@/components/ui/segmented";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { RestoreDashboardDialog } from "./RestoreDashboardDialog";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
 import { DASHBOARD_KPI_REGISTRY, ICON_IDS, KPI_IDS, NEGATIVE_COLORS, POSITIVE_COLORS, moveKpi, type DashboardPreferences, type KpiId, type KpiPreference } from "@/lib/dashboard-preferences";
@@ -262,18 +262,7 @@ export function DashboardSettingsDesktop() {
         <DashboardPreview preferences={preferences} stake={Number(me.stake ?? 0)} />
       </div>
 
-      <AlertDialog open={restoreOpen} onOpenChange={setRestoreOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restaurar personalização?</AlertDialogTitle>
-            <AlertDialogDescription>Indicadores, ordem, ícones e cores voltarão para o padrão.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={saving} onClick={() => void save(null)}>Restaurar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <RestoreDashboardDialog open={restoreOpen} onOpenChange={setRestoreOpen} saving={saving} onConfirm={() => void save(null)} />
     </div>
   );
 }

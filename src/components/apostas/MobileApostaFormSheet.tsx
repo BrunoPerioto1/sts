@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { CasaSheet } from "./CasaSheet";
@@ -10,9 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
+import { useApostaFormScan } from "@/hooks/apostas/use-aposta-form-scan";
 import { type BetItem } from "@/api/routes/get-bets";
-import { useBetSlipScan } from "@/hooks/apostas/use-bet-slip-scan";
 import { BetSlipUpload } from "./BetSlipUpload";
 import { AiFieldLabel } from "./AiFieldLabel";
 import { aiFieldRing } from "@/lib/ai-field";
@@ -37,51 +36,18 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
   const [sportOpen, setSportOpen] = useState(false);
   const sports = useSports();
   const [dataHoraOpen, setDataHoraOpen] = useState(false);
-  const scan = useBetSlipScan();
 
-  // Lote: com bilhete sobrando na fila, salvar não fecha a sheet — limpa os
-  // campos e já começa a ler o próximo print.
-  function handleSaved(aposta: BetItem) {
-    if (scan.remaining === 0) {
-      onApostaAdded(aposta);
-      onClose();
-      return;
-    }
-    resetForm();
-    // Só a legenda digitada segue pro próximo: a casa do bilhete anterior não
-    // vale pro seguinte, e sem hint a IA lê a logo do próprio print.
-    void scan.next(caption.trim() || undefined).then((p) => p && applyAiFields(p));
-  }
-
-  const { formData, setFormData, setField, houses, submitting, potentialReturn, handleSubmit, aiMarks, originalOdd, tipId, setTipId, applyAiFields, resetForm } = useApostaForm({
-    onApostaAdded: handleSaved,
-    initialData,
-    isEditing,
-  });
-  // Legenda da casa, como no Telegram: digitar "kto" antes de escolher a
-  // imagem evita que a IA tenha que adivinhar a casa pela logo.
-  const [caption, setCaption] = useState("");
-  const houseName = houses.find((h) => h.id === formData.houseId)?.name;
-  // A legenda digitada vence o select: é o gesto mais recente do usuário.
-  const hint = caption.trim() || houseName;
-
-  const read = async (files: File | Blob | File[]) => {
-    const parsed = await scan.scan(files, hint);
-    if (parsed) applyAiFields(parsed);
-  };
-
-  /** Mais uma imagem do MESMO bilhete: relê tudo junto e reescreve os campos. */
-  const addPart = async (file: File) => {
-    const parsed = await scan.addPart(file, hint);
-    if (parsed) applyAiFields(parsed);
-  };
-
-  useEffect(() => {
-    if (!pendingImage || (Array.isArray(pendingImage) && !pendingImage.length)) return;
-    void read(pendingImage);
-    onPendingImageConsumed?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingImage]);
+  const { formData, setFormData, setField, houses, submitting, potentialReturn, handleSubmit, aiMarks, originalOdd, tipId, setTipId, scan, uploadProps } =
+    useApostaFormScan({
+      onDone: (aposta) => {
+        onApostaAdded(aposta);
+        onClose();
+      },
+      initialData,
+      isEditing,
+      pendingImage,
+      onPendingImageConsumed,
+    });
 
   return (
     <BottomSheet
@@ -106,28 +72,7 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
     >
       <form id="mobile-aposta-form" onSubmit={handleSubmit} className="flex flex-col gap-4 pb-4">
         {/* Edição de aposta já registrada não lê print — só o cadastro novo. */}
-        {!isEditing && (
-          <BetSlipUpload
-            variant="mobile"
-            status={scan.status}
-            preview={scan.preview}
-            error={scan.error}
-            houseName={houseName}
-            caption={caption}
-            onCaptionChange={setCaption}
-            onFiles={(files) => void read(files)}
-            onAddPart={(file) => void addPart(file)}
-            missing={scan.result?.missing}
-            oddFromSelections={scan.result?.oddFromSelections}
-            batch={{ index: scan.index, total: scan.total }}
-            onRetry={() => void scan.retry(hint).then((p) => p && applyAiFields(p))}
-            onReset={() => {
-              scan.reset();
-              resetForm();
-              setCaption("");
-            }}
-          />
-        )}
+        {!isEditing && <BetSlipUpload variant="mobile" {...uploadProps} />}
 
         <div className="space-y-1.5">
           <AiFieldLabel htmlFor="bet-game" mark={aiMarks.game} className={fieldLabel}>Evento *</AiFieldLabel>

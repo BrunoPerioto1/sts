@@ -1,8 +1,20 @@
+import { Check, PencilSimple, XCircle } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatOdd } from "@/lib/format";
 import { toInput, type TipPlanilharForm } from "./use-tip-planilhar";
-import type { TipItem } from "@/api/routes/get-tips";
+import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
+
+// Props comuns ao sheet (mobile) e ao diálogo (desktop).
+export type TipPlanilharProps = {
+  tip: TipItem;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (overrides: PlanilharTipDto) => void;
+  onDismiss: () => void;
+  busy: boolean;
+};
 
 const chipClass =
   "h-11 shrink-0 rounded-lg border border-border px-3 text-sm text-zinc-300 transition-colors hover:bg-foreground/[0.07]";
@@ -89,6 +101,55 @@ export function TipOddField({ form }: { form: TipPlanilharForm }) {
         onChange={(e) => form.setOdd(e.target.value)}
         placeholder="0,00"
       />
+    </div>
+  );
+}
+
+// Os três desfechos: planilhar, caiu, ou fechar e manter na fila. No sheet o
+// botão principal é maior — fica no rodapé, ao alcance do polegar.
+export function TipPlanilharActions({
+  form,
+  busy,
+  onConfirm,
+  onDismiss,
+  onOpenChange,
+  variant,
+}: Pick<TipPlanilharProps, "busy" | "onConfirm" | "onDismiss" | "onOpenChange"> & {
+  form: TipPlanilharForm;
+  variant: "sheet" | "dialog";
+}) {
+  return (
+    <div className="space-y-2">
+      <Button
+        size={variant === "sheet" ? "lg" : "default"}
+        className={`${variant === "sheet" ? "h-12" : "h-11"} w-full border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]`}
+        disabled={!form.valid || busy}
+        onClick={() => onConfirm(form.overrides())}
+      >
+        <Check size={16} weight="bold" />
+        {busy ? "Planilhando…" : "Planilhar e sair da fila"}
+      </Button>
+
+      <div className="flex gap-2">
+        <Button
+          className="flex-1 border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26] hover:text-white"
+          disabled={busy}
+          onClick={onDismiss}
+        >
+          <XCircle size={15} weight="bold" /> Caiu
+        </Button>
+        <Button variant="outline" className="flex-1" onClick={() => form.setEditing((v) => !v)}>
+          <PencilSimple size={15} weight="bold" /> Editar
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onOpenChange(false)}
+        className="w-full py-1 text-center text-xs text-zinc-500 hover:text-zinc-300"
+      >
+        Ainda não apostei — manter na fila
+      </button>
     </div>
   );
 }
