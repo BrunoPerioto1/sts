@@ -24,15 +24,19 @@ const statusMeta: Record<TipStatus, { label: string; variant: "pending" | "won" 
 
 export function TipColumnHeaderDesktop({
   selectAll,
+  selectionMode,
 }: {
   /** Checkbox de "selecionar todas" na coluna de seleção (no lugar da linha à parte). */
   selectAll?: { checked: boolean | "indeterminate"; onToggle: () => void; count: number };
+  /** Fora do modo de seleção a coluna fica reservada, mas vazia (igual Apostas). */
+  selectionMode?: boolean;
 }) {
   return (
     <div className="flex items-center border-b border-border py-2.5">
       {selectAll && (
-        <div className="flex w-10 shrink-0 justify-center">
+        <div className={cn("flex w-10 shrink-0 justify-center transition-opacity", !selectionMode && "pointer-events-none opacity-0")}>
           <Checkbox
+            tabIndex={selectionMode ? 0 : -1}
             checked={selectAll.checked}
             onCheckedChange={selectAll.onToggle}
             aria-label={`Selecionar todas (${selectAll.count})`}
@@ -124,12 +128,15 @@ export function TipRowDesktop({
   onSelect,
   checked,
   onToggle,
+  selectionMode,
 }: {
   tip: TipItem;
   selected: boolean;
   onSelect: () => void;
   checked?: boolean;
   onToggle?: (shiftKey: boolean) => void;
+  /** Alguma tip marcada: clique na linha marca/desmarca em vez de abrir o painel. */
+  selectionMode?: boolean;
 }) {
   const status = statusMeta[tip.status];
 
@@ -148,7 +155,9 @@ export function TipRowDesktop({
       )}
     >
       {onToggle && (
-        <div className="flex w-10 shrink-0 justify-center">
+        // Igual Apostas: o checkbox só aparece no hover da linha ou com o modo
+        // de seleção ativo — fixo em toda linha era ruído na fila.
+        <div className={cn("flex w-10 shrink-0 justify-center transition-opacity", selectionMode || checked ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100")}>
           <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)}
             onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
             aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`}
@@ -159,6 +168,7 @@ export function TipRowDesktop({
       type="button"
       onClick={(event) => {
         if (event.shiftKey && onToggle) onToggle(true);
+        else if (selectionMode && onToggle) onToggle(false);
         else onSelect();
       }}
       onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}

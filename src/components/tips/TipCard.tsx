@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowSquareOut,
   ArrowCounterClockwise,
@@ -35,11 +35,14 @@ export function TipCard({
   onDismiss,
   onUndismiss,
   onPlanilhar,
+  leading,
 }: {
   tip: TipItem;
   onDismiss: () => void;
   onUndismiss: () => void;
   onPlanilhar: () => void;
+  /** Antes da linha "Recebida" — o checkbox, no modo de seleção. */
+  leading?: ReactNode;
 }) {
   const [showMessage, setShowMessage] = useState(false);
 
@@ -47,9 +50,12 @@ export function TipCard({
     <article className="border-b border-border px-4 py-3.5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-zinc-500">
-            Recebida {formatTime(tip.createdAt)}
-            {tip.house && ` · ${tip.house}`}
+          <p className="flex items-center gap-2 text-xs text-zinc-500">
+            {leading}
+            <span className="min-w-0 truncate">
+              Recebida {formatTime(tip.createdAt)}
+              {tip.house && ` · ${tip.house}`}
+            </span>
           </p>
           <h3 className="mt-1 text-[17px] font-semibold leading-tight text-foreground">
             {tip.game ?? "Jogo não identificado"}

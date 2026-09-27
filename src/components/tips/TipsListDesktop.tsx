@@ -65,7 +65,7 @@ export function TipsListDesktop({
   return (
     <div className="min-w-0 overflow-x-auto">
       <div className="min-w-[900px]">
-      <TipColumnHeaderDesktop selectAll={onToggle ? selectAll : undefined} />
+      <TipColumnHeaderDesktop selectAll={onToggle ? selectAll : undefined} selectionMode={checkedIds.size > 0} />
       {grupos.map((grupo) => (
         <section key={grupo.key} className="min-w-0">
           <div className="flex items-baseline gap-2 border-b border-border px-3 py-2.5">
@@ -86,6 +86,7 @@ export function TipsListDesktop({
                 onSelect={() => onSelect(tip)}
                 checked={checkedIds.has(tip.id)}
                 onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
+                selectionMode={checkedIds.size > 0}
               />
             ))}
           </div>

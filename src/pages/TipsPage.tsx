@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ArrowsClockwise, Buildings, CaretDown, CheckCircle, Clock, ListChecks, MagnifyingGlass, PaperPlaneTilt, X } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { TipCard } from "@/components/tips/TipCard";
+import { TipCardMobileItem } from "@/components/tips/TipCardMobileItem";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
@@ -16,7 +16,6 @@ import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { actionToast } from "@/lib/action-toast";
@@ -415,32 +414,17 @@ export default function TipsPage() {
             )}
             <div className="overflow-hidden rounded-xl border border-border">
               {grupo.tips.map((tip) => (
-                <div
-                  key={tip.id}
-                  className={cn(
-                    "relative border-b border-border transition-colors last:border-b-0",
-                    // Mesmo tom da seleção no desktop (color-mix: bg-accent/[x]
-                    // não gera CSS com o accent em var()).
-                    checkedIds.has(tip.id) && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
-                  )}
-                >
-                {canSelect && (
-                  <label className="flex min-h-11 items-center gap-2 px-4 pt-2 text-xs text-zinc-400">
-                    <Checkbox checked={checkedIds.has(tip.id)} onCheckedChange={() => toggleChecked(tip.id)}
-                      aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`} />
-                    Selecionar
-                  </label>
-                )}
-                <fieldset className="min-w-0">
-                <TipCard
+                <TipCardMobileItem
                   key={tip.id}
                   tip={tip}
+                  canSelect={canSelect}
+                  selectionMode={checkedTips.length > 0}
+                  checked={checkedIds.has(tip.id)}
+                  onToggle={() => toggleChecked(tip.id)}
                   onPlanilhar={() => setPlanilhando(tip)}
                   onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
                   onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
                 />
-                </fieldset>
-                </div>
               ))}
             </div>
             </section>
