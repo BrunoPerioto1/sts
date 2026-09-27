@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarBlank, CaretRight } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
@@ -11,7 +11,12 @@ import { PeriodCalendarSheet } from "@/components/apostas/PeriodCalendarSheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
-import { PERIOD_OPTIONS, PRESET_LABEL, presetRange } from "@/lib/dashboard-periods";
+import { PRESET_LABEL, presetRange } from "@/lib/dashboard-periods";
+
+// Poucos atalhos, numa linha só (cabe até em 320px). Os outros presets
+// (7/14/60 dias) seguem valendo se já estiverem salvos — só não têm chip;
+// qualquer outro recorte sai pelo "Período personalizado".
+const PERIOD_CHIPS = ["currentMonth", "lastMonth", "allTime"] as const;
 
 export interface DashboardFiltersDraft {
   preset: DatePreset;
@@ -29,6 +34,8 @@ export function countActiveDashboardFilters(f: Pick<DashboardFiltersDraft, "pres
 }
 
 const sectionLabel = "text-xs font-medium uppercase tracking-wider text-zinc-500";
+// Mesma altura/raio/padding do campo "Período personalizado".
+const selectField = "min-h-[48px] rounded-lg px-3";
 
 interface DashboardFiltersSheetProps {
   open: boolean;
@@ -62,7 +69,7 @@ export function DashboardFiltersSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const activeCount = countActiveDashboardFilters(draft);
+  const isDefault = countActiveDashboardFilters(draft) === 0;
 
   const casaSummary =
     draft.houseIds.length === 0
@@ -78,7 +85,9 @@ export function DashboardFiltersSheet({
         ? (sports.find((s) => s.id === draft.sportIds[0])?.name ?? "1 esporte")
         : `${draft.sportIds.length} esportes`;
 
-  const periodLabel = `${format(parseISO(draft.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(draft.endDate), "dd MMM", { locale: ptBR })}`;
+  const isCustom = draft.preset === "custom";
+  const customLabel = `${format(parseISO(draft.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(draft.endDate), "dd MMM", { locale: ptBR })}`;
+  const customDays = differenceInCalendarDays(parseISO(draft.endDate), parseISO(draft.startDate)) + 1;
 
   const selectPreset = (preset: Exclude<DatePreset, "custom">) => {
     const { from, to } = presetRange(preset, firstBetDate);
@@ -100,16 +109,9 @@ export function DashboardFiltersSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Filtros"
-      titleExtra={
-        activeCount > 0 && (
-          <span className="h-5 min-w-[20px] px-1 rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
-            {activeCount}
-          </span>
-        )
-      }
       footer={
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="min-h-[44px] px-4" onClick={handleClear}>
+          <Button variant="outline" className="min-h-[44px] px-5" onClick={handleClear} disabled={isDefault}>
             Limpar
           </Button>
           <Button className="flex-1 min-h-[44px]" onClick={handleApply}>
@@ -118,11 +120,11 @@ export function DashboardFiltersSheet({
         </div>
       }
     >
-      <div className="py-3 space-y-5">
-        <section className="space-y-2">
+      <div className="pt-1 pb-4 space-y-6">
+        <section className="space-y-2.5">
           <p className={sectionLabel}>Período</p>
-          <div className="flex flex-wrap gap-2">
-            {PERIOD_OPTIONS.map(({ value: preset }) => {
+          <div className="grid grid-cols-3 gap-2">
+            {PERIOD_CHIPS.map((preset) => {
               // Período personalizado não acende nenhum chip: um só estado de período ativo.
               const isActive = draft.preset === preset;
               return (
@@ -132,8 +134,11 @@ export function DashboardFiltersSheet({
                   aria-pressed={isActive}
                   onClick={() => selectPreset(preset)}
                   className={cn(
-                    "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
-                    isActive ? "bg-accent text-white" : "border border-foreground/10 text-zinc-400"
+                    // Borda nos dois estados: trocar de chip não mexe 1px no layout.
+                    "press h-10 px-1.5 rounded-full border text-[13px] min-[360px]:text-sm font-medium flex items-center justify-center whitespace-nowrap transition-colors",
+                    isActive
+                      ? "border-accent bg-accent text-white"
+                      : "border-foreground/10 bg-foreground/[0.03] text-zinc-300"
                   )}
                 >
                   {PRESET_LABEL[preset]}
@@ -143,14 +148,15 @@ export function DashboardFiltersSheet({
           </div>
         </section>
 
-        <section className="space-y-1.5">
+        <section className="space-y-2.5">
           <p className={sectionLabel}>Casas</p>
-          <SheetSelectField summary={casaSummary} onOpen={() => setCasaOpen(true)} />
+          <SheetSelectField className={selectField} summary={casaSummary} onOpen={() => setCasaOpen(true)} />
         </section>
 
-        <section className="space-y-1.5">
+        <section className="space-y-2.5">
           <p className={sectionLabel}>Esportes</p>
           <SheetSelectField
+            className={selectField}
             summary={sportSummary}
             onOpen={() => setSportOpen(true)}
             leading={
@@ -161,19 +167,31 @@ export function DashboardFiltersSheet({
           />
         </section>
 
-        <section className="space-y-1.5">
+        <section className="space-y-2.5">
           <p className={sectionLabel}>Período personalizado</p>
+          {/* Ativo, ganha o mesmo tratamento de seleção do campo "De/Até" do
+              calendário; os chips acima apagam — um único estado de período. */}
           <button
             type="button"
+            aria-pressed={isCustom}
             onClick={() => setCalendarOpen(true)}
             className={cn(
-              "flex w-full items-center gap-2.5 min-h-[44px] rounded-md border bg-card px-[10px] py-[8px] text-left",
-              draft.preset === "custom" ? "border-accent" : "border-input"
+              "press-sm flex w-full items-center gap-2.5 min-h-[48px] rounded-lg border px-3 text-left transition-colors",
+              isCustom ? "border-accent bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]" : "border-input bg-card hover:border-foreground/45"
             )}
           >
-            <CalendarBlank className="h-4 w-4 text-zinc-500 shrink-0" />
-            <span className="flex-1 text-sm text-foreground truncate">{periodLabel}</span>
-            <CaretRight className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+            <CalendarBlank size={18} className={cn("shrink-0", isCustom ? "text-accent" : "text-zinc-500")} />
+            <span className="flex-1 min-w-0 truncate text-sm">
+              {isCustom ? (
+                <>
+                  <span className="font-medium text-foreground">{customLabel}</span>
+                  <span className="text-zinc-500"> · {customDays} dia{customDays > 1 ? "s" : ""}</span>
+                </>
+              ) : (
+                <span className="text-zinc-400">Escolher datas</span>
+              )}
+            </span>
+            <CaretRight size={14} className="text-zinc-500 shrink-0" />
           </button>
         </section>
       </div>

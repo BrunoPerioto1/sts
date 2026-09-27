@@ -538,3 +538,42 @@
 .light .text-green-400,
 .light .text-emerald-400 { color: #059669; }
 .light .text-violet-300 { color: #7c3aed; }
+
+/* Intervalo do PeriodCalendarSheet (sheets de período no mobile). Fica aqui e
+   não em classes do Tailwind porque são camadas: o início/fim é um círculo
+   sólido desenhado por cima de meia faixa, e a faixa arredonda nas pontas de
+   cada semana. Cada semana vira uma pílula própria (há respiro entre as
+   linhas), em vez de um bloco retangular fechado. */
+.period-range-cal {
+  --range-band: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  --range-dot: var(--color-accent);
+}
+.period-range-cal td .day-range-middle {
+  background: var(--range-band);
+  border-radius: 0;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  font-weight: 400;
+}
+.period-range-cal td:first-child .day-range-middle { border-radius: 9999px 0 0 9999px; }
+.period-range-cal td:last-child .day-range-middle { border-radius: 0 9999px 9999px 0; }
+.period-range-cal td:first-child:last-child .day-range-middle { border-radius: 9999px; }
+
+.period-range-cal td .day-range-start,
+.period-range-cal td .day-range-end {
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0;
+  background: radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%);
+}
+/* Meia faixa atrás do círculo, ligando-o ao miolo — só quando há miolo do
+   lado certo (não em dia único nem colado na borda da semana). */
+.period-range-cal td:not(:last-child) .day-range-start:not(.day-range-end) {
+  background:
+    radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%),
+    linear-gradient(to right, transparent 50%, var(--range-band) 50%);
+}
+.period-range-cal td:not(:first-child) .day-range-end:not(.day-range-start) {
+  background:
+    radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%),
+    linear-gradient(to left, transparent 50%, var(--range-band) 50%);
+}
