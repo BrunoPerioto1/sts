@@ -7,6 +7,7 @@ import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { useHouses } from "@/hooks/queries/use-houses";
 import { useSports } from "@/hooks/queries/use-sports";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
+import { type DashboardFiltersDraft } from "@/components/dashboard/mobile/DashboardFiltersSheet";
 import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { DashboardDesktopSkeleton } from "@/components/dashboard/DashboardDesktopSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -67,6 +68,16 @@ export function DashboardPage() {
   const houses = useHouses();
   const sports = useSports();
 
+  // "Aplicar" do sheet de filtros do mobile: os setters rodam no mesmo handler,
+  // então o React junta tudo num render só e o react-query dispara uma única
+  // leva de requisições (a chave é por valor — nada mudou, nada busca).
+  const applyMobileFilters = (next: DashboardFiltersDraft) => {
+    if (next.preset === "custom") setCustomRange(next.startDate, next.endDate);
+    else setPreset(next.preset);
+    setHouseIds(next.houseIds);
+    setSportIds(next.sportIds);
+  };
+
   const rangeLabel =
     ready && filters.startDate && filters.endDate
       ? `${format(parseISO(filters.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(filters.endDate), "dd MMM", { locale: ptBR })}`
@@ -82,8 +93,8 @@ export function DashboardPage() {
     .filter(Boolean)
     .join(" · ");
 
-  // Recorte por casa/esporte só no desktop: o header do mobile é a própria
-  // tela (mobileFullBleed) e o seletor de casas de lá é outro (CasaSheet).
+  // Filtros do topo só no desktop: o header do mobile é a própria tela
+  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet.
   const headerActions = (
     <div className="flex items-center gap-2">
       {!hasNoBets && (
@@ -151,8 +162,10 @@ export function DashboardPage() {
               metrics={metrics}
               previousMetrics={previousMetrics}
               dailyData={dailyData}
+              houses={houses}
+              sports={sports}
               onPresetChange={setPreset}
-              onCustomRange={setCustomRange}
+              onApplyFilters={applyMobileFilters}
             />
           ) : undefined
         }
