@@ -42,6 +42,13 @@ const chipClass = (ativo: boolean) =>
     ativo ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-300",
   );
 
+// Contador dentro do chip como badge, pra "Pendentes 40" não ler como frase.
+const chipBadgeClass = (ativo: boolean) =>
+  cn(
+    "rounded-full px-1.5 py-px text-[11px] tabular-nums",
+    ativo ? "bg-white/20 text-white" : "bg-foreground/[0.08] text-zinc-200",
+  );
+
 const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
   pending: {
     title: "Fila limpa",
@@ -210,7 +217,22 @@ export default function TipsPage() {
       mobileHeader={
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">Tips</h1>
-          {subtitle && <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>}
+          {/* Números em destaque, rótulos apagados: o olho pega "40" e "R$ 1.631". */}
+          {summary && (
+            <p className="mt-0.5 text-sm text-zinc-400">
+              <span className="font-medium text-zinc-100 tabular-nums">
+                {summary.pending} {summary.pending === 1 ? "tip" : "tips"}
+              </span>
+              {summary.pendingStake > 0 && (
+                <>
+                  {" · Stake sugerida "}
+                  <span className="font-medium text-zinc-100 tabular-nums">
+                    {formatCurrencyCompact(summary.pendingStake)}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
         </div>
       }
     >
@@ -321,10 +343,10 @@ export default function TipsPage() {
           inputRef={buscaRef}
           placeholder="Buscar por evento ou mercado..."
         />
-        <div className="mb-4 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mb-5 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <button type="button" onClick={() => setStatusSheetOpen(true)} className={chipClass(tab !== "pending")}>
             <ListChecks size={13} /> {tabs.find((t) => t.value === tab)?.label}
-            {summary && <span className="tabular-nums opacity-60">{summary[tabs.find((t) => t.value === tab)!.countKey]}</span>}
+            {summary && <span className={chipBadgeClass(tab !== "pending")}>{summary[tabs.find((t) => t.value === tab)!.countKey]}</span>}
             <CaretDown size={11} className="opacity-60" />
           </button>
           <button type="button" onClick={() => setCasaSheetOpen(true)} className={chipClass(houseIds.length > 0)}>
@@ -335,7 +357,7 @@ export default function TipsPage() {
             <button type="button" onClick={() => setInicioSheetOpen(true)} className={chipClass(inicio.length > 0)}>
               <Clock size={13} />{" "}
               {inicio.length === 1 ? TIP_GROUP_OPTIONS.find((o) => o.value === inicio[0])?.label : "Início"}
-              {inicio.length > 1 && <span className="tabular-nums opacity-75">{inicio.length}</span>}
+              {inicio.length > 1 && <span className={chipBadgeClass(true)}>{inicio.length}</span>}
               <CaretDown size={11} className="opacity-60" />
             </button>
           )}
