@@ -3,7 +3,6 @@ import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { AnimatedSignedCurrency } from "@/components/ui/animated-currency";
 import { settledProfit } from "@/lib/bet-status";
 import { betDate, betIdsOfMonth, groupCheckState, type MonthGroup } from "@/lib/bet-grouping";

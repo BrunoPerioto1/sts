@@ -13,7 +13,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { DashboardDesktopView } from "@/components/dashboard/DashboardDesktopView";
 import { PeriodPopover } from "@/components/dashboard/PeriodPopover";
 import { Button } from "@/components/ui/button";
-import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
+import { useDashboardFilters } from "@/hooks/dashboard/use-dashboard-filters";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 

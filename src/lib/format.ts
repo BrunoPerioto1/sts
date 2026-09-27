@@ -14,10 +14,6 @@ export function formatCurrencyCompact(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 }
 
-export function formatSignedCurrencyCompact(value: number): string {
-  return value >= 0 ? `+${formatCurrencyCompact(value)}` : formatCurrencyCompact(value);
-}
-
 // Máscara de valor "de trás pra frente": os dígitos digitados preenchem os
 // centavos primeiro (ex: "1050" -> "10,50"), padrão comum em apps BR.
 export function centsToDisplay(cents: number): string {

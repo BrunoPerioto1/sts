@@ -18,7 +18,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { actionToast } from "@/lib/action-toast";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTips } from "@/hooks/queries/use-tips";
@@ -26,7 +25,7 @@ import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/t
 import { useHouses } from "@/hooks/queries/use-houses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
-import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
+import type { TipItem, TipStatus } from "@/api/routes/get-tips";
 
 const tabs: { value: TipStatus; label: string; description: string; countKey: "pending" | "planilhadas" | "caidas" }[] = [
   { value: "pending", label: "Pendentes", description: "Esperando planilhar ou marcar que caiu", countKey: "pending" },

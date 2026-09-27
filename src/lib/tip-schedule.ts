@@ -64,14 +64,14 @@ export function tipTiming(
   return { headline, tone: -diffMin <= LIVE_WINDOW_MIN ? "live" : "old" };
 }
 
-export function hasStarted(eventStartAt: string | null, now: Date = new Date()): boolean {
+function hasStarted(eventStartAt: string | null, now: Date = new Date()): boolean {
   return eventStartAt != null && new Date(eventStartAt).getTime() <= now.getTime();
 }
 
 export type TipGroupId = "upcoming" | "unknown" | "started";
 
 // Nome de cada bloco, também usado como opção do filtro "Início" da fila.
-export const TIP_GROUP_LABEL: Record<TipGroupId, string> = {
+const TIP_GROUP_LABEL: Record<TipGroupId, string> = {
   upcoming: "A iniciar",
   unknown: "Sem horário",
   started: "Iniciados",
