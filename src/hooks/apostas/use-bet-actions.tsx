@@ -11,6 +11,7 @@ import {
 } from "@/api/routes/get-bets";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { previewProfit, statusLabelByResultId } from "@/lib/bet-status";
+import { betsInCall, planBetUndo } from "@/lib/bet-undo";
 import { actionToast, ArrowCounterClockwise, Check, CheckCircle, Copy, Trash as TrashIcon } from "@/lib/action-toast";
 
 // Verde/vermelho no toast de finalização em lote são reservados pro resultado
@@ -122,15 +123,19 @@ export function useBetActions() {
   };
 
   // Ação em lote da seleção múltipla (Agrupado): optimistic update na lista +
-  // desfazer por ~5s. Undo restaura o status original de cada aposta — usa o
-  // endpoint em lote de novo quando os originais eram todos iguais (comum:
-  // marcar um grupo de pendentes), senão cai pra 1 chamada por aposta (só no
-  // desfazer, já que aí os valores realmente diferem por item).
+  // desfazer por ~5s. Undo restaura o status original de cada aposta: um lote
+  // por status, e cada Cashout sozinho com o valor recebido (ver planBetUndo).
   const bulkFinalize = async (ids: number[], resultId: ResultIdEnum, onSuccess?: () => void) => {
     if (ids.length === 0) return;
     const previous = cachedBets()
       .filter((a) => ids.includes(a.id))
-      .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName, profit: a.profit }));
+      .map((a) => ({
+        id: a.id,
+        resultId: a.resultId,
+        resultName: a.resultName,
+        profit: a.profit,
+        cashoutValue: a.cashoutValue,
+      }));
 
     patchCachedBets((a) => (ids.includes(a.id) ? settle(a, resultId) : a));
     setBulkLoading(true);
@@ -138,15 +143,27 @@ export function useBetActions() {
       await finalizeMultipleBets({ betIds: ids, resultId });
       onSuccess?.();
 
+      // allSettled: uma chamada recusada não pode esconder as outras nem
+      // passar como "desfeita" — antes o erro sumia e a tela não dizia nada.
       const undo = async () => {
-        const uniqueOriginal = new Set(previous.map((p) => p.resultId));
-        if (uniqueOriginal.size === 1) {
-          await finalizeMultipleBets({ betIds: previous.map((p) => p.id), resultId: previous[0].resultId as ResultIdEnum });
-        } else {
-          await Promise.all(previous.map((p) => finalizeBet(p.id, { resultId: p.resultId as ResultIdEnum })));
-        }
+        const calls = planBetUndo(previous);
+        const results = await Promise.allSettled(
+          calls.map((call) =>
+            call.kind === "batch"
+              ? finalizeMultipleBets({ betIds: call.betIds, resultId: call.resultId })
+              : finalizeBet(call.id, { resultId: call.resultId, cashoutValue: call.cashoutValue }),
+          ),
+        );
         await reload();
-        actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
+        const failed = results.reduce((n, r, i) => (r.status === "rejected" ? n + betsInCall(calls[i]) : n), 0);
+        if (failed === 0) {
+          actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
+        } else {
+          const firstError = results.find((r): r is PromiseRejectedResult => r.status === "rejected")?.reason;
+          actionToast.error({
+            description: `${failed === previous.length ? "Não deu pra desfazer" : `${failed} de ${previous.length} apostas não voltaram`}: ${errText(firstError, "erro ao desfazer")}`,
+          });
+        }
       };
 
       actionToast.success({
