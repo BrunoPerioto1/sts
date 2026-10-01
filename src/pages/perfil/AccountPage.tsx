@@ -168,7 +168,8 @@ export default function AccountPage() {
       >
         <div className="pb-4 flex flex-col gap-3">
           <p className="text-sm text-zinc-400">
-            Apaga suas apostas, saldos de casas e movimentações. Não dá pra desfazer nem recuperar depois.
+            Apaga suas apostas, saldos de casas e movimentações
+            {me?.telegramUserId ? ", e seu Telegram sai do grupo de Tips" : ""}. Não dá pra desfazer nem recuperar depois.
           </p>
           <div className="space-y-1.5">
             <Label htmlFor="delete-password" className="text-sm font-normal text-zinc-400">

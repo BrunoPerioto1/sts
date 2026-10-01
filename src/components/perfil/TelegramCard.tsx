@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { TelegramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
+import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import type { MeResponse } from "@/api/routes/get-me";
@@ -12,6 +23,8 @@ import type { MeResponse } from "@/api/routes/get-me";
 export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: () => void }) {
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState("");
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
   const isLinked = !!me.telegramUserId;
 
   const handleGenerate = async () => {
@@ -29,12 +42,16 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
   };
 
   const handleUnlink = async () => {
+    setUnlinking(true);
     try {
       await postUnlinkTelegram();
       actionToast.success({ title: "Telegram desvinculado" });
+      setConfirmUnlink(false);
       onUnlinked();
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
+    } finally {
+      setUnlinking(false);
     }
   };
 
@@ -63,7 +80,7 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
 
       <p className="text-[13px] text-zinc-400 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
       {isLinked ? (
-        <Button variant="outline" size="sm" onClick={handleUnlink}>Desvincular</Button>
+        <Button variant="outline" size="sm" onClick={() => setConfirmUnlink(true)}>Desvincular</Button>
       ) : (
         <div className="space-y-2">
           <Button size="sm" onClick={handleGenerate} disabled={linking}>
@@ -72,6 +89,28 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
           {code && <p className="text-sm">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
         </div>
       )}
+
+      <AlertDialog open={confirmUnlink} onOpenChange={(open) => !unlinking && setConfirmUnlink(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desvincular o Telegram?</AlertDialogTitle>
+            <AlertDialogDescription>{UNLINK_TELEGRAM_WARNING}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unlinking}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={unlinking}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleUnlink();
+              }}
+              className="bg-negative text-white hover:bg-negative/90"
+            >
+              Desvincular
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

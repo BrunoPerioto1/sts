@@ -55,6 +55,15 @@ export function saveToken(token: string, remember = true) {
   saveAccessBlock(null);
 }
 
+/**
+ * Troca o token mantendo onde ele estava (localStorage com "Manter conectado",
+ * sessionStorage sem). A troca de senha derruba as sessões abertas e devolve
+ * um token novo pra esta continuar.
+ */
+export function replaceToken(token: string) {
+  saveToken(token, read(localStorage, TOKEN_KEY) !== null);
+}
+
 export function clearToken() {
   write(localStorage, TOKEN_KEY, null);
   write(sessionStorage, TOKEN_KEY, null);

@@ -7,6 +7,7 @@ import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { actionToast } from "@/lib/action-toast";
 import { postChangePassword } from "@/api/routes/post-change-password";
 import { getErrorMessage } from "@/lib/api-error";
+import { replaceToken } from "@/lib/auth-session";
 
 const MIN_PASSWORD = 6;
 
@@ -25,8 +26,10 @@ export default function PasswordPage() {
     setSaving(true);
     setError(null);
     try {
-      await postChangePassword({ currentPassword: current, newPassword: next });
-      actionToast.success({ title: "Senha alterada" });
+      const { access_token } = await postChangePassword({ currentPassword: current, newPassword: next });
+      // A senha nova derrubou todas as sessões; esta segue com o token novo.
+      replaceToken(access_token);
+      actionToast.success({ title: "Senha alterada", description: "Os outros aparelhos foram desconectados." });
       navigate(-1);
     } catch (err) {
       setError(getErrorMessage(err, "Falha ao alterar a senha."));
@@ -77,7 +80,7 @@ export default function PasswordPage() {
           />
 
           <p className="text-sm text-zinc-500">
-            Trocar a senha não desconecta esta sessão — você continua logado aqui.
+            Trocar a senha desconecta os outros aparelhos. Aqui você continua logado.
           </p>
         </div>
 
