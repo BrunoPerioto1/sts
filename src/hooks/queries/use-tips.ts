@@ -73,14 +73,28 @@ export function useTips(status?: TipStatus, q?: string, houseIds: number[] = [])
   };
 }
 
-// Badge de Tips no menu: quantas pendentes esperam decisão. Mesmo staleTime
-// da fila — tip chega de fora do app, sem o usuário fazer nada.
+// Tip chega do canal sem o usuário fazer nada; sem isto o menu só mudava com
+// F5 ou depois de uma ação. Com a aba escondida o react-query não dispara.
+const TIP_COUNTS_REFETCH_MS = 60 * 1000;
+
+// Badge de Tips no menu: quantas pendentes esperam decisão. O menu está em
+// toda tela, então é ele que dá o ritmo: mudou o número, a fila aberta também
+// está velha e recarrega junto (só a query montada vai à rede).
 export function useTipCounts() {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: TIP_COUNTS_KEY,
-    queryFn: getTipCounts,
+    queryFn: async () => {
+      const before = qc.getQueryData<Awaited<ReturnType<typeof getTipCounts>>>(TIP_COUNTS_KEY);
+      const counts = await getTipCounts();
+      if (before && before.pending !== counts.pending) {
+        void qc.invalidateQueries({ queryKey: TIPS_KEY });
+      }
+      return counts;
+    },
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
+    refetchInterval: TIP_COUNTS_REFETCH_MS,
   });
 }
 

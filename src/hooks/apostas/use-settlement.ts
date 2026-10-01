@@ -53,6 +53,11 @@ export function useSettlementQueue() {
       }
       return fila;
     },
+    // Aposta vira "atrasada" com o relógio e o placar chega pelo job 3x ao
+    // dia: o badge do menu não pode esperar F5. Sem placar novo o endpoint só
+    // conta; com a aba escondida o react-query não dispara.
+    refetchInterval: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 
