@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { format, parseISO, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMe } from "@/hooks/queries/use-me";
-import { useHouseMetrics } from "@/hooks/queries/use-houses";
+import { useBankrollSeries } from "@/hooks/dashboard/use-bankroll-series";
 import { useHouseProfit } from "@/hooks/dashboard/use-house-profit";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -14,7 +14,7 @@ import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { DashboardProfitHero, daysSummary } from "./DashboardProfitHero";
 import { ProfitBarChart } from "./ProfitBarChart";
-import { BankrollChart, type BankrollPoint } from "./BankrollChart";
+import { BankrollChart } from "./BankrollChart";
 import { HouseProfitBars } from "./HouseProfitBars";
 
 // Até um mês cabe uma barra por dia; acima disso a leitura só funciona por
@@ -29,24 +29,6 @@ function groupByWeek(data: DailySummaryPoint[]) {
   return Array.from(buckets.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, profitDay]) => ({ date, profitDay }));
-}
-
-/**
- * Banca ao fim de cada dia, reconstruída de trás pra frente a partir do saldo
- * atual das casas.
- *
- * ponytail: depósitos e saques dentro do período não entram na conta (só o
- * lucro das apostas), então a curva mostra a forma da evolução, não o extrato.
- * Corrigir isso exige o histórico de transações por dia no backend.
- */
-function bankrollSeries(daily: DailySummaryPoint[], currentBalance: number): BankrollPoint[] {
-  const points: BankrollPoint[] = [];
-  let balance = currentBalance;
-  for (let i = daily.length - 1; i >= 0; i--) {
-    points.unshift({ date: daily[i].date, balance });
-    balance -= daily[i].profitDay;
-  }
-  return points;
 }
 
 function Panel({ label, right, children, className }: {
@@ -73,9 +55,10 @@ function StatRow({ label, value, color }: { label: string; value: string; color?
 }
 
 interface DashboardDesktopViewProps {
-  filters: { startDate: string; endDate: string };
+  filters: { startDate: string; endDate: string; houseIds: number[]; sportIds: number[] };
   preset: DatePreset;
   metrics: DashboardMetrics;
+  previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
   onPresetChange: (preset: DatePreset) => void;
 }
@@ -90,20 +73,17 @@ export function DashboardDesktopView({
   filters,
   preset,
   metrics,
+  previousMetrics,
   dailyData,
   onPresetChange,
 }: DashboardDesktopViewProps) {
   const { me } = useMe();
-  const houseMetrics = useHouseMetrics();
-  const byHouse = useHouseProfit(filters.startDate, filters.endDate);
+  const byHouse = useHouseProfit(filters.startDate, filters.endDate, filters.houseIds, filters.sportIds);
   const preferences = normalizeDashboardPreferences(me?.dashboardPreferences);
 
   const profit = Number(metrics.totalProfit);
   const chartData = useMemo(() => groupByWeek(dailyData), [dailyData]);
-  const bankroll = useMemo(
-    () => bankrollSeries(dailyData, Number(houseMetrics.data?.totalBalance ?? 0)),
-    [dailyData, houseMetrics.data]
-  );
+  const bankroll = useBankrollSeries(filters.startDate, filters.endDate);
   const bestDay = dailyData.reduce<DailySummaryPoint | null>(
     (best, day) => (best == null || day.profitDay > best.profitDay ? day : best),
     null
@@ -189,12 +169,14 @@ export function DashboardDesktopView({
       </div>
 
       <div className="border-t border-foreground/[0.05]">
-        <DashboardKpiGrid metrics={metrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
+        <DashboardKpiGrid metrics={metrics} previous={previousMetrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
       </div>
 
       <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-foreground/[0.05]">
         <Panel
-          label="Banca acumulada"
+          // Banca é o patrimônio somado das casas: não tem como recortar por
+          // esporte, então com filtro ativo o rótulo avisa que é o total.
+          label={filters.houseIds.length || filters.sportIds.length ? "Banca acumulada · todas as casas" : "Banca acumulada"}
           className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r"
           right={
             bankroll.length > 0 ? (

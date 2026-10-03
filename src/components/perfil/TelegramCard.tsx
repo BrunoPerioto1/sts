@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { TelegramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
+import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
 import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
+import type { MeResponse } from "@/api/routes/get-me";
 
 // Card do desktop. O fluxo completo (contagem regressiva, polling, dígitos)
 // mora na tela /profile/telegram, usada no mobile.
-export function TelegramCard({ isLinked, onUnlinked }: { isLinked: boolean; onUnlinked: () => void }) {
+export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: () => void }) {
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState("");
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+  const isLinked = !!me.telegramUserId;
 
   const handleGenerate = async () => {
     try {
@@ -27,27 +42,45 @@ export function TelegramCard({ isLinked, onUnlinked }: { isLinked: boolean; onUn
   };
 
   const handleUnlink = async () => {
+    setUnlinking(true);
     try {
       await postUnlinkTelegram();
       actionToast.success({ title: "Telegram desvinculado" });
+      setConfirmUnlink(false);
       onUnlinked();
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
+    } finally {
+      setUnlinking(false);
     }
   };
 
   return (
-    <div className="card elev-sm bg-card rounded-md p-[16px]">
-      <div className="flex items-center gap-2 mb-1">
-        <TelegramLogo size={18} className="text-accent" />
-        <h3 className="text-base font-medium">Telegram</h3>
-        <span className={`tag ml-auto text-xs px-[10px] py-[3px] rounded-[6px] ${isLinked ? "bg-positive/[0.16] text-positive" : "bg-neutral-800 text-neutral-100"}`}>
-          {isLinked ? "Vinculado" : "Não vinculado"}
+    <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="telegram-title">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="h-8 w-8 rounded-lg bg-foreground/[0.06] flex items-center justify-center text-zinc-300" aria-hidden="true">
+          <TelegramLogo size={16} />
         </span>
+        <h2 id="telegram-title" className="text-base font-semibold">Telegram</h2>
       </div>
-      <p className="text-sm opacity-55 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
+
+      {/* Nem toda conta do Telegram tem @; sem ele, o texto genérico. */}
+      <div className="rounded-lg bg-foreground/[0.04] px-3 py-2.5 mb-3">
+        <p className="flex items-center gap-2 text-sm font-medium min-w-0">
+          <span className="truncate">{!isLinked ? "Nenhuma conta" : me.telegramUsername ? `@${me.telegramUsername}` : "Conta vinculada"}</span>
+          <span className={`flex shrink-0 items-center gap-1 text-xs font-normal ${isLinked ? "text-positive" : "text-zinc-400"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isLinked ? "bg-positive" : "bg-zinc-500"}`} />
+            {isLinked ? "Vinculado" : "Não vinculado"}
+          </span>
+        </p>
+        {isLinked && me.telegramLinkedAt && (
+          <p className="text-xs text-zinc-500 mt-0.5">desde {new Date(me.telegramLinkedAt).toLocaleDateString("pt-BR")}</p>
+        )}
+      </div>
+
+      <p className="text-[13px] text-zinc-400 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
       {isLinked ? (
-        <Button variant="outline" size="sm" onClick={handleUnlink}>Desvincular</Button>
+        <Button variant="outline" size="sm" onClick={() => setConfirmUnlink(true)}>Desvincular</Button>
       ) : (
         <div className="space-y-2">
           <Button size="sm" onClick={handleGenerate} disabled={linking}>
@@ -56,6 +89,28 @@ export function TelegramCard({ isLinked, onUnlinked }: { isLinked: boolean; onUn
           {code && <p className="text-sm">Código: <span className="font-mono">{code}</span> — envie <span className="font-mono">/vincular {code}</span> no bot.</p>}
         </div>
       )}
-    </div>
+
+      <AlertDialog open={confirmUnlink} onOpenChange={(open) => !unlinking && setConfirmUnlink(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desvincular o Telegram?</AlertDialogTitle>
+            <AlertDialogDescription>{UNLINK_TELEGRAM_WARNING}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unlinking}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={unlinking}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleUnlink();
+              }}
+              className="bg-negative text-white hover:bg-negative/90"
+            >
+              Desvincular
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
   );
 }

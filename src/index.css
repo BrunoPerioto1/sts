@@ -454,6 +454,38 @@
     transform: scale(0.985);
   }
 
+  /* Profundidade do CTA primario ("Nova aposta"; a cor fica no className,
+     senao as utilities do variant do Button venceriam). Sombra escura, nao
+     glow azul, pra descolar do fundo sem cara de neon. */
+  .btn-cta {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.28),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+    transition:
+      transform var(--dur-fast) var(--ease-out-soft),
+      box-shadow var(--dur-fast) var(--ease-out-soft),
+      background-color var(--dur-fast) linear;
+  }
+  .btn-cta:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  .btn-cta:active {
+    transform: scale(0.97);
+  }
+  .light .btn-cta {
+    box-shadow:
+      0 2px 6px rgba(15, 23, 42, 0.14),
+      0 0 0 1px rgba(15, 23, 42, 0.04);
+  }
+  .light .btn-cta:hover {
+    box-shadow:
+      0 4px 12px rgba(15, 23, 42, 0.18),
+      0 0 0 1px rgba(15, 23, 42, 0.06);
+  }
+
   /* Esqueleto com brilho passando: comunica "carregando" melhor que o pulse
      chapado, que a distancia parece conteudo piscando. */
   .skeleton {
@@ -481,7 +513,9 @@
     animation: none !important;
   }
   .press:active,
-  .press-sm:active {
+  .press-sm:active,
+  .btn-cta:hover,
+  .btn-cta:active {
     transform: none;
   }
 }
@@ -504,3 +538,42 @@
 .light .text-green-400,
 .light .text-emerald-400 { color: #059669; }
 .light .text-violet-300 { color: #7c3aed; }
+
+/* Intervalo do PeriodCalendarSheet (sheets de período no mobile). Fica aqui e
+   não em classes do Tailwind porque são camadas: o início/fim é um círculo
+   sólido desenhado por cima de meia faixa, e a faixa arredonda nas pontas de
+   cada semana. Cada semana vira uma pílula própria (há respiro entre as
+   linhas), em vez de um bloco retangular fechado. */
+.period-range-cal {
+  --range-band: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  --range-dot: var(--color-accent);
+}
+.period-range-cal td .day-range-middle {
+  background: var(--range-band);
+  border-radius: 0;
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  font-weight: 400;
+}
+.period-range-cal td:first-child .day-range-middle { border-radius: 9999px 0 0 9999px; }
+.period-range-cal td:last-child .day-range-middle { border-radius: 0 9999px 9999px 0; }
+.period-range-cal td:first-child:last-child .day-range-middle { border-radius: 9999px; }
+
+.period-range-cal td .day-range-start,
+.period-range-cal td .day-range-end {
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0;
+  background: radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%);
+}
+/* Meia faixa atrás do círculo, ligando-o ao miolo — só quando há miolo do
+   lado certo (não em dia único nem colado na borda da semana). */
+.period-range-cal td:not(:last-child) .day-range-start:not(.day-range-end) {
+  background:
+    radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%),
+    linear-gradient(to right, transparent 50%, var(--range-band) 50%);
+}
+.period-range-cal td:not(:first-child) .day-range-end:not(.day-range-start) {
+  background:
+    radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%),
+    linear-gradient(to left, transparent 50%, var(--range-band) 50%);
+}

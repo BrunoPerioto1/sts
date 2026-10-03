@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { formatCurrency } from "@/lib/format";
 import { parsePtBrNumber } from "@/lib/format";
 import { THRESHOLD_MAX, THRESHOLD_MIN, toPtBr, type usePreferencesForm } from "@/hooks/use-preferences-form";
+import { DEFAULT_STALE_BET_DAYS } from "@/lib/house-activity";
 
 type PreferencesFormState = ReturnType<typeof usePreferencesForm>;
 
@@ -68,6 +69,27 @@ export function PreferencesFields({
             {thresholdInReais != null
               ? `Equivale a ${formatCurrency(thresholdInReais)} de stake. Sinal abaixo disso não vira notificação.`
               : "Só recebe notificação do bot quando o sinal indicar stake acima desta porcentagem da banca."}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className={labelClassName}>Sugerir saque após</Label>
+        <div className="relative">
+          <Input
+            inputMode="numeric"
+            placeholder={String(DEFAULT_STALE_BET_DAYS)}
+            className="min-h-[52px] rounded-lg pr-14 text-xl font-medium tabular-nums"
+            value={form.staleDaysInput}
+            onChange={(e) => form.setStaleDaysInput(e.target.value.replace(/\D/g, "").slice(0, 3))}
+          />
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base text-zinc-500 pointer-events-none">dias</span>
+        </div>
+        {form.staleDaysError ? (
+          <p className="text-sm text-negative">{form.staleDaysError}</p>
+        ) : (
+          <p className="text-sm text-zinc-500">
+            Casa com saldo e sem apostas há mais que isso ganha o aviso "sacar" na lista de casas.
           </p>
         )}
       </div>

@@ -10,20 +10,121 @@ import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin-health";
 import { initialsOf } from "@/lib/format";
-import type { AdminUser } from "@/api/routes/get-admin";
+import type { AdminUser, UpdateAdminUserParams } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { daysUntilAccess, formatAccessDate, fromSaoPauloInput, isExpired, tipsGroupAction, toSaoPauloInput } from "@/lib/access";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
 
-const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_110px]";
+// Ações em 128px: "Tirar do grupo" é o rótulo mais largo da coluna.
+const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_196px_128px]";
+
+const INVITE_FAILED =
+  "Confira se o bot é admin do grupo e se a pessoa não bloqueou o bot. Dá pra repetir pelo botão Convidar.";
 
 const FILTERS = [
   { id: "all", label: "Todos", test: () => true },
   { id: "admin", label: "Admin", test: (u: AdminUser) => u.roleId === 1 },
   { id: "user", label: "Usuário", test: (u: AdminUser) => u.roleId === 3 },
   { id: "locked", label: "Bloqueados", test: (u: AdminUser) => isLocked(u.lockedUntil) },
+  { id: "expired", label: "Vencidos", test: (u: AdminUser) => isExpired(u.accessUntil) },
+  // Quem cobrar esta semana: vence nos próximos 7 dias e ainda está em dia.
+  {
+    id: "expiring",
+    label: "Vence em 7 dias",
+    test: (u: AdminUser) => !!u.accessUntil && !isExpired(u.accessUntil) && daysUntilAccess(u.accessUntil) <= 7,
+  },
+  // Apertou "Já paguei": conferir o extrato pelo identificador STS<id>.
+  { id: "claimed", label: "Avisou pagamento", test: (u: AdminUser) => !!u.paymentClaimedAt },
 ] as const;
 
 type FilterId = (typeof FILTERS)[number]["id"];
+
+const ACCESS_DAYS = 30;
+
+// Vencimento + "+30d". Sem prazo = conta antiga ou admin; o primeiro clique
+// já põe o cliente no ciclo de cobrança. Clicar na data abre o ajuste exato
+// (hora de Brasília) — pra acertar quem pagou em outro dia sem ir no banco.
+function AccessCell({
+  user,
+  isMe,
+  pending,
+  onExtend,
+  onSetDate,
+}: {
+  user: AdminUser;
+  isMe: boolean;
+  pending: boolean;
+  onExtend: () => void;
+  onSetDate: (accessUntil: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const expired = isExpired(user.accessUntil);
+  const label = user.accessUntil ? `${expired ? "venceu" : "até"} ${formatAccessDate(user.accessUntil)}` : "sem prazo";
+  // Largura fixa no rótulo: o +30d fica na mesma coluna em todas as linhas.
+  const labelClass = cn("w-[132px] shrink-0 text-left text-sm tabular-nums whitespace-nowrap", expired ? "text-negative" : "opacity-55");
+
+  if (isMe) return <span className={labelClass}>{label}</span>;
+
+  const apply = (accessUntil: string | null) => {
+    onSetDate(accessUntil);
+    setOpen(false);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          if (next) setValue(user.accessUntil ? toSaoPauloInput(user.accessUntil) : "");
+          setOpen(next);
+        }}
+      >
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            disabled={pending}
+            aria-label={`Ajustar vencimento de ${user.username}`}
+            className={cn(labelClass, "underline decoration-dotted underline-offset-4 hover:opacity-100 disabled:opacity-40")}
+          >
+            {label}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-72 space-y-3">
+          <div className="space-y-1.5">
+            <label htmlFor={`access-${user.id}`} className="text-xs text-zinc-400">Vence em (horário de Brasília)</label>
+            <Input
+              id={`access-${user.id}`}
+              type="datetime-local"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            {user.accessUntil ? (
+              <Button variant="ghost" size="sm" className="text-zinc-400" onClick={() => apply(null)}>Sem prazo</Button>
+            ) : <span />}
+            <Button size="sm" disabled={!value} onClick={() => apply(fromSaoPauloInput(value))}>Salvar</Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <Button variant="outline" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
+        +{ACCESS_DAYS}d
+      </Button>
+    </div>
+  );
+}
 
 function RoleChoice({
   user,
@@ -95,6 +196,11 @@ function Identity({ user, isMe }: { user: AdminUser; isMe: boolean }) {
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/10 opacity-50 shrink-0">inativo</span>
           )}
         </p>
+        {user.paymentClaimedAt && (
+          <p className="text-xs text-[var(--dashboard-orange)]">
+            avisou que pagou · {formatSaoPaulo(user.paymentClaimedAt)} · PIX STS{user.id}
+          </p>
+        )}
         <p className="text-xs opacity-45 truncate">{user.email}</p>
         <LockLine user={user} />
       </div>
@@ -107,16 +213,35 @@ function Actions({
   pending,
   onUnlock,
   onUnlink,
+  onTipsGroup,
 }: {
   user: AdminUser;
   pending: boolean;
   onUnlock: () => void;
   onUnlink: () => void;
+  onTipsGroup: (action: "remove" | "invite") => void;
 }) {
   if (isLocked(user.lockedUntil)) {
     return (
       <Button variant="outline" size="sm" disabled={pending} onClick={onUnlock} className="text-[var(--dashboard-orange)] border-[var(--dashboard-orange)]/40">
         Desbloquear
+      </Button>
+    );
+  }
+
+  // Na frente do Desvincular: vencido e ainda no grupo, a pessoa segue lendo
+  // as tips lá — é a ação que está faltando nessa linha.
+  const groupAction = tipsGroupAction(user);
+  if (groupAction) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={pending}
+        onClick={() => onTipsGroup(groupAction)}
+        className={cn(groupAction === "remove" && "text-negative border-negative/40")}
+      >
+        {groupAction === "remove" ? "Tirar do grupo" : "Convidar"}
       </Button>
     );
   }
@@ -129,7 +254,27 @@ function Actions({
     );
   }
 
-  return <span className="text-sm opacity-25">—</span>;
+  return null;
+}
+
+// Fica fora do Actions: desativar vale pra qualquer linha, e não pode tomar o
+// lugar da ação principal (desbloquear, tirar do grupo). A própria conta não
+// tem o link — o servidor recusa, igual ao papel.
+function ActiveToggle({ user, pending, onToggle }: { user: AdminUser; pending: boolean; onToggle: () => void }) {
+  const inactive = user.isActive === false;
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={onToggle}
+      className={cn(
+        "text-xs underline-offset-4 hover:underline disabled:opacity-40",
+        inactive ? "text-accent-text" : "text-zinc-500 hover:text-negative",
+      )}
+    >
+      {inactive ? "Reativar conta" : "Desativar conta"}
+    </button>
+  );
 }
 
 export function AdminUsers() {
@@ -138,6 +283,10 @@ export function AdminUsers() {
   const update = useUpdateAdminUser();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
+  // Promover dá acesso ao painel inteiro: pede confirmação. Rebaixar não.
+  const [promoting, setPromoting] = useState<AdminUser | null>(null);
+  const changeRole = (user: AdminUser, roleId: number) =>
+    roleId === 1 ? setPromoting(user) : run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`);
 
   // Doze linhas: filtrar aqui é mais barato que uma rota de busca.
   const filtered = useMemo(() => {
@@ -153,16 +302,42 @@ export function AdminUsers() {
     );
   }, [users, search, filter]);
 
-  const run = (id: number, params: { roleId?: number; unlock?: boolean; unlinkTelegram?: boolean }, done: string) =>
+  const run = (
+    id: number,
+    params: UpdateAdminUserParams,
+    done: string,
+    action?: { label: string; onClick: () => void },
+  ) =>
     update.mutate(
       { id, ...params },
       {
-        onSuccess: () => actionToast.success({ title: done }),
+        // Liberar acesso de quem estava fora do grupo Tips também manda o
+        // convite: o toast diz se ele chegou.
+        onSuccess: ({ groupInvite }) =>
+          groupInvite === "failed"
+            ? actionToast.error({ title: "O convite do grupo Tips não saiu", description: INVITE_FAILED, duration: 6000 })
+            : actionToast.success({
+                title: done,
+                description: groupInvite === "sent" ? "Convite do grupo Tips enviado no Telegram." : undefined,
+                duration: groupInvite === "sent" ? 3000 : undefined,
+                action,
+              }),
         onError: (err) => actionToast.error({ description: getErrorMessage(err, "Não foi possível aplicar a mudança.") }),
       },
     );
 
   const pendingFor = (id: number) => update.isPending && update.variables?.id === id;
+
+  const tipsGroup = (id: number, action: "remove" | "invite") =>
+    run(id, { tipsGroup: action }, action === "remove" ? "Tirado do grupo Tips" : "Liberado no grupo Tips");
+
+  // Desativar derruba login, API e tips na hora: sem diálogo de confirmação,
+  // mas com Desfazer no toast pro clique errado.
+  const toggleActive = (user: AdminUser) => {
+    const reactivate = () => run(user.id, { isActive: true }, "Conta reativada");
+    if (user.isActive === false) return reactivate();
+    run(user.id, { isActive: false }, "Conta desativada", { label: "Desfazer", onClick: reactivate });
+  };
 
   const body = isPending ? (
     <div className="p-4 space-y-2">
@@ -186,14 +361,18 @@ export function AdminUsers() {
     <EmptyState bare title="Nenhum usuário encontrado" description={search ? `Nada bate com "${search}".` : "Ninguém neste filtro."} />
   ) : (
     <>
-      {/* Desktop */}
-      <div className="hidden sm:block">
+      {/* Desktop: sete colunas pedem ~1120px. Abaixo de xl (com a sidebar
+          aberta) a tabela era cortada pelo overflow-hidden do painel — os
+          cartões cobrem até lá, e a rolagem lateral segura o resto. */}
+      <div className="hidden xl:block overflow-x-auto">
+        <div className="min-w-[1120px]">
         <div className={cn(GRID, "px-6 py-2.5 border-b border-border bg-foreground/[0.02] [&>span]:text-[11px] [&>span]:uppercase [&>span]:tracking-[0.1em] [&>span]:opacity-40")}>
           <span>Usuário</span>
           <span>Papel</span>
           <span className="text-right">Apostas</span>
           <span>Último login</span>
           <span>Telegram</span>
+          <span>Acesso</span>
           <span className="text-right">Ações</span>
         </div>
         {filtered.map((user) => (
@@ -203,27 +382,53 @@ export function AdminUsers() {
               user={user}
               disabled={user.id === me?.id}
               pending={pendingFor(user.id)}
-              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+              onChange={(roleId) => changeRole(user, roleId)}
             />
             <span className="text-sm tabular-nums text-right">{user.betCount}</span>
-            <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
-            <span className="text-sm opacity-55">
-              {user.hasTelegram ? `vinculado ${formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}` : "—"}
-            </span>
-            <div className="flex justify-end">
+            {/* Sem valor, o traço fica no meio da largura que a data ocuparia,
+                e não colado na esquerda da coluna. */}
+            {user.lastLogin ? (
+              <span className="text-sm opacity-55">{formatSaoPaulo(user.lastLogin)}</span>
+            ) : (
+              <span className="w-[80px] text-center text-sm opacity-25">—</span>
+            )}
+            {user.hasTelegram ? (
+              user.tipsGroupRemovedAt ? (
+                <span className="text-sm text-negative">fora do grupo</span>
+              ) : (
+                <span className="text-sm opacity-55">vinculado {formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}</span>
+              )
+            ) : (
+              <span className="w-[108px] text-center text-sm opacity-25">—</span>
+            )}
+            <AccessCell
+              user={user}
+              isMe={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
+            />
+            <div className="flex flex-col items-end gap-1">
               <Actions
                 user={user}
                 pending={pendingFor(user.id)}
                 onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
                 onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+                onTipsGroup={(action) => tipsGroup(user.id, action)}
               />
+              {user.id !== me?.id ? (
+                <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
+              ) : (
+                !isLocked(user.lockedUntil) && !user.hasTelegram && <span className="text-sm opacity-25">—</span>
+              )}
             </div>
           </div>
         ))}
+        </div>
       </div>
 
-      {/* Mobile: tabela de seis colunas não cabe em 390px. */}
-      <div className="space-y-2 p-3 sm:hidden">
+      {/* Cartões: tabela de sete colunas não cabe no celular nem no notebook. */}
+      <div className="grid gap-2 p-3 sm:grid-cols-2 xl:hidden">
         {filtered.map((user) => (
           <div key={user.id} className="rounded-lg border border-border bg-card p-3.5 space-y-3">
             <Identity user={user} isMe={user.id === me?.id} />
@@ -231,14 +436,22 @@ export function AdminUsers() {
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-55">
               <span>{user.betCount} apostas</span>
               <span>{formatSaoPaulo(user.lastLogin)}</span>
-              <span>{user.hasTelegram ? "Telegram vinculado" : "sem Telegram"}</span>
+              <span>{user.hasTelegram ? (user.tipsGroupRemovedAt ? "fora do grupo Tips" : "Telegram vinculado") : "sem Telegram"}</span>
             </div>
+
+            <AccessCell
+              user={user}
+              isMe={user.id === me?.id}
+              pending={pendingFor(user.id)}
+              onExtend={() => run(user.id, { extendDays: ACCESS_DAYS }, `Acesso liberado por +${ACCESS_DAYS} dias`)}
+              onSetDate={(accessUntil) => run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido")}
+            />
 
             <RoleChoice
               user={user}
               disabled={user.id === me?.id}
               pending={pendingFor(user.id)}
-              onChange={(roleId) => run(user.id, { roleId }, `Papel alterado para ${ROLE_LABELS[roleId]}`)}
+              onChange={(roleId) => changeRole(user, roleId)}
             />
 
             {(isLocked(user.lockedUntil) || user.hasTelegram) && (
@@ -248,8 +461,13 @@ export function AdminUsers() {
                   pending={pendingFor(user.id)}
                   onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
                   onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+                  onTipsGroup={(action) => tipsGroup(user.id, action)}
                 />
               </div>
+            )}
+
+            {user.id !== me?.id && (
+              <ActiveToggle user={user} pending={pendingFor(user.id)} onToggle={() => toggleActive(user)} />
             )}
           </div>
         ))}
@@ -265,7 +483,7 @@ export function AdminUsers() {
       title={users ? `${users.length} ${users.length === 1 ? "usuário" : "usuários"}` : "Usuários"}
       description={
         <>
-          Papel, bloqueio de login e vínculo com o Telegram.
+          Papel, bloqueio de login, vínculo com o Telegram, vencimento do acesso (PIX) e quem fica no grupo Tips.
           <br />
           Você não altera o próprio papel — o servidor recusa o auto-rebaixamento.
         </>
@@ -292,6 +510,27 @@ export function AdminUsers() {
       footer={users && !isError && <span className="opacity-45">{filtered.length} de {users.length}</span>}
     >
       {body}
+      <AlertDialog open={!!promoting} onOpenChange={(open) => !open && setPromoting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tornar {promoting?.fullName || promoting?.username} administrador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Admin vê e altera todos os usuários, casas e o pipeline de tips. Dá pra desfazer depois, mudando o papel de volta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (promoting) run(promoting.id, { roleId: 1 }, `Papel alterado para ${ROLE_LABELS[1]}`);
+                setPromoting(null);
+              }}
+            >
+              Tornar admin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminPanel>
   );
 }

@@ -22,11 +22,12 @@ import {
   lucroSugerido,
   tally,
 } from "@/lib/settlement-view";
-import { formatTime } from "@/lib/format";
+import { formatTime, formatOdd } from "@/lib/format";
 import { stakeCurta } from "@/lib/settlement-format";
 import { cn } from "@/lib/utils";
 import { SuggestionDetail } from "@/components/conferir/SuggestionDetail";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { tintStyle, usePerformanceColor } from "@/hooks/use-performance-color";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import {
   ArrowsClockwise,
@@ -44,33 +45,23 @@ const BRL = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
-function corDoLucro(lucro: number): string {
-  return lucro > 0 ? "text-green-400" : lucro < 0 ? "text-red-400" : "text-zinc-300";
-}
-
-const BADGES: Record<number, { label: string; cls: string }> = {
-  [ResultIdEnum.WON]: {
-    label: "GANHOU",
-    cls: "bg-green-500/[0.12] border-green-500/25 text-green-400",
-  },
-  [ResultIdEnum.LOST]: {
-    label: "PERDEU",
-    cls: "bg-red-500/[0.12] border-red-500/25 text-red-400",
-  },
-  [ResultIdEnum.CANCELED]: {
-    label: "ANULADA",
-    cls: "bg-foreground/[0.06] border-foreground/10 text-zinc-300",
-  },
+// Sinal de cada resultado pra cor de Preferências (ganho/perda); anulada fica neutra.
+const BADGES: Record<number, { label: string; sign: number }> = {
+  [ResultIdEnum.WON]: { label: "GANHOU", sign: 1 },
+  [ResultIdEnum.LOST]: { label: "PERDEU", sign: -1 },
+  [ResultIdEnum.CANCELED]: { label: "ANULADA", sign: 0 },
 };
 
 function ResultBadge({ resultId }: { resultId: ResultIdEnum }) {
+  const color = usePerformanceColor();
   const it = BADGES[resultId] ?? BADGES[ResultIdEnum.CANCELED];
   return (
     <span
       className={cn(
         "shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide",
-        it.cls,
+        !it.sign && "bg-foreground/[0.06] border-foreground/10 text-zinc-300",
       )}
+      style={it.sign ? tintStyle(color(it.sign)) : undefined}
     >
       {it.label}
     </span>
@@ -85,6 +76,7 @@ function Impacto({
   suggestion: SettlementSuggestion;
   className?: string;
 }) {
+  const color = usePerformanceColor();
   if (suggestion.suggestedResultId === ResultIdEnum.CANCELED) {
     return (
       <span className={cn("text-zinc-400", className)}>
@@ -94,7 +86,7 @@ function Impacto({
   }
   const lucro = lucroSugerido(suggestion);
   return (
-    <span className={cn("font-medium", corDoLucro(lucro), className)}>
+    <span className={cn("font-medium", className)} style={{ color: color(lucro) }}>
       {lucro > 0 ? "+" : ""}
       {BRL.format(lucro)}
     </span>
@@ -168,7 +160,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
 
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-zinc-500">
-                {stakeCurta(suggestion.stake)} @ {suggestion.odd.toFixed(2)}{" "}
+                {stakeCurta(suggestion.stake)} @ {formatOdd(suggestion.odd)}{" "}
                 <Impacto suggestion={suggestion} className="ml-1 text-xs" />
               </p>
               {descartar}
@@ -213,7 +205,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
         </div>
 
         <span className="whitespace-nowrap text-xs text-zinc-500">
-          {stakeCurta(suggestion.stake)} @ {suggestion.odd.toFixed(2)}
+          {stakeCurta(suggestion.stake)} @ {formatOdd(suggestion.odd)}
         </span>
 
         <Impacto suggestion={suggestion} className="whitespace-nowrap text-right text-xs" />
@@ -390,6 +382,7 @@ export default function ConferirPage() {
   const { compute, confirm, dismiss } = useSettlementActions();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [aberta, setAberta] = useState<SettlementSuggestion | null>(null);
+  const color = usePerformanceColor();
 
   const lista = useMemo(() => suggestions ?? [], [suggestions]);
 
@@ -458,7 +451,9 @@ export default function ConferirPage() {
             size={16}
             className={compute.isPending ? "animate-spin" : undefined}
           />
-          Calcular próximo lote
+          {/* O cálculo já roda sozinho (fim do job de placar e abertura da
+              tela); o botão fica pra quem quer forçar agora. */}
+          {fila?.hasMore ? "Calcular próximo lote" : "Atualizar"}
         </Button>
       }
     >
@@ -558,9 +553,7 @@ export default function ConferirPage() {
                       </span>
                       {resumoSelecao && `: ${resumoSelecao}`}
                     </span>
-                    <span
-                      className={cn("shrink-0 font-semibold", corDoLucro(total))}
-                    >
+                    <span className="shrink-0 font-semibold" style={{ color: color(total) }}>
                       {total > 0 ? "+" : ""}
                       {BRL.format(total)}
                       <span className="hidden font-normal text-zinc-500 md:inline">

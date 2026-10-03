@@ -17,5 +17,7 @@ export function useInvalidateBetData() {
       qc.invalidateQueries({ queryKey: ["bets"] }),
       qc.invalidateQueries({ queryKey: ["houses"] }),
       qc.invalidateQueries({ queryKey: ["dashboard"] }),
+      // Série da banca (dashboard) reconstrói o saldo a partir das movimentações.
+      qc.invalidateQueries({ queryKey: ["transactions"] }),
     ]);
 }

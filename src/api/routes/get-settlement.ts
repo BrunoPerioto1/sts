@@ -60,12 +60,16 @@ export function dismissSettlement(betIds: number[]) {
 export interface SettlementQueue {
   /** Apostas ainda pendentes do usuário. */
   pending: number;
+  /** Pendentes de jogo que já acabou: o número do menu de Apostas. */
+  overdue: number;
   /** Pendentes com placar esperando cálculo: o que entra no próximo lote. */
   settleable: number;
   /** Propostas aguardando confirmação. */
   suggestions: number;
   /** Analisadas que o bot não soube resolver. Seguem pendentes. */
   undecided: number;
+  /** Quantas a API acabou de calcular sozinha nesta chamada (placar novo). */
+  computed: number;
   hasMore: boolean;
 }
 

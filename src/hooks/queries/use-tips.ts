@@ -8,6 +8,7 @@ import {
 import { runTipBatch, tipPlanilharDefaults } from "@/lib/tip-batch";
 import {
   dismissTip,
+  getTipCounts,
   getTips,
   planilharTip,
   undismissTip,
@@ -18,6 +19,9 @@ import {
 } from "@/api/routes/get-tips";
 
 const TIPS_KEY = ["tips"] as const;
+// Fora de TIPS_KEY de propósito: o otimista percorre tudo sob ["tips"]
+// esperando o formato da lista, e o número do menu não é lista.
+const TIP_COUNTS_KEY = ["tip-counts"] as const;
 // Chave comum das gravações, pra lista saber quais tips estão em voo.
 const TIP_WRITE_KEY = ["tips", "write"] as const;
 // Sem paginacao na tela: a fila e' curta (o canal manda dezenas, nao milhares)
@@ -67,6 +71,31 @@ export function useTips(status?: TipStatus, q?: string, houseIds: number[] = [])
     summary: query.data?.summary ?? null,
     total: query.data?.total ?? 0,
   };
+}
+
+// Tip chega do canal sem o usuário fazer nada; sem isto o menu só mudava com
+// F5 ou depois de uma ação. Com a aba escondida o react-query não dispara.
+const TIP_COUNTS_REFETCH_MS = 60 * 1000;
+
+// Badge de Tips no menu: quantas pendentes esperam decisão. O menu está em
+// toda tela, então é ele que dá o ritmo: mudou o número, a fila aberta também
+// está velha e recarrega junto (só a query montada vai à rede).
+export function useTipCounts() {
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: TIP_COUNTS_KEY,
+    queryFn: async () => {
+      const before = qc.getQueryData<Awaited<ReturnType<typeof getTipCounts>>>(TIP_COUNTS_KEY);
+      const counts = await getTipCounts();
+      if (before && before.pending !== counts.pending) {
+        void qc.invalidateQueries({ queryKey: TIPS_KEY });
+      }
+      return counts;
+    },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchInterval: TIP_COUNTS_REFETCH_MS,
+  });
 }
 
 const down = (value: number, by: number) => Math.max(0, value - by);
@@ -129,6 +158,7 @@ export function useTipActions() {
   // desde o clique. Esperar aqui só prenderia o `isPending` da mutation.
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: TIPS_KEY });
+    void qc.invalidateQueries({ queryKey: TIP_COUNTS_KEY });
   };
   // Planilhar cria aposta: mexe na lista de apostas, no saldo da casa e nas
   // métricas do dashboard, exatamente como registrar uma aposta pela tela de

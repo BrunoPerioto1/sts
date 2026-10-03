@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { SquaresFour, Receipt, Buildings, UserCircle, ClipboardText, PaperPlaneTilt } from "@phosphor-icons/react";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
+import { useTipCounts } from "@/hooks/queries/use-tips";
 import { tapHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const items = [
 export function BottomNav() {
   const location = useLocation();
   const { data: fila } = useSettlementQueue();
+  const { data: tipCounts } = useTipCounts();
   const activeIndex = items.findIndex((item) => location.pathname.startsWith(item.path));
 
   return (
@@ -61,11 +63,18 @@ export function BottomNav() {
                 weight={isActive ? "fill" : "regular"}
                 className={cn(isActive && "animate-pop-in")}
               />
-              {/* Contagem de proposta esperando confirmacao. So' na aba da
+              {/* Contagem de proposta esperando confirmacao. Azul so na aba da
                   conferencia: e' a unica que pede acao do usuario. */}
               {item.path === "/settlement" && !!fila?.suggestions && (
                 <span className="absolute -right-2.5 -top-1.5 min-w-[16px] rounded-full bg-accent px-1 text-center text-[10px] font-semibold leading-4 text-white tabular-nums">
                   {fila.suggestions > 99 ? "99+" : fila.suggestions}
+                </span>
+              )}
+              {/* Tips pendentes em cinza: é oportunidade, não pendência que
+                  trava dinheiro — o azul fica só pra conferência. */}
+              {item.path === "/tips" && !!tipCounts?.pending && (
+                <span className="absolute -right-2.5 -top-1.5 min-w-[16px] rounded-full bg-foreground/20 px-1 text-center text-[10px] font-semibold leading-4 text-foreground tabular-nums">
+                  {tipCounts.pending > 99 ? "99+" : tipCounts.pending}
                 </span>
               )}
             </span>

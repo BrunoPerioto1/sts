@@ -9,6 +9,7 @@ const SORT_LABEL: Record<HouseSortMobile, string> = {
   profit: "Lucro",
   name: "Nome",
   bets: "Apostas",
+  idle: "Parada",
   lastMovement: "Última mov.",
 };
 

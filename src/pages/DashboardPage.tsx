@@ -1,9 +1,13 @@
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarSlash, WarningCircle } from "@phosphor-icons/react";
+import { WarningCircle } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Link } from "react-router-dom";
+import { DashboardChecklist } from "@/components/dashboard/DashboardChecklist";
+import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
+import { useHouses } from "@/hooks/queries/use-houses";
+import { useSports } from "@/hooks/queries/use-sports";
 import { DashboardMobileView } from "@/components/dashboard/mobile/DashboardMobileView";
+import { type DashboardFiltersDraft } from "@/components/dashboard/mobile/DashboardFiltersSheet";
 import { DashboardMobileSkeleton } from "@/components/dashboard/mobile/DashboardMobileSkeleton";
 import { DashboardDesktopSkeleton } from "@/components/dashboard/DashboardDesktopSkeleton";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -50,14 +54,7 @@ function DashboardPageContent({
   }
 
   if (ready && hasNoBets) {
-    return (
-      <EmptyState
-        icon={<CalendarSlash size={30} />}
-        title="Nenhuma aposta registrada ainda"
-        description="Registre sua primeira aposta pelo Telegram ou por aqui para começar a ver suas métricas."
-        action={<Button asChild><Link to="/bets">Nova aposta</Link></Button>}
-      />
-    );
+    return <div className="px-4 pt-6 sm:p-0"><DashboardChecklist /></div>;
   }
 
   return <>{mobileView ?? desktopView}</>;
@@ -65,8 +62,21 @@ function DashboardPageContent({
 
 export function DashboardPage() {
   const isMobile = useIsMobile();
-  const { filters, preset, setPreset, setCustomRange, firstBetDate, hasNoBets, ready } = useDashboardFilters();
+  const { filters, preset, setPreset, setCustomRange, setHouseIds, setSportIds, firstBetDate, hasNoBets, ready } =
+    useDashboardFilters();
   const { metrics, previousMetrics, dailyData, loading, error, reload } = useDashboardData(filters);
+  const houses = useHouses();
+  const sports = useSports();
+
+  // "Aplicar" do sheet de filtros do mobile: os setters rodam no mesmo handler,
+  // então o React junta tudo num render só e o react-query dispara uma única
+  // leva de requisições (a chave é por valor — nada mudou, nada busca).
+  const applyMobileFilters = (next: DashboardFiltersDraft) => {
+    if (next.preset === "custom") setCustomRange(next.startDate, next.endDate);
+    else setPreset(next.preset);
+    setHouseIds(next.houseIds);
+    setSportIds(next.sportIds);
+  };
 
   const rangeLabel =
     ready && filters.startDate && filters.endDate
@@ -83,15 +93,36 @@ export function DashboardPage() {
     .filter(Boolean)
     .join(" · ");
 
-  const periodButton = (
-    <PeriodPopover
-      preset={preset}
-      firstBetDate={firstBetDate}
-      from={filters.startDate}
-      to={filters.endDate}
-      onSelect={setPreset}
-      onCustomRange={setCustomRange}
-    />
+  // Filtros do topo só no desktop: o header do mobile é a própria tela
+  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet.
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {!hasNoBets && (
+        <>
+          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+            <HouseMultiSelect houses={houses} selected={filters.houseIds} onChange={setHouseIds} label="Casas" />
+          </div>
+          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+            <HouseMultiSelect
+              houses={sports}
+              selected={filters.sportIds}
+              onChange={setSportIds}
+              label="Esportes"
+              noun={["esporte", "esportes"]}
+              allLabel="Todos"
+            />
+          </div>
+        </>
+      )}
+      <PeriodPopover
+        preset={preset}
+        firstBetDate={firstBetDate}
+        from={filters.startDate}
+        to={filters.endDate}
+        onSelect={setPreset}
+        onCustomRange={setCustomRange}
+      />
+    </div>
   );
 
   return (
@@ -105,7 +136,7 @@ export function DashboardPage() {
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.
       mobileFullBleed
-      actions={periodButton}
+      actions={headerActions}
     >
       <DashboardPageContent
         hasNoBets={hasNoBets}
@@ -117,6 +148,7 @@ export function DashboardPage() {
             filters={filters}
             preset={preset}
             metrics={metrics}
+            previousMetrics={previousMetrics}
             dailyData={dailyData}
             onPresetChange={setPreset}
           />
@@ -130,8 +162,10 @@ export function DashboardPage() {
               metrics={metrics}
               previousMetrics={previousMetrics}
               dailyData={dailyData}
+              houses={houses}
+              sports={sports}
               onPresetChange={setPreset}
-              onCustomRange={setCustomRange}
+              onApplyFilters={applyMobileFilters}
             />
           ) : undefined
         }

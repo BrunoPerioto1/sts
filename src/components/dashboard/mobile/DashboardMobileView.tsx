@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarBlank, CaretDown, ChartLine } from "@phosphor-icons/react";
+import { CalendarBlank, ChartLine, SlidersHorizontal } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -12,7 +12,7 @@ import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
-import { PeriodSheet } from "../PeriodSheet";
+import { DashboardFiltersSheet, countActiveDashboardFilters, type DashboardFiltersDraft } from "./DashboardFiltersSheet";
 import { PRESET_LABEL } from "@/lib/dashboard-periods";
 import { ProfitBarChart } from "../ProfitBarChart";
 import { CumulativeProfitChart } from "../CumulativeProfitChart";
@@ -22,14 +22,16 @@ import { DashboardProfitHero, daysSummary } from "../DashboardProfitHero";
 const MIN_DAYS_FOR_CHART = 1;
 
 interface DashboardMobileViewProps {
-  filters: { startDate: string; endDate: string };
+  filters: { startDate: string; endDate: string; houseIds: number[]; sportIds: number[] };
   preset: DatePreset;
   firstBetDate: string | null;
   metrics: DashboardMetrics;
   previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
+  houses: { id: number; name: string }[];
+  sports: { id: number; name: string }[];
   onPresetChange: (preset: DatePreset) => void;
-  onCustomRange: (from: string, to: string) => void;
+  onApplyFilters: (next: DashboardFiltersDraft) => void;
 }
 
 export function DashboardMobileView({
@@ -38,10 +40,13 @@ export function DashboardMobileView({
   firstBetDate,
   metrics,
   dailyData,
+  houses,
+  sports,
   onPresetChange,
-  onCustomRange,
+  onApplyFilters,
 }: DashboardMobileViewProps) {
-  const [periodOpen, setPeriodOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = countActiveDashboardFilters({ preset, houseIds: filters.houseIds, sportIds: filters.sportIds });
   const [grafico, setGrafico] = useState<"dia" | "acumulado">("dia");
   const { me } = useMe();
   const invalidate = useInvalidateBetData();
@@ -66,12 +71,19 @@ export function DashboardMobileView({
               {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}</span>
             </p>
           </div>
+          {/* Mesmo botão de filtros do header de Apostas (ApostasMobileHeader). */}
           <button
             type="button"
-            onClick={() => setPeriodOpen(true)}
-            className="press shrink-0 flex items-center gap-1.5 h-11 px-3 rounded-xl border border-foreground/10 text-sm text-zinc-300"
+            onClick={() => setFiltersOpen(true)}
+            aria-label="Abrir filtros"
+            className="press relative shrink-0 h-11 w-11 flex items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.04] text-zinc-300 hover:text-foreground"
           >
-            {PRESET_LABEL[preset]} <CaretDown size={12} />
+            <SlidersHorizontal size={19} />
+            {activeFilterCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -132,15 +144,14 @@ export function DashboardMobileView({
 
       </div>
 
-      <PeriodSheet
-        open={periodOpen}
-        onOpenChange={setPeriodOpen}
-        preset={preset}
+      <DashboardFiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        value={{ preset, ...filters }}
+        onApply={onApplyFilters}
         firstBetDate={firstBetDate}
-        from={filters.startDate}
-        to={filters.endDate}
-        onSelect={onPresetChange}
-        onCustomRange={onCustomRange}
+        houses={houses}
+        sports={sports}
       />
     </>
   );

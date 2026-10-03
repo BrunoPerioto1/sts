@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { useSettlementReview } from "@/hooks/apostas/use-settlement";
 import { diaRelativo } from "@/lib/settlement-view";
-import { formatTime } from "@/lib/format";
+import { formatTime, formatOdd } from "@/lib/format";
 import { stakeCurta } from "@/lib/settlement-format";
 
 /**
@@ -63,7 +63,7 @@ export default function ConferirPendentesPage() {
                   <p className="truncate text-xs text-zinc-500">
                     {b.eventStartAt &&
                       `${diaRelativo(b.eventStartAt)} ${formatTime(b.eventStartAt)} · `}
-                    {stakeCurta(Number(b.stake))} @ {Number(b.odd).toFixed(2)}
+                    {stakeCurta(Number(b.stake))} @ {formatOdd(b.odd)}
                   </p>
                   <p className="truncate text-sm font-medium text-foreground">{b.game}</p>
                   <p className="truncate text-xs text-zinc-400">{b.market}</p>

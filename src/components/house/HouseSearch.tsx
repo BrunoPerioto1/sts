@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HouseMultiSelect } from "./HouseMultiSelect";
 import type { HouseOption } from "@/hooks/queries/use-houses";
 
-export type HouseSort = "balance" | "name" | "profit";
+export type HouseSort = "balance" | "name" | "profit" | "bets" | "idle";
 
 interface HousesSearchProps {
   searchTerm: string;
@@ -82,6 +82,8 @@ export function HousesSearch({
             <SelectItem value="balance">Saldo</SelectItem>
             <SelectItem value="name">Nome</SelectItem>
             <SelectItem value="profit">Lucro</SelectItem>
+            <SelectItem value="bets">Apostas</SelectItem>
+            <SelectItem value="idle">Parada há mais tempo</SelectItem>
           </SelectContent>
         </Select>
       </div>

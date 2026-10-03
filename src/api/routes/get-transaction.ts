@@ -33,6 +33,9 @@ export interface TransactionFilterParams {
 
 export interface TransactionDto {
   id: number;
+  houseId?: number;
+  transactionTypeId?: number;
+  description?: string | null;
   houseName: string;
   transactionType: string;
   value: number;
@@ -47,3 +50,18 @@ export async function getTransactions(params: TransactionFilterParams) {
   return response.data;
 }
 
+
+export interface UpdateTransactionParams {
+  transactionTypeId?: number;
+  /** Como digitado: o back aplica o sinal (saque negativo, depósito positivo). */
+  value?: number;
+  description?: string;
+}
+
+export function updateTransaction(id: number, changes: UpdateTransactionParams) {
+  return unwrap(api.transactions.patch(`/${id}`, changes));
+}
+
+export function deleteTransaction(id: number) {
+  return unwrap(api.transactions.delete(`/${id}`));
+}

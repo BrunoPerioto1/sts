@@ -345,7 +345,7 @@ function SampleSection({
   children,
 }: {
   title: string;
-  notes: (string | false | undefined)[];
+  notes: (string | false | null | undefined)[];
   diagnosis?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -938,14 +938,48 @@ export function AdminScanner() {
                   aria-label="Filtrar por status"
                   className="h-8 w-auto ml-auto gap-2 text-sm"
                 >
-                  <span className="opacity-55">Status:</span>
-                  <SelectValue />
+                  <span className="opacity-55">Status</span>
+                  {/* Texto próprio em vez de SelectValue: o item tem a contagem, o botão não. */}
+                  <span>
+                    {STATUS_FILTERS.find((f) => f.id === status)?.label ??
+                      "Todos"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent align="end">
-                  <SelectItem value="all">Todos</SelectItem>
-                  {STATUS_FILTERS.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.label} · {all.filter(f.test).length}
+                  {[
+                    { id: "all", label: "Todos", n: all.length, warn: false },
+                    ...STATUS_FILTERS.map((f) => {
+                      const n = all.filter(f.test).length;
+                      // Laranja só quando há o que olhar; zero fica neutro.
+                      const warn =
+                        (f.id === "problem" || f.id === "coverage") && n > 0;
+                      return { id: f.id, label: f.label, n, warn };
+                    }),
+                  ].map((o) => (
+                    <SelectItem
+                      key={o.id}
+                      value={o.id}
+                      className="py-1 data-[state=checked]:bg-foreground/[0.06] [&>span:last-child]:flex-1"
+                    >
+                      <span className="flex items-center justify-between gap-6">
+                        <span
+                          className={cn(
+                            o.warn && "text-[var(--dashboard-orange)]",
+                          )}
+                        >
+                          {o.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "tabular-nums text-xs",
+                            o.warn
+                              ? "text-[var(--dashboard-orange)]"
+                              : "opacity-50",
+                          )}
+                        >
+                          {o.n}
+                        </span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

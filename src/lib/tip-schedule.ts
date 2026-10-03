@@ -1,0 +1,120 @@
+// Fila de Tips pelo relógio do jogo. A pergunta de quem abre a fila é "ainda
+// dá tempo de entrar?", e a ordem de chegada no canal não responde isso.
+
+function duration(totalMin: number): string {
+  if (totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
+}
+
+/** "começa em 40 min", "começou há 2h15". */
+export function startLabel(eventStartAt: string, now: Date = new Date()): string {
+  const diffMin = (new Date(eventStartAt).getTime() - now.getTime()) / 60_000;
+  if (diffMin > 0) return `começa em ${duration(Math.max(1, Math.round(diffMin)))}`;
+  const ago = Math.round(-diffMin);
+  if (ago >= 24 * 60) return "começou há mais de um dia";
+  return `começou há ${duration(Math.max(1, ago))}`;
+}
+
+/**
+ * Versão curta pra coluna estreita do desktop ("em 40 min", "há 2h15").
+ * Fora de um dia pra frente ou pra trás, o relativo não ajuda: null, e a
+ * célula volta a mostrar o dia.
+ */
+export function compactStartLabel(eventStartAt: string, now: Date = new Date()): string | null {
+  const diffMin = (new Date(eventStartAt).getTime() - now.getTime()) / 60_000;
+  if (Math.abs(diffMin) >= 24 * 60) return null;
+  return diffMin > 0
+    ? `em ${duration(Math.max(1, Math.round(diffMin)))}`
+    : `há ${duration(Math.max(1, Math.round(-diffMin)))}`;
+}
+
+export type TipTimingTone = "upcoming" | "soon" | "live" | "old" | "unknown";
+
+// Cor do destaque por tom, sem exagero: neutro, azul perto de começar, âmbar
+// provavelmente ao vivo, cinza antigo / sem horário.
+export const TIP_TIMING_TONE_CLASS: Record<TipTimingTone, string> = {
+  upcoming: "text-foreground",
+  soon: "text-accent-text",
+  live: "text-amber-400/90",
+  old: "text-zinc-500",
+  // Menos que os estados normais: é ausência de dado, não um estado do jogo.
+  unknown: "text-zinc-500 font-normal opacity-70",
+};
+
+// Janela em que "começou há" ainda sugere jogo rolando. Não temos o fim do
+// jogo, então passou disso a linha só apaga (não afirma "encerrado").
+const LIVE_WINDOW_MIN = 3 * 60;
+const SOON_MIN = 30;
+
+/**
+ * O tempo que importa na fila, em destaque: quanto falta ou há quanto começou.
+ * O tom só colore (perto de começar, provavelmente ao vivo, antigo).
+ */
+export function tipTiming(
+  eventStartAt: string | null,
+  now: Date = new Date(),
+): { headline: string; tone: TipTimingTone } {
+  if (!eventStartAt) return { headline: "Sem horário identificado", tone: "unknown" };
+  const label = startLabel(eventStartAt, now);
+  const headline = label.charAt(0).toUpperCase() + label.slice(1);
+  const diffMin = (new Date(eventStartAt).getTime() - now.getTime()) / 60_000;
+  if (diffMin > 0) return { headline, tone: diffMin <= SOON_MIN ? "soon" : "upcoming" };
+  return { headline, tone: -diffMin <= LIVE_WINDOW_MIN ? "live" : "old" };
+}
+
+export function hasStarted(eventStartAt: string | null, now: Date = new Date()): boolean {
+  return eventStartAt != null && new Date(eventStartAt).getTime() <= now.getTime();
+}
+
+export type TipGroupId = "upcoming" | "unknown" | "started";
+
+// Nome de cada bloco, também usado como opção do filtro "Início" da fila.
+export const TIP_GROUP_LABEL: Record<TipGroupId, string> = {
+  upcoming: "A iniciar",
+  unknown: "Sem horário",
+  started: "Iniciados",
+};
+
+const TIP_GROUP_DESCRIPTION: Record<TipGroupId, string> = {
+  upcoming: "Ainda não começaram",
+  started: "Já começaram",
+  unknown: "Horário de início indisponível",
+};
+
+// No filtro "Sem horário" vem por último: não é um momento do jogo como os
+// outros dois. A ordem dos blocos na lista é outra (groupPendingTips).
+export const TIP_GROUP_OPTIONS = (["upcoming", "started", "unknown"] as const).map((id) => ({
+  value: id,
+  label: TIP_GROUP_LABEL[id],
+  description: TIP_GROUP_DESCRIPTION[id],
+}));
+
+export interface TipGroup<T> {
+  id: TipGroupId;
+  label: string;
+  tips: T[];
+}
+
+/**
+ * Três blocos, nesta ordem: o que ainda dá tempo (quem começa antes vem
+ * primeiro), o que não teve o confronto reconhecido, e o que já começou (o
+ * mais recente em cima — é o que ainda pode ter odd ao vivo).
+ */
+export function groupPendingTips<T extends { eventStartAt: string | null }>(
+  tips: T[],
+  now: Date = new Date(),
+): TipGroup<T>[] {
+  const time = (t: T) => new Date(t.eventStartAt!).getTime();
+  const upcoming = tips.filter((t) => t.eventStartAt != null && !hasStarted(t.eventStartAt, now));
+  const started = tips.filter((t) => hasStarted(t.eventStartAt, now));
+  const unknown = tips.filter((t) => t.eventStartAt == null);
+
+  const grupos: TipGroup<T>[] = [
+    { id: "upcoming", label: TIP_GROUP_LABEL.upcoming, tips: [...upcoming].sort((a, b) => time(a) - time(b)) },
+    { id: "unknown", label: TIP_GROUP_LABEL.unknown, tips: unknown },
+    { id: "started", label: TIP_GROUP_LABEL.started, tips: [...started].sort((a, b) => time(b) - time(a)) },
+  ];
+  return grupos.filter((g) => g.tips.length > 0);
+}

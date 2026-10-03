@@ -76,6 +76,12 @@ export function colorForHouse(id: number) {
   return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
 }
 
+// Nome pra mostrar: o que a pessoa digitou no cadastro. O username é gerado
+// pelo servidor ("bruno.souza2") e só aparece quando não há nome.
+export function displayName(user: { fullName?: string | null; username: string }): string {
+  return user.fullName?.trim() || user.username;
+}
+
 export function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";
@@ -86,4 +92,11 @@ export function initialsOf(name: string): string {
 export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+// Odd com 2 casas, ou 3 quando a terceira existe (1.855). A coluna guarda 3
+// desde a migration de precisao; toFixed(2) arredondava 1.855 pra 1.86.
+export function formatOdd(value: number | string): string {
+  const fixed = Number(value).toFixed(3);
+  return fixed.endsWith("0") ? fixed.slice(0, -1) : fixed;
 }

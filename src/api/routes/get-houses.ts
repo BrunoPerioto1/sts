@@ -22,9 +22,17 @@ export interface HouseMetricsDto {
 export interface HouseBalanceDto {
   houseId: number;
   houseName: string;
+  /** Site da casa (.bet.br, federal); null = sem link cadastrado. */
+  websiteUrl: string | null;
   totalBets: string | number;
   settledBets: string | number;
   totalStake: string | number;
+  /** Stake das liquidadas: a base do ROI. */
+  settledStake: string | number;
+  /** Stake das pendentes. A casa já tirou isso do saldo que ela mostra. */
+  openStake: string | number;
+  /** Lucro / stake liquidado (fração: 0.12 = 12%). */
+  roi: string | number;
   totalBetProfit: string | number;
   totalDeposit: string | number;
   totalWithdrawal: string | number;
@@ -35,6 +43,8 @@ export interface HouseBalanceDto {
   wonBets: string | number;
   lostBets: string | number;
   lastMovementAt: string | null;
+  /** Hora da aposta mais recente na casa; null = nunca apostou nela. */
+  lastBetAt: string | null;
 }
 
 export interface HouseBalanceFilter {

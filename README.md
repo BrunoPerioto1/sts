@@ -71,21 +71,29 @@ E alguns detalhes que só aparecem usando: trocar o print no meio de uma leitura
 
 **Casas.** Saldo por casa, reconciliado a partir de depósitos, saques e resultados. Junto vem o comparador, que ranqueia por ROI, lucro ou taxa de acerto num período, com pódio e insights gerados — concentração de lucro, casa performando abaixo da média mas carregando stake acima dela.
 
-**Tips.** A fila espelhada do canal, em três abas: pendentes, planilhadas e caíram. Dá pra planilhar direto daqui ou descartar, e desfazer o descarte.
+**Tips.** A fila espelhada do canal, em três abas: pendentes, planilhadas e caíram, com busca, filtro por casa e o horário do jogo em cada tip. Dá pra planilhar direto daqui, em lote ou uma a uma, ou marcar que caiu e desfazer. A tip some da lista no clique e volta sozinha se a gravação falhar. A fila e o número no menu se atualizam sozinhos (a cada minuto, só com a aba visível), porque tip chega do canal sem o usuário fazer nada.
 
-**Perfil.** Virou uma área com sub-rotas próprias:
+**Conferência.** O placar dos jogos chega por um job no backend, e a API propõe o resultado de cada aposta pendente. Aqui você confere e confirma, uma a uma ou em lote, ou descarta a proposta. Nada é liquidado sem esse clique. O que o motor não soube resolver vai pra uma lista à parte, com o motivo. O menu mostra quantas propostas e quantas apostas atrasadas esperam, e esses números se atualizam sozinhos a cada 2 minutos.
 
-- *Conta* — identidade e exclusão de conta
-- *Senha* — troca de senha
-- *Telegram* — vínculo e desvínculo da conta do bot
-- *Preferências* — banca e o "avisar só acima de", que é o filtro de percentual mínimo das tips
+**Perfil.** Virou uma área com sub-rotas próprias (no desktop, a tela de Configurações, com abas Perfil e Dashboard):
+
+- *Conta* — nome, e-mail (trocar pede a senha atual) e exclusão de conta, também com senha
+- *Senha* — troca de senha; desconecta os outros aparelhos e mantém este logado
+- *Telegram* — vínculo por código de seis dígitos, com a tela fechando sozinha quando o bot confirma; desvincular pede confirmação, porque tira do grupo de Tips
+- *Preferências* — banca, o "avisar só acima de" (filtro de percentual mínimo das tips), e o "sugerir saque após"
 - *Dashboard* — customização dos KPIs
+
+O tema claro ou escuro se escolhe na própria tela de Perfil.
+
+**Acesso.** Quando o acesso vence, a API responde 402 e o app leva pra tela de renovação, com o PIX copia-e-cola e o botão "Já paguei". Faltando poucos dias, um aviso no topo oferece o mesmo PIX sem sair do app. Esqueceu a senha: o código chega pelo bot do Telegram.
+
+**Admin.** Só pra papel de admin, e barrado de verdade no backend: saúde do pipeline (Telegram → tip → fan-out → coletor → liquidação), tips que não geraram mensagem, usuários (liberar, estender acesso, desativar, tirar do grupo de Tips) e o cadastro global de casas.
 
 A customização do dashboard é mais do que parece: você reordena os cards arrastando, liga e desliga cada um, escolhe o ícone de cada KPI a partir de um registry, e define as cores de valor positivo e negativo. Tem restaurar padrão e anúncios de acessibilidade no reordenamento, porque arrastar com o teclado precisava funcionar também.
 
 **Exportação.** Apostas, movimentações e resumo mensal, cada um em CSV com separador ponto-e-vírgula, que é o que o Excel em português espera. É a saída pra planilha e pra declaração de imposto.
 
-**Auth.** Login com JWT e rota protegida.
+**Auth.** Login, cadastro e recuperação de senha, com JWT e rota protegida.
 
 Toda tela tem layout mobile de verdade, com bottom sheet em vez de diálogo espremido. Não é firula: registrar aposta acontece no celular, quase sempre em pé.
 
@@ -93,7 +101,7 @@ Toda tela tem layout mobile de verdade, com bottom sheet em vez de diálogo espr
 
 ## Stack
 
-React 18 com TypeScript, build no Vite. Tailwind com os padrões do shadcn/ui sobre primitivas Radix. TanStack Query cuidando de estado de servidor, React Router nas rotas, Recharts nos gráficos, date-fns nas datas e Axios no HTTP. Deploy na Vercel.
+React 18 com TypeScript, build no Vite. Tailwind com os padrões do shadcn/ui sobre primitivas Radix, ícones Phosphor e tema claro/escuro com `next-themes`. TanStack Query cuidando de estado de servidor, React Router nas rotas, Recharts nos gráficos, date-fns nas datas e Axios no HTTP. Deploy na Vercel.
 
 Os tokens de design são CSS variables em `src/index.css`, registradas no `tailwind.config.ts`. Isso é o que permite escrever `text-accent-text` ou `bg-positive` em vez de espalhar hex pelo código — a cor é nomeada pelo papel que exerce, e trocar o tema é mexer num arquivo.
 
@@ -107,19 +115,24 @@ src/
 │   ├── apiClient.ts    instâncias axios por recurso + interceptor de JWT
 │   └── routes/         um arquivo por endpoint
 ├── components/
+│   ├── admin/          painel: pipeline, usuários, casas
 │   ├── apostas/        lista, filtros, formulário, upload do bilhete
+│   ├── auth/           login, cadastro, recuperação de senha
+│   ├── conferir/       detalhe da proposta de liquidação
 │   ├── dashboard/      gráficos, cards de KPI, registry de ícones
 │   ├── house/          saldos e comparador
 │   ├── tips/           fila de tips
 │   ├── perfil/         cards de conta, preferências, exportação
-│   ├── layout/         shell e navegação
+│   ├── layout/         shell, navegação, aviso de vencimento
 │   └── ui/             primitivas shadcn
 ├── hooks/
-│   ├── apostas/        estado do formulário, leitura do bilhete
+│   ├── apostas/        estado do formulário, leitura do bilhete, conferência
 │   ├── dashboard/      preferências de KPI
 │   └── queries/        wrappers de TanStack Query
-├── lib/                formatação, compressão de imagem, exportação CSV
-└── pages/              telas de rota
+├── lib/                formatação, sessão, compressão de imagem, exportação CSV
+└── pages/              telas de rota (perfil/ com as sub-rotas)
+
+tests/                  testes de lib/ com node --test
 ```
 
 Vale notar uma decisão: os formulários de aposta do desktop e do mobile são duas apresentações sobre **um** hook, o `use-aposta-form`. Mesma validação, mesmo payload, mesmo comportamento da IA. Só o layout muda. Foi isso que evitou que a leitura do bilhete precisasse ser implementada duas vezes.

@@ -4,6 +4,8 @@ import { CaretLeft, ChatCircleDots, CircleNotch, Clock, PaperPlaneTilt, Sun, Bel
 import { MainLayout } from "@/components/layout/MainLayout";
 import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { BottomSheet } from "@/components/apostas/BottomSheet";
+import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
 import { actionToast } from "@/lib/action-toast";
 import { useMe } from "@/hooks/queries/use-me";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
@@ -26,6 +28,8 @@ export default function TelegramPage() {
   const [linking, setLinking] = useState(false);
   const [code, setCode] = useState<{ value: string; expiresAt: Date } | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
 
   const isLinked = !!me?.telegramUserId;
   const expired = !!code && code.expiresAt.getTime() <= now;
@@ -62,12 +66,16 @@ export default function TelegramPage() {
   };
 
   const handleUnlink = async () => {
+    setUnlinking(true);
     try {
       await postUnlinkTelegram();
       actionToast.success({ title: "Telegram desvinculado" });
+      setConfirmUnlink(false);
       reloadMe();
     } catch (error) {
       actionToast.error({ description: getErrorMessage(error, "Falha ao desvincular.") });
+    } finally {
+      setUnlinking(false);
     }
   };
 
@@ -193,7 +201,7 @@ export default function TelegramPage() {
             </a>
           </Button>
 
-          <button type="button" onClick={handleUnlink} className="press w-full h-12 text-sm text-negative">
+          <button type="button" onClick={() => setConfirmUnlink(true)} className="press w-full h-12 text-sm text-negative">
             Desvincular
           </button>
         </div>
@@ -239,6 +247,29 @@ export default function TelegramPage() {
           </p>
         </div>
       )}
+
+      <BottomSheet
+        open={confirmUnlink}
+        onOpenChange={(open) => !unlinking && setConfirmUnlink(open)}
+        title="Desvincular o Telegram?"
+        footer={
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="destructive"
+              className="w-full min-h-[48px] text-base"
+              disabled={unlinking}
+              onClick={handleUnlink}
+            >
+              {unlinking ? "Desvinculando…" : "Desvincular"}
+            </Button>
+            <Button variant="ghost" className="w-full min-h-[44px]" disabled={unlinking} onClick={() => setConfirmUnlink(false)}>
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <p className="pb-4 text-sm text-zinc-400">{UNLINK_TELEGRAM_WARNING}</p>
+      </BottomSheet>
     </MainLayout>
   );
 }

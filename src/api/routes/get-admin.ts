@@ -36,6 +36,11 @@ export type AdminUser = {
   lockedUntil: string | null;
   failedLoginAttempts: number;
   telegramLinkedAt: string | null;
+  accessUntil: string | null;
+  /** Tirado do grupo Tips pelo painel; null = dentro ou convidado de volta. */
+  tipsGroupRemovedAt: string | null;
+  /** Apertou "Já paguei" (renovação/bot); some quando o acesso é liberado. */
+  paymentClaimedAt: string | null;
   hasTelegram: boolean;
   betCount: number;
 };
@@ -45,17 +50,32 @@ export type AdminHouse = {
   name: string;
   isActive: boolean;
   aliases: string[];
+  websiteUrl: string | null;
   betCount: number;
 };
 
-export type CreateAdminHouseParams = { name: string; aliases?: string[] };
-export type UpdateAdminHouseParams = { name?: string; aliases?: string[]; isActive?: boolean };
+// websiteUrl: só .bet.br (o servidor recusa o resto); "" ou null apaga o link.
+export type CreateAdminHouseParams = { name: string; aliases?: string[]; websiteUrl?: string | null };
+export type UpdateAdminHouseParams = { name?: string; aliases?: string[]; isActive?: boolean; websiteUrl?: string | null };
 
 export type UpdateAdminUserParams = {
   roleId?: number;
   unlock?: boolean;
   unlinkTelegram?: boolean;
+  /** false desativa a conta (sem login, sem API, sem tips); true reativa. */
+  isActive?: boolean;
+  extendDays?: number;
+  /** Vencimento exato (ISO com fuso); null = sem prazo. */
+  accessUntil?: string | null;
+  /** remove: tira do grupo Tips quem está sem acesso. invite: repete o convite de quem voltou e ficou de fora. */
+  tipsGroup?: "remove" | "invite";
 };
+
+/**
+ * A linha atualizada, mais o que houve com o convite do grupo Tips quando o
+ * acesso voltou. Ausente = nada a mandar (continuava no grupo).
+ */
+export type UpdatedAdminUser = AdminUser & { groupInvite?: "sent" | "failed" };
 
 export async function getAdminOverview(): Promise<AdminOverview> {
   const res = await apiClient().admin.get<AdminOverview>("overview");
@@ -67,8 +87,8 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
   return res.data;
 }
 
-export async function patchAdminUser(id: number, data: UpdateAdminUserParams): Promise<AdminUser> {
-  const res = await apiClient().admin.patch<AdminUser>(`users/${id}`, data);
+export async function patchAdminUser(id: number, data: UpdateAdminUserParams): Promise<UpdatedAdminUser> {
+  const res = await apiClient().admin.patch<UpdatedAdminUser>(`users/${id}`, data);
   return res.data;
 }
 

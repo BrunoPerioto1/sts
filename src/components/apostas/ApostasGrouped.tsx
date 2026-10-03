@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
-import { groupBets } from "@/lib/bet-grouping";
-import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
+import { useState } from "react";
+import { groupBets, monthLabel, type MonthGroup } from "@/lib/bet-grouping";
+import { type BetItem, type BetMonthSummary, ResultIdEnum } from "@/api/routes/get-bets";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
+import { useMonthBets, type BetsQueryFilters } from "@/hooks/apostas/use-bets-query";
 import { ApostaDetailSheet } from "./ApostaDetailSheet";
 import { ApostasEmpty } from "./ApostasEmpty";
 import { ApostasGroupedDesktop } from "./ApostasGroupedDesktop";
@@ -11,7 +12,9 @@ import { ApostasListSkeleton } from "./ApostasListSkeleton";
 import { ApostasMobileSkeleton } from "./ApostasMobileSkeleton";
 
 interface ApostasGroupedProps {
-  apostas: BetItem[];
+  filters: BetsQueryFilters;
+  /** Meses do filtro com quantidade e lucro (GET /bets/monthly-summary). */
+  months: BetMonthSummary[];
   isLoading?: boolean;
   hasFilters?: boolean;
   onClearFilters?: () => void;
@@ -22,24 +25,41 @@ interface ApostasGroupedProps {
   selection: BulkSelection;
 }
 
-// Visão "Agrupado": agrupa as apostas por mês/semana/dia e delega a renderização
-// pra versão desktop ou mobile. Estado de expansão e de detalhe ficam aqui, que
-// é o único ponto comum às duas.
-export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection, hasFilters, onClearFilters }: ApostasGroupedProps) {
+// Visão "Agrupado": mês > dia. Os totais de cada mês vêm prontos do banco; as
+// linhas só do mês aberto (antes a tela baixava o filtro inteiro pra somar).
+// Estado de expansão e de detalhe ficam aqui, o único ponto comum ao desktop e
+// ao mobile.
+export function ApostasGrouped({ filters, months, isLoading, onEdit, onDelete, onDuplicate, onFinalize, selection, hasFilters, onClearFilters }: ApostasGroupedProps) {
   const isMobile = useIsMobile();
-  const groups = useMemo(() => groupBets(apostas), [apostas]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [detailAposta, setDetailAposta] = useState<BetItem | null>(null);
 
-  const orderedIds = useMemo(
-    () => groups.flatMap((m) => m.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id)))),
-    [groups]
-  );
-
-  const isMonthOpen = (key: string) => expanded[key] ?? key === groups[0]?.key;
+  // O mês mais recente abre sozinho; os outros só quando o usuário abre.
+  const firstKey = months[0]?.month;
+  const isMonthOpen = (key: string) => expanded[key] ?? key === firstKey;
   const toggleMonth = (key: string) => {
-    setExpanded((prev) => ({ ...prev, [key]: !(prev[key] ?? key === groups[0]?.key) }));
+    setExpanded((prev) => ({ ...prev, [key]: !(prev[key] ?? key === firstKey) }));
   };
+
+  const openMonths = months.map((m) => m.month).filter(isMonthOpen);
+  const loaded = useMonthBets(filters, openMonths);
+
+  const groups: MonthGroup[] = months.map((m) => {
+    const month = loaded.get(m.month);
+    return {
+      key: m.month,
+      label: monthLabel(m.month),
+      count: m.count,
+      total: m.profit,
+      // groupBets separa por semana/dia; o mês já é este (achata por garantia,
+      // caso o fuso do aparelho não seja o de SP e alguma aposta de borda caia
+      // no mês vizinho).
+      weeks: month ? groupBets(month.bets).flatMap((g) => g.weeks) : [],
+      loading: month?.loading,
+    };
+  });
+
+  const orderedIds = groups.flatMap((m) => m.weeks.flatMap((w) => w.days.flatMap((d) => d.bets.map((b) => b.id))));
 
   // So mostra esqueleto quando NAO ha nada na tela ainda. Em recarga (editar,
   // liquidar, mudar status) trocar a lista inteira por um esqueleto de poucas
@@ -47,11 +67,11 @@ export function ApostasGrouped({ apostas, isLoading, onEdit, onDelete, onDuplica
   // maximo (~0) e a tela voltava pro topo. Mantendo a lista montada durante o
   // refetch, a posicao do scroll fica onde estava — o spinner do header ja
   // sinaliza o carregamento.
-  if (isLoading && apostas.length === 0) {
+  if (isLoading && months.length === 0) {
     return isMobile ? <ApostasMobileSkeleton /> : <ApostasListSkeleton />;
   }
 
-  if (apostas.length === 0) {
+  if (months.length === 0) {
     return <ApostasEmpty hasFilters={hasFilters} onClearFilters={onClearFilters} />;
   }
 

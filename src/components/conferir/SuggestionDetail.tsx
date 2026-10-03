@@ -6,7 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { SettlementSuggestion } from "@/api/routes/get-settlement";
 import { ResultIdEnum } from "@/api/routes/result-id";
 import { lucroSugerido } from "@/lib/settlement-view";
-import { formatCurrency, formatDate, formatTime } from "@/lib/format";
+import { formatCurrency, formatDate, formatTime, formatOdd } from "@/lib/format";
+import { tintStyle, usePerformanceColor } from "@/hooks/use-performance-color";
 
 interface Props {
   suggestion: SettlementSuggestion | null;
@@ -22,14 +23,17 @@ interface Props {
 const itens = (texto: string, sep: string) =>
   texto.split(sep).map((t) => t.trim()).filter(Boolean);
 
+// sign escolhe a cor de ganho/perda de Preferências; anulada fica neutra.
 const VISUAL = {
-  [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", cor: "text-emerald-400", caixa: "border-emerald-500/25 bg-emerald-500/[0.07]", Icone: CheckCircle },
-  [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", cor: "text-red-400", caixa: "border-red-500/25 bg-red-500/[0.07]", Icone: XCircle },
+  [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", sign: 1, Icone: CheckCircle },
+  [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", sign: -1, Icone: XCircle },
 } as const;
-const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", cor: "text-zinc-300", caixa: "border-foreground/10 bg-foreground/[0.04]", Icone: MinusCircle };
+const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", sign: 0, Icone: MinusCircle };
 
 function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }: Props & { suggestion: SettlementSuggestion }) {
   const v = VISUAL[s.suggestedResultId as keyof typeof VISUAL] ?? ANULADA;
+  const color = usePerformanceColor();
+  const cor = v.sign ? color(v.sign) : "var(--color-text)";
   const lucro = lucroSugerido(s);
   const [casa, fora] = s.game.split(/\s+x\s+/i);
   const temPlacar = s.homeScore != null && s.awayScore != null;
@@ -37,17 +41,20 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
     <div className="space-y-5 pb-4">
       <p className="text-sm text-zinc-500">
         {s.eventStartAt && `${formatDate(s.eventStartAt)} · ${formatTime(s.eventStartAt)} · `}
-        {formatCurrency(s.stake)} @ {s.odd.toFixed(2)}
+        {formatCurrency(s.stake)} @ {formatOdd(s.odd)}
       </p>
 
-      <div className={`flex items-end justify-between rounded-xl border px-4 py-3.5 ${v.caixa}`}>
+      <div
+        className={`flex items-end justify-between rounded-xl border px-4 py-3.5 ${v.sign ? "" : "border-foreground/10 bg-foreground/[0.04]"}`}
+        style={v.sign ? tintStyle(cor, 7, 25) : undefined}
+      >
         <div>
           <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Proposta do bot</p>
-          <p className={`text-2xl font-medium ${v.cor}`}>{v.rotulo}</p>
+          <p className="text-2xl font-medium" style={{ color: cor }}>{v.rotulo}</p>
         </div>
         <div className="text-right">
           <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Lucro</p>
-          <p className={`text-xl tabular-nums ${v.cor}`}>
+          <p className="text-xl tabular-nums" style={{ color: cor }}>
             {lucro > 0 ? "+" : ""}{formatCurrency(lucro)}
           </p>
         </div>
@@ -79,7 +86,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         <ul className="space-y-2 text-sm text-zinc-300">
           {itens(s.explanation, ";").map((e, i) => (
             <li key={i} className="flex items-start gap-2.5">
-              <v.Icone weight="fill" size={18} className={`mt-px shrink-0 ${v.cor}`} />
+              <v.Icone weight="fill" size={18} className="mt-px shrink-0" style={{ color: cor }} />
               {e}
             </li>
           ))}

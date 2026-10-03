@@ -1,7 +1,8 @@
 import { apiClient } from "../apiClient";
 
 export type RegisterRequest = {
-  username: string;
+  /** Opcional: sem ele o servidor gera um livre a partir do nome/e-mail. */
+  username?: string;
   email: string;
   password: string;
   fullName?: string;

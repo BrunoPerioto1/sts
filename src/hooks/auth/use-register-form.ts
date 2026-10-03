@@ -45,11 +45,12 @@ export function useRegisterForm() {
     setSubmitting(true);
     setError(null);
     try {
+      // Sem username: o servidor gera um único a partir do nome. Mandar o
+      // "Nome" como username fazia dois "Bruno" colidirem no cadastro.
       await postRegister({
-        username: data.nome,
         email: data.email,
         password: data.password,
-        fullName: data.nome,
+        fullName: data.nome.trim(),
       });
 
       const loginRes = await postLogin({ email: data.email, password: data.password });

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { formatDate } from "@/lib/format";
 import { TipColumnHeaderDesktop, TipRowDesktop } from "./TipRowDesktop";
 import type { TipItem } from "@/api/routes/get-tips";
@@ -25,44 +26,70 @@ function groupByDay(tips: TipItem[]) {
   return grupos;
 }
 
+export interface TipListGroup {
+  key: string;
+  label: string;
+  hint?: string;
+  tips: TipItem[];
+  /** Ação do grupo inteiro, no cabeçalho (ex.: marcar as começadas como caiu). */
+  action?: ReactNode;
+}
+
 export function TipsListDesktop({
   tips,
+  groups,
   selectedId,
   onSelect,
   checkedIds,
   onToggle,
+  selectAll,
 }: {
   tips: TipItem[];
+  /** Agrupamento pronto (fila pendente, por horário do jogo). Sem ele, por dia de chegada. */
+  groups?: TipListGroup[];
   selectedId: number | null;
   onSelect: (tip: TipItem) => void;
   checkedIds: Set<number>;
   onToggle?: (id: number, shiftKey: boolean) => void;
+  selectAll?: { checked: boolean | "indeterminate"; onToggle: () => void; count: number };
 }) {
+  const grupos: TipListGroup[] =
+    groups ??
+    groupByDay(tips).map((g) => ({
+      key: g.date,
+      label: g.label,
+      hint: g.label === g.date ? undefined : g.date,
+      tips: g.tips,
+    }));
+
   return (
     <div className="min-w-0 overflow-x-auto">
       <div className="min-w-[900px]">
-      <TipColumnHeaderDesktop selectable={!!onToggle} />
-      {groupByDay(tips).map((grupo) => (
-        <section key={grupo.date} className="min-w-0">
-          <div className="flex items-baseline gap-2 border-b border-border px-3 py-2">
+      <TipColumnHeaderDesktop selectAll={onToggle ? selectAll : undefined} selectionMode={checkedIds.size > 0} />
+      {grupos.map((grupo) => (
+        <section key={grupo.key} className="min-w-0">
+          <div className="flex items-baseline gap-2 border-b border-border px-3 py-2.5">
             <span className="text-[13px] font-semibold tracking-tight">{grupo.label}</span>
-            <span className="text-xs opacity-40">
-              {grupo.label === grupo.date ? "" : `· ${grupo.date}`}
+            <span className="text-xs text-zinc-500">
+              {grupo.hint ? `${grupo.hint} · ` : ""}
+              <span className="tabular-nums">{grupo.tips.length}</span>
             </span>
-            <span className="ml-auto text-xs opacity-40">
-              {grupo.tips.length} {grupo.tips.length === 1 ? "tip" : "tips"}
-            </span>
+            {grupo.action && <span className="ml-auto self-center">{grupo.action}</span>}
           </div>
-          {grupo.tips.map((tip) => (
-            <TipRowDesktop
-              key={tip.id}
-              tip={tip}
-              selected={tip.id === selectedId}
-              onSelect={() => onSelect(tip)}
-              checked={checkedIds.has(tip.id)}
-              onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
-            />
-          ))}
+          {/* Respiro entre linhas: marcadas em sequência não viram um bloco só. */}
+          <div className="space-y-1 py-1">
+            {grupo.tips.map((tip) => (
+              <TipRowDesktop
+                key={tip.id}
+                tip={tip}
+                selected={tip.id === selectedId}
+                onSelect={() => onSelect(tip)}
+                checked={checkedIds.has(tip.id)}
+                onToggle={onToggle ? (shiftKey) => onToggle(tip.id, shiftKey) : undefined}
+                selectionMode={checkedIds.size > 0}
+              />
+            ))}
+          </div>
         </section>
       ))}
       </div>

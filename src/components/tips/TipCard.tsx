@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowSquareOut,
   ArrowCounterClockwise,
@@ -11,9 +11,11 @@ import {
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
+import { formatCurrency, formatKickoff, formatTime, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TIP_TIMING_TONE_CLASS, tipTiming } from "@/lib/tip-schedule";
 import type { TipItem } from "@/api/routes/get-tips";
+import { TipKickoffBadge } from "./TipKickoffBadge";
 
 // % da banca sugerido, nao retorno: sem sinal e sem verde, que liam como EV.
 function formatPercent(value: number) {
@@ -33,11 +35,14 @@ export function TipCard({
   onDismiss,
   onUndismiss,
   onPlanilhar,
+  leading,
 }: {
   tip: TipItem;
   onDismiss: () => void;
   onUndismiss: () => void;
   onPlanilhar: () => void;
+  /** Antes da linha "Recebida" — o checkbox, no modo de seleção. */
+  leading?: ReactNode;
 }) {
   const [showMessage, setShowMessage] = useState(false);
 
@@ -45,9 +50,12 @@ export function TipCard({
     <article className="border-b border-border px-4 py-3.5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-zinc-500">
-            {formatTime(tip.createdAt)}
-            {tip.house && ` · ${tip.house}`}
+          <p className="flex items-center gap-2 text-xs text-zinc-500">
+            {leading}
+            <span className="min-w-0 truncate">
+              Recebida {formatTime(tip.createdAt)}
+              {tip.house && ` · ${tip.house}`}
+            </span>
           </p>
           <h3 className="mt-1 text-[17px] font-semibold leading-tight text-foreground">
             {tip.game ?? "Jogo não identificado"}
@@ -56,11 +64,25 @@ export function TipCard({
           {/* Hora do jogo, não da tip: é ela que diz se ainda dá tempo de
               entrar. Só aparece quando o confronto casou com o cache de
               eventos — data chutada aqui seria pior que nenhuma. */}
-          {tip.eventStartAt && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
-              <Clock size={13} weight="bold" />
-              {formatKickoff(tip.eventStartAt)}
+          {/* O horário do jogo é o destaque (branco, semibold); na fila
+              pendente o relativo (quanto falta / há quanto começou) vem ao
+              lado, na cor de urgência — nunca número solto. */}
+          {tip.eventStartAt ? (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
+              <TipKickoffBadge label={formatKickoff(tip.eventStartAt)} />
+              {tip.status === "pending" && (
+                <span className={cn("min-w-0 truncate font-medium", tipTiming(tip.eventStartAt).tone === "upcoming" ? "text-zinc-400" : TIP_TIMING_TONE_CLASS[tipTiming(tip.eventStartAt).tone])}>
+                  {tipTiming(tip.eventStartAt).headline}
+                </span>
+              )}
             </p>
+          ) : (
+            tip.status === "pending" && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
+                <Clock size={13} weight="bold" className="shrink-0" />
+                <span className={cn("font-medium", TIP_TIMING_TONE_CLASS.unknown)}>Sem horário identificado</span>
+              </p>
+            )
           )}
         </div>
 
@@ -83,7 +105,7 @@ export function TipCard({
                   <Calculator size={16} weight="bold" />
                 </a>
               )}
-              <p className="text-2xl font-semibold leading-none tabular-nums">{tip.odd.toFixed(2)}</p>
+              <p className="text-2xl font-semibold leading-none tabular-nums">{formatOdd(tip.odd)}</p>
             </div>
           )}
           {tip.percent !== null && (

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { HouseBalanceDto } from "@/api/routes/get-houses";
 import type { HouseSortMobile } from "@/components/house/mobile/SortSheet";
+import { idleDays } from "@/lib/house-activity";
 
 // Busca, chips e ordenação da lista de casas (mobile). "Com saldo" e
 // "Negativas" são mutuamente exclusivos: ligar um desliga o outro.
@@ -20,6 +21,7 @@ export function useHouseFilters(houses: HouseBalanceDto[]) {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);
       if (sort === "profit") return Number(b.totalBetProfit) - Number(a.totalBetProfit);
       if (sort === "bets") return Number(b.totalBets) - Number(a.totalBets);
+      if (sort === "idle") return idleDays(b.lastBetAt) - idleDays(a.lastBetAt);
       if (sort === "lastMovement") return new Date(b.lastMovementAt ?? 0).getTime() - new Date(a.lastMovementAt ?? 0).getTime();
       return Number(b.realHouseBalance) - Number(a.realHouseBalance);
     });

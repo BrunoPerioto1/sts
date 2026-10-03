@@ -16,6 +16,33 @@ export const PRESET_LABEL: Record<DatePreset, string> = {
 };
 
 const shortDate = (date: Date) => format(date, "d MMM", { locale: ptBR });
+const iso = (date: Date) => format(date, "yyyy-MM-dd");
+
+// Intervalo (yyyy-MM-dd, inclusivo nas duas pontas) de cada preset fixo.
+export function presetRange(
+  preset: Exclude<DatePreset, "custom">,
+  firstBetDate: string | null,
+  today: Date = new Date()
+): { from: string; to: string } {
+  switch (preset) {
+    case "7d":
+    case "14d":
+      // 7 dias = hoje + os 6 anteriores.
+      return { from: iso(subDays(today, preset === "7d" ? 6 : 13)), to: iso(today) };
+    case "currentMonth":
+      // Fim do mes, nao hoje: aposta de jogo futuro cai no filtro do mes atual.
+      return { from: iso(startOfMonth(today)), to: iso(endOfMonth(today)) };
+    case "lastMonth": {
+      const lastMonth = subMonths(today, 1);
+      return { from: iso(startOfMonth(lastMonth)), to: iso(endOfMonth(lastMonth)) };
+    }
+    case "60d":
+    case "90d":
+      return { from: iso(subDays(today, preset === "60d" ? 60 : 90)), to: iso(today) };
+    case "allTime":
+      return { from: firstBetDate ?? "2000-01-01", to: iso(today) };
+  }
+}
 
 // Mesma conta do applyPreset em useDashboardFilters — aqui só pra mostrar o
 // intervalo embaixo de cada opção antes do usuário escolher.

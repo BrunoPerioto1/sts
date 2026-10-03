@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createBet,
   deleteBet,
@@ -7,11 +7,11 @@ import {
   finalizeBet,
   finalizeMultipleBets,
   type BetItem,
-  type PaginatedBetsResponseDto,
   ResultIdEnum,
 } from "@/api/routes/get-bets";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
-import { statusLabelByResultId } from "@/lib/bet-status";
+import { previewProfit, statusLabelByResultId } from "@/lib/bet-status";
+import { betsInCall, planBetUndo } from "@/lib/bet-undo";
 import { actionToast, ArrowCounterClockwise, Check, CheckCircle, Copy, Trash as TrashIcon } from "@/lib/action-toast";
 
 // Verde/vermelho no toast de finalização em lote são reservados pro resultado
@@ -25,12 +25,6 @@ function errText(e: unknown, fallback: string) {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-interface UseBetActionsArgs {
-  // Chave da lista exibida — o optimistic update em lote escreve nela.
-  queryKey: readonly unknown[];
-  apostas: BetItem[];
-}
-
 /**
  * Mutações da tela de apostas: chamada de API, toast, invalidação de cache e
  * (no lote de status) optimistic update com desfazer. A tela fica só com a UI.
@@ -39,7 +33,7 @@ interface UseBetActionsArgs {
  * de seleção diferentes (checkbox da Tabela e seleção múltipla do Agrupado) e o
  * ponto exato em que cada um limpa faz parte do comportamento atual.
  */
-export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
+export function useBetActions() {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateBetData();
   // `mutating` cobre a janela do próprio request de excluir/liquidar, antes do
@@ -52,11 +46,36 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
   // próprio invalidate já a refaz.
   const reload = () => invalidate();
 
-  // Optimistic update da lista sem sair do cache do react-query.
+  // A lista guarda as linhas por mês aberto (useMonthBets): o optimistic
+  // update escreve em todos esses caches, e o status anterior sai deles.
+  const MONTH_ROWS = ["bets", "month"];
   const patchCachedBets = (fn: (b: BetItem) => BetItem) => {
-    queryClient.setQueryData<InfiniteData<PaginatedBetsResponseDto>>(queryKey, (old) =>
-      old ? { ...old, pages: old.pages.map((p) => ({ ...p, data: (p.data ?? []).map(fn) })) } : old
-    );
+    queryClient.setQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }, (old) => old?.map(fn));
+  };
+  // Liquidação otimista: status e lucro estimado na hora, pro valor já correr
+  // até o resultado em vez de mostrar R$ 0,00 até o refetch. O refetch traz o
+  // lucro do backend, que é o autoritativo.
+  const settle = (a: BetItem, resultId: ResultIdEnum, cashoutValue?: number): BetItem => {
+    const stake = Number(a.stake ?? 0);
+    const profit =
+      resultId === ResultIdEnum.PENDING
+        ? null
+        : resultId === ResultIdEnum.CASHOUT
+          ? cashoutValue != null ? cashoutValue - stake : a.profit
+          : previewProfit(resultId, stake, Number(a.odd ?? 0));
+    return {
+      ...a,
+      resultId,
+      resultName: statusLabelByResultId[resultId] ?? a.resultName,
+      profit,
+      ...(resultId === ResultIdEnum.CASHOUT && cashoutValue != null ? { cashoutValue } : {}),
+    };
+  };
+  const cachedBets = () => {
+    const byId = new Map<number, BetItem>();
+    for (const [, rows] of queryClient.getQueriesData<BetItem[]>({ queryKey: MONTH_ROWS }))
+      for (const bet of rows ?? []) byId.set(bet.id, bet);
+    return [...byId.values()];
   };
 
   const deleteOne = async (id: number, onSuccess?: () => void) => {
@@ -74,13 +93,15 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
   };
 
   const finalizeOne = async (id: number, resultId: ResultIdEnum, cashoutValue?: number) => {
+    patchCachedBets((a) => (a.id === id ? settle(a, resultId, cashoutValue) : a));
     try {
       await finalizeBet(id, { resultId, cashoutValue });
-      await reload();
       actionToast.success({ icon: Check, title: "Aposta liquidada" });
     } catch (e) {
       actionToast.error({ description: errText(e, "Falha ao liquidar aposta") });
     }
+    // Com erro também: o refetch desfaz o otimista.
+    await reload();
   };
 
   const duplicate = async (aposta: BetItem) => {
@@ -102,31 +123,47 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
   };
 
   // Ação em lote da seleção múltipla (Agrupado): optimistic update na lista +
-  // desfazer por ~5s. Undo restaura o status original de cada aposta — usa o
-  // endpoint em lote de novo quando os originais eram todos iguais (comum:
-  // marcar um grupo de pendentes), senão cai pra 1 chamada por aposta (só no
-  // desfazer, já que aí os valores realmente diferem por item).
+  // desfazer por ~5s. Undo restaura o status original de cada aposta: um lote
+  // por status, e cada Cashout sozinho com o valor recebido (ver planBetUndo).
   const bulkFinalize = async (ids: number[], resultId: ResultIdEnum, onSuccess?: () => void) => {
     if (ids.length === 0) return;
-    const previous = apostas
+    const previous = cachedBets()
       .filter((a) => ids.includes(a.id))
-      .map((a) => ({ id: a.id, resultId: a.resultId, resultName: a.resultName }));
+      .map((a) => ({
+        id: a.id,
+        resultId: a.resultId,
+        resultName: a.resultName,
+        profit: a.profit,
+        cashoutValue: a.cashoutValue,
+      }));
 
-    patchCachedBets((a) => (ids.includes(a.id) ? { ...a, resultId, resultName: statusLabelByResultId[resultId] ?? a.resultName } : a));
+    patchCachedBets((a) => (ids.includes(a.id) ? settle(a, resultId) : a));
     setBulkLoading(true);
     try {
       await finalizeMultipleBets({ betIds: ids, resultId });
       onSuccess?.();
 
+      // allSettled: uma chamada recusada não pode esconder as outras nem
+      // passar como "desfeita" — antes o erro sumia e a tela não dizia nada.
       const undo = async () => {
-        const uniqueOriginal = new Set(previous.map((p) => p.resultId));
-        if (uniqueOriginal.size === 1) {
-          await finalizeMultipleBets({ betIds: previous.map((p) => p.id), resultId: previous[0].resultId as ResultIdEnum });
-        } else {
-          await Promise.all(previous.map((p) => finalizeBet(p.id, { resultId: p.resultId as ResultIdEnum })));
-        }
+        const calls = planBetUndo(previous);
+        const results = await Promise.allSettled(
+          calls.map((call) =>
+            call.kind === "batch"
+              ? finalizeMultipleBets({ betIds: call.betIds, resultId: call.resultId })
+              : finalizeBet(call.id, { resultId: call.resultId, cashoutValue: call.cashoutValue }),
+          ),
+        );
         await reload();
-        actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
+        const failed = results.reduce((n, r, i) => (r.status === "rejected" ? n + betsInCall(calls[i]) : n), 0);
+        if (failed === 0) {
+          actionToast.success({ icon: ArrowCounterClockwise, title: "Alteração desfeita" });
+        } else {
+          const firstError = results.find((r): r is PromiseRejectedResult => r.status === "rejected")?.reason;
+          actionToast.error({
+            description: `${failed === previous.length ? "Não deu pra desfazer" : `${failed} de ${previous.length} apostas não voltaram`}: ${errText(firstError, "erro ao desfazer")}`,
+          });
+        }
       };
 
       actionToast.success({
@@ -143,7 +180,7 @@ export function useBetActions({ queryKey, apostas }: UseBetActionsArgs) {
     } catch (e) {
       patchCachedBets((a) => {
         const orig = previous.find((p) => p.id === a.id);
-        return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName } : a;
+        return orig ? { ...a, resultId: orig.resultId, resultName: orig.resultName, profit: orig.profit } : a;
       });
       actionToast.error({ description: errText(e, "Falha ao atualizar status") });
     } finally {

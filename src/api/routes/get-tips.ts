@@ -79,3 +79,14 @@ export function dismissTip(id: number) {
 export function undismissTip(id: number) {
   return unwrap(api.tips.delete(`/${id}/dismiss`));
 }
+
+export interface TipCounts {
+  pending: number;
+  planilhadas: number;
+  caidas: number;
+}
+
+export async function getTipCounts() {
+  const response = await api.tips.get<TipCounts>('/counts');
+  return response.data;
+}

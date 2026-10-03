@@ -3,7 +3,7 @@ import { CheckCircle, PencilSimple, Copy, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDate, formatSignedCurrency, formatTime } from "@/lib/format";
+import { formatCurrency, formatDate, formatSignedCurrency, formatTime, formatOdd } from "@/lib/format";
 import { colorByResultId, mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -64,7 +64,7 @@ export function ApostaDetailSheet({
         <div className="grid grid-cols-3 gap-2 border border-border rounded-md p-3">
           <div>
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Cotação</p>
-            <p className="text-sm font-medium tabular-nums">{Number(aposta.odd).toFixed(2)}</p>
+            <p className="text-sm font-medium tabular-nums">{formatOdd(aposta.odd)}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Valor</p>
@@ -85,7 +85,7 @@ export function ApostaDetailSheet({
             <div className="min-w-0">
               <p className="text-sm leading-snug">{aposta.market}</p>
               <p className="text-xs opacity-55">
-                {Number(aposta.odd).toFixed(2)}
+                {formatOdd(aposta.odd)}
                 {aposta.houseName && ` · ${aposta.houseName}`}
               </p>
             </div>

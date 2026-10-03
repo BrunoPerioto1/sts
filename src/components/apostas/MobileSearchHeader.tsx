@@ -59,11 +59,11 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, 
     <div className="pb-3">
       <div
         className={cn(
-          "relative flex items-center h-10 rounded-md border bg-foreground/[0.03] transition-colors",
-          focused ? "border-accent" : "border-foreground/10"
+          "relative flex items-center h-11 rounded-md border bg-foreground/[0.04] transition-colors",
+          focused ? "border-accent" : "border-foreground/15"
         )}
       >
-        <MagnifyingGlass className="absolute left-3 h-4 w-4 text-zinc-500 pointer-events-none" />
+        <MagnifyingGlass className="absolute left-3 h-4 w-4 text-zinc-400 pointer-events-none" />
         <input
           ref={inputRef}
           value={value}
@@ -82,16 +82,19 @@ export function MobileSearchBar({ value, onChange, resultsCount, open, onClose, 
             }
           }}
           placeholder={placeholder}
-          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-foreground placeholder:text-zinc-500 outline-none"
+          className="flex-1 min-w-0 h-full bg-transparent pl-9 pr-9 text-base text-foreground placeholder:text-zinc-400 outline-none"
         />
-        <button
-          type="button"
-          onClick={handleClear}
-          aria-label="Limpar busca"
-          className="absolute right-1.5 h-8 w-8 flex items-center justify-center text-zinc-500 hover:text-foreground"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+        {/* Sem texto não há o que limpar; fechar a busca fica com o botão do header. */}
+        {value && (
+          <button
+            type="button"
+            onClick={handleClear}
+            aria-label="Limpar busca"
+            className="absolute right-1.5 h-8 w-8 flex items-center justify-center text-zinc-500 hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
       {value && (
         <p className="mt-1.5 pl-1 text-xs text-zinc-500 truncate">

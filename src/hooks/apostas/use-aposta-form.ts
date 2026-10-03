@@ -65,6 +65,9 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
   const [aiMarks, setAiMarks] = useState<Partial<Record<AiField, AiFieldMark>>>({});
   const [originalOdd, setOriginalOdd] = useState<number | null>(null);
   const [tipId, setTipId] = useState<number | undefined>(undefined);
+  // A leitura do print preencheu o formulário: a aposta vai como "print no
+  // site" no filtro de origem, mesmo que o usuário corrija algum campo.
+  const [fromImage, setFromImage] = useState(false);
   const [formData, setFormData] = useState<ApostaFormData>({
     game: initialData?.game || "",
     market: initialData?.market || "",
@@ -130,9 +133,11 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
     // Vincular é decisão do usuário: a melhor candidata já vem marcada, mas
     // nada é enviado sem ele confirmar em "Registrar e vincular".
     setTipId(parsed.matchedTips[0]?.tipId);
+    setFromImage(true);
   };
 
   const clearAi = () => {
+    setFromImage(false);
     setAiMarks({});
     setOriginalOdd(null);
     setTipId(undefined);
@@ -195,6 +200,7 @@ export function useApostaForm({ onApostaAdded, initialData, isEditing = false }:
           sport: formData.sport,
           betTime: new Date(formData.betTime).toISOString(),
           ...(tipId ? { tipId } : {}),
+          ...(fromImage ? { fromImage: true } : {}),
         };
         const created = await createBetRoute(payload);
         onApostaAdded(created);

@@ -15,29 +15,56 @@ interface PeriodPopoverProps {
   to: string;
   onSelect: (preset: DatePreset) => void;
   onCustomRange: (from: string, to: string) => void;
+  /** Texto do gatilho; padrão é o nome do preset. */
+  label?: string;
+  className?: string;
+  align?: "start" | "center" | "end";
+  disabled?: boolean;
 }
 
 /**
  * Seletor de período do desktop: presets à esquerda, calendário à direita, tudo
  * no mesmo popover — sem a folha que sobe da base, que é gesto de mobile.
  */
-export function PeriodPopover({ preset, firstBetDate, from, to, onSelect, onCustomRange }: PeriodPopoverProps) {
+export function PeriodPopover({
+  preset,
+  firstBetDate,
+  from,
+  to,
+  onSelect,
+  onCustomRange,
+  label,
+  className,
+  align = "end",
+  disabled,
+}: PeriodPopoverProps) {
   const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState<DateRange | undefined>(
-    from ? { from: parseISO(from), to: to ? parseISO(to) : undefined } : undefined
-  );
+  const committed = (): DateRange | undefined =>
+    from ? { from: parseISO(from), to: to ? parseISO(to) : undefined } : undefined;
+  const [pending, setPending] = useState<DateRange | undefined>(committed);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        // O período pode ter mudado por fora (chip removido, "Limpar tudo").
+        if (next) setPending(committed());
+        setOpen(next);
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="press flex items-center gap-1.5 h-9 px-3 rounded-lg border border-foreground/10 text-[13px] text-zinc-200 hover:border-foreground/20"
+          disabled={disabled}
+          className={cn(
+            "press flex items-center gap-1.5 h-9 px-3 rounded-lg border border-foreground/10 text-[13px] text-zinc-200 hover:border-foreground/20 disabled:opacity-45 disabled:pointer-events-none",
+            className
+          )}
         >
-          {PRESET_LABEL[preset]} <CaretDown size={12} />
+          {label ?? PRESET_LABEL[preset]} <CaretDown size={12} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 flex" align="end">
+      <PopoverContent className="w-auto p-0 flex" align={align}>
         <div className="flex flex-col gap-0.5 p-2 min-w-[190px] border-r border-border">
           {PERIOD_OPTIONS.map((opt) => (
             <button

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { ChartLineUp } from "@phosphor-icons/react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<"login" | "register" | "forgot">("login");
+  const [forgotEmail, setForgotEmail] = useState("");
 
   return (
     <div className="min-h-dvh grid lg:grid-cols-[1.05fr_1fr]">
@@ -59,10 +61,18 @@ const AuthPage = () => {
           </div>
         </div>
 
-        {isLogin ? (
-          <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
+        {view === "login" ? (
+          <LoginForm
+            onSwitchToRegister={() => setView("register")}
+            onForgotPassword={(email) => {
+              setForgotEmail(email);
+              setView("forgot");
+            }}
+          />
+        ) : view === "forgot" ? (
+          <ForgotPasswordForm initialEmail={forgotEmail} onBack={() => setView("login")} />
         ) : (
-          <RegisterForm onSwitchToLogin={() => setIsLogin(true)} />
+          <RegisterForm onSwitchToLogin={() => setView("login")} />
         )}
       </div>
     </div>

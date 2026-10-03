@@ -18,9 +18,10 @@ import {
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
+import { useTipCounts } from "@/hooks/queries/use-tips";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
-import { initialsOf } from "@/lib/format";
+import { displayName, initialsOf } from "@/lib/format";
 import { useTheme } from "next-themes";
 import { THEME_OPTIONS } from "@/components/perfil/ThemeSelect";
 import {
@@ -35,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type BadgeKey = "pending" | "suggestions";
+type BadgeKey = "overdue" | "suggestions" | "tips";
 
 interface NavItem {
   label: string;
@@ -59,8 +60,8 @@ const sections: NavSection[] = [
     title: "Gestão",
     items: [
       { label: "Dashboard", icon: SquaresFour, href: "/dashboard" },
-      { label: "Apostas", icon: Receipt, href: "/bets", badge: "pending" },
-      { label: "Tips", icon: PaperPlaneTilt, href: "/tips" },
+      { label: "Apostas", icon: Receipt, href: "/bets", badge: "overdue" },
+      { label: "Tips", icon: PaperPlaneTilt, href: "/tips", badge: "tips" },
       { label: "Conferência", icon: ClipboardText, href: "/settlement", badge: "suggestions", badgeHighlight: true },
       { label: "Casas de Apostas", icon: Buildings, href: "/houses" },
     ],
@@ -81,12 +82,17 @@ const sections: NavSection[] = [
   },
 ];
 
+// Uma fonte só pra largura: o <main> do AppShell desloca pelo mesmo número.
+// Antes eram 256px aqui e 248px lá, e a sidebar cobria 8px do conteúdo.
+export const SIDEBAR_WIDTH = 256;
+export const SIDEBAR_COLLAPSED_WIDTH = 72;
+
 type Me = ReturnType<typeof useMe>["me"];
 
 function Avatar({ user }: { user: Me }) {
   return (
     <span className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold shrink-0">
-      {user ? initialsOf(user.username) : "?"}
+      {user ? initialsOf(displayName(user)) : "?"}
     </span>
   );
 }
@@ -94,7 +100,7 @@ function Avatar({ user }: { user: Me }) {
 function UserLines({ user }: { user: Me }) {
   return (
     <span className="overflow-hidden flex-1 min-w-0">
-      <span className="block text-sm font-medium truncate">{user?.username ?? "…"}</span>
+      <span className="block text-sm font-medium truncate">{user ? displayName(user) : "…"}</span>
       <span className="block text-xs text-foreground/50 truncate">{user?.email ?? ""}</span>
     </span>
   );
@@ -114,6 +120,9 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
   // Proposta esperando confirmação é dinheiro parado: o número no menu é o que
   // faz o usuário voltar na conferência sem precisar lembrar dela sozinho.
   const { data: fila } = useSettlementQueue();
+  // Tips pendentes: neutro, não azul — é fila de oportunidade, não pendência
+  // que trava dinheiro como a conferência.
+  const { data: tipCounts } = useTipCounts();
   const visible = sections.filter((s) => !s.adminOnly || isAdmin);
 
   const { theme, setTheme } = useTheme();
@@ -130,7 +139,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
     <div
       className="flex flex-col bg-sidebar text-sidebar-foreground border-r border-border transition-[width] duration-200"
       style={{
-        width: collapsed ? "72px" : "256px",
+        width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         position: isInDrawer ? "relative" : "fixed",
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
@@ -187,7 +196,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
             {section.items.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.href);
-              const badge = item.badge ? fila?.[item.badge] : undefined;
+              const badge = item.badge === "tips" ? tipCounts?.pending : item.badge ? fila?.[item.badge] : undefined;
               return (
                 <NavLink
                   key={item.href}

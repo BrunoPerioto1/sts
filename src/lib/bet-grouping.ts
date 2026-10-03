@@ -21,6 +21,13 @@ export interface MonthGroup {
   count: number;
   total: number;
   weeks: WeekGroup[];
+  /** Mês aberto cujas linhas ainda estão chegando. */
+  loading?: boolean;
+}
+
+/** "2026-09" → "Setembro 2026". */
+export function monthLabel(key: string): string {
+  return capitalize(format(new Date(`${key}-01T12:00:00`), "MMMM yyyy", { locale: ptBR }));
 }
 
 function capitalize(s: string) {
