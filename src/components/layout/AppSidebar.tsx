@@ -11,8 +11,9 @@ import {
   ClipboardText,
   UsersThree,
   GitFork,
+  Scan,
   GearSix,
-  DotsThreeVertical,
+  CaretUpDown,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
@@ -20,10 +21,17 @@ import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { initialsOf } from "@/lib/format";
+import { useTheme } from "next-themes";
+import { THEME_OPTIONS } from "@/components/perfil/ThemeSelect";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -64,6 +72,7 @@ const sections: NavSection[] = [
       { label: "Gerenciar Casas", icon: BuildingOffice, href: "/admin/houses" },
       { label: "Usuários", icon: UsersThree, href: "/admin/users" },
       { label: "Pipeline", icon: GitFork, href: "/admin/pipeline" },
+      { label: "Scanner", icon: Scan, href: "/admin/scanner" },
     ],
   },
   {
@@ -71,6 +80,25 @@ const sections: NavSection[] = [
     items: [{ label: "Configurações", icon: GearSix, href: "/profile" }],
   },
 ];
+
+type Me = ReturnType<typeof useMe>["me"];
+
+function Avatar({ user }: { user: Me }) {
+  return (
+    <span className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold shrink-0">
+      {user ? initialsOf(user.username) : "?"}
+    </span>
+  );
+}
+
+function UserLines({ user }: { user: Me }) {
+  return (
+    <span className="overflow-hidden flex-1 min-w-0">
+      <span className="block text-sm font-medium truncate">{user?.username ?? "…"}</span>
+      <span className="block text-xs text-foreground/50 truncate">{user?.email ?? ""}</span>
+    </span>
+  );
+}
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -87,6 +115,11 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
   // faz o usuário voltar na conferência sem precisar lembrar dela sozinho.
   const { data: fila } = useSettlementQueue();
   const visible = sections.filter((s) => !s.adminOnly || isAdmin);
+
+  const { theme, setTheme } = useTheme();
+  // Sem escolha salva o app abre escuro (defaultTheme do App.tsx).
+  const currentTheme = theme ?? "dark";
+  const CurrentThemeIcon = (THEME_OPTIONS.find((o) => o.value === currentTheme) ?? THEME_OPTIONS[0]).icon;
 
   const logout = () => {
     onNavigate?.();
@@ -199,48 +232,64 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
       </nav>
 
       <div className="pt-3 shrink-0">
-        <div
-          className={cn(
-            "flex items-center gap-2.5 rounded-xl border border-border bg-foreground/[0.03]",
-            collapsed ? "justify-center p-1.5" : "p-2.5",
-          )}
-        >
-          {/* Colapsado não cabe o ⋮: o avatar vira o botão de sair. */}
-          <button
-            type="button"
-            onClick={collapsed ? logout : undefined}
-            tabIndex={collapsed ? 0 : -1}
-            title={collapsed ? "Sair" : undefined}
+        {/* O card inteiro abre o menu da conta, como no colapsado (só o avatar). */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Opções da conta"
             className={cn(
-              "w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold shrink-0",
-              !collapsed && "cursor-default",
+              "w-full flex items-center gap-2.5 rounded-xl border border-border bg-foreground/[0.03] text-left hover:bg-foreground/[0.06] transition-colors",
+              collapsed ? "justify-center p-1.5" : "p-2.5",
             )}
           >
-            {user ? initialsOf(user.username) : "?"}
-          </button>
-          {!collapsed && (
-            <div className="overflow-hidden flex-1 min-w-0">
-              <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">{user?.username ?? "…"}</div>
-              <div className="text-xs text-foreground/50 whitespace-nowrap overflow-hidden text-ellipsis">{user?.email ?? ""}</div>
-            </div>
-          )}
-          {!collapsed && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="rounded-md p-1 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07] transition-colors shrink-0"
-                aria-label="Opções da conta"
-              >
-                <DotsThreeVertical size={18} weight="bold" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="top">
-                <DropdownMenuItem onSelect={logout}>
-                  <SignOut size={16} className="mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+            <Avatar user={user} />
+            {!collapsed && (
+              <>
+                <UserLines user={user} />
+                <CaretUpDown size={16} className="text-foreground/55 shrink-0" />
+              </>
+            )}
+          </DropdownMenuTrigger>
+          {/* Pra cima e na largura do card: aberto pro lado ele invadia a tela. */}
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            sideOffset={6}
+            className={cn(collapsed ? "w-52" : "w-[var(--radix-dropdown-menu-trigger-width)]")}
+          >
+            {/* Recolhido, o card não mostra nome nem email: o menu mostra. */}
+            {collapsed && (
+              <>
+                <div className="px-2 py-1.5">
+                  <UserLines user={user} />
+                </div>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <CurrentThemeIcon size={16} className="mr-2" />
+                Tema
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {THEME_OPTIONS.map((o) => (
+                  <DropdownMenuCheckboxItem
+                    key={o.value}
+                    checked={currentTheme === o.value}
+                    onCheckedChange={() => setTheme(o.value)}
+                  >
+                    <o.icon size={16} className="mr-2" />
+                    {o.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={logout}>
+              <SignOut size={16} className="mr-2" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

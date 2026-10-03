@@ -1,14 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  deleteAdminScanner,
   getAdminHouses,
   getAdminOverview,
+  getAdminScanner,
+  getAdminScannerSample,
   getAdminUsers,
   patchAdminHouse,
+  patchAdminScanner,
+  patchAdminScannerSport,
   patchAdminUser,
   postAdminHouse,
+  postAdminScanner,
   type AdminHouse,
   type AdminUser,
   type CreateAdminHouseParams,
+  type CreateScannerParams,
+  type ScannerFlags,
+  type ScannerTournament,
   type UpdateAdminHouseParams,
   type UpdateAdminUserParams,
 } from "@/api/routes/get-admin";
@@ -16,6 +25,7 @@ import {
 const ADMIN_KEY = ["admin"] as const;
 const USERS_KEY = [...ADMIN_KEY, "users"] as const;
 const HOUSES_KEY = [...ADMIN_KEY, "houses"] as const;
+const SCANNER_KEY = [...ADMIN_KEY, "scanner"] as const;
 
 // O painel existe justamente pra flagrar coletor parado: servir número de 5
 // minutos atrás (staleTime global do App.tsx) seria a própria tela mentindo.
@@ -78,5 +88,68 @@ export function useUpdateAdminHouse() {
       );
       void qc.invalidateQueries({ queryKey: ["houses"] });
     },
+  });
+}
+
+export function useAdminScanner() {
+  return useQuery({ queryKey: SCANNER_KEY, queryFn: getAdminScanner });
+}
+
+// Só busca quando o painel "Dados" abre: são ~3 KB por competição.
+export function useAdminScannerSample(id: number, enabled: boolean) {
+  return useQuery({ queryKey: [...SCANNER_KEY, "sample", id], queryFn: () => getAdminScannerSample(id), enabled });
+}
+
+export function useCreateAdminScanner() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: CreateScannerParams) => postAdminScanner(params),
+    // Raro: refaz o GET em vez de montar a linha (a resposta não traz o esporte).
+    onSuccess: () => qc.invalidateQueries({ queryKey: SCANNER_KEY }),
+  });
+}
+
+/** Uma competição (`id`) ou todas as de um esporte (`sportId`). */
+export type ScannerTarget = { id: number } | { sportId: number };
+
+/**
+ * Otimista: o checkbox muda no clique e volta se a API recusar. Esperar o PATCH
+ * num serverless frio deixava a tela parecendo travada.
+ */
+export function useUpdateAdminScanner() {
+  const qc = useQueryClient();
+  const hits = (t: ScannerTournament, target: ScannerTarget) =>
+    "id" in target ? t.id === target.id : t.sportId === target.sportId;
+
+  return useMutation({
+    mutationFn: ({ target, flags }: { target: ScannerTarget; flags: ScannerFlags }) =>
+      "id" in target
+        ? patchAdminScanner(target.id, flags).then((row) => [row])
+        : patchAdminScannerSport(target.sportId, flags),
+    onMutate: async ({ target, flags }) => {
+      await qc.cancelQueries({ queryKey: SCANNER_KEY });
+      const before = qc.getQueryData<ScannerTournament[]>(SCANNER_KEY);
+      qc.setQueryData<ScannerTournament[]>(SCANNER_KEY, (old) =>
+        old?.map((t) => (hits(t, target) ? { ...t, ...flags } : t)),
+      );
+      return { before };
+    },
+    onError: (_err, _vars, ctx) => qc.setQueryData(SCANNER_KEY, ctx?.before),
+    // A resposta é o que ficou no banco: mescla por id (sem o nome do esporte).
+    onSuccess: (rows) => {
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      qc.setQueryData<ScannerTournament[]>(SCANNER_KEY, (old) => old?.map((t) => ({ ...t, ...byId.get(t.id) })));
+    },
+  });
+}
+
+export function useDeleteAdminScanner() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteAdminScanner(id),
+    onSuccess: (_void, id) =>
+      qc.setQueryData<ScannerTournament[]>(SCANNER_KEY, (old) => old?.filter((t) => t.id !== id)),
   });
 }

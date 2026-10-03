@@ -86,3 +86,75 @@ export async function patchAdminHouse(id: number, data: UpdateAdminHouseParams):
   const res = await apiClient().admin.patch<AdminHouse>(`houses/${id}`, data);
   return res.data;
 }
+
+// ---- Scanner do SofaScore (/admin/scanner). Regras em stsbackend/docs/scanner.md.
+
+export type ScannerCheckStatus = "ok" | "invalid_id" | "blocked" | "error";
+
+export type ScannerTournament = {
+  id: number;
+  name: string;
+  sportId: number;
+  sportName: string;
+  isActive: boolean;
+  statistics: boolean;
+  incidents: boolean;
+  lineups: boolean;
+  lastEvents: number | null;
+  lastEventsAt: string | null;
+  lastCheckAt: string | null;
+  lastCheckStatus: ScannerCheckStatus | null;
+  sampleAt: string | null;
+  // Seções que vieram vazias na amostra: a conferência não liquida esses mercados.
+  coverageGaps: ("statistics" | "lineups")[];
+};
+
+// Resumo do último jogo encerrado da competição (jobs/sofascore/amostra.py).
+// `used` = o motor de liquidação lê essa chave.
+export type ScannerSample = {
+  sample: {
+    event: { id: number; home: string; away: string; score: string; startAt: string } | null;
+    statistics?: { key: string; name: string; group: string; home: unknown; away: unknown; used: boolean }[] | null;
+    incidents?: Record<string, number> | null;
+    lineups?: { confirmed: boolean; players: number; keys: { key: string; example: number; used: boolean }[] } | null;
+    // Chaves que o motor precisa e não vieram (amostra a partir de 03/10).
+    missing?: { statistics: string[]; lineups: string[] };
+  } | null;
+  sampleAt: string | null;
+};
+
+export async function getAdminScannerSample(id: number): Promise<ScannerSample> {
+  const res = await apiClient().admin.get<ScannerSample>(`scanner/${id}/sample`);
+  return res.data;
+}
+
+export type ScannerFlag = "isActive" | "statistics" | "incidents" | "lineups";
+export type ScannerFlags = Partial<Record<ScannerFlag, boolean>>;
+export type CreateScannerParams = { id: number; name: string; sportId: number };
+
+// PATCH devolve a linha crua da tabela: sem o nome do esporte, que vem de join.
+type ScannerRow = Omit<ScannerTournament, "sportName">;
+
+export async function getAdminScanner(): Promise<ScannerTournament[]> {
+  const res = await apiClient().admin.get<ScannerTournament[]>("scanner");
+  return res.data;
+}
+
+export async function postAdminScanner(data: CreateScannerParams): Promise<ScannerRow> {
+  const res = await apiClient().admin.post<ScannerRow>("scanner", data);
+  return res.data;
+}
+
+export async function patchAdminScanner(id: number, data: ScannerFlags): Promise<ScannerRow> {
+  const res = await apiClient().admin.patch<ScannerRow>(`scanner/${id}`, data);
+  return res.data;
+}
+
+export async function patchAdminScannerSport(sportId: number, data: ScannerFlags): Promise<ScannerRow[]> {
+  const res = await apiClient().admin.patch<ScannerRow[]>(`scanner/sports/${sportId}`, data);
+  return res.data;
+}
+
+export async function deleteAdminScanner(id: number): Promise<void> {
+  await apiClient().admin.delete(`scanner/${id}`);
+}

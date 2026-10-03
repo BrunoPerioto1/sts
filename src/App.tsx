@@ -22,6 +22,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminTipsPage = lazy(() => import("./pages/AdminTipsPage"));
 const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
+const AdminScannerPage = lazy(() => import("./pages/AdminScannerPage"));
 import { Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
@@ -73,6 +74,7 @@ const App = () => (
           <Route path="/admin/houses" element={<RequireAdmin><AdminHousesPage /></RequireAdmin>} />
           <Route path="/admin/users" element={<RequireAdmin><AdminUsersPage /></RequireAdmin>} />
           <Route path="/admin/tips" element={<RequireAdmin><AdminTipsPage /></RequireAdmin>} />
+          <Route path="/admin/scanner" element={<RequireAdmin><AdminScannerPage /></RequireAdmin>} />
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />

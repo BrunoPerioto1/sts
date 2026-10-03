@@ -2,7 +2,8 @@ import { Desktop, Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
-const OPTIONS = [
+// Também usado no menu da conta (AppSidebar).
+export const THEME_OPTIONS = [
   { value: "dark", label: "Escuro", icon: Moon },
   { value: "light", label: "Claro", icon: Sun },
   { value: "system", label: "Sistema", icon: Desktop },
@@ -14,7 +15,7 @@ export function ThemeSelect({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   return (
     <div className={cn("inline-flex overflow-hidden rounded-md border border-border", className)} role="radiogroup" aria-label="Tema">
-      {OPTIONS.map((o, i) => {
+      {THEME_OPTIONS.map((o, i) => {
         const active = (theme ?? "dark") === o.value;
         return (
           <button
