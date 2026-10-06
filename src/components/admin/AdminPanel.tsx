@@ -29,7 +29,8 @@ export function AdminPanel({
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.12em] opacity-45">{eyebrow}</p>
             <h2 className="text-xl font-semibold tracking-tight mt-0.5">{title}</h2>
-            {description && <div className="text-sm opacity-55 mt-1 leading-relaxed">{description}</div>}
+            {/* Cor e não opacity: filho com cor própria (alerta, Tudo OK) não apaga junto. */}
+            {description && <div className="text-sm text-foreground/55 mt-1 leading-relaxed">{description}</div>}
           </div>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>

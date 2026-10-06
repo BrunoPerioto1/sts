@@ -34,6 +34,36 @@ export function nameFromUrl(raw: string): string {
     .join(" ");
 }
 
+// Slug do SofaScore → nome na tabela `sports`.
+const SPORT_SLUG: Record<string, string> = {
+  football: "Futebol",
+  futsal: "Futsal",
+  basketball: "Basquete",
+  "american-football": "Futebol Americano",
+  rugby: "Rugby",
+  tennis: "Tênis",
+  "table-tennis": "Tênis de Mesa",
+  volleyball: "Vôlei",
+  handball: "Handebol",
+  baseball: "Beisebol",
+  "ice-hockey": "Hóquei no Gelo",
+  esports: "eSports",
+  mma: "MMA",
+};
+
+/** "…/tournament/football/brazil/…/325" → "Futebol". Null se a URL não diz. */
+export function sportFromUrl(raw: string): string | null {
+  let path: string;
+  try {
+    path = new URL(raw.trim()).pathname;
+  } catch {
+    return null;
+  }
+  const parts = path.split("/").filter(Boolean);
+  const i = parts.indexOf("tournament");
+  return i >= 0 ? (SPORT_SLUG[parts[i + 1]] ?? null) : null;
+}
+
 type CollectState = {
   isActive: boolean;
   lastEvents: number | null;
