@@ -3,6 +3,7 @@ import {
   getAllHouses,
   getHouseBalances,
   getHouseMetrics,
+  houseLogoUrl,
   type FindAllHousesDTO,
 } from "@/api/routes/get-houses";
 
@@ -31,6 +32,24 @@ export function useHouses(): HouseOption[] {
     select: toOptions,
   });
   return data ?? EMPTY_OPTIONS;
+}
+
+// Nome (minúsculo) → URL do avatar, da mesma query de useHouses. O avatar é
+// chamado só com o nome em várias telas (saldo, admin, select de aposta).
+const toLogoUrls = (rows: FindAllHousesDTO[]): Map<string, string> =>
+  new Map(
+    rows.flatMap((h) =>
+      h.logoVersion ? [[h.name.trim().toLowerCase(), houseLogoUrl(Number(h.id), h.logoVersion)] as const] : [],
+    ),
+  );
+
+export function useHouseLogoUrl(name: string): string | undefined {
+  const { data } = useQuery({
+    queryKey: [...HOUSES_KEY, "all"],
+    queryFn: getAllHouses,
+    select: toLogoUrls,
+  });
+  return data?.get(name.trim().toLowerCase());
 }
 
 // getHouseBalances aceita filtro opcional; o wrapper evita o react-query passar

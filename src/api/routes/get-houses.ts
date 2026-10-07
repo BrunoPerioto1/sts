@@ -4,6 +4,15 @@ export interface HouseDto {
   id: number;
   name: string;
   active: boolean;
+  /** Versão do avatar guardado no banco; null = sem logo (usa as iniciais). */
+  logoVersion?: number | null;
+}
+
+// <img> não passa pelo axios: monta a URL absoluta. O ?v= muda quando o logo
+// é trocado, e a API serve com cache imutável.
+export function houseLogoUrl(id: number, version: number): string {
+  const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+  return `${base}/house/${id}/logo?v=${version}`;
 }
 
 export type FindAllHousesDTO = HouseDto;
