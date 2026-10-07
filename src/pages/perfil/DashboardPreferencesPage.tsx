@@ -1,6 +1,5 @@
 import { useRef, useState, type PointerEvent } from "react";
-import { Link } from "react-router-dom";
-import { ArrowDown, ArrowUp, CaretLeft, CaretRight, DotsSixVertical } from "@phosphor-icons/react";
+import { ArrowDown, ArrowUp, CaretRight, DotsSixVertical } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SettingsLayout } from "@/components/perfil/SettingsLayout";
 import { DashboardSettingsDesktop } from "@/components/perfil/DashboardSettingsDesktop";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function DashboardPreferencesPage() {
   const isMobile = useIsMobile();
@@ -77,12 +77,7 @@ function DashboardPreferencesMobile() {
     void save({ ...preferences, kpis: next });
   }
   const title = "Personalizar Dashboard";
-  return <MainLayout title={title} hideHeaderBorder hideBottomNav mobileHeader={
-    <div className="flex items-center gap-2 min-w-0">
-      <Link to="/profile" aria-label="Voltar" className="h-11 w-11 shrink-0 flex items-center justify-center text-zinc-400"><CaretLeft size={20} /></Link>
-      <h1 className="text-lg font-semibold">{title}</h1>
-    </div>
-  }>
+  return <MainLayout title={title} hideHeaderBorder hideBottomNav mobileHeader={<PageHeader back="/profile" title={title} />}>
     <div className="max-w-xl space-y-7 pb-6">
       <p className="text-sm text-zinc-400">Escolha os indicadores, ordem, ícones e aparência do seu Dashboard.</p>
       {!me ? <div role="status" aria-label="Carregando preferências" className="space-y-4">

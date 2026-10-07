@@ -130,13 +130,12 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
 
       <div className="flex flex-col gap-4">
         <TelegramCard me={me} onUnlinked={reloadMe} />
-        <button
-          type="button"
-          onClick={() => navigate("/logout")}
-          className="press self-start flex items-center gap-2 px-2 py-1.5 text-[13px] text-zinc-400 hover:text-foreground"
-        >
-          <SignOut size={15} /> Sair da conta
-        </button>
+        <div className="self-start">
+          <Button variant="destructive" size="sm" className="gap-2" onClick={() => navigate("/logout")}>
+            <SignOut size={15} /> Sair da conta
+          </Button>
+          <p className="px-2.5 text-xs text-zinc-600 tabular-nums">v{__APP_VERSION__}</p>
+        </div>
       </div>
     </div>
   );

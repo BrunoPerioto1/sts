@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CaretLeft, ChatCircleDots, CircleNotch, Clock, PaperPlaneTilt, Sun, Bell } from "@phosphor-icons/react";
+import { ChatCircleDots, CircleNotch, Clock, PaperPlaneTilt, Sun, Bell } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/ui/page-header";
 import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
@@ -13,6 +14,7 @@ import { postUnlinkTelegram } from "@/api/routes/post-unlink-telegram";
 import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import { formatCountdown } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
 
 const BOT_HANDLE = "@betbpbot";
 
@@ -96,27 +98,20 @@ export default function TelegramPage() {
       hideHeaderBorder
       hideBottomNav
       mobileHeader={
-        <div className="flex items-center gap-2 min-w-0">
-          <button
-            type="button"
-            onClick={() => (code ? setCode(null) : navigate(-1))}
-            aria-label="Voltar"
-            className="p-1 -ml-1 text-zinc-400 hover:text-foreground"
-          >
-            <CaretLeft size={20} />
-          </button>
-          <h1 className="text-lg font-semibold truncate flex-1">{title}</h1>
-          {!code && (
-            <span
-              className={cn(
-                "text-[11px] uppercase tracking-wider px-2 py-1 rounded-md shrink-0",
-                isLinked ? "bg-success/[0.16] text-success" : "border border-foreground/10 text-zinc-400"
-              )}
-            >
-              {isLinked ? "Vinculado" : "Não vinculado"}
-            </span>
-          )}
-        </div>
+        <PageHeader
+          // Com o código na tela, voltar fecha o código antes de sair.
+          back={() => (code ? setCode(null) : navigate(-1))}
+          title={title}
+          actions={
+            !code && (
+              // Mesmo status da linha do Telegram no Perfil: ponto + texto.
+              <span className={cn("flex items-center gap-1.5 text-xs", isLinked ? "text-success" : "text-zinc-400")}>
+                <span className={cn("w-1.5 h-1.5 rounded-full", isLinked ? "bg-success" : "bg-zinc-500")} />
+                {isLinked ? "Vinculado" : "Não vinculado"}
+              </span>
+            )
+          }
+        />
       }
     >
       {!me ? (
@@ -153,7 +148,7 @@ export default function TelegramPage() {
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">No bot</p>
+            <SectionLabel as="p" className="mb-2">No bot</SectionLabel>
             <button
               type="button"
               onClick={copyCommand}
@@ -229,14 +224,15 @@ export default function TelegramPage() {
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Exemplo de mensagem</p>
+            <SectionLabel as="p" className="mb-2">Exemplo de mensagem</SectionLabel>
             <p className="rounded-lg bg-foreground/[0.04] p-3.5 text-sm text-zinc-300">
               “100 na Betano, Flamengo vitória, odd 2.10”
             </p>
           </div>
 
           <Button
-            className="w-full min-h-[48px] bg-accent text-white font-semibold hover:bg-accent/90"
+            size="lg"
+            className="w-full"
             onClick={generateCode}
             disabled={linking}
           >

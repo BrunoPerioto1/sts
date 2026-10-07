@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CaretLeft, CaretRight, Lock, Trash } from "@phosphor-icons/react";
+import { CaretRight, Lock, Trash } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
 import { FormSkeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,8 @@ import { deleteMe } from "@/api/routes/delete-me";
 import { useMe } from "@/hooks/queries/use-me";
 import { getErrorMessage } from "@/lib/api-error";
 import { clearToken } from "@/lib/auth-session";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -68,14 +70,7 @@ export default function AccountPage() {
       title="Dados da conta"
       hideHeaderBorder
       hideBottomNav
-      mobileHeader={
-        <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Voltar" className="p-1 -ml-1 text-zinc-400 hover:text-foreground">
-            <CaretLeft size={20} />
-          </button>
-          <h1 className="text-lg font-semibold truncate">Dados da conta</h1>
-        </div>
-      }
+      mobileHeader={<PageHeader back title="Dados da conta" />}
     >
       {!me ? (
         <FormSkeleton fields={3} />
@@ -115,7 +110,7 @@ export default function AccountPage() {
             )}
           </div>
 
-          <p className="text-xs uppercase tracking-wider text-zinc-500 mt-7 mb-2">Segurança</p>
+          <SectionLabel className="mt-7 mb-2">Segurança</SectionLabel>
           <div className="flex flex-col divide-y divide-border border-y border-border">
             <Link to="/profile/password" className="press h-14 flex items-center gap-3">
               <Lock size={19} className="text-zinc-400 shrink-0" />

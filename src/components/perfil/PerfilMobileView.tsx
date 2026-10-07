@@ -1,8 +1,11 @@
 import { useId } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ThemeSelect } from "./ThemeSelect";
-import { Bank, CaretRight, IdentificationCard, Palette, Pulse, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
+import { Bank, IdentificationCard, Palette, Pulse, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ListGroup, ListIcon, ListRow } from "@/components/ui/list-group";
+import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { displayName, formatInt, formatMoney, formatPercent, initialsOf } from "@/lib/format";
@@ -87,60 +90,25 @@ interface PerfilMobileViewProps {
 }
 
 interface Row {
-  to?: string;
+  to: string;
   icon: Icon;
   label: string;
-  value?: string;
-  valueTone?: string;
+  value?: React.ReactNode;
   trailing?: React.ReactNode;
 }
 
-function RowGroup({ title, rows, admin, children }: { title: string; rows: Row[]; admin?: boolean; children?: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <p className="px-1 flex items-center gap-1.5 text-xs uppercase tracking-wider font-medium text-zinc-500">
-        {title}
-        {/* Só admin vê esta seção: escudo e ícones em cinza (não âmbar, que é
-            "pendente") marcam a diferença. */}
-        {admin && <ShieldCheck size={13} weight="fill" className="text-zinc-400" />}
-      </p>
-      <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
-        {rows.map((row) => {
-          const inner = (
-            <>
-              <span
-                className={cn(
-                  "w-8 h-8 shrink-0 rounded-[9px] flex items-center justify-center",
-                  admin ? "bg-foreground/[0.08]" : "bg-accent/10"
-                )}
-              >
-                <row.icon size={16} className={admin ? "text-zinc-300" : "text-accent-text"} />
-              </span>
-              {/* Nome inteiro em cima e valor embaixo: em uma linha só,
-                  "Preferências de aposta" era cortado no meio. */}
-              <span className="flex-1 min-w-0">
-                <span className="block text-[14.5px] text-foreground truncate">{row.label}</span>
-                {row.value && (
-                  <span className={cn("block text-xs tabular-nums truncate", row.valueTone ?? "text-zinc-500")}>{row.value}</span>
-                )}
-              </span>
-              {row.trailing ?? <CaretRight size={13} className="text-zinc-600 shrink-0" />}
-            </>
-          );
-          return row.to ? (
-            <Link key={row.label} to={row.to} className="press h-[60px] px-3.5 flex items-center gap-3 hover:bg-foreground/[0.03]">
-              {inner}
-            </Link>
-          ) : (
-            <div key={row.label} className="h-[60px] px-3.5 flex items-center gap-3">
-              {inner}
-            </div>
-          );
-        })}
-        {children}
-      </div>
-    </div>
-  );
+/** Linhas de navegação do Perfil: ícone tingido · nome · resumo · chevron. */
+function rows(list: Row[], tone: "accent" | "neutral" = "accent") {
+  return list.map((row) => (
+    <ListRow
+      key={row.label}
+      to={row.to}
+      leading={<ListIcon icon={row.icon} tone={tone} />}
+      title={row.label}
+      subtitle={row.value}
+      trailing={row.trailing}
+    />
+  ));
 }
 
 export function PerfilMobileView({ me, summary, metricsLoading, metricsError, metricsUnavailable }: PerfilMobileViewProps) {
@@ -185,7 +153,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
             </span>
           ),
         }
-      : { to: "/profile/telegram", icon: TelegramLogo, label: "Telegram", value: "Não vinculado", valueTone: "text-accent-text" },
+      : { to: "/profile/telegram", icon: TelegramLogo, label: "Telegram", value: <span className="text-accent-text">Não vinculado</span> },
     { to: "/profile/dashboard", icon: SquaresFour, label: "Dashboard", value: "Indicadores, ícones e cores" },
   ];
 
@@ -202,7 +170,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-zinc-500">Lucro acumulado</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Lucro acumulado</p>
             {since && <p className="text-xs text-zinc-500">{since}</p>}
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -230,39 +198,36 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
         </div>
         <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
           {stats.map((s) => (
-            <div key={s.label} className="min-w-0 space-y-0.5">
-              <p className="text-[11.5px] text-zinc-500 truncate">{s.label}</p>
-              <p className="text-lg font-semibold tracking-tight tabular-nums truncate">{s.value}</p>
-              {s.hint && <p className="text-[11px] text-zinc-500 tabular-nums truncate">{s.hint}</p>}
-            </div>
+            <StatCard key={s.label} label={s.label} value={s.value} hint={s.hint} />
           ))}
         </div>
       </div>
 
-      <RowGroup title="Conta" rows={contaRows}>
+      <ListGroup title="Conta">
+        {rows(contaRows)}
         {/* Tema quebra o padrão da linha: label em cima e o seletor ocupando
             a largura toda embaixo, em vez de espremido ao lado do título. */}
         <div className="px-3.5 py-3 space-y-2.5">
           <div className="flex items-center gap-3">
-            <span className="w-8 h-8 shrink-0 rounded-[9px] bg-accent/10 flex items-center justify-center">
-              <Palette size={16} className="text-accent-text" />
-            </span>
-            <span className="text-[14.5px] text-foreground">Tema</span>
+            <ListIcon icon={Palette} />
+            <span className="text-sm font-medium text-foreground">Tema</span>
           </div>
           <ThemeSelect className="flex w-full" />
         </div>
-      </RowGroup>
-      {me.roleId === ADMIN_ROLE_ID && <RowGroup title="Administração" rows={adminRows} admin />}
+      </ListGroup>
+      {me.roleId === ADMIN_ROLE_ID && (
+        // Só admin vê esta seção: escudo e ícones em cinza marcam a diferença.
+        <ListGroup title="Administração" titleIcon={<ShieldCheck size={13} weight="fill" className="text-zinc-400" />}>
+          {rows(adminRows, "neutral")}
+        </ListGroup>
+      )}
 
       {/* Ação destrutiva fecha a tela como botão ghost, não com peso de card. */}
-      <div className="flex justify-center pb-2">
-        <button
-          type="button"
-          onClick={() => navigate("/logout")}
-          className="press h-[44px] px-4 rounded-xl flex items-center justify-center gap-2 text-[14.5px] font-medium text-danger hover:bg-danger/10"
-        >
+      <div className="flex flex-col items-center gap-1 pb-2">
+        <Button variant="destructive" className="h-11 px-4 gap-2" onClick={() => navigate("/logout")}>
           <SignOut size={16} /> Sair da conta
-        </button>
+        </Button>
+        <p className="text-xs text-zinc-600 tabular-nums">v{__APP_VERSION__}</p>
       </div>
     </div>
   );
