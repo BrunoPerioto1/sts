@@ -24,7 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
+import { AdminPanel } from "@/components/admin/AdminPanel";
+import { FilterChip } from "@/components/ui/filter-chips";
 import { AdminUsersMobile } from "@/components/admin/AdminUsersMobile";
 import { useIsMobile } from "@/hooks/use-mobile";
 

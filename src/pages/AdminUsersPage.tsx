@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AdminUsers } from "@/components/admin/AdminUsers";
-import { AdminMobileHeader } from "@/components/admin/AdminPanel";
+import { PageHeader } from "@/components/ui/page-header";
+import { formatInt } from "@/lib/format";
 import { useAdminUsers } from "@/hooks/queries/use-admin";
 
 export default function AdminUsersPage() {
@@ -11,10 +12,12 @@ export default function AdminUsersPage() {
     <MainLayout
       title="Admin"
       subtitle="Usuários"
+      hideHeaderBorder
       mobileHeader={
-        <AdminMobileHeader
+        <PageHeader
+          back="/profile"
           title="Usuários"
-          subtitle={users && `${users.length} ${users.length === 1 ? "conta" : "contas"} · ${admins} ${admins === 1 ? "admin" : "admins"}`}
+          subtitle={users && `${formatInt(users.length)} ${users.length === 1 ? "conta" : "contas"} · ${formatInt(admins)} ${admins === 1 ? "admin" : "admins"}`}
         />
       }
     >

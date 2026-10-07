@@ -5,7 +5,7 @@ import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminPanel } from "@/components/admin/AdminPanel";
-import { AdminMobileHeader } from "@/components/admin/AdminPanel";
+import { PageHeader } from "@/components/ui/page-header";
 import { PipelineHealth, PipelineSummary, buildGroups, countAlerts } from "@/components/admin/PipelineHealth";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
@@ -42,9 +42,10 @@ export default function AdminPage() {
       title="Admin"
       subtitle="Pipeline"
       actions={refresh}
+      hideHeaderBorder
       mobileHeader={
         // Sem botão de atualizar: no celular quem atualiza é o puxar pra baixo.
-        <AdminMobileHeader title="Pipeline" subtitle={`atualizado ${updatedAt.slice(-5)} · horário de Brasília`} />
+        <PageHeader back="/profile" title="Pipeline" subtitle={`atualizado ${updatedAt.slice(-5)} · horário de Brasília`} />
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />

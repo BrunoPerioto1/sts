@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
 import { cn } from "@/lib/utils";
-import { formatPercent } from "@/lib/format";
+import { formatInt, formatPercent } from "@/lib/format";
 
 /**
  * Tips das últimas 24h que não geraram DM. Tela à parte, e não um "ver mais"
@@ -39,13 +40,13 @@ export default function AdminTipsPage() {
       title="Tips sem entrega"
       subtitle={data ? `${tips.length} nas últimas 24h · ${expected} deveriam ter chegado em alguém` : undefined}
       actions={back}
+      hideHeaderBorder
       mobileHeader={
-        <div className="flex items-center gap-3">
-          <Link to="/admin/pipeline" className="press opacity-60" aria-label="Voltar para o admin">
-            <ArrowLeft size={20} />
-          </Link>
-          <h1 className="text-xl font-semibold tracking-tight truncate">Tips sem entrega</h1>
-        </div>
+        <PageHeader
+          back="/admin/pipeline"
+          title="Tips sem entrega"
+          subtitle={data ? `${formatInt(tips.length)} nas últimas 24h` : undefined}
+        />
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />

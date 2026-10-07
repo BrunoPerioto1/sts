@@ -38,11 +38,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  AdminPanel,
-  COLUMN_HEAD,
-  FilterChip,
-} from "@/components/admin/AdminPanel";
+import { AdminPanel, COLUMN_HEAD } from "@/components/admin/AdminPanel";
+import { FilterChip } from "@/components/ui/filter-chips";
 import {
   useAdminScanner,
   useAdminScannerSample,

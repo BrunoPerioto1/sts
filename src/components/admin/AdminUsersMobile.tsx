@@ -3,7 +3,8 @@ import { Prohibit, WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MobileChip, MobileChips, MobileSearch } from "@/components/admin/AdminPanel";
+import { SearchField } from "@/components/ui/search-field";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin-health";
 import { daysUntilAccess, formatAccessDate, isExpired, tipsGroupAction } from "@/lib/access";
 import { initialsOf, formatInt } from "@/lib/format";
@@ -210,15 +211,13 @@ export function AdminUsersMobile<F extends string>({
         </button>
       )}
 
-      <MobileSearch value={search} onChange={setSearch} placeholder="Nome ou e-mail" />
+      <SearchField value={search} onChange={setSearch} placeholder="Nome ou e-mail" />
       {users && (
-        <MobileChips>
-          {filters.map((f) => (
-            <MobileChip key={f.id} active={filter === f.id} count={users.filter(f.test).length} onClick={() => setFilter(f.id)}>
-              {f.label}
-            </MobileChip>
-          ))}
-        </MobileChips>
+        <FilterChips
+          options={filters.map((f) => ({ value: f.id, label: f.label, count: users.filter(f.test).length }))}
+          value={filter}
+          onChange={setFilter}
+        />
       )}
 
       {isPending ? (
