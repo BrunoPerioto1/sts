@@ -88,8 +88,15 @@ export function useHouseRowEditor(house: AdminHouse) {
   };
 }
 
+export type CatalogSort = "bets" | "name";
+
+const CATALOG_SORTS: Record<CatalogSort, (a: AdminHouse, b: AdminHouse) => number> = {
+  bets: (a, b) => b.betCount - a.betCount,
+  name: (a, b) => a.name.localeCompare(b.name, "pt-BR"),
+};
+
 /**
- * Busca, filtro e corte do catálogo. Sem busca, a tela abre nas `pageSize`
+ * Busca, filtro, ordenação e corte do catálogo. Sem busca, a tela abre nas `pageSize`
  * casas de maior volume — são as que alguém mexe; a busca mostra tudo que
  * bate, porque cortar esconderia justamente o que foi procurado.
  */
@@ -102,8 +109,10 @@ export function useHouseCatalog<F extends { id: string; test: (h: AdminHouse) =>
   const [search, setSearch] = useState("");
   const [filter, setFilterState] = useState<F["id"]>(initialFilter);
   const [showAll, setShowAll] = useState(false);
+  // Padrão: mais apostas primeiro, que era a única ordem antes do seletor.
+  const [sort, setSort] = useState<CatalogSort>("bets");
 
-  const all = [...(houses ?? [])].sort((a, b) => b.betCount - a.betCount);
+  const all = [...(houses ?? [])].sort(CATALOG_SORTS[sort]);
   const term = search.trim().toLowerCase();
   const test = filters.find((f) => f.id === filter)?.test ?? (() => true);
   const filtered = all.filter(
@@ -124,6 +133,8 @@ export function useHouseCatalog<F extends { id: string; test: (h: AdminHouse) =>
     },
     showAll,
     setShowAll,
+    sort,
+    setSort,
     filtered,
     visible,
     hidden: filtered.length - visible.length,

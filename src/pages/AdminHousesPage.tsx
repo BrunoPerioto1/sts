@@ -3,9 +3,11 @@ import { Plus } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AdminHouses } from "@/components/admin/AdminHouses";
 import { AdminHousesMobile } from "@/components/admin/AdminHousesMobile";
-import { AdminMobileHeader } from "@/components/admin/AdminPanel";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { useAdminHouses } from "@/hooks/queries/use-admin";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatInt } from "@/lib/format";
 import type { AdminHouse } from "@/api/routes/get-admin";
 
 export default function AdminHousesPage() {
@@ -17,18 +19,17 @@ export default function AdminHousesPage() {
     <MainLayout
       title="Admin"
       subtitle="Casas de apostas"
+      hideHeaderBorder
       mobileHeader={
-        <AdminMobileHeader
+        <PageHeader
+          // Admin entra pelo Perfil no celular: voltar leva pra lá.
+          back="/profile"
           title="Casas de aposta"
-          subtitle={houses ? `${houses.length} no catálogo · vale para todos` : "vale para todos"}
-          action={
-            <button
-              type="button"
-              onClick={() => setEditing("new")}
-              className="press h-9 px-3 rounded-[10px] border border-accent text-accent-text text-[13.5px] flex items-center gap-1.5"
-            >
+          subtitle={houses ? `${formatInt(houses.length)} casas · catálogo compartilhado` : "catálogo compartilhado"}
+          actions={
+            <Button size="sm" className="gap-1.5" onClick={() => setEditing("new")}>
               <Plus size={14} /> Nova
-            </button>
+            </Button>
           }
         />
       }

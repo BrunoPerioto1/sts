@@ -1,31 +1,49 @@
 import { useState } from "react";
-import { CaretRight, Info, Plus, X } from "@phosphor-icons/react";
-import { BottomSheet } from "@/components/apostas/BottomSheet";
+import { Plus, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MobileChip, MobileChips, MobileSearch } from "@/components/admin/AdminPanel";
+import { FormField, FormSheet } from "@/components/ui/form-sheet";
+import { SearchField } from "@/components/ui/search-field";
+import { FilterChips } from "@/components/ui/filter-chips";
+import { SortSelect, type SortOption } from "@/components/ui/sort-select";
+import { ListGroup, ListRow } from "@/components/ui/list-group";
+import { HouseAvatar } from "@/components/ui/house-avatar";
 import { useAdminHouses, useCreateAdminHouse, useUpdateAdminHouse } from "@/hooks/queries/use-admin";
-import { useHouseCatalog } from "@/hooks/admin/use-admin-houses-view";
+import { useHouseCatalog, type CatalogSort } from "@/hooks/admin/use-admin-houses-view";
 import { siteLabel } from "@/lib/house-url";
+import { formatInt, houseDisplayName } from "@/lib/format";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import type { AdminHouse } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
-import { formatInt } from "@/lib/format";
 
 const PAGE = 10;
 
+// "Todas" primeiro: a faixa de chips abre no começo, e o padrão é o que se vê.
 const FILTERS = [
+  { id: "all", label: "Todas", test: () => true },
   { id: "noAlias", label: "Sem apelido", test: (h: AdminHouse) => h.aliases.length === 0 },
   { id: "alias", label: "Com apelido", test: (h: AdminHouse) => h.aliases.length > 0 },
   { id: "noSite", label: "Sem site", test: (h: AdminHouse) => h.isActive && !h.websiteUrl },
   { id: "inactive", label: "Inativas", test: (h: AdminHouse) => !h.isActive },
-  { id: "all", label: "Todas", test: () => true },
 ] as const;
 
-const fieldLabel = "text-xs text-zinc-500";
+const SORTS: SortOption<CatalogSort>[] = [
+  { value: "bets", label: "Mais apostas", hint: "mais usadas primeiro" },
+  { value: "name", label: "Nome", hint: "A → Z" },
+];
+
+// "https://www.betano.bet.br/x" → "betano.bet.br": o campo guarda só o domínio
+// (o servidor põe o https:// de volta e valida o .bet.br).
+function siteDomain(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/[/?#].*$/, "");
+}
 
 // Folha de edição/cadastro: um campo por linha, com rótulo. `house` null = nova.
 function HouseSheet({ house, onClose }: { house: AdminHouse | null; onClose: () => void }) {
@@ -66,7 +84,7 @@ function HouseSheet({ house, onClose }: { house: AdminHouse | null; onClose: () 
     } else {
       create.mutate(params, {
         onSuccess: (created) => {
-          actionToast.success({ title: `${created.name} cadastrada` });
+          actionToast.success({ title: `${houseDisplayName(created.name)} cadastrada` });
           onClose();
         },
         onError,
@@ -75,143 +93,139 @@ function HouseSheet({ house, onClose }: { house: AdminHouse | null; onClose: () 
   };
 
   return (
-    <BottomSheet
+    <FormSheet
       open
       onOpenChange={(open) => !open && onClose()}
-      title={house?.name || "Nova casa"}
-      footer={
-        <div className="flex gap-2.5">
-          <Button className="flex-1 h-12 text-[15px]" disabled={pending || !name.trim()} onClick={save}>
-            {pending ? "Salvando…" : "Salvar"}
-          </Button>
-          <Button variant="ghost" className="w-[100px] h-12 text-zinc-400" onClick={onClose}>
-            Cancelar
-          </Button>
-        </div>
-      }
+      title={house ? "Editar casa" : "Nova casa"}
+      onSubmit={save}
+      submitting={pending}
+      submitDisabled={!name.trim()}
     >
-      <div className="space-y-3.5 pb-4">
-        <label className="flex flex-col gap-1.5">
-          <span className={fieldLabel}>Nome</span>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Betano" className="h-[46px] rounded-xl" />
-        </label>
+      <FormField label="Nome" htmlFor="house-name">
+        <Input id="house-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Betano" className="h-[46px] rounded-xl" />
+      </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <span className={fieldLabel}>Apelidos</span>
-          <div className="min-h-[46px] rounded-xl border border-input bg-card px-2 py-1.5 flex flex-wrap items-center gap-1.5">
-            {aliases.map((alias) => (
-              <span key={alias} className="h-[30px] pl-2.5 pr-1 rounded-lg bg-foreground/[0.07] text-[13px] flex items-center gap-1">
-                {alias}
-                <button
-                  type="button"
-                  aria-label={`Remover ${alias}`}
-                  onClick={() => setAliases(aliases.filter((a) => a !== alias))}
-                  className="w-6 h-6 flex items-center justify-center text-zinc-500"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  addAlias();
-                }
-              }}
-              onBlur={addAlias}
-              enterKeyHint="done"
-              placeholder={aliases.length ? "Outro apelido" : "Novo apelido"}
-              className="flex-1 min-w-[120px] h-[30px] bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground"
-            />
-            {/* Botão visível em vez de "aperte Enter": no teclado do celular o
-                Enter é escondido. Também vale sair do campo ou salvar direto. */}
-            {draft.trim() && (
+      {/* O apelido é o que faz a tip achar a casa: `matchHouseIdByName` compara
+          por igualdade exata (depois de normalizar) antes de tentar semelhança. */}
+      <FormField
+        label="Apelidos"
+        htmlFor="house-alias"
+        help="Apelido é como a casa aparece escrita na tip. Exemplo: “Superbet Brasil” aponta para Superbet."
+      >
+        <div className="min-h-[46px] rounded-xl border border-input bg-card px-2 py-1.5 flex flex-wrap items-center gap-1.5 focus-within:border-accent">
+          {aliases.map((alias) => (
+            <span key={alias} className="h-[30px] pl-2.5 pr-1 rounded-lg bg-foreground/[0.07] text-[13px] flex items-center gap-1">
+              {alias}
               <button
                 type="button"
-                // mousedown sem foco: o campo segue aberto pra digitar o próximo.
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={addAlias}
-                className="h-[30px] px-2.5 rounded-lg bg-accent/15 text-accent-text text-[13px] flex items-center gap-1"
+                aria-label={`Remover ${alias}`}
+                onClick={() => setAliases(aliases.filter((a) => a !== alias))}
+                className="w-6 h-6 flex items-center justify-center text-zinc-500"
               >
-                <Plus size={12} /> Adicionar
+                <X size={12} />
               </button>
-            )}
-          </div>
-        </div>
-
-        <label className="flex flex-col gap-1.5">
-          <span className={fieldLabel}>Site</span>
-          <Input
-            value={site}
-            onChange={(e) => setSite(e.target.value)}
-            placeholder="casa.bet.br"
-            inputMode="url"
-            className="h-[46px] rounded-xl"
+            </span>
+          ))}
+          <input
+            id="house-alias"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === ",") {
+                e.preventDefault();
+                addAlias();
+              }
+            }}
+            onBlur={addAlias}
+            enterKeyHint="done"
+            placeholder={aliases.length ? "Outro apelido" : "Novo apelido"}
+            className="flex-1 min-w-[120px] h-[30px] bg-transparent px-1 text-base outline-none placeholder:text-zinc-600"
           />
-          <span className="text-[11.5px] leading-snug text-zinc-500">
-            Só domínio .bet.br ou casa com liminar (ex.: Zeroum). Vira o botão “Abrir casa”.
-          </span>
-        </label>
-
-        {/* Cadastro novo já nasce ativo: o POST não aceita isActive. */}
-        {house && (
-          <div className="flex items-center gap-3 pt-0.5">
-            <div className="flex-1">
-              <p className="text-[14.5px]">Ativa</p>
-              <p className="text-[11.5px] text-zinc-500">Se desligar, a casa some das tips novas</p>
-            </div>
+          {/* Botão visível em vez de "aperte Enter": no teclado do celular o
+              Enter é escondido. Também vale sair do campo ou salvar direto. */}
+          {draft.trim() && (
             <button
               type="button"
-              role="switch"
-              aria-checked={active}
-              aria-label="Ativa"
-              onClick={() => setActive((v) => !v)}
-              className={cn(
-                "shrink-0 w-[46px] h-7 rounded-full border px-[3px] flex items-center transition-colors",
-                active ? "justify-end bg-accent border-accent" : "justify-start bg-background border-border",
-              )}
+              // mousedown sem foco: o campo segue aberto pra digitar o próximo.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={addAlias}
+              className="h-[30px] px-2.5 rounded-lg bg-accent/15 text-accent-text text-[13px] flex items-center gap-1"
             >
-              <span className={cn("w-5 h-5 rounded-full", active ? "bg-white" : "bg-foreground/35")} />
+              <Plus size={12} /> Adicionar
             </button>
+          )}
+        </div>
+      </FormField>
+
+      <FormField
+        label="Site"
+        htmlFor="house-site"
+        help="Só domínio .bet.br ou casa com liminar (ex.: Zeroum). Vira o botão “Abrir casa”."
+      >
+        <Input
+          id="house-site"
+          value={site}
+          onChange={(e) => setSite(e.target.value)}
+          onBlur={() => setSite((s) => siteDomain(s))}
+          placeholder="casa.bet.br"
+          inputMode="url"
+          autoCapitalize="none"
+          className="h-[46px] rounded-xl"
+        />
+      </FormField>
+
+      {/* Cadastro novo já nasce ativo: o POST não aceita isActive. */}
+      {house && (
+        <div className="flex items-center gap-3 pt-0.5">
+          <div className="flex-1">
+            <p className="text-sm font-medium">Ativa</p>
+            <p className="text-xs text-muted">Se desligar, a casa some das tips novas</p>
           </div>
-        )}
-      </div>
-    </BottomSheet>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={active}
+            aria-label="Ativa"
+            onClick={() => setActive((v) => !v)}
+            className={cn(
+              "shrink-0 w-[46px] h-7 rounded-full border px-[3px] flex items-center transition-colors",
+              active ? "justify-end bg-accent border-accent" : "justify-start bg-background border-border",
+            )}
+          >
+            <span className={cn("w-5 h-5 rounded-full", active ? "bg-white" : "bg-foreground/35")} />
+          </button>
+        </div>
+      )}
+    </FormSheet>
   );
 }
 
 function HouseRow({ house, onEdit }: { house: AdminHouse; onEdit: () => void }) {
+  // Site e apelidos na mesma linha de subtítulo: a linha não cresce quando a
+  // casa tem apelido.
+  const site = house.websiteUrl ? siteLabel(house.websiteUrl) : null;
   return (
-    <button type="button" onClick={onEdit} className="w-full py-3 pl-3.5 pr-3 flex items-center gap-3 text-left hover:bg-foreground/[0.03]">
-      <div className="flex-1 min-w-0 space-y-1.5">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className={cn("text-[14.5px] font-medium truncate", !house.isActive && "text-zinc-500")}>{house.name}</span>
+    <ListRow
+      onClick={onEdit}
+      dimmed={!house.isActive}
+      leading={<HouseAvatar name={house.name} className={cn(!house.isActive && "opacity-50")} />}
+      title={
+        <span className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">{houseDisplayName(house.name)}</span>
           {!house.isActive && (
-            <span className="shrink-0 text-[10.5px] px-1.5 rounded-[5px] border border-border text-zinc-500">inativa</span>
+            <span className="shrink-0 rounded-full bg-foreground/[0.08] px-1.5 py-px text-[10.5px] font-medium text-zinc-400">Inativa</span>
           )}
-        </div>
-        {house.aliases.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {house.aliases.map((alias) => (
-              <span key={alias} className="text-[11.5px] px-[7px] py-0.5 rounded-md bg-foreground/[0.07] text-foreground/75">
-                {alias}
-              </span>
-            ))}
-          </div>
-        )}
-        <p className={cn("text-[11.5px] truncate", house.websiteUrl ? "text-zinc-500" : "text-[var(--dashboard-orange)]")}>
-          {house.websiteUrl ? siteLabel(house.websiteUrl) : "sem site"}
-        </p>
-      </div>
-      <div className="shrink-0 flex flex-col items-end">
-        <span className="text-sm tabular-nums text-foreground/85">{formatInt(house.betCount)}</span>
-        <span className="text-[10.5px] text-zinc-500">apostas</span>
-      </div>
-      <CaretRight size={13} className="shrink-0 text-zinc-600" />
-    </button>
+        </span>
+      }
+      subtitle={
+        <>
+          {site ?? <span className="text-warning">sem site</span>}
+          {house.aliases.length > 0 && ` · ${house.aliases.join(", ")}`}
+        </>
+      }
+      trailing={<span className="text-sm tabular-nums text-foreground/85">{formatInt(house.betCount)}</span>}
+      chevron
+    />
   );
 }
 
@@ -228,7 +242,7 @@ export function AdminHousesMobile({
   setEditing: (value: AdminHouse | "new" | null) => void;
 }) {
   const { data: houses, isPending, isError, refetch } = useAdminHouses();
-  const { search, setSearch, term, filter, setFilter, setShowAll, filtered, visible, hidden } = useHouseCatalog(
+  const { search, setSearch, term, filter, setFilter, setShowAll, sort, setSort, filtered, visible, hidden } = useHouseCatalog(
     houses,
     FILTERS,
     "all",
@@ -236,28 +250,20 @@ export function AdminHousesMobile({
   );
 
   return (
-    <div className="space-y-2.5">
-      <MobileSearch value={search} onChange={setSearch} placeholder="Casa ou apelido" />
+    <div className="space-y-3">
+      <SearchField value={search} onChange={setSearch} placeholder="Casa ou apelido" />
       {houses && (
-        <MobileChips>
-          {FILTERS.map((f) => (
-            <MobileChip key={f.id} active={filter === f.id} count={houses.filter(f.test).length} onClick={() => setFilter(f.id)}>
-              {f.label}
-            </MobileChip>
-          ))}
-        </MobileChips>
+        <FilterChips
+          options={FILTERS.map((f) => ({ value: f.id, label: f.label, count: houses.filter(f.test).length }))}
+          value={filter}
+          onChange={setFilter}
+        />
       )}
-      {/* O apelido é o que faz a tip achar a casa: `matchHouseIdByName` compara
-          por igualdade exata (depois de normalizar) antes de tentar semelhança. */}
-      <p className="flex gap-2 px-0.5 text-[11.5px] leading-snug text-zinc-500">
-        <Info size={13} className="shrink-0 mt-px" />
-        Apelido é como a casa aparece escrita na tip. Exemplo: “Superbet Brasil” aponta para Superbet.
-      </p>
 
       {isPending ? (
         <div className="space-y-2 pt-1">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[84px] rounded-xl" delay={i * 60} />
+            <Skeleton key={i} className="h-[60px] rounded-xl" delay={i * 60} />
           ))}
         </div>
       ) : isError ? (
@@ -276,19 +282,23 @@ export function AdminHousesMobile({
         />
       ) : (
         <>
-          <div className="mt-1 rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
+          <ListGroup
+            title="Casas"
+            count={filtered.length}
+            titleAction={<SortSelect options={SORTS} value={sort} onChange={setSort} />}
+          >
             {visible.map((house) => (
               <HouseRow key={house.id} house={house} onEdit={() => setEditing(house)} />
             ))}
-          </div>
+          </ListGroup>
           <div className="pt-1.5 space-y-2">
             {hidden > 0 && (
-              <Button variant="secondary" className="w-full h-[42px] rounded-xl text-zinc-300" onClick={() => setShowAll(true)}>
+              <Button variant="secondary" className="w-full h-[42px] rounded-xl" onClick={() => setShowAll(true)}>
                 Carregar mais
               </Button>
             )}
-            <p className="text-center text-[11.5px] text-zinc-500">
-              {visible.length} de {filtered.length} · mais apostas primeiro
+            <p className="text-center text-xs text-muted">
+              {formatInt(visible.length)} de {formatInt(filtered.length)}
             </p>
           </div>
         </>
