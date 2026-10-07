@@ -49,7 +49,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
           aria-invalid={!!error}
           aria-describedby={errorId}
           className={cn(
-            "w-full min-h-[48px] rounded-lg bg-card px-3.5 text-base text-foreground",
+            "w-full min-h-[44px] lg:min-h-[48px] rounded-lg bg-card px-3.5 text-base text-foreground",
             "border transition-colors outline-none",
             "placeholder:text-zinc-600",
             "focus:ring-2 focus:ring-accent/25",

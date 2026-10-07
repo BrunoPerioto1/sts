@@ -54,26 +54,32 @@ const AuthPage = () => {
         </p>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-8 bg-background p-6">
-        <div className="lg:hidden w-full max-w-[380px]">
-          <div className="w-[38px] h-[38px] rounded-lg border border-accent flex items-center justify-center">
-            <ChartLineUp size={20} className="text-accent" />
+      {/* Celular: sem a coluna da esquerda, o form vira um cartao compacto no
+          alto da tela, com a marca dentro dele. Centralizado na vertical numa
+          tela alta ele sobrava no meio de um vazio. Desktop segue como era. */}
+      <div className="flex flex-col items-center justify-start lg:justify-center bg-[var(--color-section)] lg:bg-background px-4 pt-[10dvh] pb-8 lg:p-6">
+        <div className="w-full max-w-[420px] rounded-2xl bg-card px-5 py-7 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)] lg:max-w-[380px] lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
+          <div className="lg:hidden flex flex-col items-center gap-2 mb-6">
+            <div className="w-9 h-9 rounded-lg border border-accent flex items-center justify-center">
+              <ChartLineUp size={18} className="text-accent" />
+            </div>
+            <span className="text-sm font-medium">SportsBet Manager</span>
           </div>
-        </div>
 
-        {view === "login" ? (
-          <LoginForm
-            onSwitchToRegister={() => setView("register")}
-            onForgotPassword={(email) => {
-              setForgotEmail(email);
-              setView("forgot");
-            }}
-          />
-        ) : view === "forgot" ? (
-          <ForgotPasswordForm initialEmail={forgotEmail} onBack={() => setView("login")} />
-        ) : (
-          <RegisterForm onSwitchToLogin={() => setView("login")} />
-        )}
+          {view === "login" ? (
+            <LoginForm
+              onSwitchToRegister={() => setView("register")}
+              onForgotPassword={(email) => {
+                setForgotEmail(email);
+                setView("forgot");
+              }}
+            />
+          ) : view === "forgot" ? (
+            <ForgotPasswordForm initialEmail={forgotEmail} onBack={() => setView("login")} />
+          ) : (
+            <RegisterForm onSwitchToLogin={() => setView("login")} />
+          )}
+        </div>
       </div>
     </div>
   );

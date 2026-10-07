@@ -16,10 +16,10 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
   const { data, setData, error, setError, submitting, locked, lockRemainingMs, submit } = useLoginForm();
 
   return (
-    <form onSubmit={submit} className="w-full max-w-[380px] flex flex-col gap-5">
-      <div>
-        <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Entrar</h1>
-        <p className="text-sm text-zinc-500 mt-1">Sua banca, do jeito que você deixou</p>
+    <form onSubmit={submit} className="w-full max-w-[380px] flex flex-col gap-4 lg:gap-5">
+      <div className="text-center lg:text-left">
+        <h1 className="text-2xl lg:text-[2rem] leading-tight font-semibold tracking-tight">Entrar</h1>
+        <p className="text-sm text-zinc-500 mt-0.5 lg:mt-1">Sua banca, do jeito que você deixou</p>
       </div>
 
       <AuthField
@@ -72,7 +72,7 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         </button>
       </div>
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2" disabled={submitting || locked}>
+      <Button type="submit" className="w-full min-h-[44px] lg:min-h-[48px] text-base gap-2 mt-1 lg:mt-0" disabled={submitting || locked}>
         {submitting ? (
           <>
             <CircleNotch size={18} className="animate-spin" /> Verificando…
@@ -86,9 +86,15 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         )}
       </Button>
 
-      <p className="text-center text-sm text-zinc-500">
+      {/* Celular: duas linhas e link sem sublinhado — é a ação secundária da
+          tela e não deve disputar atenção com o botão de entrar. */}
+      <p className="flex flex-col items-center gap-0.5 lg:block text-center text-sm text-zinc-500">
         Ainda não tem conta?{" "}
-        <button type="button" onClick={onSwitchToRegister} className="text-accent underline underline-offset-4 hover:no-underline">
+        <button
+          type="button"
+          onClick={onSwitchToRegister}
+          className="font-medium text-accent hover:underline underline-offset-4 lg:font-normal lg:underline lg:hover:no-underline"
+        >
           Criar conta
         </button>
       </p>
