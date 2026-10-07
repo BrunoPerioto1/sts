@@ -5,15 +5,15 @@ import { toInput, type TipPlanilharForm } from "./use-tip-planilhar";
 import type { TipItem } from "@/api/routes/get-tips";
 
 const chipClass =
-  "h-11 shrink-0 rounded-lg border border-border px-3 text-sm text-zinc-300 transition-colors hover:bg-foreground/[0.07]";
+  "h-10 shrink-0 rounded-lg border border-border px-3 text-sm text-zinc-300 transition-colors hover:bg-foreground/[0.07]";
 
 export function TipContextLine({ tip }: { tip: TipItem }) {
+  const meta = [tip.house, tip.odd !== null && `odd ${formatOdd(tip.odd)}`].filter(Boolean).join(" · ");
   return (
-    <p className="text-sm text-zinc-500">
-      {[tip.market, tip.house, tip.odd !== null && `odd ${formatOdd(tip.odd)}`]
-        .filter(Boolean)
-        .join(" · ")}
-    </p>
+    <div className="space-y-0.5">
+      {tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
+      {meta && <p className="text-xs text-zinc-500">{meta}</p>}
+    </div>
   );
 }
 
@@ -30,30 +30,30 @@ export function TipStakeFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="tip-stake" className="text-xs uppercase tracking-wide text-zinc-500">
+        <Label htmlFor="tip-stake" className="text-sm text-zinc-400">
           Stake apostada
         </Label>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
-              R$
-            </span>
-            <Input
-              id="tip-stake"
-              inputMode="decimal"
-              value={form.stake}
-              onChange={(e) => form.setStake(e.target.value)}
-              className="h-12 pl-10 text-lg font-semibold tabular-nums"
-              placeholder="0,00"
-            />
-          </div>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-zinc-500">
+            R$
+          </span>
+          <Input
+            id="tip-stake"
+            inputMode="decimal"
+            value={form.stake}
+            onChange={(e) => form.setStake(e.target.value)}
+            className="h-14 rounded-xl pl-12 text-2xl font-semibold tabular-nums"
+            placeholder="0,00"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
           {tip.recommendedStake !== null && (
             <button
               type="button"
               className={chipClass}
               onClick={() => form.setStake(toInput(tip.recommendedStake))}
             >
-              Sugerida
+              Sugerida <span className="text-zinc-500">{formatCurrency(tip.recommendedStake)}</span>
             </button>
           )}
           {tip.limit !== null && (
@@ -62,7 +62,7 @@ export function TipStakeFields({
               className={chipClass}
               onClick={() => form.setStake(toInput(tip.limit))}
             >
-              Limite
+              Limite <span className="text-zinc-500">{formatCurrency(tip.limit)}</span>
             </button>
           )}
         </div>

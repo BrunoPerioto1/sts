@@ -181,41 +181,138 @@ function GroupCards({ cards }: { cards: Card[] }) {
   );
 }
 
-/** Mobile: um grupo por vez, e já abre no que está pior. */
-function MobileGroups({ groups }: { groups: Group[] }) {
-  const worst = groups.find((g) => g.cards.some((c) => c.level === "bad")) ?? groups.find((g) => countAlerts([g]) > 0);
+function groupLevel(group: Group): HealthLevel {
+  if (group.cards.some((c) => c.level === "bad")) return "bad";
+  return countAlerts([group]) > 0 ? "warn" : "ok";
+}
+
+const RING: Record<HealthLevel, string> = {
+  ok: "shadow-[0_0_0_3px_rgb(var(--rgb-positive)/0.14)]",
+  warn: "shadow-[0_0_0_3px_color-mix(in_srgb,var(--dashboard-orange)_16%,transparent)]",
+  bad: "shadow-[0_0_0_3px_rgb(var(--rgb-negative)/0.16)]",
+  neutral: "",
+};
+
+const alertsLabel = (n: number) => `${n} ${n === 1 ? "alerta" : "alertas"}`;
+
+/** Mobile: título que já diz onde está o problema — "2 alertas na coleta". */
+export function PipelineSummary({ data }: { data: AdminOverview }) {
+  const groups = buildGroups(data);
+  const total = countAlerts(groups);
+  const withAlerts = groups.filter((g) => countAlerts([g]) > 0);
+  const fine = groups.filter((g) => countAlerts([g]) === 0).map((g) => g.title);
+  const level: HealthLevel = groups.some((g) => groupLevel(g) === "bad") ? "bad" : total > 0 ? "warn" : "ok";
+
+  const title =
+    total === 0
+      ? "Tudo rodando"
+      : withAlerts.length === 1
+        ? `${alertsLabel(total)} na ${withAlerts[0].title.toLowerCase()}`
+        : alertsLabel(total);
+  const sub =
+    total === 0
+      ? "Entrada, coleta e liquidação estão normais."
+      : fine.length === 0
+        ? "Nenhuma etapa está normal."
+        : `${fine.join(" e ")} ${fine.length === 1 ? "está normal" : "estão normais"}.`;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <span className={cn("w-2 h-2 rounded-full shrink-0", DOT[level])} />
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      </div>
+      <p className="text-[12.5px] text-zinc-500">{sub.charAt(0) + sub.slice(1).toLowerCase()}</p>
+    </div>
+  );
+}
+
+/** Mobile: as etapas viram uma linha do tempo, e já abre na que está pior. */
+function MobileTimeline({ groups }: { groups: Group[] }) {
+  const worst = groups.find((g) => groupLevel(g) === "bad") ?? groups.find((g) => countAlerts([g]) > 0);
   const [openTitle, setOpenTitle] = useState<string | null>(worst?.title ?? null);
 
   return (
-    <div className="space-y-2 sm:hidden">
-      {groups.map((group) => {
-        const alerts = countAlerts([group]);
+    <div className="sm:hidden">
+      {groups.map((group, i) => {
+        const alerts = group.cards.filter((c) => isAlert(c.level));
+        const metrics = group.cards.filter((c) => !isAlert(c.level));
+        const level = groupLevel(group);
         const open = openTitle === group.title;
-        const level: HealthLevel = group.cards.some((c) => c.level === "bad")
-          ? "bad"
-          : alerts > 0
-            ? "warn"
-            : "ok";
 
         return (
-          <div key={group.title} className="rounded-lg border border-border bg-card overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setOpenTitle(open ? null : group.title)}
-              className="flex w-full items-center gap-2 p-3.5 text-left"
-            >
-              <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", DOT[level])} />
-              <span className="text-sm font-medium">{group.title}</span>
-              <span className={cn("ml-auto text-xs", alerts > 0 ? VALUE[level] : "opacity-40")}>
-                {alerts > 0 ? `${alerts} ${alerts === 1 ? "alerta" : "alertas"}` : "ok"}
-              </span>
-              <CaretDown size={14} className={cn("opacity-40 transition-transform", open && "rotate-180")} />
-            </button>
-            {open && (
-              <div className="p-3 pt-0">
-                <GroupCards cards={group.cards} />
-              </div>
-            )}
+          <div key={group.title} className="flex gap-3">
+            <div className="w-3.5 shrink-0 flex flex-col items-center">
+              <span className={cn("mt-1.5 w-2.5 h-2.5 rounded-full shrink-0", DOT[level], RING[level])} />
+              {i < groups.length - 1 && <span className="flex-1 w-px mt-1.5 bg-border" />}
+            </div>
+            <div className="flex-1 min-w-0 pb-3">
+              <button
+                type="button"
+                onClick={() => setOpenTitle(open ? null : group.title)}
+                className="w-full flex items-center gap-2 pt-0.5 pb-2 text-left"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px]">{group.title}</p>
+                  <p className="text-[11.5px] text-zinc-500">{group.description}</p>
+                </div>
+                <span className={cn("text-xs", alerts.length ? VALUE[level] : "text-zinc-500")}>
+                  {alerts.length ? alertsLabel(alerts.length) : "ok"}
+                </span>
+                <CaretDown size={13} className={cn("text-zinc-500 transition-transform", open && "rotate-180")} />
+              </button>
+
+              {open && (
+                <div className="space-y-2">
+                  {alerts.map((card) => (
+                    <div
+                      key={card.label}
+                      className={cn(
+                        "px-3 py-[11px] rounded-[11px] border space-y-0.5",
+                        card.level === "bad"
+                          ? "border-negative/25 bg-negative/[0.07]"
+                          : "border-[var(--dashboard-orange)]/25 bg-[var(--dashboard-orange)]/[0.07]",
+                      )}
+                    >
+                      <div className="flex items-baseline gap-2">
+                        <span className="flex-1 text-[13.5px]">{card.label}</span>
+                        <span className={cn("text-[15px] tabular-nums", VALUE[card.level])}>
+                          {card.value} <span className="text-xs opacity-70">{card.unit}</span>
+                        </span>
+                      </div>
+                      <p className="text-[11.5px] leading-snug text-zinc-400">{card.hint}</p>
+                      {card.detailsTo && (
+                        <Link to={card.detailsTo} className="inline-flex items-center gap-1 pt-0.5 text-xs text-accent-text">
+                          ver quais <ArrowRight size={12} />
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                  {metrics.length > 0 && (
+                    <div className="rounded-[11px] border border-border bg-card divide-y divide-border">
+                      {metrics.map((card) => (
+                        <div key={card.label} className="px-3 py-2.5 flex items-center gap-2.5">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px]">{card.label}</p>
+                            <p className="text-[11px] text-zinc-500 truncate">{card.hint}</p>
+                          </div>
+                          {/* Zero discreto: "0 tips" em verde grande chamava mais
+                              atenção que o alerta de verdade. */}
+                          <span
+                            className={cn(
+                              "shrink-0 text-[15px] tabular-nums",
+                              card.value === "0" ? "text-zinc-500" : "text-foreground",
+                            )}
+                          >
+                            {card.value} {card.unit && <span className="text-xs text-zinc-500">{card.unit}</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
@@ -262,7 +359,7 @@ export function PipelineHealth({ data, isPending, isError, onRetry }: PipelineHe
 
   return (
     <>
-      <MobileGroups groups={groups} />
+      <MobileTimeline groups={groups} />
 
       <div className="hidden sm:block">
         {groups.map((group) => (

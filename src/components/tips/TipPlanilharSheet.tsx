@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, PencilSimple, XCircle } from "@phosphor-icons/react";
+import { CaretDown, CaretUp, Check, PencilSimple } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
@@ -12,11 +12,12 @@ import {
   TipStakeFields,
 } from "./tip-planilhar-form";
 import { useTipPlanilhar } from "./use-tip-planilhar";
+import { formatCurrency } from "@/lib/format";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
 
 // Você volta da casa e responde uma pergunta só: apostou quanto? A stake já
 // vem preenchida com a recomendada, então o caminho comum é abrir e confirmar
-// — odd e casa ficam atrás do "Editar" porque quase nunca mudam.
+// — odd e casa ficam atrás do "Odd ou casa diferente?" porque quase nunca mudam.
 // Versão mobile; o desktop usa TipPlanilharDialog com os mesmos campos.
 export function TipPlanilharSheet({
   tip,
@@ -52,55 +53,63 @@ export function TipPlanilharSheet({
       // linha com o título, que é curto mas não pode ser cortado.
       subHeader={<TipContextLine tip={tip} />}
       footer={
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Button
             size="lg"
-            className="h-12 w-full border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
+            className="h-12 w-full border-transparent bg-[#12a05c] text-base text-white hover:bg-[#0e8a4e]"
             disabled={!form.valid || busy}
             onClick={() => onConfirm(form.overrides())}
           >
             <Check size={16} weight="bold" />
-            {busy ? "Planilhando…" : "Planilhar e sair da fila"}
+            {busy ? "Planilhando…" : `Planilhar ${form.valid ? formatCurrency(form.stakeValue) : ""}`}
           </Button>
 
-          <div className="flex gap-2">
-            <Button
-              className="flex-1 border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26] hover:text-white"
+          <div className="flex">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 py-3 text-center text-sm text-zinc-400 hover:text-zinc-200"
+            >
+              Ainda não apostei
+            </button>
+            <button
+              type="button"
               disabled={busy}
               onClick={onDismiss}
+              className="flex-1 py-3 text-center text-sm text-[#e5484d] hover:text-[#f26b6f] disabled:opacity-45"
             >
-              <XCircle size={15} weight="bold" /> Caiu
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => form.setEditing((v) => !v)}>
-              <PencilSimple size={15} weight="bold" /> Editar
-            </Button>
+              Não deu · caiu
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="w-full py-1 text-center text-xs text-zinc-500 hover:text-zinc-300"
-          >
-            Ainda não apostei — manter na fila
-          </button>
         </div>
       }
     >
-      <div className="space-y-3 pb-2">
+      <div className="space-y-4 pb-2">
         <TipStakeFields tip={tip} form={form} />
 
-        {form.editing && (
-          <div className="space-y-3 border-t border-border pt-3">
-            <TipOddField form={form} />
-            <div className="space-y-1.5">
-              <Label>Casa</Label>
-              {/* Mesmo seletor dos filtros de Apostas: com ~200 casas
-                  cadastradas, o dropdown nativo vira uma lista infinita sem
-                  busca. O sheet tem busca e as usadas recentemente no topo. */}
-              <SheetSelectField summary={casaLabel} onOpen={() => setCasaOpen(true)} />
+        <div className="border-t border-border">
+          <button
+            type="button"
+            onClick={() => form.setEditing((v) => !v)}
+            className="flex w-full items-center gap-2 py-3 text-sm text-zinc-300"
+          >
+            <PencilSimple size={15} />
+            <span className="flex-1 text-left">Odd ou casa diferente?</span>
+            {form.editing ? <CaretUp size={14} /> : <CaretDown size={14} />}
+          </button>
+          {form.editing && (
+            <div className="grid grid-cols-[2fr_3fr] gap-3 pb-1">
+              <TipOddField form={form} />
+              <div className="space-y-1.5">
+                <Label>Casa</Label>
+                {/* Mesmo seletor dos filtros de Apostas: com ~200 casas
+                    cadastradas, o dropdown nativo vira uma lista infinita sem
+                    busca. O sheet tem busca e as usadas recentemente no topo. */}
+                <SheetSelectField summary={casaLabel} onOpen={() => setCasaOpen(true)} />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <CasaSheet

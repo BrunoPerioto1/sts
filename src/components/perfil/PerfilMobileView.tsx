@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeSelect } from "./ThemeSelect";
-import { CaretRight, IdentificationCard, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo } from "@phosphor-icons/react";
+import { Bank, CaretRight, IdentificationCard, Palette, Pulse, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
-import { formatCurrencyCompact, formatSignedCurrency } from "@/lib/format";
+import { displayName, formatCurrencyCompact, formatSignedCurrency, initialsOf } from "@/lib/format";
 import type { MeResponse } from "@/api/routes/get-me";
 import type { ProfileSummary } from "@/hooks/perfil/use-profile-summary";
 
@@ -18,7 +18,7 @@ function preferencesSummary(me: MeResponse): string {
   return parts.join(" · ");
 }
 
-// "desde março de 2025 · 18 meses" — a conta é a única data que temos de
+// "em 2 meses · desde 21 ago 2026" — a conta é a única data que temos de
 // verdade; a data da primeira aposta exigiria outra chamada só pra isso.
 function sinceLabel(createdAt: MeResponse["createdAt"]): string | null {
   if (!createdAt) return null;
@@ -27,8 +27,31 @@ function sinceLabel(createdAt: MeResponse["createdAt"]): string | null {
     1,
     (new Date().getFullYear() - created.getFullYear()) * 12 + new Date().getMonth() - created.getMonth()
   );
-  const label = created.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-  return `desde ${label} · ${months} ${months === 1 ? "mês" : "meses"}`;
+  const label = created
+    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+    .replace(/\./g, "")
+    .replace(/ de /g, " ");
+  return `em ${months} ${months === 1 ? "mês" : "meses"} · desde ${label}`;
+}
+
+const pct = (v: number) => `${(v * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+
+/** Avatar + nome + "e-mail · admin" — vai no mobileHeader do PerfilPage. */
+export function PerfilMobileHeader({ me }: { me: MeResponse }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="w-10 h-10 shrink-0 rounded-full bg-card border border-border flex items-center justify-center text-sm font-medium text-accent-text">
+        {initialsOf(displayName(me))}
+      </span>
+      <div className="min-w-0">
+        <h1 className="text-[17px] font-semibold tracking-tight truncate">{displayName(me)}</h1>
+        <p className="text-xs text-zinc-500 truncate">
+          {me.email}
+          {me.roleId === ADMIN_ROLE_ID && " · admin"}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 interface PerfilMobileViewProps {
@@ -39,110 +62,139 @@ interface PerfilMobileViewProps {
   metricsUnavailable: boolean;
 }
 
+interface Row {
+  to?: string;
+  icon: Icon;
+  label: string;
+  value?: string;
+  valueTone?: string;
+  trailing?: React.ReactNode;
+}
+
+function RowGroup({ title, rows }: { title: string; rows: Row[] }) {
+  return (
+    <div className="space-y-2">
+      <p className="px-1 text-xs text-zinc-500">{title}</p>
+      <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
+        {rows.map((row) => {
+          const inner = (
+            <>
+              <span className="w-8 h-8 shrink-0 rounded-[9px] bg-foreground/[0.06] flex items-center justify-center">
+                <row.icon size={16} className="text-accent-text" />
+              </span>
+              {/* Nome inteiro em cima e valor embaixo: em uma linha só,
+                  "Preferências de aposta" era cortado no meio. */}
+              <span className="flex-1 min-w-0">
+                <span className="block text-[14.5px] text-foreground truncate">{row.label}</span>
+                {row.value && (
+                  <span className={cn("block text-xs tabular-nums truncate", row.valueTone ?? "text-zinc-500")}>{row.value}</span>
+                )}
+              </span>
+              {row.trailing ?? <CaretRight size={13} className="text-zinc-600 shrink-0" />}
+            </>
+          );
+          return row.to ? (
+            <Link key={row.label} to={row.to} className="press h-[60px] px-3.5 flex items-center gap-3 hover:bg-foreground/[0.03]">
+              {inner}
+            </Link>
+          ) : (
+            <div key={row.label} className="h-[60px] px-3.5 flex items-center gap-3">
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function PerfilMobileView({ me, summary, metricsLoading, metricsError, metricsUnavailable }: PerfilMobileViewProps) {
   const navigate = useNavigate();
   const isLinked = !!me.telegramUserId;
   const since = sinceLabel(me.createdAt);
+  const stake = me.stake != null ? Number(me.stake) : null;
+  const filter = me.minPercentFilter != null ? Number(me.minPercentFilter) : null;
+  const tone = !metricsUnavailable && (summary.totalProfit >= 0 ? "text-positive" : "text-negative");
 
-  const metricTiles = [
+  // "Em casas" é saldo real; "Banca" é a referência do stake nas preferências.
+  // Antes as duas apareciam como "Banca" com valores diferentes.
+  const stats = [
     {
       label: "Apostas",
-      value: summary.totalBets.toLocaleString("pt-BR"),
-      sub: `${summary.wonBets.toLocaleString("pt-BR")} ganhas`,
+      value: metricsUnavailable ? "—" : summary.totalBets.toLocaleString("pt-BR"),
+      hint: `${summary.wonBets.toLocaleString("pt-BR")} ganhas · ${pct(summary.hitRate)}`,
     },
     {
-      label: "ROI histórico",
-      value: `${(summary.roi * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
-      tone: summary.roi >= 0 ? "text-positive" : "text-negative",
-      sub: `acerto ${(summary.hitRate * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
-    },
-    {
-      label: "Casas",
-      value: summary.totalHouses.toLocaleString("pt-BR"),
-      sub: `${summary.housesWithBalance} com saldo`,
+      label: "Em casas",
+      value: formatCurrencyCompact(summary.bankroll),
+      hint: `${summary.housesWithBalance} de ${summary.totalHouses} com saldo`,
     },
     {
       label: "Banca",
-      value: formatCurrencyCompact(summary.bankroll),
-      sub: "distribuída",
+      value: stake != null ? formatCurrencyCompact(stake) : "—",
+      hint: filter != null ? `stake ${filter.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%` : "não configurada",
     },
   ];
 
-  const settingsRows = [
-    { to: "/profile/dashboard", icon: SquaresFour, label: "Dashboard", value: "Indicadores, ícones e cores" },
-    { to: "/profile/account", icon: IdentificationCard, label: "Dados da conta", value: "Nome, e-mail e segurança" },
+  const contaRows: Row[] = [
+    { to: "/profile/account", icon: IdentificationCard, label: "Dados da conta", value: "Nome, e-mail e senha" },
+    { to: "/profile/preferences", icon: SlidersHorizontal, label: "Preferências de aposta", value: preferencesSummary(me) },
     {
       to: "/profile/telegram",
       icon: TelegramLogo,
       label: "Telegram",
       value: isLinked ? "Vinculado" : "Não vinculado",
-      valueTone: isLinked ? "text-positive" : "text-accent",
+      valueTone: isLinked ? "text-positive" : "text-accent-text",
     },
-    { to: "/profile/preferences", icon: SlidersHorizontal, label: "Preferências de aposta", value: preferencesSummary(me) },
-    // Admin entra por aqui no celular, e não na bottom nav: sétima aba deixaria
-    // cada alvo com menos de 56px, e a tela é de manutenção, não de uso diário.
-    ...(me.roleId === ADMIN_ROLE_ID
-      ? [
-          { to: "/admin/houses", icon: ShieldCheck, label: "Admin · Casas", value: "Catálogo e apelidos" },
-          { to: "/admin/users", icon: ShieldCheck, label: "Admin · Usuários", value: "Papéis e bloqueios" },
-          { to: "/admin/pipeline", icon: ShieldCheck, label: "Admin · Pipeline", value: "Saúde da coleta" },
-        ]
-      : []),
+    { to: "/profile/dashboard", icon: SquaresFour, label: "Dashboard", value: "Indicadores, ícones e cores" },
+    { icon: Palette, label: "Tema", trailing: <ThemeSelect /> },
+  ];
+
+  // Admin entra por aqui no celular, e não na bottom nav: sétima aba deixaria
+  // cada alvo com menos de 56px, e a tela é de manutenção, não de uso diário.
+  const adminRows: Row[] = [
+    { to: "/admin/houses", icon: Bank, label: "Casas", value: "Catálogo e apelidos" },
+    { to: "/admin/users", icon: Users, label: "Usuários", value: "Papéis e bloqueios" },
+    { to: "/admin/pipeline", icon: Pulse, label: "Pipeline", value: "Saúde da coleta" },
   ];
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-190px)] gap-6">
-      {/* Lucro acumulado é o número que resume a conta — os outros quatro
-          viram grade, como no dashboard. */}
-      <div>
-        <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Lucro acumulado</p>
-        <p className={cn("text-3xl font-semibold tabular-nums leading-tight", !metricsUnavailable && (summary.totalProfit >= 0 ? "text-positive" : "text-negative"))}>
-          {metricsLoading ? <Skeleton className="h-8 w-40 rounded-lg" /> : metricsError ? "Indisponível" : formatSignedCurrency(summary.totalProfit)}
-        </p>
-        {since && <p className="text-sm text-zinc-500 mt-0.5">{since}</p>}
-      </div>
-
-      <div className="grid grid-cols-2">
-        {metricTiles.map((tile, i) => (
-          <div
-            key={tile.label}
-            className={cn("py-4", i % 2 === 1 && "border-l border-border pl-4", i >= 2 && "border-t border-border")}
-          >
-            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">{tile.label}</p>
-            <p className={cn("text-xl font-semibold tabular-nums", !metricsUnavailable && tile.tone)}>{metricsUnavailable ? "—" : tile.value}</p>
-            {tile.sub && <p className="text-xs text-zinc-500 mt-0.5">{tile.sub}</p>}
+    <div className="flex flex-col gap-[22px]">
+      <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
+        <div className="space-y-1">
+          <p className="text-xs text-zinc-500">Lucro acumulado</p>
+          <div className="flex items-baseline gap-2.5 flex-wrap">
+            <span className={cn("text-[32px] leading-none font-semibold tracking-tight tabular-nums", tone)}>
+              {metricsLoading ? (
+                <Skeleton className="h-8 w-40 rounded-lg" />
+              ) : metricsError ? (
+                "Indisponível"
+              ) : (
+                formatSignedCurrency(summary.totalProfit)
+              )}
+            </span>
+            {!metricsUnavailable && <span className={cn("text-[12.5px] tabular-nums", tone)}>ROI {pct(summary.roi)}</span>}
           </div>
-        ))}
-      </div>
-
-      <div>
-        <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Ajustes</p>
-        <div className="flex flex-col divide-y divide-border border-y border-border">
-          {settingsRows.map((row) => (
-            <Link key={row.to} to={row.to} className="press h-14 flex items-center gap-3">
-              <row.icon size={19} className="text-zinc-400 shrink-0" />
-              {/* Nome inteiro em cima e valor embaixo: em uma linha só,
-                  "Preferências de aposta" era cortado no meio. */}
-              <span className="flex-1 min-w-0">
-                <span className="block text-sm text-foreground truncate">{row.label}</span>
-                <span className={cn("block text-xs truncate", row.valueTone ?? "text-zinc-500")}>{row.value}</span>
-              </span>
-              <CaretRight size={16} className="text-zinc-500 shrink-0" />
-            </Link>
+          {since && <p className="text-xs text-zinc-500">{since}</p>}
+        </div>
+        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
+          {stats.map((s) => (
+            <div key={s.label} className="min-w-0 space-y-0.5">
+              <p className="text-[11.5px] text-zinc-500">{s.label}</p>
+              <p className="text-lg font-semibold tracking-tight tabular-nums truncate">{s.value}</p>
+              <p className="text-[11px] text-zinc-500 tabular-nums truncate">{s.hint}</p>
+            </div>
           ))}
-          <div className="h-16 flex items-center gap-3">
-            <span className="flex-1 text-sm text-foreground">Tema</span>
-            <ThemeSelect />
-          </div>
         </div>
       </div>
 
-      <div className="flex-1" />
+      <RowGroup title="Conta" rows={contaRows} />
+      {me.roleId === ADMIN_ROLE_ID && <RowGroup title="Administração" rows={adminRows} />}
 
       <button
         type="button"
         onClick={() => navigate("/logout")}
-        className="press w-full h-12 rounded-xl border border-foreground/10 flex items-center justify-center gap-2 text-sm text-foreground"
+        className="press w-full h-[46px] rounded-xl border border-border flex items-center justify-center gap-2 text-[14.5px] text-zinc-400 hover:bg-card"
       >
         <SignOut size={16} /> Sair da conta
       </button>

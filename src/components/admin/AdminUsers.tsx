@@ -25,6 +25,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminPanel, FilterChip } from "@/components/admin/AdminPanel";
+import { AdminUsersMobile } from "@/components/admin/AdminUsersMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Ações em 128px: "Tirar do grupo" é o rótulo mais largo da coluna.
 const GRID = "grid items-center gap-3 grid-cols-[minmax(180px,1.6fr)_236px_80px_110px_120px_196px_128px]";
@@ -280,6 +282,7 @@ function ActiveToggle({ user, pending, onToggle }: { user: AdminUser; pending: b
 export function AdminUsers() {
   const { data: users, isPending, isError, refetch } = useAdminUsers();
   const { me } = useMe();
+  const isMobile = useIsMobile();
   const update = useUpdateAdminUser();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
@@ -338,6 +341,75 @@ export function AdminUsers() {
     if (user.isActive === false) return reactivate();
     run(user.id, { isActive: false }, "Conta desativada", { label: "Desfazer", onClick: reactivate });
   };
+
+  const extend = (user: AdminUser, days: number) =>
+    run(user.id, { extendDays: days }, `Acesso liberado por +${days} dias`);
+  const setDate = (user: AdminUser, accessUntil: string | null) =>
+    run(user.id, { accessUntil }, accessUntil ? `Vencimento ajustado para ${formatAccessDate(accessUntil)}` : "Prazo removido");
+  const accessCell = (user: AdminUser) => (
+    <AccessCell
+      user={user}
+      isMe={user.id === me?.id}
+      pending={pendingFor(user.id)}
+      onExtend={() => extend(user, ACCESS_DAYS)}
+      onSetDate={(accessUntil) => setDate(user, accessUntil)}
+    />
+  );
+  const actions = (user: AdminUser) => (
+    <Actions
+      user={user}
+      pending={pendingFor(user.id)}
+      onUnlock={() => run(user.id, { unlock: true }, "Conta desbloqueada")}
+      onUnlink={() => run(user.id, { unlinkTelegram: true }, "Telegram desvinculado")}
+      onTipsGroup={(action) => tipsGroup(user.id, action)}
+    />
+  );
+
+  const promoteDialog = (
+      <AlertDialog open={!!promoting} onOpenChange={(open) => !open && setPromoting(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tornar {promoting?.fullName || promoting?.username} administrador?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Admin vê e altera todos os usuários, casas e o pipeline de tips. Dá pra desfazer depois, mudando o papel de volta.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (promoting) run(promoting.id, { roleId: 1 }, `Papel alterado para ${ROLE_LABELS[1]}`);
+              setPromoting(null);
+            }}
+          >
+            Tornar admin
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <AdminUsersMobile
+          users={users}
+          filtered={filtered}
+          isPending={isPending}
+          isError={isError}
+          onRetry={() => void refetch()}
+          search={search}
+          setSearch={setSearch}
+          filters={FILTERS}
+          filter={filter}
+          setFilter={setFilter}
+          expiredFilter="expired"
+          act={{ meId: me?.id, pendingFor, changeRole, toggleActive, accessCell, extend, actions }}
+        />
+        {promoteDialog}
+      </>
+    );
+  }
 
   const body = isPending ? (
     <div className="p-4 space-y-2">
@@ -510,27 +582,7 @@ export function AdminUsers() {
       footer={users && !isError && <span className="opacity-45">{filtered.length} de {users.length}</span>}
     >
       {body}
-      <AlertDialog open={!!promoting} onOpenChange={(open) => !open && setPromoting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tornar {promoting?.fullName || promoting?.username} administrador?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Admin vê e altera todos os usuários, casas e o pipeline de tips. Dá pra desfazer depois, mudando o papel de volta.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (promoting) run(promoting.id, { roleId: 1 }, `Papel alterado para ${ROLE_LABELS[1]}`);
-                setPromoting(null);
-              }}
-            >
-              Tornar admin
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {promoteDialog}
     </AdminPanel>
   );
 }

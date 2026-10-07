@@ -5,7 +5,8 @@ import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminPanel } from "@/components/admin/AdminPanel";
-import { PipelineHealth, buildGroups, countAlerts } from "@/components/admin/PipelineHealth";
+import { AdminMobileHeader } from "@/components/admin/AdminPanel";
+import { PipelineHealth, PipelineSummary, buildGroups, countAlerts } from "@/components/admin/PipelineHealth";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
 import { cn } from "@/lib/utils";
@@ -42,24 +43,15 @@ export default function AdminPage() {
       subtitle="Pipeline"
       actions={refresh}
       mobileHeader={
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Admin</h1>
-          {overview.data && (
-            <span className="text-sm opacity-50">
-              {alerts === 0 ? "ok" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"}`}
-            </span>
-          )}
-        </div>
+        // Sem botão de atualizar: no celular quem atualiza é o puxar pra baixo.
+        <AdminMobileHeader title="Pipeline" subtitle={`atualizado ${updatedAt.slice(-5)} · horário de Brasília`} />
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
 
-      <AdminPanel
-        eyebrow="Pipeline"
-        title={!overview.data ? "Saúde do pipeline" : alerts === 0 ? "Tudo rodando" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"}`}
-        description="Telegram → tip → fan-out → coletor → liquidação · horário de Brasília"
-      >
-        <div className="p-4 sm:p-6">
+      {isMobile ? (
+        <div className="space-y-4">
+          {overview.data && <PipelineSummary data={overview.data} />}
           <PipelineHealth
             data={overview.data}
             isPending={overview.isPending}
@@ -67,7 +59,22 @@ export default function AdminPage() {
             onRetry={() => void overview.refetch()}
           />
         </div>
-      </AdminPanel>
+      ) : (
+        <AdminPanel
+          eyebrow="Pipeline"
+          title={!overview.data ? "Saúde do pipeline" : alerts === 0 ? "Tudo rodando" : `${alerts} ${alerts === 1 ? "alerta" : "alertas"}`}
+          description="Telegram → tip → fan-out → coletor → liquidação · horário de Brasília"
+        >
+          <div className="p-4 sm:p-6">
+            <PipelineHealth
+              data={overview.data}
+              isPending={overview.isPending}
+              isError={overview.isError}
+              onRetry={() => void overview.refetch()}
+            />
+          </div>
+        </AdminPanel>
+      )}
     </MainLayout>
   );
 }

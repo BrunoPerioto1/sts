@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /**
@@ -73,6 +76,86 @@ export function FilterChip({
     >
       {children}
       {count !== undefined && <span className="text-xs tabular-nums opacity-50">{count}</span>}
+    </button>
+  );
+}
+
+/** Mobile: voltar pro Perfil (é de lá que o admin entra), título e uma linha de contexto. */
+export function AdminMobileHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 -ml-2 min-h-9">
+      <Link to="/profile" aria-label="Voltar" className="press w-9 h-9 shrink-0 flex items-center justify-center">
+        <ArrowLeft size={18} />
+      </Link>
+      <div className="min-w-0">
+        <h1 className="text-base font-semibold tracking-tight truncate">{title}</h1>
+        {subtitle && <p className="text-[11.5px] text-zinc-500 truncate">{subtitle}</p>}
+      </div>
+      {action && <div className="ml-auto shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+/** Mobile: busca grande, no padrão das listas do app. */
+export function MobileSearch({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="relative">
+      <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-11 rounded-xl pl-9"
+      />
+    </div>
+  );
+}
+
+/** Mobile: filtros numa faixa só, que rola de lado em vez de quebrar em 2–3 linhas. */
+export function MobileChips({ children }: { children: React.ReactNode }) {
+  return <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] -mx-4 px-4">{children}</div>;
+}
+
+export function MobileChip({
+  active,
+  count,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  count?: number;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "shrink-0 h-[34px] px-3 rounded-full border flex items-center gap-1.5 text-[13px] whitespace-nowrap transition-colors",
+        active ? "border-accent bg-accent/15 text-foreground" : "border-border text-zinc-400",
+      )}
+    >
+      {children}
+      {count !== undefined && (
+        <span className={cn("text-[11.5px] tabular-nums", active ? "text-accent-text" : "text-zinc-500")}>{count}</span>
+      )}
     </button>
   );
 }
