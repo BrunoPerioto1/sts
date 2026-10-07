@@ -116,7 +116,7 @@ export function ForgotPasswordForm({ initialEmail = "", onBack }: ForgotPassword
         </>
       )}
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2 bg-accent text-white hover:bg-accent/90" disabled={busy}>
+      <Button type="submit" className="w-full min-h-[48px] text-base gap-2" disabled={busy}>
         {busy ? (
           <CircleNotch size={18} className="animate-spin" />
         ) : step === "email" ? (

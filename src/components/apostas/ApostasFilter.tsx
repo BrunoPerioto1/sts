@@ -287,7 +287,7 @@ export function ApostasFilter({
 
       {activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">Filtros ativos</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted">Filtros ativos</span>
           {activeChips.map((chip) => (
             <span
               key={chip.key}

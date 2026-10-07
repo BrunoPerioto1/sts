@@ -75,7 +75,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: Nova
     <HouseDialog open={isOpen} onClose={onClose} title="Nova movimentação" houseName={house.houseName}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-wider opacity-45 mb-1.5">Tipo</div>
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5">Tipo</div>
           {/* Dois botões no lugar do select: com só duas opções, abrir uma lista
               pra escolher entre depósito e saque é um clique a mais por nada. */}
           <div className="grid grid-cols-3 rounded-lg border border-border overflow-hidden divide-x divide-border">
@@ -101,7 +101,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: Nova
         </div>
 
         <div>
-          <div className="text-[11px] uppercase tracking-wider opacity-45 mb-1.5">{isAdjust ? "Saldo na casa" : "Valor"}</div>
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5">{isAdjust ? "Saldo na casa" : "Valor"}</div>
           <div className="flex items-baseline gap-2 border-b border-border pb-2">
             <span className="text-lg opacity-45">R$</span>
             <Input
@@ -131,7 +131,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: Nova
           <Button type="button" variant="ghost" className="text-zinc-400 hover:text-foreground" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!valid || loading} className="bg-accent text-white hover:bg-accent/90">
+          <Button type="submit" disabled={!valid || loading}>
             {loading ? "Enviando…" : "Adicionar"}
           </Button>
         </div>

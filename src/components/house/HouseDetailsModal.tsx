@@ -67,7 +67,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
 
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
             <div>
-              <div className="text-[11px] uppercase tracking-wider opacity-45">Saldo atual</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-muted">Saldo atual</div>
               <div className={cn("text-[34px] leading-tight font-medium tabular-nums", realBalance < 0 && "opacity-45")}>
                 {formatMoney(Math.max(0, realBalance))}
               </div>
@@ -95,7 +95,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
           </div>
 
           <div className="flex gap-2 p-5 border-t border-border">
-            <Button className="flex-1 gap-2 bg-accent text-white hover:bg-accent/90" onClick={() => onNewTransaction?.(house)}>
+            <Button className="flex-1 gap-2" onClick={() => onNewTransaction?.(house)}>
               <Plus size={16} /> Nova movimentação
             </Button>
             <Button variant="secondary" className="flex-1" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>

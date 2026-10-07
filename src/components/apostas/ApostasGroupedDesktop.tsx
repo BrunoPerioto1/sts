@@ -35,7 +35,7 @@ function MonthRowsSkeleton() {
 // cabeçalho ficava 8px deslocado e as colunas pareciam tortas.
 function ColumnHeader() {
   return (
-    <div className={cn(BET_GRID, "px-2 -mx-2 pb-1.5 text-[11px] uppercase tracking-wider opacity-40")}>
+    <div className={cn(BET_GRID, "px-2 -mx-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted")}>
       <span />
       <span>Hora</span>
       <span>Casa</span>

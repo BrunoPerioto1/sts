@@ -1140,7 +1140,7 @@ export function AdminScanner() {
             </div>
             <Button
               onClick={() => setAdding((v) => !v)}
-              className="shrink-0 w-11 px-0 h-11 sm:w-auto sm:h-9 sm:px-3.5 rounded-lg gap-1.5 text-[13.5px] bg-accent text-white hover:bg-accent/90 hover:opacity-100 [&_svg]:size-3.5"
+              className="shrink-0 w-11 px-0 h-11 sm:w-auto sm:h-9 sm:px-3.5 rounded-lg gap-1.5 text-[13.5px] [&_svg]:size-3.5"
               aria-label="Cadastrar competição"
             >
               <Plus size={14} />

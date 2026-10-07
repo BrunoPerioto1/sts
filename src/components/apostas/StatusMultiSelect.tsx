@@ -22,7 +22,7 @@ interface StatusMultiSelectProps {
   extra?: { section: string; label: string; checked: boolean; onToggle: () => void };
 }
 
-const sectionLabel = "px-2 pb-1 pt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500";
+const sectionLabel = "px-2 pb-1 pt-1 text-[11px] font-medium uppercase tracking-wider text-muted";
 
 // Mesmo visual do HouseMultiSelect (Casas/Esportes), sem a busca: a lista é
 // curta e fixa.

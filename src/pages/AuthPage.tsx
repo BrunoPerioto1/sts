@@ -43,7 +43,7 @@ const AuthPage = () => {
             ].map(([value, label]) => (
               <div key={label}>
                 <div className="text-2xl font-medium">{value}</div>
-                <div className="text-xs uppercase tracking-wide opacity-55 mt-1">{label}</div>
+                <div className="text-xs font-medium uppercase tracking-wider text-muted mt-1">{label}</div>
               </div>
             ))}
           </div>

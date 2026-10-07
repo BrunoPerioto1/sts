@@ -74,7 +74,7 @@ export function HousesMetrics({
       {blocks.map((b, i) => {
         const body = (
           <>
-            <div className="text-[11px] uppercase tracking-wider opacity-45">{b.label}</div>
+            <div className="text-[11px] font-medium uppercase tracking-wider text-muted">{b.label}</div>
             {isLoading ? (
               <div className="h-7 w-24 my-1 rounded bg-foreground/10 animate-pulse" />
             ) : (

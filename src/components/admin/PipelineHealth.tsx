@@ -149,7 +149,7 @@ function HealthCard({ card }: { card: Card }) {
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", DOT[card.level])} />
-        <span className="text-[11px] uppercase tracking-wider opacity-45 truncate">{card.label}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted truncate">{card.label}</span>
       </div>
 
       <div className="mt-1.5 flex items-baseline gap-1.5">

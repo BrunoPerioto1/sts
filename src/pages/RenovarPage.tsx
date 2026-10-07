@@ -102,7 +102,7 @@ const RenovarPage = () => {
                 className="w-full flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3 text-left hover:bg-foreground/[0.03]"
               >
                 <span className="min-w-0">
-                  <span className="block text-[11px] uppercase tracking-[0.1em] opacity-45">Chave PIX</span>
+                  <span className="block text-[11px] font-medium uppercase tracking-wider text-muted">Chave PIX</span>
                   <span className="block text-sm break-all">{billing.pixKey}</span>
                   {billing.txid && (
                     <span className="block text-xs opacity-55 mt-0.5">Identificador: {billing.txid}</span>

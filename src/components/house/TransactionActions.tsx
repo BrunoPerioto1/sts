@@ -109,7 +109,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
 
   const tipo = (
     <div>
-      <div className="mb-1.5 text-[11px] uppercase tracking-wider opacity-45">Tipo</div>
+      <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Tipo</div>
       <div className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-lg border border-border">
         {KINDS.map((k) => {
           const active = k.value === kind;
@@ -134,7 +134,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
 
   const valor = (
     <div>
-      <div className="mb-1.5 text-[11px] uppercase tracking-wider opacity-45">Valor</div>
+      <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Valor</div>
       <div className="flex items-baseline gap-2 border-b border-border pb-2">
         {isAdjust && (
           // Ajuste pode tirar saldo: o sinal é um toque, não um "−" digitado
@@ -241,7 +241,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={!valid || busy} className="bg-accent text-white hover:bg-accent/90">
+              <Button type="submit" disabled={!valid || busy}>
                 {salvarLabel}
               </Button>
             </div>

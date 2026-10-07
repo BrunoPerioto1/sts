@@ -72,7 +72,7 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         </button>
       </div>
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2 bg-accent text-white hover:bg-accent/90" disabled={submitting || locked}>
+      <Button type="submit" className="w-full min-h-[48px] text-base gap-2" disabled={submitting || locked}>
         {submitting ? (
           <>
             <CircleNotch size={18} className="animate-spin" /> Verificando…

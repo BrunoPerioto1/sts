@@ -17,7 +17,7 @@ import type { TipItem } from "@/api/routes/get-tips";
 function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] uppercase tracking-wider opacity-40">{label}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{label}</p>
       <p className={cn("mt-1 truncate text-lg font-semibold tabular-nums", className)}>{value}</p>
     </div>
   );
@@ -113,7 +113,7 @@ export function TipDetailPanel({
         {tip.link && (
           <Button
             asChild
-            className="mt-5 w-full justify-center gap-2 border-transparent bg-accent text-white hover:bg-accent/90"
+            className="mt-5 w-full justify-center gap-2"
           >
             {/* noreferrer junto do _blank: sem ele a aba da casa recebe
                 window.opener e pode navegar esta de volta. */}
@@ -135,7 +135,7 @@ export function TipDetailPanel({
             canal e' longo o bastante pra empurrar o "Planilhar" pra fora da
             area visivel do painel. */}
         <details className="group mt-6">
-          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] uppercase tracking-wider opacity-40 hover:opacity-70">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted hover:text-foreground">
             <CaretRight size={12} weight="bold" className="transition-transform group-open:rotate-90" />
             Mensagem do canal
           </summary>

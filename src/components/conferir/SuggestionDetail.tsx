@@ -49,11 +49,11 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         style={v.sign ? tintStyle(cor, 7, 25) : undefined}
       >
         <div>
-          <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Proposta do bot</p>
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Proposta do bot</p>
           <p className="text-2xl font-medium" style={{ color: cor }}>{v.rotulo}</p>
         </div>
         <div className="text-right">
-          <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Lucro</p>
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Lucro</p>
           <p className="text-xl tabular-nums" style={{ color: cor }}>
             {lucro > 0 ? "+" : ""}{formatMoney(lucro)}
           </p>
@@ -61,7 +61,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       </div>
 
       <div>
-        <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Placar final</p>
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Placar final</p>
         <p className="flex items-baseline gap-3">
           <span className="text-3xl font-semibold tabular-nums text-foreground">
             {temPlacar ? `${s.homeScore}×${s.awayScore}` : "—"}
@@ -71,7 +71,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       </div>
 
       <div>
-        <p className="mb-1.5 text-[11px] uppercase tracking-wider text-zinc-500">Seleção</p>
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">Seleção</p>
         <ul className="space-y-1.5">
           {itens(s.market, " / ").map((m, i) => (
             <li key={i} className="rounded-lg bg-foreground/[0.04] px-3 py-2.5 text-sm text-zinc-200">
@@ -82,7 +82,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] uppercase tracking-wider text-zinc-500">Como o bot decidiu</p>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted">Como o bot decidiu</p>
         <ul className="space-y-2 text-sm text-zinc-300">
           {itens(s.explanation, ";").map((e, i) => (
             <li key={i} className="flex items-start gap-2.5">
@@ -97,7 +97,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         <Button variant="secondary" className="h-12 px-6" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
           Descartar
         </Button>
-        <Button className="h-12 bg-accent text-white hover:bg-accent/90" onClick={() => { onToggle(); onClose(); }}>
+        <Button className="h-12" onClick={() => { onToggle(); onClose(); }}>
           {!checked && <Check size={18} />}
           {checked ? "Desmarcar" : v.acao}
         </Button>

@@ -49,7 +49,7 @@ export function TipColumnHeaderDesktop({
         TIP_GRID,
         // opacity-40 sumia contra o fundo escuro; o cabeçalho precisa ser
         // legível pra coluna ter nome, não só posição.
-        "flex-1 px-3 text-[11px] uppercase tracking-wider opacity-60",
+        "flex-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted",
       )}
     >
       {/* Os três tempos (quanto falta, jogo, recebida) numa coluna, com rótulo. */}
