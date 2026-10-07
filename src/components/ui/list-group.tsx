@@ -54,7 +54,7 @@ export function ListIcon({ icon: IconComponent, tone = "accent" }: { icon: Icon;
 }
 
 type RowBase = {
-  /** Ícone (<ListIcon>) ou outro marcador à esquerda. */
+  /** Ícone (<ListIcon>) ou avatar (<HouseAvatar>). */
   leading?: ReactNode;
   title: ReactNode;
   /** Uma linha só, truncada. Conteúdo extra (apelidos, contagens) vai aqui,

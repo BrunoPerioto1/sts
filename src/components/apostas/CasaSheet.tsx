@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow } from "./OptionRow";
 import { Button } from "@/components/ui/button";
+import { HouseAvatar } from "@/components/ui/house-avatar";
 import { SearchField } from "@/components/ui/search-field";
 import { SectionLabel } from "@/components/ui/section-label";
 import { useHouseBalances } from "@/hooks/queries/use-houses";
@@ -120,6 +121,7 @@ export function CasaSheet({
             {fallbackRecent.map((h) => (
               <OptionRow
                 key={h.id}
+                leading={<HouseAvatar name={h.name} />}
                 label={houseDisplayName(h.name)}
                 subtitle={balances[h.id] != null ? `${formatInt(balances[h.id])} apostas` : undefined}
                 selected={houseIds.includes(h.id)}
@@ -136,6 +138,7 @@ export function CasaSheet({
           {filtered.map((h) => (
             <OptionRow
               key={h.id}
+              leading={<HouseAvatar name={h.name} />}
               label={houseDisplayName(h.name)}
               subtitle={balances[h.id] != null ? `${formatInt(balances[h.id])} apostas` : undefined}
               selected={houseIds.includes(h.id)}

@@ -10,6 +10,7 @@ import { ArrowSquareOut, DotsThreeOutline, Plus } from "@phosphor-icons/react";
 import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { cn } from "@/lib/utils";
 import { formatMoney, houseDisplayName } from "@/lib/format";
+import { HouseAvatar } from "@/components/ui/house-avatar";
 import { formatIdleDays, houseActivity } from "@/lib/house-activity";
 import { HouseActivityBadge } from "./HouseActivityBadge";
 import { houseMoney } from "@/lib/house-groups";
@@ -29,7 +30,7 @@ interface HouseListItemProps {
 }
 
 export const HOUSE_GRID =
-  "grid items-center gap-3 grid-cols-[minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px_32px]";
+  "grid items-center gap-3 grid-cols-[28px_minmax(140px,1fr)_minmax(120px,1.4fr)_110px_96px_32px_32px_32px]";
 
 export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onOpenHistory, onNewTransaction, onConciliate }: HouseListItemProps) {
   // Casa não fica te devendo: saldo real negativo é lançamento faltando, não
@@ -48,6 +49,8 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
 
   return (
     <div className={cn(HOUSE_GRID, "px-2 -mx-2 py-2.5 rounded-md border-b border-border last:border-b-0 hover:bg-foreground/[0.03] transition-colors")}>
+      <HouseAvatar name={house.houseName} className="h-7 w-7 rounded-[7px] text-[11px]" />
+
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <p className="text-sm font-medium truncate">{houseDisplayName(house.houseName)}</p>

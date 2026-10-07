@@ -3,6 +3,7 @@ import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
 import { formatMoney, houseDisplayName } from "@/lib/format";
+import { HouseAvatar } from "@/components/ui/house-avatar";
 import { houseActivity } from "@/lib/house-activity";
 import { houseMoney } from "@/lib/house-groups";
 import { HouseActivityBadge } from "../HouseActivityBadge";
@@ -62,6 +63,8 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
       className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-foreground/[0.04]"
       style={stagger(index)}
     >
+      <HouseAvatar name={house.houseName} />
+
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="text-sm font-medium truncate">{houseDisplayName(house.houseName)}</span>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatInt, formatPercent, houseDisplayName } from "@/lib/format";
+import { HouseAvatar } from "@/components/ui/house-avatar";
 
 interface HouseDetailsModalProps {
   house: HouseBalanceDto | null;
@@ -51,6 +52,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
           className="fixed right-0 top-0 z-50 h-dvh w-full sm:w-[440px] border-l border-border bg-card flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-200"
         >
           <div className="flex items-start gap-3 p-5 border-b border-border">
+            <HouseAvatar name={house.houseName} className="h-9 w-9" />
             <div className="min-w-0 flex-1">
               <DialogPrimitive.Title className="text-base font-semibold truncate">
                 {houseDisplayName(house.houseName)}
