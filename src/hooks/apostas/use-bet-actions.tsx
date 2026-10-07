@@ -17,8 +17,8 @@ import { actionToast, ArrowCounterClockwise, Check, CheckCircle, Copy, Trash as 
 // Verde/vermelho no toast de finalização em lote são reservados pro resultado
 // da aposta (spec Nocturne) — Pendente fica neutro.
 const statusWordClassFor: Record<number, string> = {
-  [ResultIdEnum.WON]: "text-positive",
-  [ResultIdEnum.LOST]: "text-negative",
+  [ResultIdEnum.WON]: "text-success",
+  [ResultIdEnum.LOST]: "text-danger",
 };
 
 function errText(e: unknown, fallback: string) {

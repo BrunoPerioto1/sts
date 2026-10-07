@@ -75,7 +75,7 @@ function AccessCell({
   const expired = isExpired(user.accessUntil);
   const label = user.accessUntil ? `${expired ? "venceu" : "até"} ${formatAccessDate(user.accessUntil)}` : "sem prazo";
   // Largura fixa no rótulo: o +30d fica na mesma coluna em todas as linhas.
-  const labelClass = cn("w-[132px] shrink-0 text-left text-sm tabular-nums whitespace-nowrap", expired ? "text-negative" : "opacity-55");
+  const labelClass = cn("w-[132px] shrink-0 text-left text-sm tabular-nums whitespace-nowrap", expired ? "text-danger" : "opacity-55");
 
   if (isMe) return <span className={labelClass}>{label}</span>;
 
@@ -121,7 +121,7 @@ function AccessCell({
           </div>
         </PopoverContent>
       </Popover>
-      <Button variant="outline" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
+      <Button variant="secondary" size="sm" disabled={pending} onClick={onExtend} className="h-7 px-2 text-xs">
         +{ACCESS_DAYS}d
       </Button>
     </div>
@@ -173,7 +173,7 @@ function LockLine({ user }: { user: AdminUser }) {
   if (!isLocked(user.lockedUntil)) return null;
 
   return (
-    <p className="text-xs text-negative">
+    <p className="text-xs text-danger">
       bloqueado · {user.failedLoginAttempts} tentativas · até {formatSaoPaulo(user.lockedUntil)}
     </p>
   );
@@ -225,7 +225,7 @@ function Actions({
 }) {
   if (isLocked(user.lockedUntil)) {
     return (
-      <Button variant="outline" size="sm" disabled={pending} onClick={onUnlock} className="text-[var(--dashboard-orange)] border-[var(--dashboard-orange)]/40">
+      <Button variant="secondary" size="sm" disabled={pending} onClick={onUnlock} className="text-[var(--dashboard-orange)] border-[var(--dashboard-orange)]/40">
         Desbloquear
       </Button>
     );
@@ -237,11 +237,11 @@ function Actions({
   if (groupAction) {
     return (
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         disabled={pending}
         onClick={() => onTipsGroup(groupAction)}
-        className={cn(groupAction === "remove" && "text-negative border-negative/40")}
+        className={cn(groupAction === "remove" && "text-danger border-danger/40")}
       >
         {groupAction === "remove" ? "Tirar do grupo" : "Convidar"}
       </Button>
@@ -250,7 +250,7 @@ function Actions({
 
   if (user.hasTelegram) {
     return (
-      <Button variant="outline" size="sm" disabled={pending} onClick={onUnlink}>
+      <Button variant="secondary" size="sm" disabled={pending} onClick={onUnlink}>
         Desvincular
       </Button>
     );
@@ -271,7 +271,7 @@ function ActiveToggle({ user, pending, onToggle }: { user: AdminUser; pending: b
       onClick={onToggle}
       className={cn(
         "text-xs underline-offset-4 hover:underline disabled:opacity-40",
-        inactive ? "text-accent-text" : "text-zinc-500 hover:text-negative",
+        inactive ? "text-accent-text" : "text-zinc-500 hover:text-danger",
       )}
     >
       {inactive ? "Reativar conta" : "Desativar conta"}
@@ -422,7 +422,7 @@ export function AdminUsers() {
       bare
       title="Não foi possível carregar os usuários"
       action={
-        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+        <Button variant="secondary" size="sm" onClick={() => void refetch()}>
           Tentar de novo
         </Button>
       }
@@ -466,7 +466,7 @@ export function AdminUsers() {
             )}
             {user.hasTelegram ? (
               user.tipsGroupRemovedAt ? (
-                <span className="text-sm text-negative">fora do grupo</span>
+                <span className="text-sm text-danger">fora do grupo</span>
               ) : (
                 <span className="text-sm opacity-55">vinculado {formatSaoPaulo(user.telegramLinkedAt).slice(0, 5)}</span>
               )

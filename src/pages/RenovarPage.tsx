@@ -8,7 +8,7 @@ import { getBilling, postPaymentClaim, type Billing } from "@/api/routes/get-bil
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { getAccessBlock } from "@/lib/auth-session";
-import { formatTime } from "@/lib/format";
+import { formatTime, formatMoney } from "@/lib/format";
 
 /**
  * Destino de todo 402 (acesso vencido ou conta nova sem ativar). Cobrança é
@@ -80,7 +80,7 @@ const RenovarPage = () => {
           <div className="flex flex-col items-center gap-4 w-full max-w-[340px]">
             {billing?.price != null && (
               <p className="text-3xl font-semibold tabular-nums">
-                {billing.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                {formatMoney(billing.price)}
                 <span className="text-sm font-normal opacity-50"> /mês</span>
               </p>
             )}
@@ -114,12 +114,12 @@ const RenovarPage = () => {
 
             {token &&
               (billing?.paymentClaimedAt ? (
-                <p className="flex items-center gap-2 text-sm text-positive">
+                <p className="flex items-center gap-2 text-sm text-success">
                   <CheckCircle size={16} weight="fill" />
                   Você avisou às {formatTime(billing.paymentClaimedAt)}. É só aguardar a liberação.
                 </p>
               ) : (
-                <Button variant="outline" className="w-full" disabled={claiming} onClick={claim}>
+                <Button variant="secondary" className="w-full" disabled={claiming} onClick={claim}>
                   {claiming ? "Avisando…" : "Já paguei"}
                 </Button>
               ))}

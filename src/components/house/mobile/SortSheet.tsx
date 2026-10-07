@@ -27,7 +27,7 @@ export function SortSheet({ open, onOpenChange, value, onChange }: SortSheetProp
       onOpenChange={onOpenChange}
       title="Ordenar por"
       footer={
-        <Button variant="outline" className="w-full min-h-[44px]" onClick={() => onOpenChange(false)}>
+        <Button variant="secondary" className="w-full min-h-[44px]" onClick={() => onOpenChange(false)}>
           Fechar
         </Button>
       }

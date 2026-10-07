@@ -68,8 +68,8 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
       <div className="rounded-lg bg-foreground/[0.04] px-3 py-2.5 mb-3">
         <p className="flex items-center gap-2 text-sm font-medium min-w-0">
           <span className="truncate">{!isLinked ? "Nenhuma conta" : me.telegramUsername ? `@${me.telegramUsername}` : "Conta vinculada"}</span>
-          <span className={`flex shrink-0 items-center gap-1 text-xs font-normal ${isLinked ? "text-positive" : "text-zinc-400"}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${isLinked ? "bg-positive" : "bg-zinc-500"}`} />
+          <span className={`flex shrink-0 items-center gap-1 text-xs font-normal ${isLinked ? "text-success" : "text-zinc-400"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isLinked ? "bg-success" : "bg-zinc-500"}`} />
             {isLinked ? "Vinculado" : "Não vinculado"}
           </span>
         </p>
@@ -80,7 +80,7 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
 
       <p className="text-[13px] text-zinc-400 mb-3">Registre apostas por mensagem e receba o resumo do dia.</p>
       {isLinked ? (
-        <Button variant="outline" size="sm" onClick={() => setConfirmUnlink(true)}>Desvincular</Button>
+        <Button variant="secondary" size="sm" onClick={() => setConfirmUnlink(true)}>Desvincular</Button>
       ) : (
         <div className="space-y-2">
           <Button size="sm" onClick={handleGenerate} disabled={linking}>
@@ -104,7 +104,7 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
                 e.preventDefault();
                 void handleUnlink();
               }}
-              className="bg-negative text-white hover:bg-negative/90"
+              className="bg-danger text-white hover:bg-danger/90"
             >
               Desvincular
             </AlertDialogAction>

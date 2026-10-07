@@ -19,7 +19,7 @@ export function ApostasEmpty({ hasFilters, onClearFilters }: { hasFilters?: bool
       }
       action={
         hasFilters && onClearFilters ? (
-          <Button variant="outline" onClick={onClearFilters}>Limpar filtros</Button>
+          <Button variant="secondary" onClick={onClearFilters}>Limpar filtros</Button>
         ) : undefined
       }
     />

@@ -105,7 +105,7 @@ export function CasasMobileView() {
             icon={<WarningCircle size={28} />}
             title="Não foi possível carregar as casas"
             description="Verifique sua conexão e tente de novo."
-            action={<Button variant="outline" onClick={() => invalidate()}>Tentar novamente</Button>}
+            action={<Button variant="secondary" onClick={() => invalidate()}>Tentar novamente</Button>}
           />
         </div>
       ) : filters.filteredHouses.length === 0 ? (
@@ -114,7 +114,7 @@ export function CasasMobileView() {
           title="Nenhuma casa encontrada"
           description={filters.hasFilters ? "Nenhuma casa corresponde aos filtros aplicados." : "Nenhuma casa com apostas ou movimentações ainda."}
           action={filters.hasFilters ? (
-            <Button variant="outline" onClick={filters.clear}>Limpar filtros</Button>
+            <Button variant="secondary" onClick={filters.clear}>Limpar filtros</Button>
           ) : undefined}
         />
       ) : (

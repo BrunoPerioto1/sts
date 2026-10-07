@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatKickoff, formatTime } from "@/lib/format";
+import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -77,7 +77,7 @@ export function TipDetailPanel({
         )}
 
         {tip.isAviso && (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-400">
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-pending">
             <Warning size={14} weight="fill" /> SOBRECARGA — confira a odd na casa antes de apostar
           </p>
         )}
@@ -87,26 +87,26 @@ export function TipDetailPanel({
           container e a rolagem vai parar na página inteira. */}
       <div className="px-5 py-4">
         <div className="grid grid-cols-3 gap-4">
-          <Stat label="Odd" value={tip.odd?.toFixed(2) ?? "—"} />
+          <Stat label="Odd" value={tip.odd != null ? formatOdd(tip.odd) : "—"} />
           <Stat
             label="Stake sugerida"
-            value={tip.recommendedStake !== null ? formatCurrency(tip.recommendedStake) : "—"}
+            value={tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "—"}
           />
           <Stat
             label="% da banca"
-            value={tip.percent !== null ? `${tip.percent.toFixed(2).replace(".", ",")}%` : "—"}
+            value={tip.percent !== null ? formatPercent(tip.percent / 100, { decimals: 2 }) : "—"}
           />
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
           <Stat
             label="Lucro potencial"
-            value={tip.potentialProfit !== null ? formatCurrency(tip.potentialProfit) : "—"}
-            className="text-positive"
+            value={tip.potentialProfit !== null ? formatMoney(tip.potentialProfit) : "—"}
+            className="text-success"
           />
           <Stat
             label="Limite"
-            value={tip.limit !== null ? formatCurrency(tip.limit) : "—"}
+            value={tip.limit !== null ? formatMoney(tip.limit) : "—"}
           />
         </div>
 
@@ -124,7 +124,7 @@ export function TipDetailPanel({
         )}
 
         {tip.calcLink && (
-          <Button asChild variant="outline" className="mt-2 w-full justify-center gap-2">
+          <Button asChild variant="secondary" className="mt-2 w-full justify-center gap-2">
             <a href={tip.calcLink} target="_blank" rel="noopener noreferrer">
               <Calculator size={16} weight="bold" /> Calcular odd justa
             </a>
@@ -153,17 +153,16 @@ export function TipDetailPanel({
                 azul ficou reservado pro "Abrir na casa", que e' o passo antes
                 de decidir. */}
             <Button
-              // Verde/vermelho mais escuros que os tokens de texto (--color-positive /
-              // --color-negative): aqueles sao feitos pra texto colorido sobre fundo
-              // escuro e, virando fundo, deixam o rotulo branco em ~2:1.
-              className="h-11 flex-1 border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
+              // success-solid/danger-solid: o tom de texto, virando fundo,
+              // deixava o rotulo branco em ~2:1 (ver index.css).
+              className="h-11 flex-1 border-transparent bg-success-solid text-white hover:bg-success-solid/90"
               onClick={onPlanilhar}
               disabled={busy}
             >
               <Check size={16} weight="bold" /> Planilhar
             </Button>
             <Button
-              className="h-11 gap-2 border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26] hover:text-white"
+              className="h-11 gap-2 border-transparent bg-danger-solid text-white hover:bg-danger-solid/90 hover:text-white"
               onClick={onDismiss}
               disabled={busy}
             >
@@ -171,7 +170,7 @@ export function TipDetailPanel({
             </Button>
           </div>
         ) : tip.status === "caiu" ? (
-          <Button variant="outline" className="h-11 w-full gap-2" onClick={onUndismiss} disabled={busy}>
+          <Button variant="secondary" className="h-11 w-full gap-2" onClick={onUndismiss} disabled={busy}>
             <ArrowCounterClockwise size={16} weight="bold" /> Devolver para a fila
           </Button>
         ) : (

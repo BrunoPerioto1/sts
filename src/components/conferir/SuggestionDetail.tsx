@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { SettlementSuggestion } from "@/api/routes/get-settlement";
 import { ResultIdEnum } from "@/api/routes/result-id";
 import { lucroSugerido } from "@/lib/settlement-view";
-import { formatCurrency, formatDate, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatDate, formatTime, formatOdd } from "@/lib/format";
 import { tintStyle, usePerformanceColor } from "@/hooks/use-performance-color";
 
 interface Props {
@@ -41,7 +41,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
     <div className="space-y-5 pb-4">
       <p className="text-sm text-zinc-500">
         {s.eventStartAt && `${formatDate(s.eventStartAt)} · ${formatTime(s.eventStartAt)} · `}
-        {formatCurrency(s.stake)} @ {formatOdd(s.odd)}
+        {formatMoney(s.stake)} @ {formatOdd(s.odd)}
       </p>
 
       <div
@@ -55,7 +55,7 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         <div className="text-right">
           <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">Lucro</p>
           <p className="text-xl tabular-nums" style={{ color: cor }}>
-            {lucro > 0 ? "+" : ""}{formatCurrency(lucro)}
+            {lucro > 0 ? "+" : ""}{formatMoney(lucro)}
           </p>
         </div>
       </div>
@@ -94,10 +94,10 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
       </div>
 
       <div className="grid grid-cols-[auto_1fr] gap-2 pt-1">
-        <Button variant="outline" className="h-12 px-6" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
+        <Button variant="secondary" className="h-12 px-6" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
           Descartar
         </Button>
-        <Button className="h-12 bg-blue-600 text-white hover:bg-blue-500" onClick={() => { onToggle(); onClose(); }}>
+        <Button className="h-12 bg-accent text-white hover:bg-accent/90" onClick={() => { onToggle(); onClose(); }}>
           {!checked && <Check size={18} />}
           {checked ? "Desmarcar" : v.acao}
         </Button>

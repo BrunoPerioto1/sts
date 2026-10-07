@@ -6,8 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { useSettlementReview } from "@/hooks/apostas/use-settlement";
 import { diaRelativo } from "@/lib/settlement-view";
-import { formatTime, formatOdd } from "@/lib/format";
-import { stakeCurta } from "@/lib/settlement-format";
+import { formatMoney, formatTime, formatOdd } from "@/lib/format";
 
 /**
  * As apostas que o bot nao soube resolver, em tela propria. Na Conferencia elas
@@ -63,7 +62,7 @@ export default function ConferirPendentesPage() {
                   <p className="truncate text-xs text-zinc-500">
                     {b.eventStartAt &&
                       `${diaRelativo(b.eventStartAt)} ${formatTime(b.eventStartAt)} · `}
-                    {stakeCurta(Number(b.stake))} @ {formatOdd(b.odd)}
+                    {formatMoney(Number(b.stake), { cents: "auto" })} @ {formatOdd(b.odd)}
                   </p>
                   <p className="truncate text-sm font-medium text-foreground">{b.game}</p>
                   <p className="truncate text-xs text-zinc-400">{b.market}</p>
@@ -71,7 +70,7 @@ export default function ConferirPendentesPage() {
                     <p className="truncate text-[11px] text-zinc-600">{b.explanation}</p>
                   )}
                 </div>
-                <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Button asChild variant="secondary" size="sm" className="shrink-0">
                   <Link
                     to={`/bets?status=${ResultIdEnum.PENDING}&period=tudo&q=${encodeURIComponent(b.game)}`}
                   >

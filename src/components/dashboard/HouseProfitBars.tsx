@@ -1,5 +1,5 @@
 import type { HouseProfit } from "@/hooks/dashboard/use-house-profit";
-import { formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 /**
  * Barras divergentes a partir de um eixo zero central: perda cresce pra
@@ -30,14 +30,14 @@ export function HouseProfitBars({ rows }: { rows: HouseProfit[] }) {
                   width,
                   left: positive ? "50%" : undefined,
                   right: positive ? undefined : "50%",
-                  background: positive ? "var(--color-positive)" : "var(--color-negative)",
+                  background: positive ? "var(--color-success)" : "var(--color-danger)",
                 }}
               />
             </span>
             <span
-              className={`text-[13px] tabular-nums font-medium ${positive ? "text-positive" : "text-negative"}`}
+              className={`text-[13px] tabular-nums font-medium ${positive ? "text-success" : "text-danger"}`}
             >
-              {formatSignedCurrency(profit)}
+              {formatMoney(profit, { signed: true })}
             </span>
           </li>
         );

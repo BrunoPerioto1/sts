@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import { formatOdd } from "@/lib/format";
 
 interface OddBoostHintProps {
   originalOdd: number | null;
@@ -10,9 +11,9 @@ export function OddBoostHint({ originalOdd }: OddBoostHintProps) {
   return (
     <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center gap-1.5">
       <span className="text-[11px] tabular-nums text-zinc-500 line-through">
-        {originalOdd.toFixed(2)}
+        {formatOdd(originalOdd)}
       </span>
-      <span className="inline-flex items-center gap-0.5 rounded-md bg-positive/15 px-1.5 py-0.5 text-[10px] font-medium text-positive">
+      <span className="inline-flex items-center gap-0.5 rounded-md bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success">
         <TrendingUp className="h-2.5 w-2.5" />
         boost
       </span>

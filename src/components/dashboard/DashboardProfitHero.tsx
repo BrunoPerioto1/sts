@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AnimatedNumber } from "@/components/ui/animated-number";
-import { formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 
@@ -57,7 +57,7 @@ export function DashboardProfitHero({
         )}
         style={{ color }}
       >
-        <AnimatedNumber key={resetKey} value={profit} format={formatSignedCurrency} />
+        <AnimatedNumber key={resetKey} value={profit} format={(v) => formatMoney(v, { signed: true })} />
       </p>
       <p className={cn("text-zinc-300", size === "desktop" ? "text-[13px] mt-3" : "text-sm mt-1")}>{summary}</p>
     </div>

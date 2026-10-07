@@ -6,11 +6,7 @@ import { kpiValues } from "@/lib/dashboard-kpi-values";
 import { resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { DASHBOARD_KPI_REGISTRY, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
-import { formatSignedCurrency } from "@/lib/format";
-
-function formatUnits(value: number) {
-  return `${value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: "exceptZero" })} U`;
-}
+import { formatMoney, formatUnits } from "@/lib/format";
 
 /**
  * Topo do Dashboard com os dados reais dos últimos 30 dias, redesenhado a cada
@@ -25,7 +21,7 @@ export function DashboardPreview({ preferences, stake }: { preferences: Dashboar
   const { metrics, dailyData, loading, error } = useDashboardData(filters);
   const values = useMemo(() => kpiValues(metrics, stake), [metrics, stake]);
   const unit = stake > 0 ? stake / 100 : null;
-  const fmt = (value: number) => (unit ? formatUnits(value) : formatSignedCurrency(value));
+  const fmt = (value: number) => (unit ? formatUnits(value) : formatMoney(value, { signed: true }));
   const colors = preferences.performanceColors;
 
   // Série acumulada e pior sequência (maior queda de um pico até um vale).

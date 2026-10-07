@@ -14,7 +14,7 @@ import { aiFieldRing } from "@/lib/ai-field";
 import { OddBoostHint } from "./OddBoostHint";
 import { MatchedTipsCard } from "./MatchedTipsCard";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 interface ApostaFormProps {
   onApostaAdded: (aposta: BetItem) => void;
@@ -197,21 +197,21 @@ export function ApostaForm({
       )}
 
       {potentialReturn && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-positive/20 bg-positive/[0.07] px-4 py-3">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-success/[0.07] px-4 py-3">
           <span className="text-xs text-zinc-300">Possível ganho</span>
           <span className="flex items-baseline gap-2">
-            <strong className="text-lg font-semibold tabular-nums text-positive">
-              {formatCurrency(potentialReturn.total)}
+            <strong className="text-lg font-semibold tabular-nums text-success">
+              {formatMoney(potentialReturn.total)}
             </strong>
             <span className="text-[11px] tabular-nums text-zinc-400">
-              lucro {formatCurrency(potentialReturn.profit)}
+              lucro {formatMoney(potentialReturn.profit)}
             </span>
           </span>
         </div>
       )}
 
       <div className="-mx-6 -mb-6 mt-1 flex items-center justify-between gap-3 border-t border-foreground/10 px-6 py-4">
-        <p className={cn("text-[11px] leading-snug text-amber-400", !checking && "invisible")}>
+        <p className={cn("text-[11px] leading-snug text-pending", !checking && "invisible")}>
           Confira os campos marcados em amarelo antes de registrar
         </p>
         <div className="flex flex-none items-center gap-2">

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
-import { formatCurrency, formatSignedCurrency, formatTime } from "@/lib/format";
+import { formatMoney, formatTime } from "@/lib/format";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TransactionActions } from "../TransactionActions";
 
@@ -88,11 +88,11 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
           <div>
             <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Entrou</p>
-            <p className="text-lg font-medium tabular-nums text-positive">{formatSignedCurrency(entrou)}</p>
+            <p className="text-lg font-medium tabular-nums text-success">{formatMoney(entrou, { signed: true })}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saiu</p>
-            <p className="text-lg font-medium tabular-nums text-negative">{formatCurrency(saiu)}</p>
+            <p className="text-lg font-medium tabular-nums text-danger">{formatMoney(saiu)}</p>
           </div>
         </div>
 
@@ -105,9 +105,9 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
         ) : error ? (
           <div
             className="flex items-start gap-2 rounded-md p-3 text-sm"
-            style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-negative)" }}
+            style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-danger)" }}
           >
-            <WarningCircle size={18} className="text-negative shrink-0 mt-0.5" />
+            <WarningCircle size={18} className="text-danger shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
         ) : groups.length === 0 ? (
@@ -131,10 +131,10 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className={`block text-base font-medium tabular-nums ${value >= 0 ? "text-positive" : "text-negative"}`}>
-                          {formatSignedCurrency(value)}
+                        <span className={`block text-base font-medium tabular-nums ${value >= 0 ? "text-success" : "text-danger"}`}>
+                          {formatMoney(value, { signed: true })}
                         </span>
-                        <span className="block text-sm text-zinc-400 tabular-nums">{formatCurrency(t.runningBalance)}</span>
+                        <span className="block text-sm text-zinc-400 tabular-nums">{formatMoney(t.runningBalance)}</span>
                       </span>
                       <TransactionActions tx={t} onChanged={() => setReloadKey((k) => k + 1)} />
                     </div>

@@ -53,23 +53,23 @@ function ActionToastCard({
       role={isError ? "alert" : "status"}
       className={cn(
         "relative flex w-full items-start gap-2.5 overflow-hidden rounded-[14px] border py-3 pl-4 pr-3 sm:w-[380px] sm:rounded-xl",
-        isError ? "bg-card border-negative/30" : "bg-card border-foreground/15"
+        isError ? "bg-card border-danger/30" : "bg-card border-foreground/15"
       )}
       style={{ boxShadow: "var(--shadow-lg)" }}
     >
       <span
-        className={cn("absolute left-0 top-3.5 bottom-3.5 w-0.5 rounded-full", isError ? "bg-negative" : "bg-foreground")}
+        className={cn("absolute left-0 top-3.5 bottom-3.5 w-0.5 rounded-full", isError ? "bg-danger" : "bg-foreground")}
       />
       <span
         className={cn(
           "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] sm:h-7 sm:w-7 sm:rounded-lg",
-          isError ? "bg-negative/15" : "bg-foreground/[0.09]"
+          isError ? "bg-danger/15" : "bg-foreground/[0.09]"
         )}
       >
-        <Icon size={16} weight="bold" className={cn("sm:!w-[15px] sm:!h-[15px]", isError ? "text-negative" : "text-foreground")} />
+        <Icon size={16} weight="bold" className={cn("sm:!w-[15px] sm:!h-[15px]", isError ? "text-danger" : "text-foreground")} />
       </span>
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className={cn("text-sm font-medium leading-tight sm:text-sm", isError ? "text-negative" : "text-foreground")}>
+        <p className={cn("text-sm font-medium leading-tight sm:text-sm", isError ? "text-danger" : "text-foreground")}>
           {title}
         </p>
         {description && (

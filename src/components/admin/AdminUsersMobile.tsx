@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MobileChip, MobileChips, MobileSearch } from "@/components/admin/AdminPanel";
 import { formatSaoPaulo, isLocked, ROLE_LABELS, ROLE_OPTIONS } from "@/lib/admin-health";
 import { daysUntilAccess, formatAccessDate, isExpired, tipsGroupAction } from "@/lib/access";
-import { initialsOf } from "@/lib/format";
+import { initialsOf, formatInt } from "@/lib/format";
 import type { AdminUser } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 
@@ -67,14 +67,14 @@ function UserRow({ user, open, onToggle, act }: { user: AdminUser; open: boolean
             {inactive && <span className="shrink-0 text-[10.5px] px-1.5 rounded-[5px] border border-border text-zinc-500">inativo</span>}
           </div>
           <p className="text-[11.5px] text-zinc-500 truncate">
-            {user.betCount.toLocaleString("pt-BR")} apostas · {user.lastLogin ? `visto ${formatSaoPaulo(user.lastLogin).slice(0, 5)}` : "nunca entrou"} ·{" "}
+            {formatInt(user.betCount)} apostas · {user.lastLogin ? `visto ${formatSaoPaulo(user.lastLogin).slice(0, 5)}` : "nunca entrou"} ·{" "}
             {user.hasTelegram ? "Telegram ok" : "sem Telegram"}
           </p>
         </div>
         <span
           className={cn(
             "shrink-0 text-[11.5px] tabular-nums",
-            st.tone === "bad" && "text-negative px-[7px] py-0.5 rounded-md bg-negative/10",
+            st.tone === "bad" && "text-danger px-[7px] py-0.5 rounded-md bg-danger/10",
             st.tone === "warn" && "text-[var(--dashboard-orange)]",
             st.tone === "muted" && "text-zinc-500",
           )}
@@ -93,7 +93,7 @@ function UserRow({ user, open, onToggle, act }: { user: AdminUser; open: boolean
               </p>
             )}
             {isLocked(user.lockedUntil) && (
-              <p className="text-[11.5px] text-negative">
+              <p className="text-[11.5px] text-danger">
                 bloqueado · {user.failedLoginAttempts} tentativas · até {formatSaoPaulo(user.lockedUntil)}
               </p>
             )}
@@ -104,7 +104,7 @@ function UserRow({ user, open, onToggle, act }: { user: AdminUser; open: boolean
             <div className="flex flex-wrap items-center gap-1.5">
               {act.accessCell(user)}
               {!isMe && (
-                <Button variant="outline" size="sm" disabled={pending} onClick={() => act.extend(user, 90)} className="h-7 px-2 text-xs">
+                <Button variant="secondary" size="sm" disabled={pending} onClick={() => act.extend(user, 90)} className="h-7 px-2 text-xs">
                   +90d
                 </Button>
               )}
@@ -136,7 +136,7 @@ function UserRow({ user, open, onToggle, act }: { user: AdminUser; open: boolean
           <div className="flex items-center gap-2.5">
             <div className="flex-1 min-w-0">
               <p className="text-[13.5px]">Grupo Tips</p>
-              <p className={cn("text-[11.5px]", hint.bad ? "text-negative" : "text-zinc-500")}>{hint.text}</p>
+              <p className={cn("text-[11.5px]", hint.bad ? "text-danger" : "text-zinc-500")}>{hint.text}</p>
             </div>
             <div className="shrink-0">{act.actions(user)}</div>
           </div>
@@ -148,7 +148,7 @@ function UserRow({ user, open, onToggle, act }: { user: AdminUser; open: boolean
               onClick={() => act.toggleActive(user)}
               className={cn(
                 "h-8 flex items-center gap-1.5 text-[13px] disabled:opacity-40",
-                inactive ? "text-accent-text" : "text-negative",
+                inactive ? "text-accent-text" : "text-danger",
               )}
             >
               <Prohibit size={14} />
@@ -199,14 +199,14 @@ export function AdminUsersMobile<F extends string>({
         <button
           type="button"
           onClick={() => setFilter(expiredFilter)}
-          className="w-full h-12 px-3 rounded-xl border border-negative/30 bg-negative/[0.07] flex items-center gap-2.5 text-left"
+          className="w-full h-12 px-3 rounded-xl border border-danger/30 bg-danger/[0.07] flex items-center gap-2.5 text-left"
         >
-          <WarningCircle size={17} weight="fill" className="shrink-0 text-negative" />
+          <WarningCircle size={17} weight="fill" className="shrink-0 text-danger" />
           <span className="flex-1 text-[13.5px]">
             {expired} {expired === 1 ? "acesso vencido" : "acessos vencidos"}
             {stillInGroup > 0 && `, ${stillInGroup} ainda no grupo Tips`}
           </span>
-          <span className="text-[13px] text-negative">Ver</span>
+          <span className="text-[13px] text-danger">Ver</span>
         </button>
       )}
 
@@ -231,7 +231,7 @@ export function AdminUsersMobile<F extends string>({
         <EmptyState
           title="Não foi possível carregar os usuários"
           action={
-            <Button variant="outline" size="sm" onClick={onRetry}>
+            <Button variant="secondary" size="sm" onClick={onRetry}>
               Tentar de novo
             </Button>
           }

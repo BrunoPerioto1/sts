@@ -4,7 +4,7 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { colorForHouse, formatCurrency, initialsOf } from "@/lib/format";
+import { colorForHouse, formatMoney, initialsOf, formatInt, formatPercent } from "@/lib/format";
 
 interface HouseDetailsModalProps {
   house: HouseBalanceDto | null;
@@ -36,14 +36,12 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
   const settledBets = Number(house.settledBets ?? Math.max(0, bets - Number(house.pendingBets)));
   // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
   const decided = Number(house.wonBets) + Number(house.lostBets);
-  const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
+  const hitRate = decided > 0 ? Number(house.wonBets) / decided : 0;
   // Vem pronto da API (lucro / stake liquidado), a mesma base do dashboard e
   // do ranking. Dividir pelo total apostado contava as pendentes.
-  const roi = Number(house.roi ?? 0) * 100;
+  const roi = Number(house.roi ?? 0);
   const noMovement = deposit === 0 && withdrawal === 0;
-  const signClass = (v: number) => (v >= 0 ? "text-positive" : "text-negative");
-  // pt-BR: 70,0% e não 70.0%.
-  const pct = (v: number) => `${v.toFixed(1).replace(".", ",")}%`;
+  const signClass = (v: number) => (v >= 0 ? "text-success" : "text-danger");
 
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
@@ -64,7 +62,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
                 {house.houseName}
               </DialogPrimitive.Title>
               <p className="text-xs opacity-45">
-                {bets} {bets === 1 ? "aposta" : "apostas"} · {noMovement ? "sem movimentação registrada" : `${formatCurrency(deposit)} depositados`}
+                {bets} {bets === 1 ? "aposta" : "apostas"} · {noMovement ? "sem movimentação registrada" : `${formatMoney(deposit)} depositados`}
               </p>
             </div>
             <DialogPrimitive.Close className="opacity-50 hover:opacity-100 transition-opacity shrink-0" aria-label="Fechar">
@@ -76,28 +74,28 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
             <div>
               <div className="text-[11px] uppercase tracking-wider opacity-45">Saldo atual</div>
               <div className={cn("text-[34px] leading-tight font-medium tabular-nums", realBalance < 0 && "opacity-45")}>
-                {formatCurrency(Math.max(0, realBalance))}
+                {formatMoney(Math.max(0, realBalance))}
               </div>
               <p className={cn("text-xs", noMovement ? signClass(profit) : "opacity-45")}>
                 {noMovement
                   ? profit >= 0
                     ? "Todo o saldo vem de lucro em apostas"
                     : "Saldo negativo vindo só de apostas"
-                  : `${formatCurrency(deposit)} depositados · ${formatCurrency(withdrawal)} sacados`}
+                  : `${formatMoney(deposit)} depositados · ${formatMoney(withdrawal)} sacados`}
               </p>
             </div>
 
             <div>
               {realBalance < 0 && (
-                <Row label="A conferir" value={formatCurrency(realBalance)} valueClass="text-negative" />
+                <Row label="A conferir" value={formatMoney(realBalance)} valueClass="text-danger" />
               )}
-              <Row label="Depósitos" value={formatCurrency(deposit)} />
-              <Row label="Saques" value={formatCurrency(withdrawal)} />
-              <Row label="Lucro em apostas" value={formatCurrency(profit)} valueClass={signClass(profit)} />
-              <Row label="Apostas encerradas" value={String(settledBets)} />
-              <Row label="Apostas abertas" value={String(house.pendingBets)} />
-              <Row label="Taxa de acerto" value={pct(hitRate)} />
-              <Row label="ROI" value={`${roi >= 0 ? "+" : ""}${pct(roi)}`} valueClass={signClass(roi)} />
+              <Row label="Depósitos" value={formatMoney(deposit)} />
+              <Row label="Saques" value={formatMoney(withdrawal)} />
+              <Row label="Lucro em apostas" value={formatMoney(profit)} valueClass={signClass(profit)} />
+              <Row label="Apostas encerradas" value={formatInt(settledBets)} />
+              <Row label="Apostas abertas" value={formatInt(house.pendingBets)} />
+              <Row label="Taxa de acerto" value={formatPercent(hitRate)} />
+              <Row label="ROI" value={formatPercent(roi, { signed: true })} valueClass={signClass(roi)} />
             </div>
           </div>
 
@@ -105,7 +103,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
             <Button className="flex-1 gap-2 bg-accent text-white hover:bg-accent/90" onClick={() => onNewTransaction?.(house)}>
               <Plus size={16} /> Nova movimentação
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
+            <Button variant="secondary" className="flex-1" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
               Ver apostas
             </Button>
           </div>

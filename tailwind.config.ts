@@ -1,6 +1,11 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
+// Cor que vem pronta numa var (não em canais RGB) e ainda aceita opacidade
+// (`bg-success/10`): success/danger seguem a cor que o usuário escolheu em
+// Preferências, e essa escolha é um `var(--dashboard-*)`, não três números.
+const mixed = (cssVar: string) => `color-mix(in srgb, var(${cssVar}) calc(<alpha-value> * 100%), transparent)`;
+
 export default {
     darkMode: ["class"],
     content: [
@@ -30,29 +35,43 @@ export default {
                 zinc: Object.fromEntries(
                     [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((n) => [n, `rgb(var(--zinc-${n}) / <alpha-value>)`])
                 ),
+                // Tokens semânticos — ver index.css. `accent` (alias `primary`)
+                // é ação e seleção; success/danger, ganho e perda; pending,
+                // pendente e atenção; muted, neutro (anulada, zero).
                 primary: {
-                    DEFAULT: 'var(--color-accent)',
+                    DEFAULT: 'rgb(var(--rgb-accent) / <alpha-value>)',
                     foreground: 'var(--color-bg)'
                 },
+                success: {
+                    DEFAULT: mixed('--color-success'),
+                    foreground: 'var(--color-bg)',
+                    // Fundo de botão cheio com rótulo branco.
+                    solid: 'rgb(var(--rgb-success-solid) / <alpha-value>)'
+                },
+                danger: {
+                    DEFAULT: mixed('--color-danger'),
+                    foreground: 'var(--color-text)',
+                    solid: 'rgb(var(--rgb-danger-solid) / <alpha-value>)'
+                },
+                pending: 'rgb(var(--rgb-pending) / <alpha-value>)',
+                cashout: 'rgb(var(--rgb-cashout) / <alpha-value>)',
                 secondary: {
                     DEFAULT: 'var(--color-surface)',
                     foreground: 'var(--color-text)'
                 },
-                destructive: {
-                    DEFAULT: 'rgb(var(--rgb-negative) / <alpha-value>)',
-                    foreground: 'var(--color-text)'
-                },
                 muted: {
-                    DEFAULT: 'var(--color-surface)',
+                    DEFAULT: 'rgb(var(--rgb-muted) / <alpha-value>)',
+                    // Placeholder do shadcn (Input/Select): segue como estava.
                     foreground: 'color-mix(in srgb, var(--color-text) 55%, transparent)'
                 },
                 accent: {
-                    DEFAULT: 'var(--color-accent)',
+                    // Canais RGB: com 'var(--color-accent)' (hex) os ~48
+                    // `bg-accent/15`, `border-accent/25` etc. não geravam CSS.
+                    DEFAULT: 'rgb(var(--rgb-accent) / <alpha-value>)',
                     foreground: 'var(--color-bg)',
                     // Par de leitura do accent: o DEFAULT e superficie (texto
                     // branco por cima) e este e texto/link sobre fundo escuro.
-                    // Ja existia como CSS var, faltava registrar como cor.
-                    text: 'var(--color-accent-text)',
+                    text: 'rgb(var(--rgb-accent-text) / <alpha-value>)',
                     2: 'var(--color-accent-2)',
                     100: 'var(--color-accent-100)',
                     200: 'var(--color-accent-200)',
@@ -72,12 +91,6 @@ export default {
                     DEFAULT: 'rgb(var(--rgb-surface) / <alpha-value>)',
                     foreground: 'var(--color-text)'
                 },
-                success: {
-                    DEFAULT: 'rgb(var(--rgb-positive) / <alpha-value>)',
-                    foreground: 'var(--color-bg)'
-                },
-                positive: 'rgb(var(--rgb-positive) / <alpha-value>)',
-                negative: 'rgb(var(--rgb-negative) / <alpha-value>)',
                 neutral: {
                     100: 'var(--color-neutral-100)',
                     200: 'var(--color-neutral-200)',
@@ -88,11 +101,6 @@ export default {
                     700: 'var(--color-neutral-700)',
                     800: 'var(--color-neutral-800)',
                     900: 'var(--color-neutral-900)'
-                },
-                chart: {
-                    green: 'rgb(var(--rgb-positive) / <alpha-value>)',
-                    red: 'rgb(var(--rgb-negative) / <alpha-value>)',
-                    blue: 'var(--color-accent)'
                 },
                 sidebar: {
                     DEFAULT: 'var(--color-surface)',

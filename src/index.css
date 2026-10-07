@@ -14,8 +14,14 @@
     --rgb-surface: 19 19 22;
     --rgb-surface-2: 28 28 32;
     --rgb-text: 242 242 244;
-    --rgb-positive: 74 222 158;
-    --rgb-negative: 240 121 126;
+    /* Tokens semanticos de cor (Tailwind: accent/primary, pending, muted).
+       accent = acao e selecao; pending = aposta pendente e "atencao";
+       muted = neutro (anulada, zero). Ganho/perda (success/danger) ficam mais
+       abaixo, porque seguem a cor escolhida em Preferencias. */
+    --rgb-accent: 37 99 235;
+    --rgb-accent-text: 59 130 246;
+    --rgb-pending: 251 191 36;
+    --rgb-muted: 113 113 122;
 
     /* Escala zinc do Tailwind em variavel: no tema claro ela inverte, entao os
        ~300 text-zinc-400/500 (texto secundario) continuam legiveis sem trocar
@@ -42,9 +48,11 @@
        tom nao serve os dois: `--color-accent` e superficie (texto branco por
        cima, 5.17:1) e `--color-accent-text` e texto/link sobre fundo escuro
        (5.41:1 no fundo mais claro). O blue-600 como texto daria 3.29:1. */
-    --color-accent: #2563eb;
-    --color-accent-text: #3b82f6;
+    --color-accent: rgb(var(--rgb-accent));
+    --color-accent-text: rgb(var(--rgb-accent-text));
     --color-accent-2: #3b82f6;
+    --color-pending: rgb(var(--rgb-pending));
+    --color-muted: rgb(var(--rgb-muted));
     --color-divider: rgba(255, 255, 255, 0.1);
 
     --color-neutral-100: #f2f2f4;
@@ -71,7 +79,7 @@
     --color-section-glow: #16161b;
     --color-section-ghost: #202028;
 
-    /* Paleta controlada do dashboard. Defaults iguais a text-positive/negative. */
+    /* Paleta controlada do dashboard. Defaults iguais a text-success/danger. */
     --dashboard-positive: #4ade9e;
     --dashboard-negative: #f0797e;
     --dashboard-emerald: #6ee7b7;
@@ -81,12 +89,20 @@
     --dashboard-orange: #fdba74;
     --dashboard-pink: #f9a8d4;
 
-    --color-positive: #3ddc84;
-    --color-negative: #f2555c;
-
-    /* Botão/CTA primário: preenchido quase-branco, não outline de accent. */
-    --color-onlight: #0a0a0b;
-    --color-light: #f2f2f4;
+    /* Ganho/perda do app inteiro. Por padrao e a paleta do dashboard; quem
+       escolheu outra cor em Preferencias tem estas duas sobrescritas no <html>
+       (useResultColorVars). Antes havia dois verdes (#3ddc84 e #4ade9e) e dois
+       vermelhos convivendo. */
+    --color-success: var(--dashboard-positive);
+    --color-danger: var(--dashboard-negative);
+    /* Versao de fundo (botao cheio com rotulo branco): os tons de texto acima,
+       virando fundo, deixam o branco em ~2:1. Nao seguem a preferencia de cor —
+       sao botao de acao, nao leitura de resultado. */
+    --rgb-success-solid: 18 160 92;
+    --rgb-danger-solid: 192 39 46;
+    /* Cashout e o unico status fora do quarteto ganho/perda/pendente/neutro:
+       violeta pra nao se confundir com nenhum deles. */
+    --rgb-cashout: 139 92 246;
 
     --font-heading: "Inter", system-ui, sans-serif;
     --font-body: "Inter", system-ui, sans-serif;
@@ -122,18 +138,11 @@
     --muted-foreground: color-mix(in srgb, var(--color-text) 55%, transparent);
     --accent: var(--color-accent);
     --accent-foreground: var(--color-bg);
-    --destructive: var(--color-negative);
+    --destructive: var(--color-danger);
     --destructive-foreground: var(--color-text);
     --border: var(--color-divider);
     --input: var(--color-divider);
     --ring: var(--color-accent);
-
-    --success: var(--color-positive);
-    --success-foreground: var(--color-bg);
-    --chart-green: var(--color-positive);
-    --chart-red: var(--color-negative);
-    --chart-blue: var(--color-accent);
-    --chart-orange: #f0797e;
 
     --sidebar-background: var(--color-surface);
     --sidebar-foreground: var(--color-text);
@@ -154,9 +163,10 @@
     --rgb-surface: 255 255 255;
     --rgb-surface-2: 236 236 239;
     --rgb-text: 24 24 27;
-    /* Verde/vermelho do escuro sao claros demais pra texto em fundo branco. */
-    --rgb-positive: 5 150 105;
-    --rgb-negative: 220 38 38;
+    --rgb-accent-text: 29 78 216;
+    /* Ambar do escuro some no branco: no claro vai pro amber-700. */
+    --rgb-pending: 180 83 9;
+    --rgb-cashout: 124 58 237;
 
     --zinc-50: 9 9 11;
     --zinc-100: 24 24 27;
@@ -170,7 +180,6 @@
     --zinc-900: 244 244 245;
     --zinc-950: 250 250 250;
 
-    --color-accent-text: #1d4ed8;
     --color-divider: rgba(0, 0, 0, 0.1);
 
     --color-neutral-100: #1a1a1d;
@@ -207,13 +216,6 @@
     --dashboard-coral: #e11d48;
     --dashboard-orange: #c2410c;
     --dashboard-pink: #be185d;
-
-    --color-positive: #059669;
-    --color-negative: #dc2626;
-
-    /* CTA primario: no escuro e quase-branco; no claro, quase-preto. */
-    --color-onlight: #fafafa;
-    --color-light: #18181b;
 
     --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.08);
@@ -529,15 +531,6 @@
   }
 }
 
-/* Tons -300/-400 fixos no JSX foram escolhidos pra fundo escuro; no claro
-   somem no branco. Poucos usos (avisos, status) — troca aqui em vez de
-   espalhar `dark:` pelos componentes. */
-.light .text-amber-400 { color: #b45309; }
-.light .border-amber-400 { border-color: #d97706; }
-.light .text-red-400 { color: #dc2626; }
-.light .text-green-400,
-.light .text-emerald-400 { color: #059669; }
-.light .text-violet-300 { color: #7c3aed; }
 
 /* Intervalo do PeriodCalendarSheet (sheets de período no mobile). Fica aqui e
    não em classes do Tailwind porque são camadas: o início/fim é um círculo

@@ -12,7 +12,7 @@ import {
   TipStakeFields,
 } from "./tip-planilhar-form";
 import { useTipPlanilhar } from "./use-tip-planilhar";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
 
 // Você volta da casa e responde uma pergunta só: apostou quanto? A stake já
@@ -56,12 +56,12 @@ export function TipPlanilharSheet({
         <div className="space-y-1">
           <Button
             size="lg"
-            className="h-12 w-full border-transparent bg-[#12a05c] text-base text-white hover:bg-[#0e8a4e]"
+            className="h-12 w-full border-transparent bg-success-solid text-base text-white hover:bg-success-solid/90"
             disabled={!form.valid || busy}
             onClick={() => onConfirm(form.overrides())}
           >
             <Check size={16} weight="bold" />
-            {busy ? "Planilhando…" : `Planilhar ${form.valid ? formatCurrency(form.stakeValue) : ""}`}
+            {busy ? "Planilhando…" : `Planilhar ${form.valid ? formatMoney(form.stakeValue) : ""}`}
           </Button>
 
           <div className="flex">
@@ -76,7 +76,7 @@ export function TipPlanilharSheet({
               type="button"
               disabled={busy}
               onClick={onDismiss}
-              className="flex-1 py-3 text-center text-sm text-[#e5484d] hover:text-[#f26b6f] disabled:opacity-45"
+              className="flex-1 py-3 text-center text-sm text-danger hover:text-danger/80 disabled:opacity-45"
             >
               Não deu · caiu
             </button>

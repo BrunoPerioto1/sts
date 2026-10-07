@@ -49,7 +49,7 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
       />
 
       {locked && (
-        <p className="text-sm text-negative -mt-1">
+        <p className="text-sm text-danger -mt-1">
           Muitas tentativas. Tente de novo em {formatCountdown(lockRemainingMs)}.
         </p>
       )}

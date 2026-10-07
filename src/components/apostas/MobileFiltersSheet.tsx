@@ -116,7 +116,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
       }
       footer={
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="min-h-[44px] px-4" onClick={handleClear}>
+          <Button variant="secondary" className="min-h-[44px] px-4" onClick={handleClear}>
             Limpar
           </Button>
           <Button className="flex-1 min-h-[44px]" onClick={handleApply}>

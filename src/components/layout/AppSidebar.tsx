@@ -150,7 +150,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
     >
       <div className={cn("flex items-center mb-7 px-1.5", collapsed ? "justify-center" : "justify-between")}>
         <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg border border-accent bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg border border-accent bg-accent/[0.12] flex items-center justify-center shrink-0">
             <ChartLineUp size={18} className="text-accent-text" />
           </div>
           {!collapsed && (
@@ -207,7 +207,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                     "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
                     collapsed ? "justify-center px-0" : "px-3",
                     isActive
-                      ? "bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] text-accent-text"
+                      ? "bg-accent/[0.16] text-accent-text"
                       : "text-foreground/65 hover:bg-foreground/[0.06] hover:text-foreground",
                   )}
                 >
@@ -225,7 +225,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                         <span
                           className={cn(
                             "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-                            item.badgeHighlight ? "bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] text-accent-text" : "bg-foreground/[0.08] text-foreground/70",
+                            item.badgeHighlight ? "bg-accent/[0.22] text-accent-text" : "bg-foreground/[0.08] text-foreground/70",
                           )}
                         >
                           {badge}

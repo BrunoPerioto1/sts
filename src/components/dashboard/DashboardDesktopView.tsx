@@ -9,7 +9,7 @@ import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { stagger } from "@/lib/motion";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { DashboardProfitHero, daysSummary } from "./DashboardProfitHero";
@@ -113,20 +113,20 @@ export function DashboardDesktopView({
               label="Melhor dia"
               value={
                 bestDay
-                  ? `${formatSignedCurrency(bestDay.profitDay)} · ${format(parseISO(bestDay.date), "d MMM", { locale: ptBR })}`
+                  ? `${formatMoney(bestDay.profitDay, { signed: true })} · ${format(parseISO(bestDay.date), "d MMM", { locale: ptBR })}`
                   : "—"
               }
-              color={bestDay && bestDay.profitDay > 0 ? "var(--color-positive)" : undefined}
+              color={bestDay && bestDay.profitDay > 0 ? "var(--color-success)" : undefined}
             />
             {/* "Volume apostado" saiu daqui: repetia o KPI "Total apostado" logo abaixo. */}
             <StatRow
               label="Pior dia"
               value={
                 worstDay && worstDay.profitDay < 0
-                  ? `${formatSignedCurrency(worstDay.profitDay)} · ${format(parseISO(worstDay.date), "d MMM", { locale: ptBR })}`
+                  ? `${formatMoney(worstDay.profitDay, { signed: true })} · ${format(parseISO(worstDay.date), "d MMM", { locale: ptBR })}`
                   : "—"
               }
-              color={worstDay && worstDay.profitDay < 0 ? "var(--color-negative)" : undefined}
+              color={worstDay && worstDay.profitDay < 0 ? "var(--color-danger)" : undefined}
             />
           </div>
         </div>
@@ -138,10 +138,10 @@ export function DashboardDesktopView({
             hasData ? (
               <div className="flex items-center gap-4 text-[11px] text-zinc-400">
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-positive" /> Ganho
+                  <span className="h-2 w-2 rounded-sm bg-success" /> Ganho
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-negative" /> Perda
+                  <span className="h-2 w-2 rounded-sm bg-danger" /> Perda
                 </span>
               </div>
             ) : undefined
@@ -181,7 +181,7 @@ export function DashboardDesktopView({
           right={
             bankroll.length > 0 ? (
               <span className="text-[13px] text-zinc-300 tabular-nums">
-                {formatCurrency(bankroll[0].balance)} → {formatCurrency(bankroll[bankroll.length - 1].balance)}
+                {formatMoney(bankroll[0].balance)} → {formatMoney(bankroll[bankroll.length - 1].balance)}
               </span>
             ) : undefined
           }

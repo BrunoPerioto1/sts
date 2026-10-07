@@ -53,7 +53,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
             "border transition-colors outline-none",
             "placeholder:text-zinc-600",
             "focus:ring-2 focus:ring-accent/25",
-            error ? "border-negative focus:border-negative" : "border-foreground/[0.14] focus:border-accent",
+            error ? "border-danger focus:border-danger" : "border-foreground/[0.14] focus:border-accent",
             (isPassword || valid) && "pr-11"
           )}
         />
@@ -80,7 +80,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
       </div>
 
       {error && (
-        <p id={errorId} className="flex items-start gap-1.5 text-sm text-negative">
+        <p id={errorId} className="flex items-start gap-1.5 text-sm text-danger">
           <WarningCircle size={15} weight="fill" className="shrink-0 mt-[3px]" />
           <span>{error}</span>
         </p>

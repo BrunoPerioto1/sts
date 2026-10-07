@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { centsToDisplay, formatCurrency } from "@/lib/format";
+import { centsToDisplay, formatMoney } from "@/lib/format";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { createTransaction, getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-transaction";
 import { HouseDialog } from "./HouseDialog";
@@ -114,15 +114,15 @@ export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: Nova
             />
             <span className="text-xs opacity-45 shrink-0 whitespace-nowrap">
               {isAdjust && typed
-                ? `Ajuste ${diff > 0 ? "+" : ""}${formatCurrency(diff)}`
+                ? `Ajuste ${diff > 0 ? "+" : ""}${formatMoney(diff)}`
                 : isAdjust
-                  ? `Disponível ${formatCurrency(available)}`
-                  : `Saldo atual ${formatCurrency(house.realHouseBalance)}`}
+                  ? `Disponível ${formatMoney(available)}`
+                  : `Saldo atual ${formatMoney(house.realHouseBalance)}`}
             </span>
           </div>
           {isAdjust && openStake > 0 && (
             <p className="text-xs opacity-45 mt-1.5">
-              Digite o saldo disponível que a casa mostra. {formatCurrency(openStake)} em apostas abertas já ficam de fora.
+              Digite o saldo disponível que a casa mostra. {formatMoney(openStake)} em apostas abertas já ficam de fora.
             </p>
           )}
         </div>

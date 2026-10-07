@@ -96,7 +96,7 @@ export function TipsBulkActionBar({
             label="Planilhar"
             onClick={onPlanilhar}
             disabled={loading}
-            className="bg-green-500/[0.12] border border-green-500/25 text-green-400 hover:bg-green-500/20"
+            className="bg-success/[0.12] border border-success/25 text-success hover:bg-success/20"
           />
           <BulkActionButton
             icon={XCircle}
@@ -104,7 +104,7 @@ export function TipsBulkActionBar({
             onClick={onDismiss}
             disabled={loading}
             pending={loading}
-            className="bg-red-500/[0.12] border border-red-500/25 text-red-400 hover:bg-red-500/20"
+            className="bg-danger/[0.12] border border-danger/25 text-danger hover:bg-danger/20"
           />
         </div>
       ) : (

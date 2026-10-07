@@ -74,7 +74,7 @@ function HouseRow({ house }: { house: AdminHouse }) {
           <Button size="sm" disabled={pending} onClick={saveEdit}>
             Salvar
           </Button>
-          <Button variant="outline" size="sm" onClick={cancelEdit}>
+          <Button variant="secondary" size="sm" onClick={cancelEdit}>
             Cancelar
           </Button>
         </div>
@@ -212,7 +212,7 @@ function NewHouseForm({ onDone }: { onDone: () => void }) {
         <Button type="submit" size="sm" disabled={create.isPending || !name.trim()}>
           Cadastrar
         </Button>
-        <Button type="button" variant="outline" size="sm" onClick={onDone} aria-label="Cancelar">
+        <Button type="button" variant="secondary" size="sm" onClick={onDone} aria-label="Cancelar">
           <X size={14} />
         </Button>
       </div>
@@ -307,7 +307,7 @@ export function AdminHouses() {
           bare
           title="Não foi possível carregar as casas"
           action={
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <Button variant="secondary" size="sm" onClick={() => void refetch()}>
               Tentar de novo
             </Button>
           }

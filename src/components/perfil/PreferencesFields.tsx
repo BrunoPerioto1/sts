@@ -1,8 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { formatCurrency } from "@/lib/format";
-import { parsePtBrNumber } from "@/lib/format";
+import { formatMoney, parsePtBrNumber } from "@/lib/format";
 import { THRESHOLD_MAX, THRESHOLD_MIN, toPtBr, type usePreferencesForm } from "@/hooks/use-preferences-form";
 import { DEFAULT_STALE_BET_DAYS } from "@/lib/house-activity";
 
@@ -37,10 +36,10 @@ export function PreferencesFields({
           />
         </div>
         {form.stakeError ? (
-          <p className="text-sm text-negative">{form.stakeError}</p>
+          <p className="text-sm text-danger">{form.stakeError}</p>
         ) : (
           <p className="text-sm text-zinc-500">
-            {bankroll > 0 ? `1 U = ${formatCurrency(bankroll / 100)} · 1% da banca.` : "Informe sua banca. Uma unidade (1 U) equivale a 1% desse valor."}
+            {bankroll > 0 ? `1 U = ${formatMoney(bankroll / 100)} · 1% da banca.` : "Informe sua banca. Uma unidade (1 U) equivale a 1% desse valor."}
           </p>
         )}
       </div>
@@ -63,11 +62,11 @@ export function PreferencesFields({
           <span>{THRESHOLD_MAX}%</span>
         </div>
         {form.thresholdError ? (
-          <p className="text-sm text-negative">{form.thresholdError}</p>
+          <p className="text-sm text-danger">{form.thresholdError}</p>
         ) : (
           <p className="text-sm text-zinc-500">
             {thresholdInReais != null
-              ? `Equivale a ${formatCurrency(thresholdInReais)} de stake. Sinal abaixo disso não vira notificação.`
+              ? `Equivale a ${formatMoney(thresholdInReais)} de stake. Sinal abaixo disso não vira notificação.`
               : "Só recebe notificação do bot quando o sinal indicar stake acima desta porcentagem da banca."}
           </p>
         )}
@@ -86,7 +85,7 @@ export function PreferencesFields({
           <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base text-zinc-500 pointer-events-none">dias</span>
         </div>
         {form.staleDaysError ? (
-          <p className="text-sm text-negative">{form.staleDaysError}</p>
+          <p className="text-sm text-danger">{form.staleDaysError}</p>
         ) : (
           <p className="text-sm text-zinc-500">
             Casa com saldo e sem apostas há mais que isso ganha o aviso "sacar" na lista de casas.

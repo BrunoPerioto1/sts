@@ -8,7 +8,7 @@ import { useSports, findSport } from "@/hooks/queries/use-sports";
 import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 import { type BetItem } from "@/api/routes/get-bets";
@@ -220,14 +220,14 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
         )}
 
         {potentialReturn && (
-          <div className="grid grid-cols-2 gap-3 rounded-xl border border-positive/20 bg-positive/[0.07] p-3">
+          <div className="grid grid-cols-2 gap-3 rounded-xl border border-success/20 bg-success/[0.07] p-3">
             <div>
               <p className={fieldLabel}>Possível ganho</p>
-              <p className="text-xl font-semibold tabular-nums text-positive">{formatCurrency(potentialReturn.total)}</p>
+              <p className="text-xl font-semibold tabular-nums text-success">{formatMoney(potentialReturn.total)}</p>
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-xl font-semibold tabular-nums text-foreground">+{formatCurrency(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-foreground">+{formatMoney(potentialReturn.profit)}</p>
             </div>
           </div>
         )}

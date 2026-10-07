@@ -201,7 +201,7 @@ export function DashboardSettingsDesktop() {
               <p className="text-[13px] text-zinc-400 mb-2">Adicionar ao dashboard</p>
               <div className="flex flex-wrap gap-2">
                 {hidden.map((kpi) => (
-                  <Button key={kpi.id} variant="outline" size="sm" className="gap-1.5" disabled={saving} onClick={() => add(kpi)}>
+                  <Button key={kpi.id} variant="secondary" size="sm" className="gap-1.5" disabled={saving} onClick={() => add(kpi)}>
                     <Plus size={13} /> {DASHBOARD_KPI_REGISTRY[kpi.id].label}
                   </Button>
                 ))}
@@ -249,7 +249,7 @@ export function DashboardSettingsDesktop() {
 
         <div className="mt-8 flex items-center gap-3">
           <Button variant="ghost" size="sm" className="text-zinc-400" disabled={saving} onClick={() => setRestoreOpen(true)}>Restaurar padrão</Button>
-          <p role="status" className={cn("text-xs", error ? "text-negative" : "text-zinc-500")}>
+          <p role="status" className={cn("text-xs", error ? "text-danger" : "text-zinc-500")}>
             {saving ? "Salvando…" : error ? "Alteração não salva. A configuração anterior foi mantida." : ""}
           </p>
         </div>

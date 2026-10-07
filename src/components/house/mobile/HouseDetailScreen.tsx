@@ -4,7 +4,7 @@ import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatMoney, formatInt, formatPercent } from "@/lib/format";
 
 function StatRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
@@ -32,9 +32,9 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
   const settledBets = Number(house.settledBets ?? Math.max(0, totalBets - Number(house.pendingBets)));
   // Sobre ganhas + perdidas: "encerradas" inclui cashout, que nao e' acerto nem erro.
   const decided = Number(house.wonBets) + Number(house.lostBets);
-  const hitRate = decided > 0 ? (Number(house.wonBets) / decided) * 100 : 0;
+  const hitRate = decided > 0 ? Number(house.wonBets) / decided : 0;
   // Lucro / stake liquidado, calculado na API (mesma base do dashboard).
-  const roi = Number(house.roi ?? 0) * 100;
+  const roi = Number(house.roi ?? 0);
 
   // Portal pro body: essa tela e um overlay de tela cheia, mas era montada
   // dentro do <div className="space-y-4"> do CasasMobileView — e o space-y do
@@ -61,21 +61,21 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6">
         <div>
           <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo atual</p>
-          <p className="text-3xl font-semibold tabular-nums">{formatCurrency(Math.max(0, realBalance))}</p>
-          <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-positive" : "text-negative"}`}>
-            {formatSignedCurrency(profit)} de lucro · ROI {roi.toFixed(1)}%
+          <p className="text-3xl font-semibold tabular-nums">{formatMoney(Math.max(0, realBalance))}</p>
+          <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-success" : "text-danger"}`}>
+            {formatMoney(profit, { signed: true })} de lucro · ROI {formatPercent(roi)}
           </p>
         </div>
 
         <div className="mt-5 border-t border-border divide-y divide-border">
-          {realBalance < 0 && <StatRow label="A conferir" value={formatCurrency(realBalance)} valueClass="text-negative" />}
-          <StatRow label="Volume apostado" value={formatCurrency(Number(house.totalStake))} />
-          <StatRow label="Depósitos" value={formatCurrency(Number(house.totalDeposit))} />
-          <StatRow label="Saques" value={formatCurrency(Number(house.totalWithdrawal))} />
-          <StatRow label="Apostas encerradas" value={String(settledBets)} />
-          <StatRow label="Apostas abertas" value={String(house.pendingBets)} />
-          <StatRow label="Taxa de acerto" value={`${hitRate.toFixed(1)}%`} />
-          <StatRow label="Lucro em apostas" value={formatCurrency(profit)} valueClass={profit >= 0 ? "text-positive" : "text-negative"} />
+          {realBalance < 0 && <StatRow label="A conferir" value={formatMoney(realBalance)} valueClass="text-danger" />}
+          <StatRow label="Volume apostado" value={formatMoney(Number(house.totalStake))} />
+          <StatRow label="Depósitos" value={formatMoney(Number(house.totalDeposit))} />
+          <StatRow label="Saques" value={formatMoney(Number(house.totalWithdrawal))} />
+          <StatRow label="Apostas encerradas" value={formatInt(settledBets)} />
+          <StatRow label="Apostas abertas" value={formatInt(house.pendingBets)} />
+          <StatRow label="Taxa de acerto" value={formatPercent(hitRate)} />
+          <StatRow label="Lucro em apostas" value={formatMoney(profit)} valueClass={profit >= 0 ? "text-success" : "text-danger"} />
         </div>
       </div>
 
@@ -90,14 +90,14 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           Nova movimentação
         </Button>
         <div className={house.websiteUrl ? "grid grid-cols-3 gap-2" : "grid grid-cols-2 gap-2"}>
-          <Button variant="outline" className="min-h-[44px]" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
+          <Button variant="secondary" className="min-h-[44px]" onClick={() => navigate(`/bets?houseId=${house.houseId}&period=tudo`)}>
             Ver apostas
           </Button>
-          <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenHistory(house)}>
+          <Button variant="secondary" className="min-h-[44px]" onClick={() => onOpenHistory(house)}>
             Histórico
           </Button>
           {house.websiteUrl && (
-            <Button asChild variant="outline" className="min-h-[44px] gap-1.5">
+            <Button asChild variant="secondary" className="min-h-[44px] gap-1.5">
               <a href={house.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Abrir site da ${house.houseName}`}>
                 Site <ArrowSquareOut size={15} />
               </a>

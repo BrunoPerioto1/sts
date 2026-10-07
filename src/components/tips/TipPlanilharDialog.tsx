@@ -85,7 +85,7 @@ export function TipPlanilharDialog({
 
         <div className="space-y-2">
           <Button
-            className="h-11 w-full border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
+            className="h-11 w-full border-transparent bg-success-solid text-white hover:bg-success-solid/90"
             disabled={!form.valid || busy}
             onClick={() => onConfirm(form.overrides())}
           >
@@ -95,14 +95,14 @@ export function TipPlanilharDialog({
 
           <div className="flex gap-2">
             <Button
-              className="flex-1 border-transparent bg-[#c0272e] text-white hover:bg-[#a71f26] hover:text-white"
+              className="flex-1 border-transparent bg-danger-solid text-white hover:bg-danger-solid/90 hover:text-white"
               disabled={busy}
               onClick={onDismiss}
             >
               <XCircle size={15} weight="bold" /> Caiu
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               className="flex-1"
               onClick={() => form.setEditing((v) => !v)}
             >

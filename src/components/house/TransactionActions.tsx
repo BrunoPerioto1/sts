@@ -19,7 +19,7 @@ import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
-import { centsToDisplay, formatSignedCurrency } from "@/lib/format";
+import { centsToDisplay, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HouseDialog } from "./HouseDialog";
 
@@ -146,7 +146,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
             aria-label={negative ? "Ajuste tira saldo (tocar para somar)" : "Ajuste soma saldo (tocar para tirar)"}
             className={cn(
               "self-center rounded-md border px-2 py-0.5 text-sm font-semibold tabular-nums transition-colors",
-              negative ? "border-negative/40 text-negative" : "border-positive/40 text-positive",
+              negative ? "border-danger/40 text-danger" : "border-success/40 text-success",
             )}
           >
             {negative ? "−" : "+"}
@@ -163,11 +163,11 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
           className="h-auto min-h-0 min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl tabular-nums hover:border-0 focus-visible:border-0 focus-visible:outline-none"
         />
         <span className="shrink-0 whitespace-nowrap text-xs opacity-45">
-          Antes {formatSignedCurrency(Number(tx.value))}
+          Antes {formatMoney(Number(tx.value), { signed: true })}
         </span>
       </div>
       {valid && (
-        <p className="mt-1.5 text-xs tabular-nums opacity-45">Fica no histórico como {formatSignedCurrency(preview)}</p>
+        <p className="mt-1.5 text-xs tabular-nums opacity-45">Fica no histórico como {formatMoney(preview, { signed: true })}</p>
       )}
     </div>
   );
@@ -188,7 +188,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={openEdit}>Corrigir</DropdownMenuItem>
-          <DropdownMenuItem className="text-negative" onClick={() => setConfirmDelete(true)}>Excluir</DropdownMenuItem>
+          <DropdownMenuItem className="text-danger" onClick={() => setConfirmDelete(true)}>Excluir</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -254,7 +254,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir esta movimentação?</AlertDialogTitle>
             <AlertDialogDescription>
-              {formatSignedCurrency(Number(tx.value))} sai do histórico e o saldo real da casa é recalculado sem ela.
+              {formatMoney(Number(tx.value), { signed: true })} sai do histórico e o saldo real da casa é recalculado sem ela.
               Não dá pra desfazer.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -266,7 +266,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
                 e.preventDefault();
                 void remove();
               }}
-              className="bg-negative text-white hover:bg-negative/90"
+              className="bg-danger text-white hover:bg-danger/90"
             >
               Excluir
             </AlertDialogAction>

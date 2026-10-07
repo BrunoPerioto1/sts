@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowSquareOut, DotsThreeOutline, Plus } from "@phosphor-icons/react";
 import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { cn } from "@/lib/utils";
-import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { colorForHouse, initialsOf, formatMoney } from "@/lib/format";
 import { formatIdleDays, houseActivity } from "@/lib/house-activity";
 import { HouseActivityBadge } from "./HouseActivityBadge";
 import { houseMoney } from "@/lib/house-groups";
@@ -66,12 +66,12 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
         <div className="flex min-w-0 items-center gap-2 text-xs">
           <p className="min-w-0 truncate">
             <span className="opacity-45">
-              {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatCurrency(stake)}
-              {open > 0 && <> · {formatCurrency(open)} em aberto</>}
+              {bets} {bets === 1 ? "aposta" : "apostas"} · Stake {formatMoney(stake)}
+              {open > 0 && <> · {formatMoney(open)} em aberto</>}
             </span>
             {shortfall < 0 && (
-              <span className="text-negative">
-                <span className="opacity-45 text-foreground"> · </span>a conferir {formatCurrency(shortfall)}
+              <span className="text-danger">
+                <span className="opacity-45 text-foreground"> · </span>a conferir {formatMoney(shortfall)}
               </span>
             )}
           </p>
@@ -90,18 +90,18 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
       {/* A barra é o que faz a lista ser lida de relance: compara saldos sem
           o olho ter que ler número por número. */}
       <div className="h-[3px] rounded-full bg-foreground/[0.08] overflow-hidden">
-        <div className={cn("h-full rounded-full", shortfall < 0 ? "bg-negative" : "bg-accent")} style={{ width: `${width}%` }} />
+        <div className={cn("h-full rounded-full", shortfall < 0 ? "bg-danger" : "bg-accent")} style={{ width: `${width}%` }} />
       </div>
 
       <span className="text-right">
         <span
           className={cn("block text-sm tabular-nums", balance === 0 && "opacity-45")}
-          title={open > 0 ? `Disponível · ${formatCurrency(open)} em apostas abertas` : "Disponível"}
+          title={open > 0 ? `Disponível · ${formatMoney(open)} em apostas abertas` : "Disponível"}
         >
-          {formatCurrency(balance)}
+          {formatMoney(balance)}
         </span>
-        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
-          {formatSignedCurrency(profit)}
+        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-success" : "text-danger")}>
+          {formatMoney(profit, { signed: true })}
         </span>
       </span>
 
@@ -110,7 +110,7 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
         {activity.kind === "never" ? (
           <span className="opacity-45">—</span>
         ) : (
-          <span className={activity.kind === "withdraw" ? "text-amber-400" : "opacity-45"}>
+          <span className={activity.kind === "withdraw" ? "text-pending" : "opacity-45"}>
             aposta {formatIdleDays(activity.days)}
           </span>
         )}

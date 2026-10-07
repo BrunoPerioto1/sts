@@ -3,7 +3,7 @@ import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 interface HouseActionsSheetProps {
   house: HouseBalanceDto | null;
@@ -36,14 +36,14 @@ export function HouseActionsSheet({ house, onClose, onNewTransaction, onViewBets
       }}
       title={house.houseName}
       footer={
-        <Button variant="outline" className="w-full min-h-[44px]" onClick={onClose}>
+        <Button variant="secondary" className="w-full min-h-[44px]" onClick={onClose}>
           Fechar
         </Button>
       }
     >
       <div className="pb-4">
         <p className="text-sm text-zinc-500 -mt-1 mb-2">
-          {formatCurrency(Number(house.realHouseBalance))} · {house.totalBets} aposta{Number(house.totalBets) === 1 ? "" : "s"}
+          {formatMoney(Number(house.realHouseBalance))} · {house.totalBets} aposta{Number(house.totalBets) === 1 ? "" : "s"}
         </p>
 
         <div className="flex flex-col gap-1">

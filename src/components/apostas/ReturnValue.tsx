@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { mapResultToStatus } from "@/lib/bet-status";
 import { useAnimatedNumber } from "@/hooks/use-animated-number";
 import type { BetItem } from "@/api/routes/get-bets";
@@ -13,17 +13,17 @@ export function ReturnValue({ aposta, className }: { aposta: BetItem; className?
 
   if (status === "pendente") return <span className={cn("opacity-35 tabular-nums whitespace-nowrap", className)}>—</span>;
   if (status === "cancelada")
-    return <span className={cn("opacity-55 tabular-nums whitespace-nowrap", className)}>{formatCurrency(Number(aposta.stake ?? 0))}</span>;
+    return <span className={cn("opacity-55 tabular-nums whitespace-nowrap", className)}>{formatMoney(Number(aposta.stake ?? 0))}</span>;
   return (
     <span
       className={cn(
         "inline-block tabular-nums font-medium whitespace-nowrap",
-        lucro >= 0 ? "text-positive" : "text-negative",
+        lucro >= 0 ? "text-success" : "text-danger",
         animating && "animate-value-pop",
         className
       )}
     >
-      {formatSignedCurrency(display)}
+      {formatMoney(display, { signed: true })}
     </span>
   );
 }

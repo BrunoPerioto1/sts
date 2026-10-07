@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime, kickoffParts } from "@/lib/format";
+import { formatMoney, formatTime, kickoffParts, formatOdd, formatPercent } from "@/lib/format";
 import { TIP_TIMING_TONE_CLASS, tipTiming, type TipTimingTone } from "@/lib/tip-schedule";
 import { TipKickoffBadge } from "./TipKickoffBadge";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
@@ -144,13 +144,11 @@ export function TipRowDesktop({
     // Marcada pra lote: mesmo padrão das linhas de Apostas — fundo azul leve
     // cobrindo a linha inteira (checkbox incluso), sem contorno nem barra, e o
     // checkbox como indicador principal. Seleção clara, não dominante.
-    // color-mix e não bg-accent/[x]: o accent é var() e o Tailwind 3 não gera
-    // a opacidade (a classe saía vazia e sobrava só o ring padrão, azul forte).
     <div
       className={cn(
         "group flex items-center rounded-md transition-colors duration-150",
         checked
-          ? "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)]"
+          ? "bg-accent/[0.1] hover:bg-accent/[0.14]"
           : "hover:bg-foreground/[0.025]",
       )}
     >
@@ -161,7 +159,7 @@ export function TipRowDesktop({
           <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)}
             onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
             aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`}
-            className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-positive)_62%,var(--color-bg))]" />
+            className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-success)_62%,var(--color-bg))]" />
         </div>
       )}
       <button
@@ -201,15 +199,15 @@ export function TipRowDesktop({
       <span className="line-clamp-2 text-sm leading-tight opacity-70">{tip.house ?? "—"}</span>
 
       <span className="text-right text-sm font-medium tabular-nums">
-        {tip.odd?.toFixed(2) ?? "—"}
+        {tip.odd != null ? formatOdd(tip.odd) : "—"}
       </span>
 
       <span className="text-right text-sm tabular-nums opacity-70">
-        {tip.recommendedStake !== null ? formatCurrency(tip.recommendedStake) : "—"}
+        {tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "—"}
       </span>
 
       <span className="text-right text-xs font-medium tabular-nums text-zinc-400">
-        {tip.percent !== null ? `${tip.percent.toFixed(2).replace(".", ",")}%` : "—"}
+        {tip.percent !== null ? formatPercent(tip.percent / 100, { decimals: 2 }) : "—"}
       </span>
 
       <span>

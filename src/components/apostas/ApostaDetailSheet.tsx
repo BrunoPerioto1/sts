@@ -3,7 +3,7 @@ import { CheckCircle, PencilSimple, Copy, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDate, formatSignedCurrency, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatDate, formatTime, formatOdd } from "@/lib/format";
 import { colorByResultId, mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -56,8 +56,8 @@ export function ApostaDetailSheet({
 
         <div>
           <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>
-          <p className={cn("text-2xl font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-positive" : "text-negative")}>
-            {profit != null ? formatSignedCurrency(profit) : "—"}
+          <p className={cn("text-2xl font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-success" : "text-danger")}>
+            {profit != null ? formatMoney(profit, { signed: true }) : "—"}
           </p>
         </div>
 
@@ -68,11 +68,11 @@ export function ApostaDetailSheet({
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Valor</p>
-            <p className="text-sm font-medium tabular-nums">{formatCurrency(stake)}</p>
+            <p className="text-sm font-medium tabular-nums">{formatMoney(stake)}</p>
           </div>
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Retorno</p>
-            <p className="text-sm font-medium tabular-nums">{ganho != null ? formatCurrency(ganho) : "—"}</p>
+            <p className="text-sm font-medium tabular-nums">{ganho != null ? formatMoney(ganho) : "—"}</p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export function ApostaDetailSheet({
             <Button
               className={cn(
                 "w-full min-h-[44px] gap-2 border-transparent text-foreground font-bold hover:opacity-90 active:opacity-90",
-                profit == null ? "bg-accent" : profit >= 0 ? "bg-green-600" : "bg-red-600"
+                profit == null ? "bg-accent" : profit >= 0 ? "bg-success-solid" : "bg-danger-solid"
               )}
               style={{ boxShadow: "var(--shadow-sm)" }}
               onClick={() => setLiquidarOpen(true)}
@@ -108,19 +108,19 @@ export function ApostaDetailSheet({
           )}
           <div className="grid grid-cols-3 gap-2">
             {onEdit && (
-              <Button variant="outline" className="gap-1.5" onClick={() => { onEdit(aposta); onClose(); }}>
+              <Button variant="secondary" className="gap-1.5" onClick={() => { onEdit(aposta); onClose(); }}>
                 <PencilSimple size={14} /> Editar
               </Button>
             )}
             {onDuplicate && (
-              <Button variant="outline" className="gap-1.5" onClick={() => { onDuplicate(aposta); onClose(); }}>
+              <Button variant="secondary" className="gap-1.5" onClick={() => { onDuplicate(aposta); onClose(); }}>
                 <Copy size={14} /> Duplicar
               </Button>
             )}
             {onDelete && (
               <Button
-                variant="outline"
-                className="gap-1.5 border-negative/40 text-negative hover:bg-negative/10 hover:text-negative"
+                variant="secondary"
+                className="gap-1.5 border-danger/40 text-danger hover:bg-danger/10 hover:text-danger"
                 onClick={() => { onDelete(aposta.id); onClose(); }}
               >
                 <Trash size={14} /> Excluir

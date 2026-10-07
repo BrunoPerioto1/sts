@@ -17,16 +17,16 @@ import type { AdminOverview } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
 
 const DOT: Record<HealthLevel, string> = {
-  ok: "bg-positive",
+  ok: "bg-success",
   warn: "bg-[var(--dashboard-orange)]",
-  bad: "bg-negative",
+  bad: "bg-danger",
   neutral: "bg-foreground/30",
 };
 
 const VALUE: Record<HealthLevel, string> = {
-  ok: "text-positive",
+  ok: "text-success",
   warn: "text-[var(--dashboard-orange)]",
-  bad: "text-negative",
+  bad: "text-danger",
   neutral: "text-foreground",
 };
 
@@ -187,9 +187,9 @@ function groupLevel(group: Group): HealthLevel {
 }
 
 const RING: Record<HealthLevel, string> = {
-  ok: "shadow-[0_0_0_3px_rgb(var(--rgb-positive)/0.14)]",
+  ok: "shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-success)_14%,transparent)]",
   warn: "shadow-[0_0_0_3px_color-mix(in_srgb,var(--dashboard-orange)_16%,transparent)]",
-  bad: "shadow-[0_0_0_3px_rgb(var(--rgb-negative)/0.16)]",
+  bad: "shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-danger)_16%,transparent)]",
   neutral: "",
 };
 
@@ -270,7 +270,7 @@ function MobileTimeline({ groups }: { groups: Group[] }) {
                       className={cn(
                         "px-3 py-[11px] rounded-[11px] border space-y-0.5",
                         card.level === "bad"
-                          ? "border-negative/25 bg-negative/[0.07]"
+                          ? "border-danger/25 bg-danger/[0.07]"
                           : "border-[var(--dashboard-orange)]/25 bg-[var(--dashboard-orange)]/[0.07]",
                       )}
                     >
@@ -347,7 +347,7 @@ export function PipelineHealth({ data, isPending, isError, onRetry }: PipelineHe
         title="Não foi possível ler o pipeline"
         description="A lista de usuários abaixo continua valendo."
         action={
-          <Button variant="outline" size="sm" onClick={onRetry}>
+          <Button variant="secondary" size="sm" onClick={onRetry}>
             Tentar de novo
           </Button>
         }

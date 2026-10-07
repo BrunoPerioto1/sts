@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { exportAllBetsCsv, exportMonthlyCsv, exportTransactionsCsv } from "@/lib/bet-exports";
+import { formatInt } from "@/lib/format";
 
 export function ExportDataCard({ totalBets }: { totalBets: number }) {
   const [running, setRunning] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function ExportDataCard({ totalBets }: { totalBets: number }) {
   };
 
   const rows = [
-    { label: "Apostas", sub: `${totalBets.toLocaleString("pt-BR")} linhas · todas as casas`, onClick: exportAllBetsCsv },
+    { label: "Apostas", sub: `${formatInt(totalBets)} linhas · todas as casas`, onClick: exportAllBetsCsv },
     { label: "Movimentações", sub: "depósitos, saques e ajustes", onClick: exportTransactionsCsv },
     { label: "Resumo mensal", sub: "lucro e ROI por mês", onClick: exportMonthlyCsv },
   ];
@@ -40,7 +41,7 @@ export function ExportDataCard({ totalBets }: { totalBets: number }) {
             </span>
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               className="gap-2"
               disabled={running !== null}
               onClick={() => void download(row.label, row.onClick)}

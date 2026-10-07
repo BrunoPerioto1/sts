@@ -11,6 +11,7 @@ import { DashboardKpiCard } from "@/components/dashboard/DashboardKpiCard";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
 import { DASHBOARD_KPI_REGISTRY, ICON_IDS, POSITIVE_COLORS, NEGATIVE_COLORS, defaultDashboardPreferences, performanceColor, moveKpi, toggleKpi, type KpiId, type KpiPreference, type DashboardPreferences } from "@/lib/dashboard-preferences";
+import { formatPercent, formatUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SettingsLayout } from "@/components/perfil/SettingsLayout";
@@ -155,12 +156,12 @@ function DashboardPreferencesMobile() {
           <h2 id="preview-title" className="text-base font-semibold">Prévia</h2>
           <p className="text-xs text-zinc-400 mt-1">Valores ilustrativos para comparar positivos e negativos.</p>
           <div className="grid grid-cols-2 auto-rows-fr gap-2.5 mt-3">
-            {([{ id: "roi", value: "+106.1%", signed: 106.1 }, { id: "units", value: "+26,6 U", signed: 26.6 }, { id: "roi", value: "-20.5%", signed: -20.5 }, { id: "units", value: "-5,2 U", signed: -5.2 }] as const).map((tile, index) => <DashboardKpiCard key={index} label={DASHBOARD_KPI_REGISTRY[tile.id].label} value={tile.value} icon={resolveKpiIcon(tile.id, preferences.kpis.find((kpi) => kpi.id === tile.id)!.icon)} color={performanceColor(tile.signed, colors)} />)}
+            {([{ id: "roi", value: formatPercent(1.061, { signed: true }), signed: 1.061 }, { id: "units", value: formatUnits(26.6), signed: 26.6 }, { id: "roi", value: formatPercent(-0.205, { signed: true }), signed: -0.205 }, { id: "units", value: formatUnits(-5.2), signed: -5.2 }] as const).map((tile, index) => <DashboardKpiCard key={index} label={DASHBOARD_KPI_REGISTRY[tile.id].label} value={tile.value} icon={resolveKpiIcon(tile.id, preferences.kpis.find((kpi) => kpi.id === tile.id)!.icon)} color={performanceColor(tile.signed, colors)} />)}
           </div>
         </section>
         <p role="status" className="text-xs text-zinc-400">{saving ? "Salvando…" : error ? "Alteração não salva. A configuração anterior foi mantida." : "Alterações salvas automaticamente."}</p>
-        {error && <p role="alert" className="text-sm text-negative">{error}</p>}
-        <Button variant="outline" className="w-full min-h-11" disabled={saving} onClick={() => setRestoreOpen(true)}>Restaurar Dashboard padrão</Button>
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        <Button variant="secondary" className="w-full min-h-11" disabled={saving} onClick={() => setRestoreOpen(true)}>Restaurar Dashboard padrão</Button>
       </>}
     </div>
     <BottomSheet open={iconKpi !== null} onOpenChange={(open) => { if (!open) setIconKpi(null); }} title={iconKpi ? `Ícone de ${DASHBOARD_KPI_REGISTRY[iconKpi].label}` : "Ícone"} contentClassName="sm:max-w-xl sm:mx-auto">
@@ -174,7 +175,7 @@ function DashboardPreferencesMobile() {
             }}><IconComponent size={22} /><span className="text-[10px] text-zinc-400">{label}</span></button>;
           })}
         </div>
-        <Button variant="outline" disabled={saving} className="w-full mt-4" onClick={() => { void save({ ...preferences, kpis: preferences.kpis.map((kpi) => kpi.id === iconKpi ? { ...kpi, icon: DASHBOARD_KPI_REGISTRY[iconKpi].defaultIcon } : kpi) }); setIconKpi(null); }}>Ícone padrão</Button>
+        <Button variant="secondary" disabled={saving} className="w-full mt-4" onClick={() => { void save({ ...preferences, kpis: preferences.kpis.map((kpi) => kpi.id === iconKpi ? { ...kpi, icon: DASHBOARD_KPI_REGISTRY[iconKpi].defaultIcon } : kpi) }); setIconKpi(null); }}>Ícone padrão</Button>
       </div>}
     </BottomSheet>
     <BottomSheet open={colorSide !== null} onOpenChange={(open) => { if (!open) setColorSide(null); }} title={colorSide === "positive" ? "Cor positiva" : "Cor negativa"} contentClassName="sm:max-w-xl sm:mx-auto">

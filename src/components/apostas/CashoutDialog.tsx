@@ -34,7 +34,7 @@ export function CashoutDialog({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
           <Button
             disabled={!value || Number.isNaN(Number(value))}
             onClick={() => {

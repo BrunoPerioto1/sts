@@ -11,22 +11,22 @@ import {
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatKickoff, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { TIP_TIMING_TONE_CLASS, tipTiming } from "@/lib/tip-schedule";
 import type { TipItem } from "@/api/routes/get-tips";
 import { TipKickoffBadge } from "./TipKickoffBadge";
 
 // % da banca sugerido, nao retorno: sem sinal e sem verde, que liam como EV.
-function formatPercent(value: number) {
-  return `${value.toFixed(2).replace(".", ",")}% da banca`;
+function bankrollShare(value: number) {
+  return `${formatPercent(value / 100, { decimals: 2 })} da banca`;
 }
 
 const squareButtonClass =
   "press flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-zinc-300 transition-colors hover:bg-foreground/[0.07] disabled:opacity-40";
 
 const dangerButtonClass =
-  "press flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-negative text-negative transition-colors hover:bg-negative/10";
+  "press flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-danger text-danger transition-colors hover:bg-danger/10";
 
 // Uma linha da fila. Densa de propósito: o que decide a aposta (odd, EV,
 // jogo, mercado) tem que caber sem rolar, e a ação principal é um alvo só.
@@ -110,14 +110,14 @@ export function TipCard({
           )}
           {tip.percent !== null && (
             <p className="mt-1 text-xs font-medium tabular-nums text-zinc-400">
-              {formatPercent(tip.percent)}
+              {bankrollShare(tip.percent)}
             </p>
           )}
         </div>
       </div>
 
       {tip.isAviso && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-400">
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-pending">
           <Warning size={14} weight="fill" /> SOBRECARGA — confira a odd na casa antes de apostar
         </p>
       )}
@@ -137,7 +137,7 @@ export function TipCard({
             <a href={tip.link} target="_blank" rel="noopener noreferrer">
               <ArrowSquareOut size={16} weight="bold" />
               {tip.recommendedStake !== null
-                ? `Apostar  ${formatCurrency(tip.recommendedStake)}`
+                ? `Apostar  ${formatMoney(tip.recommendedStake)}`
                 : "Abrir na casa"}
             </a>
           ) : (
@@ -187,7 +187,7 @@ export function TipCard({
       </BottomSheet>
 
       {tip.status !== "pending" && (
-        <p className={cn("mt-2 text-xs", tip.status === "planilhada" ? "text-green-400" : "text-zinc-500")}>
+        <p className={cn("mt-2 text-xs", tip.status === "planilhada" ? "text-success" : "text-zinc-500")}>
           {tip.status === "planilhada" ? "Planilhada" : "Marcada como caiu"}
         </p>
       )}

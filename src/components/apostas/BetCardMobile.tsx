@@ -1,7 +1,7 @@
 import { Clock } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatTime, formatOdd } from "@/lib/format";
 import { stagger } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import { mapResultToStatus, statusLabel, type Status } from "@/lib/bet-status";
@@ -12,13 +12,13 @@ import type { BulkSelection } from "@/hooks/apostas/use-bulk-selection";
 import { ReturnValue } from "./ReturnValue";
 
 const stripColors: Record<Status, string> = {
-  ganha: "bg-green-500",
-  meiaGanha: "bg-green-500/40",
-  perdida: "bg-red-500/60",
-  meiaPerdida: "bg-red-500/30",
-  pendente: "bg-accent",
-  cancelada: "bg-neutral-500/40",
-  cashout: "bg-accent-500",
+  ganha: "bg-success",
+  meiaGanha: "bg-success/40",
+  perdida: "bg-danger/60",
+  meiaPerdida: "bg-danger/30",
+  pendente: "bg-pending",
+  cancelada: "bg-muted/40",
+  cashout: "bg-cashout",
 };
 
 // Só a cor: o nome do status aparecia em vertical na lateral e disputava a
@@ -87,7 +87,7 @@ export function BetCardMobile({
         <span className={timeChipClass}>
           <Clock size={12} weight="bold" /> {formatTime(betDate(aposta))}
         </span>
-        <span className={oddChipClass}>@{formatOdd(aposta.odd)} · {formatCurrency(Number(aposta.stake))}</span>
+        <span className={oddChipClass}>@{formatOdd(aposta.odd)} · {formatMoney(Number(aposta.stake))}</span>
         {aposta.houseName && <span className={houseChipClass} title={aposta.houseName}><span className="truncate">{aposta.houseName}</span></span>}
       </div>
 

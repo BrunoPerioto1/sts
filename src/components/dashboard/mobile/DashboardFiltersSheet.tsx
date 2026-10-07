@@ -111,7 +111,7 @@ export function DashboardFiltersSheet({
       title="Filtros"
       footer={
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="min-h-[44px] px-5" onClick={handleClear} disabled={isDefault}>
+          <Button variant="secondary" className="min-h-[44px] px-5" onClick={handleClear} disabled={isDefault}>
             Limpar
           </Button>
           <Button className="flex-1 min-h-[44px]" onClick={handleApply}>
@@ -177,7 +177,7 @@ export function DashboardFiltersSheet({
             onClick={() => setCalendarOpen(true)}
             className={cn(
               "press-sm flex w-full items-center gap-2.5 min-h-[48px] rounded-lg border px-3 text-left transition-colors",
-              isCustom ? "border-accent bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]" : "border-input bg-card hover:border-foreground/45"
+              isCustom ? "border-accent bg-accent/[0.08]" : "border-input bg-card hover:border-foreground/45"
             )}
           >
             <CalendarBlank size={18} className={cn("shrink-0", isCustom ? "text-accent" : "text-zinc-500")} />

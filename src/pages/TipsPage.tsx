@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { actionToast } from "@/lib/action-toast";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTips } from "@/hooks/queries/use-tips";
 import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/tips/use-tips-page";
@@ -177,7 +177,7 @@ export default function TipsPage() {
   const pull = usePullToRefresh(() => refetch(), isMobile);
 
   const stakeSugerida =
-    summary && summary.pendingStake > 0 ? ` · ${formatCurrencyCompact(summary.pendingStake)} em stake sugerida` : "";
+    summary && summary.pendingStake > 0 ? ` · ${formatMoney(summary.pendingStake, { cents: false })} em stake sugerida` : "";
   const subtitle = summary ? `${summary.pending} ${summary.pending === 1 ? "tip" : "tips"}${stakeSugerida}` : undefined;
 
   const statusOptions = tabs.map((t) => ({ value: t.value, label: t.label, description: t.description, count: summary?.[t.countKey] }));
@@ -227,7 +227,7 @@ export default function TipsPage() {
                 <>
                   {" · Stake sugerida "}
                   <span className="font-medium text-zinc-100 tabular-nums">
-                    {formatCurrencyCompact(summary.pendingStake)}
+                    {formatMoney(summary.pendingStake, { cents: false })}
                   </span>
                 </>
               )}
@@ -261,7 +261,7 @@ export default function TipsPage() {
                   className={cn(
                     "min-w-[20px] rounded px-1.5 py-px text-center text-[11px] tabular-nums leading-4",
                     ativa
-                      ? "bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] text-foreground"
+                      ? "bg-accent/[0.22] text-foreground"
                       : "bg-foreground/[0.06] text-zinc-400",
                   )}
                 >
@@ -316,7 +316,7 @@ export default function TipsPage() {
                     className={cn(
                       "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] transition-colors duration-150",
                       ativo
-                        ? "bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-foreground"
+                        ? "bg-accent/[0.14] text-foreground"
                         : "text-zinc-300 hover:bg-foreground/[0.04]",
                     )}
                   >
@@ -480,12 +480,12 @@ export default function TipsPage() {
               <li key={tip.id}>
                 <p className="font-medium">{tip.game ?? "Jogo não identificado"}</p>
                 <p className="text-xs text-zinc-400">{tip.market}</p>
-                <p className="text-zinc-400">{tip.house ?? "Casa não reconhecida"} · Odd {tip.odd ?? "—"} · {tip.recommendedStake !== null ? formatCurrency(tip.recommendedStake) : "Stake não informada"}</p>
+                <p className="text-zinc-400">{tip.house ?? "Casa não reconhecida"} · Odd {tip.odd ?? "—"} · {tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "Stake não informada"}</p>
               </li>
             ))}
           </ul>
-          <p className="text-sm">Stake total: {formatCurrency(batchReview?.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0) ?? 0)}</p>
-          <Button className="border-transparent bg-[#12a05c] text-white hover:bg-[#0e8a4e]"
+          <p className="text-sm">Stake total: {formatMoney(batchReview?.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0) ?? 0)}</p>
+          <Button className="border-transparent bg-success-solid text-white hover:bg-success-solid/90"
             onClick={() => batchReview && runBatch("planilhar", batchReview)}>
             Confirmar e planilhar
           </Button>

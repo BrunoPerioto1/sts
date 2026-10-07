@@ -3,7 +3,7 @@ import { ArrowsHorizontal } from "@phosphor-icons/react";
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 interface ProfitBarChartProps {
   data: { date: string; profitDay: number }[];
@@ -11,14 +11,14 @@ interface ProfitBarChartProps {
 }
 
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
-const POS = "rgb(var(--rgb-positive))";
-const NEG = "rgb(var(--rgb-negative))";
+const POS = "var(--color-success)";
+const NEG = "var(--color-danger)";
 // Até 30 dias cabe tudo na tela. Acima disso a barra afinaria demais pra tocar:
 // ela fica em 13px e o gráfico rola na horizontal, com o eixo Y parado.
 const MAX_SEM_ROLAGEM = 30;
 const SLOT = 22;
 const Y_WIDTH = 40;
-const cor = (v: number) => (v > 0 ? POS : v < 0 ? NEG : "#71717a");
+const cor = (v: number) => (v > 0 ? POS : v < 0 ? NEG : "var(--color-muted)");
 
 /**
  * Lucro por dia. A leitura fica numa caixa acima das barras (não em tooltip
@@ -77,7 +77,7 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
           <span className="text-zinc-100">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
           <span className="h-4 w-px bg-foreground/10" />
           <span className="tabular-nums" style={{ color: cor(atual.profitDay) }}>
-            {formatSignedCurrency(atual.profitDay)}
+            {formatMoney(atual.profitDay, { signed: true })}
           </span>
         </span>
         {(nota || rola) && (

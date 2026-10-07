@@ -28,6 +28,7 @@ import { tapHaptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { formatInt } from "@/lib/format";
 
 export default function ApostasPage() {
   const isMobile = useIsMobile();
@@ -166,7 +167,7 @@ export default function ApostasPage() {
   return (
     <MainLayout
       title="Apostas"
-      subtitle={`${total.toLocaleString("pt-BR")} registros`}
+      subtitle={`${formatInt(total)} registros`}
       titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
       titleClassName="text-2xl font-semibold tracking-tight shrink-0"
       subtitleClassName="text-sm text-zinc-500 truncate"
@@ -182,7 +183,7 @@ export default function ApostasPage() {
       actions={
         <Button
           onClick={() => setCreateModalOpen(true)}
-          className="btn-cta hidden md:flex h-9 sm:h-9 gap-1.5 rounded-md px-4 sm:px-4 font-semibold bg-[#2f5cc9] text-white hover:bg-[#3565d4] hover:opacity-100 active:opacity-100 [&_svg]:size-3.5"
+          className="btn-cta hidden md:flex h-9 sm:h-9 gap-1.5 rounded-md px-4 sm:px-4 font-semibold bg-accent text-white hover:bg-accent/90 hover:opacity-100 active:opacity-100 [&_svg]:size-3.5"
         >
           <Plus weight="bold" /> Nova aposta
         </Button>

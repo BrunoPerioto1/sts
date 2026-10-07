@@ -27,11 +27,7 @@ interface PeriodCalendarSheetProps {
 // miolo, arredondada nas pontas de cada semana) mora no index.css, em
 // .period-range-cal — são camadas que classe utilitária não expressa bem.
 // Aqui só vão os marcadores que aquele CSS procura.
-//
-// Tons translúcidos do accent via color-mix, não `bg-accent/[x]`: o accent é
-// `var(--color-accent)` (hex), e o Tailwind 3 não gera modificador de opacidade
-// pra cor em var() — a classe some sem aviso.
-const ACCENT_FAINT = "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]";
+const ACCENT_FAINT = "bg-accent/[0.08]";
 
 const rangeCalendarClassNames = {
   months: "flex flex-col",

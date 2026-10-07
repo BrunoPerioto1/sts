@@ -1,7 +1,7 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 export interface BankrollPoint {
   date: string;
@@ -13,7 +13,7 @@ function BankrollTooltip({ active, payload, label }: { active?: boolean; payload
   return (
     <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-xs">
       <p className="opacity-70 mb-1">{format(parseISO(label), "dd 'de' MMMM", { locale: ptBR })}</p>
-      <span className="font-medium">{formatCurrency(payload[0].value)}</span>
+      <span className="font-medium">{formatMoney(payload[0].value)}</span>
     </div>
   );
 }
@@ -38,7 +38,7 @@ export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; h
             tickLine={false}
             domain={["dataMin", "dataMax"]}
             tick={{ fill: "var(--color-text)", opacity: 0.6, fontSize: 11 }}
-            tickFormatter={(value: number) => formatCurrencyCompact(value)}
+            tickFormatter={(value: number) => formatMoney(value, { cents: false })}
           />
           <XAxis
             dataKey="date"

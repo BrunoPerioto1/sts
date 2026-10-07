@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
-import { colorForHouse, initialsOf, formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { colorForHouse, initialsOf, formatMoney } from "@/lib/format";
 import { houseActivity } from "@/lib/house-activity";
 import { houseMoney } from "@/lib/house-groups";
 import { HouseActivityBadge } from "../HouseActivityBadge";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 function betsSubtitle(house: HouseBalanceDto) {
   const total = Number(house.totalBets);
   const pending = Number(house.pendingBets);
-  const stake = `Stake ${formatCurrency(Number(house.totalStake))}`;
+  const stake = `Stake ${formatMoney(Number(house.totalStake))}`;
   const totalLabel = `${total} aposta${total === 1 ? "" : "s"}`;
   if (pending > 0) return `${totalLabel} · ${pending} aberta${pending === 1 ? "" : "s"} · ${stake}`;
   return `${totalLabel} · ${stake}`;
@@ -76,19 +76,19 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
         </span>
         <span className="block text-xs text-zinc-400 leading-snug truncate">{betsSubtitle(house)}</span>
         {real < 0 && (
-          <span className="block text-xs text-negative leading-snug">a conferir {formatCurrency(real)}</span>
+          <span className="block text-xs text-danger leading-snug">a conferir {formatMoney(real)}</span>
         )}
       </span>
 
       <span className="shrink-0 text-right">
         {/* Disponível, como o site da casa mostra; o preso em aposta aberta
             vem embaixo quando existe. */}
-        <span className="block text-sm font-medium tabular-nums">{formatCurrency(money.available)}</span>
+        <span className="block text-sm font-medium tabular-nums">{formatMoney(money.available)}</span>
         {money.open > 0 && (
-          <span className="block text-xs text-zinc-400 tabular-nums">+{formatCurrency(money.open)} em aberto</span>
+          <span className="block text-xs text-zinc-400 tabular-nums">+{formatMoney(money.open)} em aberto</span>
         )}
-        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-positive" : "text-negative")}>
-          Lucro {formatSignedCurrency(profit)}
+        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-success" : "text-danger")}>
+          Lucro {formatMoney(profit, { signed: true })}
         </span>
       </span>
 

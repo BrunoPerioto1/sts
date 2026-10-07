@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { createTransaction, getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-transaction";
-import { centsToDisplay, formatCurrency } from "@/lib/format";
+import { centsToDisplay, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft; submitLabel: string }> = {
@@ -137,10 +137,10 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
             <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isAdjust ? "Saldo na casa" : "Valor"}</p>
             {isAdjust ? (
               <p className="text-xs text-zinc-500">
-                {typed ? `Ajuste ${diff > 0 ? "+" : ""}${formatCurrency(diff)}` : `Disponível ${formatCurrency(available)}`}
+                {typed ? `Ajuste ${diff > 0 ? "+" : ""}${formatMoney(diff)}` : `Disponível ${formatMoney(available)}`}
               </p>
             ) : numericValue > 0 && (
-              <p className="text-xs text-zinc-500">Saldo passa a {formatCurrency(projectedBalance)}</p>
+              <p className="text-xs text-zinc-500">Saldo passa a {formatMoney(projectedBalance)}</p>
             )}
           </div>
           <Input
@@ -152,7 +152,7 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
           />
           {isAdjust && openStake > 0 && (
             <p className="text-xs text-zinc-500 px-1 pt-1.5">
-              Digite o saldo disponível que a casa mostra. {formatCurrency(openStake)} em apostas abertas já ficam de fora.
+              Digite o saldo disponível que a casa mostra. {formatMoney(openStake)} em apostas abertas já ficam de fora.
             </p>
           )}
           <div className="flex gap-2 pt-2">

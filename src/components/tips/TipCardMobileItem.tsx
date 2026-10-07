@@ -42,9 +42,8 @@ export function TipCardMobileItem({
     <div
       className={cn(
         "relative border-b border-border transition-colors last:border-b-0",
-        // Mesmo tom da seleção no desktop (color-mix: bg-accent/[x] não gera CSS
-        // com o accent em var()).
-        checked && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
+        // Mesmo tom da seleção no desktop.
+        checked && "bg-accent/[0.1]",
         selectionMode && "press-sm cursor-pointer select-none",
       )}
       onClickCapture={(event) => {

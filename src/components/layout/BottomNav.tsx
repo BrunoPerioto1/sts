@@ -38,7 +38,7 @@ export function BottomNav() {
             transition: "transform var(--dur-base) var(--ease-out-soft)",
           }}
         >
-          <span className="h-7 w-14 rounded-full bg-blue-500/15" />
+          <span className="h-7 w-14 rounded-full bg-accent/15" />
         </span>
       )}
 

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { formatCurrency, parsePtBrNumber } from "@/lib/format";
+import { formatMoney, parsePtBrNumber } from "@/lib/format";
 import { toPtBr, type usePreferencesForm } from "@/hooks/use-preferences-form";
 import { DEFAULT_STALE_BET_DAYS } from "@/lib/house-activity";
 
@@ -19,7 +19,7 @@ function Field({ id, label, prefix, suffix, hint, error, children }: {
         {children}
         {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none">{suffix}</span>}
       </div>
-      <p className={cn("text-xs", error ? "text-negative" : "text-zinc-500")}>{error ?? hint}</p>
+      <p className={cn("text-xs", error ? "text-danger" : "text-zinc-500")}>{error ?? hint}</p>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
           label="Banca"
           prefix="R$"
           error={form.stakeError}
-          hint={bankroll > 0 ? `1 U = ${formatCurrency(bankroll / 100)} · 1% da banca` : "1 U = 1% da banca"}
+          hint={bankroll > 0 ? `1 U = ${formatMoney(bankroll / 100)} · 1% da banca` : "1 U = 1% da banca"}
         >
           <Input
             id="pref-bankroll"
@@ -61,7 +61,7 @@ export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
           label="Avisar sinais acima de"
           suffix="%"
           error={form.thresholdError}
-          hint={bankroll > 0 && Number.isFinite(thresholdNum) ? `≈ ${formatCurrency((thresholdNum / 100) * bankroll)} de stake` : "da banca, por sinal"}
+          hint={bankroll > 0 && Number.isFinite(thresholdNum) ? `≈ ${formatMoney((thresholdNum / 100) * bankroll)} de stake` : "da banca, por sinal"}
         >
           <Input
             id="pref-threshold"

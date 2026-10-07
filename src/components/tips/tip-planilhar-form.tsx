@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatCurrency, formatOdd } from "@/lib/format";
+import { formatMoney, formatOdd } from "@/lib/format";
 import { toInput, type TipPlanilharForm } from "./use-tip-planilhar";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -53,7 +53,7 @@ export function TipStakeFields({
               className={chipClass}
               onClick={() => form.setStake(toInput(tip.recommendedStake))}
             >
-              Sugerida <span className="text-zinc-500">{formatCurrency(tip.recommendedStake)}</span>
+              Sugerida <span className="text-zinc-500">{formatMoney(tip.recommendedStake)}</span>
             </button>
           )}
           {tip.limit !== null && (
@@ -62,7 +62,7 @@ export function TipStakeFields({
               className={chipClass}
               onClick={() => form.setStake(toInput(tip.limit))}
             >
-              Limite <span className="text-zinc-500">{formatCurrency(tip.limit)}</span>
+              Limite <span className="text-zinc-500">{formatMoney(tip.limit)}</span>
             </button>
           )}
         </div>
@@ -70,8 +70,8 @@ export function TipStakeFields({
 
       {form.valid && (
         <p className="text-sm tabular-nums text-zinc-400">
-          Retorno {formatCurrency(form.retorno)} · lucro{" "}
-          <span className="text-positive">{formatCurrency(form.retorno - form.stakeValue)}</span>
+          Retorno {formatMoney(form.retorno)} · lucro{" "}
+          <span className="text-success">{formatMoney(form.retorno - form.stakeValue)}</span>
         </p>
       )}
     </>

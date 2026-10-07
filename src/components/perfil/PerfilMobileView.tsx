@@ -5,7 +5,7 @@ import { Bank, CaretRight, IdentificationCard, Palette, Pulse, ShieldCheck, Sign
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
-import { displayName, formatCurrencyCompact, formatSignedCurrency, initialsOf } from "@/lib/format";
+import { displayName, formatInt, formatMoney, formatPercent, initialsOf } from "@/lib/format";
 import { useProfitSparkline } from "@/hooks/perfil/use-profit-sparkline";
 import type { MeResponse } from "@/api/routes/get-me";
 import type { ProfileSummary } from "@/hooks/perfil/use-profile-summary";
@@ -15,8 +15,8 @@ function preferencesSummary(me: MeResponse): string {
   const filter = me.minPercentFilter != null ? Number(me.minPercentFilter) : null;
   if (stake == null && filter == null) return "Não configurado";
   const parts: string[] = [];
-  if (stake != null) parts.push(`Banca ${formatCurrencyCompact(stake)}`);
-  if (filter != null) parts.push(`stake ${filter.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`);
+  if (stake != null) parts.push(`Banca ${formatMoney(stake, { cents: false })}`);
+  if (filter != null) parts.push(`stake ${formatPercent(filter / 100, { decimals: 2, minDecimals: 0 })}`);
   return parts.join(" · ");
 }
 
@@ -33,13 +33,11 @@ function sinceLabel(createdAt: MeResponse["createdAt"]): string | null {
   return `desde ${label}`;
 }
 
-const pct = (v: number) => `${(v * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
-
 /** Avatar + nome + e-mail e badge de admin — vai no mobileHeader do PerfilPage. */
 export function PerfilMobileHeader({ me }: { me: MeResponse }) {
   return (
     <div className="flex items-center gap-3.5 min-w-0">
-      <span className="w-14 h-14 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-lg font-semibold text-white">
+      <span className="w-14 h-14 shrink-0 rounded-full bg-gradient-to-br from-accent-text to-accent flex items-center justify-center text-lg font-semibold text-white">
         {initialsOf(displayName(me))}
       </span>
       <div className="min-w-0 space-y-1">
@@ -47,7 +45,7 @@ export function PerfilMobileHeader({ me }: { me: MeResponse }) {
         <div className="flex items-center gap-2 min-w-0">
           <p className="text-xs text-zinc-500 truncate">{me.email}</p>
           {me.roleId === ADMIN_ROLE_ID && (
-            <span className="shrink-0 rounded-full bg-amber-400/10 px-2 py-px text-[11px] font-medium text-amber-400">admin</span>
+            <span className="shrink-0 rounded-full bg-foreground/[0.08] px-2 py-px text-[11px] font-medium text-zinc-300">admin</span>
           )}
         </div>
       </div>
@@ -102,8 +100,9 @@ function RowGroup({ title, rows, admin, children }: { title: string; rows: Row[]
     <div className="space-y-2">
       <p className="px-1 flex items-center gap-1.5 text-xs uppercase tracking-wider font-medium text-zinc-500">
         {title}
-        {/* Só admin vê esta seção: escudo e ícones em âmbar marcam a diferença. */}
-        {admin && <ShieldCheck size={13} weight="fill" className="text-amber-400" />}
+        {/* Só admin vê esta seção: escudo e ícones em cinza (não âmbar, que é
+            "pendente") marcam a diferença. */}
+        {admin && <ShieldCheck size={13} weight="fill" className="text-zinc-400" />}
       </p>
       <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
         {rows.map((row) => {
@@ -112,10 +111,10 @@ function RowGroup({ title, rows, admin, children }: { title: string; rows: Row[]
               <span
                 className={cn(
                   "w-8 h-8 shrink-0 rounded-[9px] flex items-center justify-center",
-                  admin ? "bg-amber-400/10" : "bg-blue-500/10"
+                  admin ? "bg-foreground/[0.08]" : "bg-accent/10"
                 )}
               >
-                <row.icon size={16} className={admin ? "text-amber-400" : "text-accent-text"} />
+                <row.icon size={16} className={admin ? "text-zinc-300" : "text-accent-text"} />
               </span>
               {/* Nome inteiro em cima e valor embaixo: em uma linha só,
                   "Preferências de aposta" era cortado no meio. */}
@@ -150,24 +149,24 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
   const since = sinceLabel(me.createdAt);
   const sparkline = useProfitSparkline(me.createdAt);
   const positive = summary.totalProfit >= 0;
-  const tone = !metricsUnavailable && (positive ? "text-positive" : "text-negative");
+  const tone = !metricsUnavailable && (positive ? "text-success" : "text-danger");
 
   // Banca/stake ficam só em Preferências de aposta; aqui entra a taxa de
   // acerto, que antes era só subtexto. Quantas casas têm saldo fica na tela de Casas.
   const stats = [
     {
       label: "Apostas",
-      value: metricsUnavailable ? "—" : summary.totalBets.toLocaleString("pt-BR"),
-      hint: `${summary.wonBets.toLocaleString("pt-BR")} ganhas`,
+      value: metricsUnavailable ? "—" : formatInt(summary.totalBets),
+      hint: `${formatInt(summary.wonBets)} ganhas`,
     },
     {
       label: "Acerto",
-      value: metricsUnavailable ? "—" : pct(summary.hitRate),
-      hint: `de ${summary.settledBets.toLocaleString("pt-BR")} resolvidas`,
+      value: metricsUnavailable ? "—" : formatPercent(summary.hitRate),
+      hint: `de ${formatInt(summary.settledBets)} resolvidas`,
     },
     {
       label: "Saldo nas casas",
-      value: formatCurrencyCompact(summary.bankroll),
+      value: formatMoney(summary.bankroll, { cents: false }),
     },
   ];
 
@@ -181,8 +180,8 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
           label: "Telegram",
           value: me.telegramUsername ? `@${me.telegramUsername}` : "Conta sem @",
           trailing: (
-            <span className="shrink-0 flex items-center gap-1.5 text-xs text-positive">
-              <span className="w-1.5 h-1.5 rounded-full bg-positive" /> Vinculado
+            <span className="shrink-0 flex items-center gap-1.5 text-xs text-success">
+              <span className="w-1.5 h-1.5 rounded-full bg-success" /> Vinculado
             </span>
           ),
         }
@@ -213,17 +212,17 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
               ) : metricsError ? (
                 "Indisponível"
               ) : (
-                formatSignedCurrency(summary.totalProfit)
+                formatMoney(summary.totalProfit, { signed: true })
               )}
             </span>
             {!metricsUnavailable && (
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[12px] font-medium tabular-nums",
-                  positive ? "bg-positive/10 text-positive" : "bg-negative/10 text-negative"
+                  positive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
                 )}
               >
-                ROI {pct(summary.roi)}
+                ROI {formatPercent(summary.roi)}
               </span>
             )}
           </div>
@@ -245,7 +244,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
             a largura toda embaixo, em vez de espremido ao lado do título. */}
         <div className="px-3.5 py-3 space-y-2.5">
           <div className="flex items-center gap-3">
-            <span className="w-8 h-8 shrink-0 rounded-[9px] bg-blue-500/10 flex items-center justify-center">
+            <span className="w-8 h-8 shrink-0 rounded-[9px] bg-accent/10 flex items-center justify-center">
               <Palette size={16} className="text-accent-text" />
             </span>
             <span className="text-[14.5px] text-foreground">Tema</span>
@@ -260,7 +259,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
         <button
           type="button"
           onClick={() => navigate("/logout")}
-          className="press h-[44px] px-4 rounded-xl flex items-center justify-center gap-2 text-[14.5px] font-medium text-negative hover:bg-negative/10"
+          className="press h-[44px] px-4 rounded-xl flex items-center justify-center gap-2 text-[14.5px] font-medium text-danger hover:bg-danger/10"
         >
           <SignOut size={16} /> Sair da conta
         </button>

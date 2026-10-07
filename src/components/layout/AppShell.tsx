@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar, SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_WIDTH } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
 import { AccessExpiryBanner } from "./AccessExpiryBanner";
+import { useResultColorVars } from "@/hooks/use-performance-color";
 
 const COLLAPSED_KEY = "sidebar_collapsed";
 
@@ -55,6 +56,7 @@ export function AppShell() {
   const { pathname } = useLocation();
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(readCollapsed);
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
+  useResultColorVars();
 
   const setSidebarCollapsed = useCallback((collapsed: boolean) => {
     setSidebarCollapsedState(collapsed);

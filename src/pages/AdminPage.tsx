@@ -26,7 +26,7 @@ export default function AdminPage() {
     <>
       <span className="text-xs opacity-40">atualizado {updatedAt}</span>
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         disabled={overview.isFetching}
         onClick={() => void overview.refetch()}

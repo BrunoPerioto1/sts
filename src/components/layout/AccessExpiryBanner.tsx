@@ -5,6 +5,7 @@ import { getMyBilling, postMyPaymentClaim } from "@/api/routes/get-billing";
 import { useMe } from "@/hooks/queries/use-me";
 import { actionToast } from "@/lib/action-toast";
 import { daysUntilAccess, isExpired } from "@/lib/access";
+import { formatMoney } from "@/lib/format";
 
 // Mesmos marcos do lembrete do Telegram (3 dias, amanhã, hoje).
 const WARN_DAYS = 3;
@@ -71,19 +72,19 @@ export function AccessExpiryBanner() {
   };
 
   return (
-    <div role="status" className="flex items-center gap-3 px-4 sm:px-6 py-2.5 text-sm bg-amber-500/10 border-b border-amber-500/25">
-      <Hourglass size={16} className="shrink-0 text-amber-400" aria-hidden="true" />
+    <div role="status" className="flex items-center gap-3 px-4 sm:px-6 py-2.5 text-sm bg-pending/10 border-b border-pending/25">
+      <Hourglass size={16} className="shrink-0 text-pending" aria-hidden="true" />
       <p className="flex-1 min-w-0">
         Seu acesso vence <span className="font-medium">{when}</span>.
         {price != null && (
-          <span className="text-zinc-400"> Renove com {price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} no PIX.</span>
+          <span className="text-zinc-400"> Renove com {formatMoney(price)} no PIX.</span>
         )}
       </p>
       {pixText && (
         <button
           type="button"
           onClick={copy}
-          className="press shrink-0 flex items-center gap-1.5 rounded-md border border-amber-500/30 px-2.5 py-1 text-xs hover:bg-amber-500/10"
+          className="press shrink-0 flex items-center gap-1.5 rounded-md border border-pending/30 px-2.5 py-1 text-xs hover:bg-pending/10"
         >
           <Copy size={13} /> Copiar PIX
         </button>
@@ -92,7 +93,7 @@ export function AccessExpiryBanner() {
         <button
           type="button"
           onClick={claim}
-          className="press shrink-0 hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-zinc-300 hover:bg-amber-500/10"
+          className="press shrink-0 hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-zinc-300 hover:bg-pending/10"
         >
           Já paguei
         </button>

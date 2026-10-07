@@ -83,6 +83,17 @@ export function performanceColor(value: number | null, colors: DashboardPreferen
     : NEGATIVE_COLORS[colors.customEnabled ? colors.negative : "default-negative"].token;
 }
 
+/**
+ * Cor de ganho/perda do app inteiro (as vars --color-success/--color-danger
+ * por trás de `text-success`/`text-danger`). null = paleta padrão do tema, sem
+ * sobrescrever. O "desligar cores" (enabled) não entra: ele neutraliza só os
+ * números do dashboard, não o verde de "vinculado" ou de um toast de sucesso.
+ */
+export function resultColorVars(colors: DashboardPreferences["performanceColors"]): { success: string; danger: string } | null {
+  if (!colors.customEnabled) return null;
+  return { success: POSITIVE_COLORS[colors.positive].token, danger: NEGATIVE_COLORS[colors.negative].token };
+}
+
 export function kpiColumnSpan(index: number, count: number): 1 | 2 {
   return count % 2 === 1 && index === count - 1 ? 2 : 1;
 }

@@ -1,6 +1,6 @@
 import { HouseMetricsDto } from "@/api/routes/get-houses";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 interface HousesMetricsProps {
   metrics: HouseMetricsDto;
@@ -34,21 +34,21 @@ export function HousesMetrics({
   const blocks = [
     {
       label: "Saldo total",
-      value: formatCurrency(metrics.totalBalance),
+      value: formatMoney(metrics.totalBalance),
       hint:
         openStake > 0
-          ? `${formatCurrency(openStake)} em aberto · ${withBalanceCount} ${withBalanceCount === 1 ? "casa" : "casas"}`
+          ? `${formatMoney(openStake)} em aberto · ${withBalanceCount} ${withBalanceCount === 1 ? "casa" : "casas"}`
           : `em ${withBalanceCount} ${withBalanceCount === 1 ? "casa" : "casas"}`,
     },
     {
       label: "Lucro consolidado",
-      value: `${profit >= 0 ? "+" : ""}${formatCurrency(profit)}`,
-      valueClass: profit >= 0 ? "text-positive" : "text-negative",
+      value: `${profit >= 0 ? "+" : ""}${formatMoney(profit)}`,
+      valueClass: profit >= 0 ? "text-success" : "text-danger",
       hint: "desde o início",
     },
     {
       label: "Movimentado",
-      value: formatCurrency(moved),
+      value: formatMoney(moved),
       hint: moved === 0 ? "nenhum depósito ou saque" : "depósitos + saques",
     },
     {
@@ -57,11 +57,11 @@ export function HousesMetrics({
       // buraco fica na hint — o número grande é quantas casas conferir.
       label: "A conferir",
       value: `${negatives} de ${metrics.totalHousesUsed}`,
-      valueClass: negatives > 0 ? "text-negative" : undefined,
+      valueClass: negatives > 0 ? "text-danger" : undefined,
       hint: conferirActive
         ? "mostrando só essas · clique pra voltar"
         : negatives > 0
-          ? `${formatCurrency(metrics.negativeAmount)} sem lançamento · ver casas`
+          ? `${formatMoney(metrics.negativeAmount)} sem lançamento · ver casas`
           : "nenhuma casa no vermelho",
       // Vira botão só quando há o que conferir: é o atalho pra conciliação.
       onClick: negatives > 0 || conferirActive ? onConferir : undefined,
@@ -90,7 +90,7 @@ export function HousesMetrics({
             type="button"
             onClick={b.onClick}
             aria-pressed={b.active}
-            className={cn(cell, "press transition-colors hover:bg-foreground/[0.03]", b.active && "bg-negative/[0.06]")}
+            className={cn(cell, "press transition-colors hover:bg-foreground/[0.03]", b.active && "bg-danger/[0.06]")}
           >
             {body}
           </button>

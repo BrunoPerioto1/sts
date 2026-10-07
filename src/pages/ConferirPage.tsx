@@ -22,8 +22,7 @@ import {
   lucroSugerido,
   tally,
 } from "@/lib/settlement-view";
-import { formatTime, formatOdd } from "@/lib/format";
-import { stakeCurta } from "@/lib/settlement-format";
+import { formatMoney, formatTime, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SuggestionDetail } from "@/components/conferir/SuggestionDetail";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
@@ -39,11 +38,6 @@ import {
   X,
   XCircle,
 } from "@phosphor-icons/react";
-
-const BRL = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
 
 // Sinal de cada resultado pra cor de Preferências (ganho/perda); anulada fica neutra.
 const BADGES: Record<number, { label: string; sign: number }> = {
@@ -80,7 +74,7 @@ function Impacto({
   if (suggestion.suggestedResultId === ResultIdEnum.CANCELED) {
     return (
       <span className={cn("text-zinc-400", className)}>
-        {BRL.format(suggestion.stake)} devolvidos
+        {formatMoney(suggestion.stake)} devolvidos
       </span>
     );
   }
@@ -88,7 +82,7 @@ function Impacto({
   return (
     <span className={cn("font-medium", className)} style={{ color: color(lucro) }}>
       {lucro > 0 ? "+" : ""}
-      {BRL.format(lucro)}
+      {formatMoney(lucro)}
     </span>
   );
 }
@@ -160,7 +154,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
 
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-zinc-500">
-                {stakeCurta(suggestion.stake)} @ {formatOdd(suggestion.odd)}{" "}
+                {formatMoney(suggestion.stake, { cents: "auto" })} @ {formatOdd(suggestion.odd)}{" "}
                 <Impacto suggestion={suggestion} className="ml-1 text-xs" />
               </p>
               {descartar}
@@ -205,7 +199,7 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
         </div>
 
         <span className="whitespace-nowrap text-xs text-zinc-500">
-          {stakeCurta(suggestion.stake)} @ {formatOdd(suggestion.odd)}
+          {formatMoney(suggestion.stake, { cents: "auto" })} @ {formatOdd(suggestion.odd)}
         </span>
 
         <Impacto suggestion={suggestion} className="whitespace-nowrap text-right text-xs" />
@@ -338,7 +332,7 @@ function Vazio({
             Ainda há apostas na fila que não entraram neste lote.
           </p>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onCompute}
             disabled={busy}
@@ -441,7 +435,7 @@ export default function ConferirPage() {
       }
       actions={
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => compute.mutate()}
           disabled={ocupado}
@@ -555,7 +549,7 @@ export default function ConferirPage() {
                     </span>
                     <span className="shrink-0 font-semibold" style={{ color: color(total) }}>
                       {total > 0 ? "+" : ""}
-                      {BRL.format(total)}
+                      {formatMoney(total)}
                       <span className="hidden font-normal text-zinc-500 md:inline">
                         {" "}
                         no lucro

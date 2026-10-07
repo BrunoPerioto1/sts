@@ -75,6 +75,7 @@ import {
 } from "@/lib/scanner-labels";
 import type { ScannerFlag, ScannerTournament } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { formatInt } from "@/lib/format";
 
 const FLAGS: { key: ScannerFlag; label: string; short: string; hint: string }[] =
   [
@@ -191,7 +192,7 @@ function collectTitle(t: ScannerTournament): string | undefined {
 }
 
 const gamesText = (rows: ScannerTournament[]) =>
-  `${collectSummary(rows).games.toLocaleString("pt-BR")} jogos`;
+  `${formatInt(collectSummary(rows).games)} jogos`;
 
 function useSetFlag() {
   const update = useUpdateAdminScanner();
@@ -811,7 +812,7 @@ function TournamentRow({
             onClick={onDelete}
             className={cn(
               ICON_BUTTON,
-              "hover:text-destructive hover:bg-destructive/10",
+              "hover:text-danger hover:bg-danger/10",
             )}
             aria-label={`Excluir ${t.name}`}
             title="Excluir"
@@ -921,7 +922,7 @@ function NewTournamentForm({
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="icon"
           className="hidden sm:inline-flex"
           onClick={() => onDone(false)}
@@ -1095,7 +1096,7 @@ export function AdminScanner() {
                 {summary.lastCheckAt
                   ? `Última coleta há ${lastRun.value} ${lastRun.unit}`
                   : "Nunca coletado"}{" "}
-                · {summary.games.toLocaleString("pt-BR")} jogos ·{" "}
+                · {formatInt(summary.games)} jogos ·{" "}
                 {summary.empty} sem jogos
               </span>
               <span className="hidden sm:inline">·</span>
@@ -1142,7 +1143,7 @@ export function AdminScanner() {
             </div>
             <Button
               onClick={() => setAdding((v) => !v)}
-              className="shrink-0 w-11 px-0 h-11 sm:w-auto sm:h-9 sm:px-3.5 rounded-lg gap-1.5 text-[13.5px] bg-[var(--color-accent)] text-white hover:bg-[#1d4ed8] hover:opacity-100 [&_svg]:size-3.5"
+              className="shrink-0 w-11 px-0 h-11 sm:w-auto sm:h-9 sm:px-3.5 rounded-lg gap-1.5 text-[13.5px] bg-accent text-white hover:bg-accent/90 hover:opacity-100 [&_svg]:size-3.5"
               aria-label="Cadastrar competição"
             >
               <Plus size={14} />
@@ -1239,7 +1240,7 @@ export function AdminScanner() {
             title="Não foi possível carregar o scanner"
             action={
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => void refetch()}
               >
@@ -1290,7 +1291,7 @@ export function AdminScanner() {
                 }
                 action={
                   filtered && (
-                    <Button variant="outline" size="sm" onClick={clearFilters}>
+                    <Button variant="secondary" size="sm" onClick={clearFilters}>
                       Limpar filtros
                     </Button>
                   )
@@ -1358,7 +1359,7 @@ export function AdminScanner() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <Button
-              variant="outline"
+              variant="secondary"
               className="sm:mr-auto"
               onClick={pauseInstead}
             >

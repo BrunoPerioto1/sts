@@ -4,7 +4,7 @@ import { getTransactions, type TransactionDto } from "@/api/routes/get-transacti
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatDate, formatSignedCurrency, formatTime } from "@/lib/format";
+import { formatDate, formatMoney, formatTime } from "@/lib/format";
 import { HouseDialog } from "./HouseDialog";
 import { TransactionActions } from "./TransactionActions";
 
@@ -17,8 +17,8 @@ interface MovimentacaoModalProps {
 }
 
 const TYPE_MAP: Record<string, { label: string; icon: typeof ArrowDownLeft; className: string }> = {
-  DEPOSIT: { label: "Depósito", icon: ArrowDownLeft, className: "text-positive" },
-  WITHDRAWAL: { label: "Saque", icon: ArrowUpRight, className: "text-negative" },
+  DEPOSIT: { label: "Depósito", icon: ArrowDownLeft, className: "text-success" },
+  WITHDRAWAL: { label: "Saque", icon: ArrowUpRight, className: "text-danger" },
   ADJUSTMENT: { label: "Ajuste", icon: SlidersHorizontal, className: "opacity-55" },
 };
 
@@ -52,9 +52,9 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
       ) : error ? (
         <div
           className="flex items-start gap-2 rounded-md p-3 text-sm"
-          style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-negative)" }}
+          style={{ background: "var(--color-surface)", boxShadow: "inset 2px 0 0 var(--color-danger)" }}
         >
-          <WarningCircle size={18} className="text-negative shrink-0 mt-0.5" />
+          <WarningCircle size={18} className="text-danger shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">Não foi possível carregar o histórico</p>
             <p className="opacity-70 mt-0.5">Estamos com um problema nesta casa. Tente de novo em instantes.</p>
@@ -68,7 +68,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
           description="Depósitos e saques desta casa aparecem aqui em ordem cronológica."
           action={
             onNewTransaction && (
-              <Button variant="outline" className="gap-2" onClick={onNewTransaction}>
+              <Button variant="secondary" className="gap-2" onClick={onNewTransaction}>
                 <Plus size={14} /> Registrar a primeira
               </Button>
             )
@@ -91,7 +91,7 @@ export function MovimentacaoModal({ isOpen, onClose, casaNome, houseId, onNewTra
                 <span className={cn("text-sm font-medium tabular-nums shrink-0", meta.className)}>
                   {/* O valor ja vem com sinal do banco (saque negativo); somar um
                       "−" pelo tipo dava "−−R$ 6,81". Igual ao historico mobile. */}
-                  {formatSignedCurrency(Number(mov.value))}
+                  {formatMoney(Number(mov.value), { signed: true })}
                 </span>
                 <TransactionActions tx={mov} onChanged={() => setReloadKey((k) => k + 1)} />
               </div>

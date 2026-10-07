@@ -110,7 +110,7 @@ export default function TelegramPage() {
             <span
               className={cn(
                 "text-[11px] uppercase tracking-wider px-2 py-1 rounded-md shrink-0",
-                isLinked ? "bg-positive/[0.16] text-positive" : "border border-foreground/10 text-zinc-400"
+                isLinked ? "bg-success/[0.16] text-success" : "border border-foreground/10 text-zinc-400"
               )}
             >
               {isLinked ? "Vinculado" : "Não vinculado"}
@@ -142,7 +142,7 @@ export default function TelegramPage() {
           <div className="flex items-center gap-2 text-sm">
             <Clock size={15} className="text-zinc-500 shrink-0" />
             {expired ? (
-              <span className="text-negative">Código expirado.</span>
+              <span className="text-danger">Código expirado.</span>
             ) : (
               <span className="text-zinc-500">Expira em {formatCountdown(code.expiresAt.getTime() - now)}</span>
             )}
@@ -169,7 +169,7 @@ export default function TelegramPage() {
             Esperando a confirmação do bot…
           </div>
 
-          <Button variant="outline" className="w-full min-h-[48px]" onClick={() => setCode(null)}>
+          <Button variant="secondary" className="w-full min-h-[48px]" onClick={() => setCode(null)}>
             Cancelar vinculação
           </Button>
           <p className="text-center text-xs text-zinc-500 -mt-2">Esta tela fecha sozinha quando o bot confirmar.</p>
@@ -195,13 +195,13 @@ export default function TelegramPage() {
             O que ele envia se ajusta no próprio bot.
           </p>
 
-          <Button variant="outline" className="w-full min-h-[48px] gap-2" asChild>
+          <Button variant="secondary" className="w-full min-h-[48px] gap-2" asChild>
             <a href={`https://t.me/${BOT_HANDLE.replace("@", "")}`} target="_blank" rel="noreferrer">
               Abrir conversa
             </a>
           </Button>
 
-          <button type="button" onClick={() => setConfirmUnlink(true)} className="press w-full h-12 text-sm text-negative">
+          <button type="button" onClick={() => setConfirmUnlink(true)} className="press w-full h-12 text-sm text-danger">
             Desvincular
           </button>
         </div>

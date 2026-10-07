@@ -13,6 +13,7 @@ import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import type { AdminHouse } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { formatInt } from "@/lib/format";
 
 const PAGE = 10;
 
@@ -206,7 +207,7 @@ function HouseRow({ house, onEdit }: { house: AdminHouse; onEdit: () => void }) 
         </p>
       </div>
       <div className="shrink-0 flex flex-col items-end">
-        <span className="text-sm tabular-nums text-foreground/85">{house.betCount.toLocaleString("pt-BR")}</span>
+        <span className="text-sm tabular-nums text-foreground/85">{formatInt(house.betCount)}</span>
         <span className="text-[10.5px] text-zinc-500">apostas</span>
       </div>
       <CaretRight size={13} className="shrink-0 text-zinc-600" />
@@ -263,7 +264,7 @@ export function AdminHousesMobile({
         <EmptyState
           title="Não foi possível carregar as casas"
           action={
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <Button variant="secondary" size="sm" onClick={() => void refetch()}>
               Tentar de novo
             </Button>
           }
@@ -282,7 +283,7 @@ export function AdminHousesMobile({
           </div>
           <div className="pt-1.5 space-y-2">
             {hidden > 0 && (
-              <Button variant="outline" className="w-full h-[42px] rounded-xl text-zinc-300" onClick={() => setShowAll(true)}>
+              <Button variant="secondary" className="w-full h-[42px] rounded-xl text-zinc-300" onClick={() => setShowAll(true)}>
                 Carregar mais
               </Button>
             )}

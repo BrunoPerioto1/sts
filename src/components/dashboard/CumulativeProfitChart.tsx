@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatCurrency, formatSignedCurrency } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
-const POS = "rgb(var(--rgb-positive))";
-const NEG = "rgb(var(--rgb-negative))";
+const POS = "var(--color-success)";
+const NEG = "var(--color-danger)";
 
 /** Lucro acumulado dia a dia: a leitura mostra o dia tocado e o total até ele. */
 export function CumulativeProfitChart({ data, height = 200 }: { data: { date: string; profitDay: number }[]; height?: number }) {
@@ -33,11 +33,11 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
           <span className="text-zinc-400">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
           <span className="h-4 w-px bg-foreground/10" />
           <span className="text-zinc-400">
-            Acum. <span className="font-medium tabular-nums text-zinc-100">{formatCurrency(atual.acum)}</span>
+            Acum. <span className="font-medium tabular-nums text-zinc-100">{formatMoney(atual.acum)}</span>
           </span>
         </span>
         <span className="tabular-nums" style={{ color: atual.dia >= 0 ? POS : NEG }}>
-          {formatSignedCurrency(atual.dia)}
+          {formatMoney(atual.dia, { signed: true })}
         </span>
       </div>
 

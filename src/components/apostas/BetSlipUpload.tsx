@@ -207,13 +207,13 @@ export function BetSlipUpload({
   const notes = (
     <>
       {missing.length > 0 && (
-        <p className="text-[11px] leading-snug text-amber-400">
+        <p className="text-[11px] leading-snug text-pending">
           Não identifiquei: {missing.join(", ")} — preencha na mão
           {preview && preview.parts < 4 ? " ou mande a parte que faltou" : ""}.
         </p>
       )}
       {oddFromSelections && (
-        <p className="text-[11px] leading-snug text-amber-400">
+        <p className="text-[11px] leading-snug text-pending">
           O bilhete não mostra a odd total: calculei pelas seleções. Confira.
         </p>
       )}
@@ -240,7 +240,7 @@ export function BetSlipUpload({
         <div className="flex items-start gap-3">
           {thumb}
           <div className="min-w-0 flex-1 space-y-1">
-            <p className="text-xs font-medium text-amber-400">
+            <p className="text-xs font-medium text-pending">
               {error ?? "Não consegui ler esse print"}
             </p>
             <p className="text-[11px] leading-snug text-zinc-500">
@@ -275,7 +275,7 @@ export function BetSlipUpload({
         <div className="flex items-start gap-3">
           {thumb}
           <div className="min-w-0 flex-1 space-y-1">
-            <span className={cn(chip, "bg-positive/15 font-medium text-positive")}>
+            <span className={cn(chip, "bg-success/15 font-medium text-success")}>
               <Sparkles className="h-3 w-3" />
               Lido pela IA
             </span>
@@ -302,7 +302,7 @@ export function BetSlipUpload({
               <button
                 type="button"
                 onClick={onReset}
-                className={cn(chip, "text-negative hover:bg-negative/10")}
+                className={cn(chip, "text-danger hover:bg-danger/10")}
               >
                 <Trash2 className="h-3 w-3" />
                 Remover
@@ -391,7 +391,7 @@ export function BetSlipUpload({
           dragging
             ? "border-accent bg-accent/10"
             : "border-foreground/10 bg-[var(--color-surface)]",
-          status === "error" && !dragging && "border-amber-400/40",
+          status === "error" && !dragging && "border-pending/40",
         )}
       >
         {body()}

@@ -37,7 +37,7 @@ export type TipTimingTone = "upcoming" | "soon" | "live" | "old" | "unknown";
 export const TIP_TIMING_TONE_CLASS: Record<TipTimingTone, string> = {
   upcoming: "text-foreground",
   soon: "text-accent-text",
-  live: "text-amber-400/90",
+  live: "text-pending/90",
   old: "text-zinc-500",
   // Menos que os estados normais: é ausência de dado, não um estado do jogo.
   unknown: "text-zinc-500 font-normal opacity-70",

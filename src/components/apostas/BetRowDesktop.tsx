@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatTime, formatOdd } from "@/lib/format";
 import { mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -60,10 +60,8 @@ export function BetRowDesktop({
         selection.selectionMode && "cursor-pointer",
         // Hover é percebido, não anunciado; seleção é clara, não dominante. O
         // verde/vermelho do resultado segue sendo o mais forte da linha.
-        // color-mix e não bg-accent/[x]: o accent é var(), e aí o Tailwind 3
-        // não gera a opacidade (a classe sai vazia).
         isSelected
-          ? "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)]"
+          ? "bg-accent/[0.1] hover:bg-accent/[0.14]"
           : "hover:bg-foreground/[0.025]"
       )}
       onClick={handleRowClick}
@@ -81,7 +79,7 @@ export function BetRowDesktop({
           aria-label="Selecionar aposta"
           // Verde apagado (sem o neon do padrão) e borda que acende no hover:
           // o checkbox indica a seleção sem competir com o resultado.
-          className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-positive)_62%,var(--color-bg))]"
+          className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-success)_62%,var(--color-bg))]"
         />
       </span>
 
@@ -95,7 +93,7 @@ export function BetRowDesktop({
       </div>
 
       <span className="text-right text-sm tabular-nums opacity-80">{formatOdd(aposta.odd)}</span>
-      <span className="text-right text-sm tabular-nums opacity-80">{formatCurrency(Number(aposta.stake))}</span>
+      <span className="text-right text-sm tabular-nums opacity-80">{formatMoney(Number(aposta.stake))}</span>
       <ReturnValue aposta={aposta} className="text-sm text-right" />
 
       <Badge variant={statusVariant[status]} className="justify-self-start">{statusLabel[status]}</Badge>

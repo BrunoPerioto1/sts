@@ -63,7 +63,7 @@ export function DashboardChecklist() {
               )}
             >
               {step.done ? (
-                <CheckCircle size={20} weight="fill" className="shrink-0 text-positive" aria-label="feito" />
+                <CheckCircle size={20} weight="fill" className="shrink-0 text-success" aria-label="feito" />
               ) : (
                 <Circle size={20} className="shrink-0 text-zinc-500" aria-label="pendente" />
               )}

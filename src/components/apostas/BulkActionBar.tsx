@@ -110,7 +110,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             onClick={() => handleStatus("won", ResultIdEnum.WON)}
             disabled={loading}
             pending={pendingAction === "won"}
-            className="bg-green-500/[0.12] border border-green-500/25 text-green-400 hover:bg-green-500/20"
+            className="bg-success/[0.12] border border-success/25 text-success hover:bg-success/20"
           />
           <BulkActionButton
             icon={XCircle}
@@ -118,7 +118,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             onClick={() => handleStatus("lost", ResultIdEnum.LOST)}
             disabled={loading}
             pending={pendingAction === "lost"}
-            className="bg-red-500/[0.12] border border-red-500/25 text-red-400 hover:bg-red-500/20"
+            className="bg-danger/[0.12] border border-danger/25 text-danger hover:bg-danger/20"
           />
           <BulkActionButton
             icon={Clock}
@@ -134,7 +134,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             onClick={() => setConfirmOpen(true)}
             disabled={loading}
             pending={pendingAction === "delete"}
-            className="bg-red-500 text-white hover:bg-red-600"
+            className="bg-danger-solid text-white hover:bg-danger-solid/90"
           />
         </div>
       </div>

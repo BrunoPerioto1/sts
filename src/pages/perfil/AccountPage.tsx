@@ -127,9 +127,9 @@ export default function AccountPage() {
             </Link>
 
             <button type="button" onClick={() => setConfirmOpen(true)} className="press h-14 flex items-center gap-3 text-left">
-              <Trash size={19} className="text-negative shrink-0" />
+              <Trash size={19} className="text-danger shrink-0" />
               <span className="flex-1 min-w-0">
-                <span className="block text-sm text-negative truncate">Excluir conta</span>
+                <span className="block text-sm text-danger truncate">Excluir conta</span>
                 <span className="block text-xs text-zinc-500 truncate">apaga apostas, casas e histórico</span>
               </span>
               <CaretRight size={16} className="text-zinc-500 shrink-0" />

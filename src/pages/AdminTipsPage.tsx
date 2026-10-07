@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
 import { cn } from "@/lib/utils";
+import { formatPercent } from "@/lib/format";
 
 /**
  * Tips das últimas 24h que não geraram DM. Tela à parte, e não um "ver mais"
@@ -26,7 +27,7 @@ export default function AdminTipsPage() {
   const expected = data?.undeliveredExpected ?? 0;
 
   const back = (
-    <Button variant="outline" size="sm" asChild>
+    <Button variant="secondary" size="sm" asChild>
       <Link to="/admin/pipeline">
         <ArrowLeft size={14} /> Pipeline
       </Link>
@@ -59,7 +60,7 @@ export default function AdminTipsPage() {
         <EmptyState
           title="Não foi possível carregar as tips"
           action={
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <Button variant="secondary" size="sm" onClick={() => void refetch()}>
               Tentar de novo
             </Button>
           }
@@ -93,7 +94,7 @@ export default function AdminTipsPage() {
                       tip.expectedDelivery ? "text-[var(--dashboard-orange)]" : "opacity-45",
                     )}
                   >
-                    {tip.percent === null ? "sem %" : `${tip.percent}%`}
+                    {tip.percent === null ? "sem %" : formatPercent(tip.percent / 100, { decimals: 2, minDecimals: 0 })}
                   </span>
                   {tip.expectedDelivery && (
                     <span className="text-[10px] uppercase tracking-wider text-[var(--dashboard-orange)] opacity-80">

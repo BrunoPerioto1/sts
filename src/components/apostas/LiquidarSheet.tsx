@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatSignedCurrency, formatOdd } from "@/lib/format";
+import { formatMoney, formatOdd } from "@/lib/format";
 import { colorByResultId, mapResultToStatus, previewProfit } from "@/lib/bet-status";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { BottomSheet } from "./BottomSheet";
@@ -42,7 +42,7 @@ export function LiquidarSheet({
     <BottomSheet nested open={open} onOpenChange={onOpenChange} title="Liquidar">
       <div className="pb-4 space-y-4">
         <p className="text-sm text-zinc-500 -mt-1 truncate">
-          {aposta.game} · {formatCurrency(stake)} @ {formatOdd(odd)}
+          {aposta.game} · {formatMoney(stake)} @ {formatOdd(odd)}
         </p>
 
         {(["RESULTADO", "PARCIAL"] as const).map((section) => (
@@ -62,8 +62,8 @@ export function LiquidarSheet({
                     >
                       <OptionBar color={colorByResultId[String(r.resultId)]} />
                       <span className="flex-1 text-sm text-foreground">{r.label}</span>
-                      <span className={cn("text-sm font-medium tabular-nums", value >= 0 ? "text-positive" : "text-negative")}>
-                        {formatSignedCurrency(value)}
+                      <span className={cn("text-sm font-medium tabular-nums", value >= 0 ? "text-success" : "text-danger")}>
+                        {formatMoney(value, { signed: true })}
                       </span>
                     </button>
                   );
@@ -91,7 +91,7 @@ export function LiquidarSheet({
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
               <span className="flex-1 text-sm text-foreground">Cancelada</span>
-              <span className="text-sm font-medium tabular-nums text-zinc-300">{formatCurrency(0)}</span>
+              <span className="text-sm font-medium tabular-nums text-zinc-300">{formatMoney(0)}</span>
             </button>
           </div>
         </div>

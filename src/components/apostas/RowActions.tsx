@@ -64,7 +64,7 @@ export function RowActions({
         {onDelete && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-negative" onClick={() => onDelete(aposta.id)}>
+            <DropdownMenuItem className="text-danger" onClick={() => onDelete(aposta.id)}>
               Excluir
             </DropdownMenuItem>
           </>

@@ -49,7 +49,7 @@ export function CashoutSheet({
           >
             Confirmar
           </Button>
-          <Button variant="outline" className="w-full min-h-[44px]" onClick={close}>
+          <Button variant="secondary" className="w-full min-h-[44px]" onClick={close}>
             Cancelar
           </Button>
         </div>
