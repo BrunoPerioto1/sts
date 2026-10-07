@@ -25,19 +25,21 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden overflow-hidden border-t border-border bg-sidebar"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {/* Barra de 2px que escorrega entre as abas em vez de sumir e reaparecer
-          — e o unico elemento da nav que mostra a transicao de uma pra outra,
-          ja que a troca de tela em si e instantanea. */}
+      {/* Pill atras do icone ativo (estilo Material 3) que escorrega entre as
+          abas em vez de sumir e reaparecer — e o unico elemento da nav que
+          mostra a transicao, ja que a troca de tela em si e instantanea. */}
       {activeIndex >= 0 && (
         <span
           aria-hidden
-          className="absolute top-0 h-[2px] rounded-full bg-accent"
+          className="pointer-events-none absolute top-1 flex justify-center"
           style={{
             width: `${100 / items.length}%`,
             transform: `translateX(${activeIndex * 100}%)`,
             transition: "transform var(--dur-base) var(--ease-out-soft)",
           }}
-        />
+        >
+          <span className="h-7 w-14 rounded-full bg-blue-500/15" />
+        </span>
       )}
 
       {items.map((item, index) => {

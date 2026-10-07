@@ -38,7 +38,8 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.value)}
             className={cn(
               "press flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] whitespace-nowrap transition-colors disabled:opacity-50",
-              active ? "bg-accent/15 text-foreground ring-1 ring-inset ring-accent/40" : "text-zinc-400 hover:text-foreground"
+              // Preenchido, sem borda: mesmo jeito de "selecionado" do resto do app.
+              active ? "bg-zinc-800 text-foreground" : "text-zinc-400 hover:text-foreground"
             )}
           >
             {o.icon && <o.icon size={14} />} {o.label}
