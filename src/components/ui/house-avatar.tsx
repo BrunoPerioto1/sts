@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { houseColor, houseInitials } from "@/lib/format";
+import { useHouseLogoUrl } from "@/hooks/queries/use-houses";
 
 const SIZES = {
   sm: "h-6 w-6 rounded-md text-[10px]",
@@ -8,12 +10,30 @@ const SIZES = {
 } as const;
 
 /**
- * Avatar da casa: duas letras do nome sobre uma cor derivada do próprio nome
- * (hash — a mesma casa tem a mesma cor em todas as telas, sem sorteio).
- * Sem favicon de propósito: buscar ícone num serviço externo entregaria a lista
- * de casas a terceiros e não funcionaria offline no PWA.
+ * Avatar da casa: o logo gravado no banco (betting_houses.logo),
+ * servido pela nossa própria API — o navegador não fala com terceiro,
+ * então a lista de casas não vaza. Sem logo, ou se a imagem não carregar
+ * (offline no PWA), ficam as duas letras do nome sobre uma cor derivada do
+ * próprio nome (hash — a mesma casa tem a mesma cor em todas as telas).
  */
 export function HouseAvatar({ name, size = "md", className }: { name: string; size?: keyof typeof SIZES; className?: string }) {
+  const logoUrl = useHouseLogoUrl(name);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+
+  if (logoUrl && failedUrl !== logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailedUrl(logoUrl)}
+        className={cn("shrink-0 object-cover bg-white", SIZES[size], className)}
+      />
+    );
+  }
+
   return (
     <span
       aria-hidden="true"
