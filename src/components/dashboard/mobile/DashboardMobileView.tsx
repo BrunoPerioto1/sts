@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarBlank, ChartLine, SlidersHorizontal } from "@phosphor-icons/react";
+import { ChartLine, SlidersHorizontal } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -12,6 +12,9 @@ import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { Segmented } from "@/components/ui/segmented";
 import { DashboardFiltersSheet, countActiveDashboardFilters, type DashboardFiltersDraft } from "./DashboardFiltersSheet";
 import { PRESET_LABEL } from "@/lib/dashboard-periods";
 import { ProfitBarChart } from "../ProfitBarChart";
@@ -20,6 +23,11 @@ import { DashboardProfitHero, daysSummary } from "../DashboardProfitHero";
 
 // Barras também representam um único dia; vazio só quando não há dados.
 const MIN_DAYS_FOR_CHART = 1;
+
+const CHART_OPTIONS = [
+  { value: "dia", label: "Dia" },
+  { value: "acumulado", label: "Acumulado" },
+] as const;
 
 interface DashboardMobileViewProps {
   filters: { startDate: string; endDate: string; houseIds: number[]; sportIds: number[] };
@@ -62,30 +70,19 @@ export function DashboardMobileView({
     <>
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       <div className="min-h-[calc(100dvh-96px)] px-4 pt-5 pb-6 flex flex-col">
-        <div className="flex items-start justify-between gap-3 shrink-0 animate-rise stagger" style={stagger(0)}>
-          <div className="min-w-0">
-            <h2 className="text-[28px] leading-tight font-semibold tracking-tight">Dashboard</h2>
-            <p className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
-              <CalendarBlank size={17} className="shrink-0" aria-hidden="true" />
-              <span>
-              {shortDate(filters.startDate)} – {shortDate(filters.endDate)} · {rangeSuffix}</span>
-            </p>
-          </div>
-          {/* Mesmo botão de filtros do header de Apostas (ApostasMobileHeader). */}
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(true)}
-            aria-label="Abrir filtros"
-            className="press relative shrink-0 h-11 w-11 flex items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.04] text-zinc-300 hover:text-foreground"
-          >
-            <SlidersHorizontal size={19} />
-            {activeFilterCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* A tela é de ponta a ponta (sem o header do MainLayout), então o
+            PageHeader vem aqui dentro. Período no subtítulo; filtros no mesmo
+            botão de Apostas. */}
+        <PageHeader
+          className="shrink-0 animate-rise stagger"
+          title="Dashboard"
+          subtitle={`${shortDate(filters.startDate)} – ${shortDate(filters.endDate)} · ${rangeSuffix}`}
+          actions={
+            <Button variant="icon" onClick={() => setFiltersOpen(true)} aria-label="Abrir filtros" badge={activeFilterCount}>
+              <SlidersHorizontal />
+            </Button>
+          }
+        />
 
         <DashboardProfitHero
           className="mt-8 shrink-0 animate-rise stagger"
@@ -99,20 +96,13 @@ export function DashboardMobileView({
         <div className="mt-5 animate-rise stagger" style={stagger(2)}>
           {dailyData.length >= MIN_DAYS_FOR_CHART ? (
             <>
-              <div role="tablist" className="mb-3 grid grid-cols-2 rounded-xl bg-foreground/[0.04] p-1 text-sm">
-                {(["dia", "acumulado"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="tab"
-                    aria-selected={grafico === v}
-                    onClick={() => setGrafico(v)}
-                    className={`press h-9 rounded-lg capitalize transition-colors ${grafico === v ? "bg-foreground/[0.1] text-foreground" : "text-zinc-400"}`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                label="Gráfico"
+                className="flex w-full mb-3"
+                value={grafico}
+                options={CHART_OPTIONS}
+                onChange={setGrafico}
+              />
               {grafico === "dia" ? (
                 <ProfitBarChart data={dailyData} />
               ) : (
@@ -128,13 +118,9 @@ export function DashboardMobileView({
                 </p>
               </div>
               {preset !== "60d" && preset !== "allTime" && (
-                <button
-                  type="button"
-                  onClick={() => onPresetChange("60d")}
-                  className="press text-sm text-accent font-medium mt-2 ml-6"
-                >
+                <Button variant="ghost" size="sm" className="mt-1 ml-4" onClick={() => onPresetChange("60d")}>
                   Ampliar para 60 dias
-                </button>
+                </Button>
               )}
             </div>
           )}

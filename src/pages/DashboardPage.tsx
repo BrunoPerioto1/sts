@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatInt } from "@/lib/format";
 
 interface DashboardPageContentProps {
   hasNoBets: boolean;
@@ -88,7 +89,7 @@ export function DashboardPage() {
   const subtitle = [
     "Visão geral da sua performance",
     rangeLabel,
-    ready && !loading ? `${Number(metrics.settledBets)} apostas liquidadas` : null,
+    ready && !loading ? `${formatInt(metrics.settledBets)} apostas liquidadas` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -130,8 +131,8 @@ export function DashboardPage() {
       title="Dashboard"
       subtitle={subtitle}
       titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
-      titleClassName="text-2xl font-semibold tracking-tight"
-      subtitleClassName="text-sm text-zinc-400 truncate"
+      subtitleClassName="text-sm text-zinc-500 truncate"
+      hideHeaderBorder
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.

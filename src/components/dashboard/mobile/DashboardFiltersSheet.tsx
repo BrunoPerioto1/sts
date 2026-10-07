@@ -9,6 +9,9 @@ import { SportSheet } from "@/components/apostas/SportSheet";
 import { SportIcon } from "@/components/apostas/SportIcon";
 import { PeriodCalendarSheet } from "@/components/apostas/PeriodCalendarSheet";
 import { Button } from "@/components/ui/button";
+import { FilterChip } from "@/components/ui/filter-chips";
+import { SectionLabel } from "@/components/ui/section-label";
+import { houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { PRESET_LABEL, presetRange } from "@/lib/dashboard-periods";
@@ -33,7 +36,6 @@ export function countActiveDashboardFilters(f: Pick<DashboardFiltersDraft, "pres
   return [f.preset !== DEFAULT_DASHBOARD_PRESET, f.houseIds.length > 0, f.sportIds.length > 0].filter(Boolean).length;
 }
 
-const sectionLabel = "text-xs font-medium uppercase tracking-wider text-zinc-500";
 // Mesma altura/raio/padding do campo "Período personalizado".
 const selectField = "min-h-[48px] rounded-lg px-3";
 
@@ -75,7 +77,7 @@ export function DashboardFiltersSheet({
     draft.houseIds.length === 0
       ? "Todas as casas"
       : draft.houseIds.length === 1
-        ? (houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
+        ? houseDisplayName(houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
         : `${draft.houseIds.length} casas`;
 
   const sportSummary =
@@ -122,39 +124,24 @@ export function DashboardFiltersSheet({
     >
       <div className="pt-1 pb-4 space-y-6">
         <section className="space-y-2.5">
-          <p className={sectionLabel}>Período</p>
-          <div className="grid grid-cols-3 gap-2">
-            {PERIOD_CHIPS.map((preset) => {
-              // Período personalizado não acende nenhum chip: um só estado de período ativo.
-              const isActive = draft.preset === preset;
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => selectPreset(preset)}
-                  className={cn(
-                    // Borda nos dois estados: trocar de chip não mexe 1px no layout.
-                    "press h-10 px-1.5 rounded-full border text-[13px] min-[360px]:text-sm font-medium flex items-center justify-center whitespace-nowrap transition-colors",
-                    isActive
-                      ? "border-accent bg-accent text-white"
-                      : "border-foreground/10 bg-foreground/[0.03] text-zinc-300"
-                  )}
-                >
-                  {PRESET_LABEL[preset]}
-                </button>
-              );
-            })}
+          <SectionLabel as="h3">Período</SectionLabel>
+          {/* Período personalizado não acende nenhum chip: um só estado de período ativo. */}
+          <div className="flex flex-wrap gap-2">
+            {PERIOD_CHIPS.map((preset) => (
+              <FilterChip key={preset} active={draft.preset === preset} onClick={() => selectPreset(preset)}>
+                {PRESET_LABEL[preset]}
+              </FilterChip>
+            ))}
           </div>
         </section>
 
         <section className="space-y-2.5">
-          <p className={sectionLabel}>Casas</p>
+          <SectionLabel as="h3">Casas</SectionLabel>
           <SheetSelectField className={selectField} summary={casaSummary} onOpen={() => setCasaOpen(true)} />
         </section>
 
         <section className="space-y-2.5">
-          <p className={sectionLabel}>Esportes</p>
+          <SectionLabel as="h3">Esportes</SectionLabel>
           <SheetSelectField
             className={selectField}
             summary={sportSummary}
@@ -168,7 +155,7 @@ export function DashboardFiltersSheet({
         </section>
 
         <section className="space-y-2.5">
-          <p className={sectionLabel}>Período personalizado</p>
+          <SectionLabel as="h3">Período personalizado</SectionLabel>
           {/* Ativo, ganha o mesmo tratamento de seleção do campo "De/Até" do
               calendário; os chips acima apagam — um único estado de período. */}
           <button

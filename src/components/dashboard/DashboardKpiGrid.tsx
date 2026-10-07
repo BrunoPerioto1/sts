@@ -3,7 +3,7 @@ import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { DASHBOARD_KPI_REGISTRY, kpiColumnSpan, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { kpiValues } from "@/lib/dashboard-kpi-values";
 import { kpiDelta } from "@/lib/dashboard-kpi-delta";
-import { DashboardKpiCard } from "./DashboardKpiCard";
+import { StatCard } from "@/components/ui/stat-card";
 import { resolveKpiIcon } from "./dashboard-icons";
 
 // Delta com cor só onde "subir" é bom sem ambiguidade; volume e odd subindo
@@ -28,7 +28,7 @@ export function DashboardKpiGrid({ metrics, previous, stake, preferences, deskto
         const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, preferences.performanceColors) : undefined;
         const delta = previous ? kpiDelta(kpi.id, metrics, previous, stake) : null;
         return <div key={kpi.id} className="flex-1 min-w-fit px-5 py-4 border-l border-foreground/[0.05] first:border-l-0">
-          <p className="text-[11px] uppercase tracking-wide text-zinc-400 mb-1.5 whitespace-nowrap">{meta.label}</p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5 whitespace-nowrap">{meta.label}</p>
           <p className="text-2xl leading-tight font-semibold tabular-nums whitespace-nowrap" style={{ color }}>{data.value}</p>
           {previous && (
             <p className="mt-1 text-[11px] tabular-nums whitespace-nowrap text-zinc-500" title="Comparado ao período anterior de mesma duração">
@@ -56,7 +56,7 @@ export function DashboardKpiGrid({ metrics, previous, stake, preferences, deskto
       const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, preferences.performanceColors) : undefined;
       const IconComponent = resolveKpiIcon(kpi.id, kpi.icon);
       const columnSpan = kpiColumnSpan(index, visible.length);
-      return <DashboardKpiCard key={kpi.id} label={meta.label} value={data.value} icon={IconComponent} color={color} columnSpan={columnSpan} />;
+      return <StatCard key={kpi.id} variant="card" label={meta.label} value={data.value} icon={IconComponent} color={color} wide={columnSpan === 2} />;
     })}
   </div>;
 }

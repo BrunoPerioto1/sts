@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { SectionLabel } from "@/components/ui/section-label";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 
 /** Linha "3 dias positivos · 1 negativo" que acompanha o número-herói. */
@@ -49,7 +50,7 @@ export function DashboardProfitHero({
 }) {
   return (
     <div className={cn("min-w-0", className)} style={style}>
-      <p className="text-[11px] uppercase tracking-wide text-zinc-400 mb-1.5">Lucro líquido</p>
+      <SectionLabel as="p" className="px-0 mb-1.5">Lucro líquido</SectionLabel>
       <p
         className={cn(
           "font-semibold tabular-nums leading-tight tracking-tight",

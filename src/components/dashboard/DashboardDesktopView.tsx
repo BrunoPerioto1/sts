@@ -10,6 +10,7 @@ import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { stagger } from "@/lib/motion";
 import { formatMoney } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { DashboardProfitHero, daysSummary } from "./DashboardProfitHero";
@@ -36,10 +37,9 @@ function Panel({ label, right, children, className }: {
 }) {
   return (
     <section className={cn("flex flex-col", className)}>
-      <div className="flex items-center justify-between gap-3 mb-4 shrink-0">
-        <h3 className="text-[11px] uppercase tracking-wide text-zinc-400">{label}</h3>
-        {right}
-      </div>
+      <SectionLabel as="h3" className="px-0 mb-4 shrink-0" action={right}>
+        {label}
+      </SectionLabel>
       <div className="flex-1 min-h-0">{children}</div>
     </section>
   );

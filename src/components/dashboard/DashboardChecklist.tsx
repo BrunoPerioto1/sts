@@ -3,6 +3,7 @@ import { CheckCircle, Circle, CaretRight } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import { useHouseBalances } from "@/hooks/queries/use-houses";
 import { cn } from "@/lib/utils";
+import { SectionLabel } from "@/components/ui/section-label";
 
 interface Step {
   label: string;
@@ -50,7 +51,7 @@ export function DashboardChecklist() {
 
   return (
     <section className="mx-auto max-w-lg rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] p-5 animate-fade-in">
-      <p className="text-[11px] uppercase tracking-wide text-zinc-400">Primeiros passos · {doneCount} de {steps.length}</p>
+      <SectionLabel as="p" className="px-0">{`Primeiros passos · ${doneCount} de ${steps.length}`}</SectionLabel>
       <h3 className="mt-1 text-lg font-semibold">Seu dashboard aparece com a primeira aposta</h3>
       <ol className="mt-4 space-y-1">
         {steps.map((step) => (

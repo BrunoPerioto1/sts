@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { DashboardKpiCard } from "@/components/dashboard/DashboardKpiCard";
+import { StatCard } from "@/components/ui/stat-card";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
 import { DASHBOARD_KPI_REGISTRY, ICON_IDS, POSITIVE_COLORS, NEGATIVE_COLORS, defaultDashboardPreferences, performanceColor, moveKpi, toggleKpi, type KpiId, type KpiPreference, type DashboardPreferences } from "@/lib/dashboard-preferences";
@@ -156,7 +156,7 @@ function DashboardPreferencesMobile() {
           <h2 id="preview-title" className="text-base font-semibold">Prévia</h2>
           <p className="text-xs text-zinc-400 mt-1">Valores ilustrativos para comparar positivos e negativos.</p>
           <div className="grid grid-cols-2 auto-rows-fr gap-2.5 mt-3">
-            {([{ id: "roi", value: formatPercent(1.061, { signed: true }), signed: 1.061 }, { id: "units", value: formatUnits(26.6), signed: 26.6 }, { id: "roi", value: formatPercent(-0.205, { signed: true }), signed: -0.205 }, { id: "units", value: formatUnits(-5.2), signed: -5.2 }] as const).map((tile, index) => <DashboardKpiCard key={index} label={DASHBOARD_KPI_REGISTRY[tile.id].label} value={tile.value} icon={resolveKpiIcon(tile.id, preferences.kpis.find((kpi) => kpi.id === tile.id)!.icon)} color={performanceColor(tile.signed, colors)} />)}
+            {([{ id: "roi", value: formatPercent(1.061, { signed: true }), signed: 1.061 }, { id: "units", value: formatUnits(26.6), signed: 26.6 }, { id: "roi", value: formatPercent(-0.205, { signed: true }), signed: -0.205 }, { id: "units", value: formatUnits(-5.2), signed: -5.2 }] as const).map((tile, index) => <StatCard key={index} variant="card" label={DASHBOARD_KPI_REGISTRY[tile.id].label} value={tile.value} icon={resolveKpiIcon(tile.id, preferences.kpis.find((kpi) => kpi.id === tile.id)!.icon)} color={performanceColor(tile.signed, colors)} />)}
           </div>
         </section>
         <p role="status" className="text-xs text-zinc-400">{saving ? "Salvando…" : error ? "Alteração não salva. A configuração anterior foi mantida." : "Alterações salvas automaticamente."}</p>

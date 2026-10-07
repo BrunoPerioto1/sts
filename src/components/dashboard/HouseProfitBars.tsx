@@ -1,5 +1,5 @@
 import type { HouseProfit } from "@/hooks/dashboard/use-house-profit";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, houseDisplayName, signColor } from "@/lib/format";
 
 /**
  * Barras divergentes a partir de um eixo zero central: perda cresce pra
@@ -20,7 +20,7 @@ export function HouseProfitBars({ rows }: { rows: HouseProfit[] }) {
         const positive = profit >= 0;
         return (
           <li key={house} className="grid grid-cols-[minmax(72px,1fr)_1fr_auto] items-center gap-3">
-            <span className="text-[13px] text-zinc-200 truncate">{house}</span>
+            <span className="text-[13px] text-zinc-200 truncate">{houseDisplayName(house)}</span>
             <span className="relative h-2 rounded-full bg-foreground/[0.04]">
               {/* O zero fica no meio da faixa; a barra sai dele pros dois lados. */}
               <span className="absolute inset-y-[-3px] left-1/2 w-px bg-foreground/15" aria-hidden="true" />
@@ -35,7 +35,7 @@ export function HouseProfitBars({ rows }: { rows: HouseProfit[] }) {
               />
             </span>
             <span
-              className={`text-[13px] tabular-nums font-medium ${positive ? "text-success" : "text-danger"}`}
+              className={`text-[13px] tabular-nums font-medium ${signColor(profit)}`}
             >
               {formatMoney(profit, { signed: true })}
             </span>
