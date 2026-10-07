@@ -22,6 +22,7 @@ import {
 } from "./tip-planilhar-form";
 import { useTipPlanilhar } from "./use-tip-planilhar";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
+import { houseDisplayName } from "@/lib/format";
 
 // Versão desktop do "Conseguiu apostar?": diálogo centrado e estreito. O
 // bottom sheet aqui esticava os botões de ponta a ponta do monitor e jogava a
@@ -68,7 +69,7 @@ export function TipPlanilharDialog({
                   onValueChange={(v) => form.setHouseIds([Number(v)])}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={tip.house ?? "Selecione"} />
+                    <SelectValue placeholder={tip.house ? houseDisplayName(tip.house) : "Selecione"} />
                   </SelectTrigger>
                   <SelectContent>
                     {houses.map((h) => (

@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent } from "@/lib/format";
+import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { TIP_TIMING_TONE_CLASS, tipTiming } from "@/lib/tip-schedule";
 import type { TipItem } from "@/api/routes/get-tips";
@@ -54,7 +54,7 @@ export function TipCard({
             {leading}
             <span className="min-w-0 truncate">
               Recebida {formatTime(tip.createdAt)}
-              {tip.house && ` · ${tip.house}`}
+              {tip.house && ` · ${houseDisplayName(tip.house)}`}
             </span>
           </p>
           <h3 className="mt-1 text-[17px] font-semibold leading-tight text-foreground">
@@ -125,11 +125,10 @@ export function TipCard({
       <div className="mt-3 flex items-center gap-2">
         <Button
           asChild={!!tip.link}
-          size="lg"
           disabled={!tip.link}
           // min-w-0: sem isso o rótulo longo ("Apostar R$ 1.000,00") impede o
           // botão de encolher e empurra o "..." pra fora da tela no mobile.
-          className="h-11 min-w-0 flex-1 truncate border-transparent bg-accent text-white hover:bg-accent/90"
+          className="h-11 min-w-0 flex-1 truncate"
         >
           {tip.link ? (
             // noreferrer junto do _blank: sem ele a aba da casa recebe

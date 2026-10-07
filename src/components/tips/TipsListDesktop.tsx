@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { formatDate } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
 import { TipColumnHeaderDesktop, TipRowDesktop } from "./TipRowDesktop";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -68,14 +69,9 @@ export function TipsListDesktop({
       <TipColumnHeaderDesktop selectAll={onToggle ? selectAll : undefined} selectionMode={checkedIds.size > 0} />
       {grupos.map((grupo) => (
         <section key={grupo.key} className="min-w-0">
-          <div className="flex items-baseline gap-2 border-b border-border px-3 py-2.5">
-            <span className="text-[13px] font-semibold tracking-tight">{grupo.label}</span>
-            <span className="text-xs text-zinc-500">
-              {grupo.hint ? `${grupo.hint} · ` : ""}
-              <span className="tabular-nums">{grupo.tips.length}</span>
-            </span>
-            {grupo.action && <span className="ml-auto self-center">{grupo.action}</span>}
-          </div>
+          <SectionLabel className="border-b border-border px-3 py-2.5" count={grupo.tips.length} action={grupo.action}>
+            {grupo.hint ? `${grupo.label} · ${grupo.hint}` : grupo.label}
+          </SectionLabel>
           {/* Respiro entre linhas: marcadas em sequência não viram um bloco só. */}
           <div className="space-y-1 py-1">
             {grupo.tips.map((tip) => (

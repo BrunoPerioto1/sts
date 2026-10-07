@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatMoney, formatOdd } from "@/lib/format";
+import { formatMoney, formatOdd, houseDisplayName, signColor } from "@/lib/format";
 import { toInput, type TipPlanilharForm } from "./use-tip-planilhar";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -8,7 +8,7 @@ const chipClass =
   "h-10 shrink-0 rounded-lg border border-border px-3 text-sm text-zinc-300 transition-colors hover:bg-foreground/[0.07]";
 
 export function TipContextLine({ tip }: { tip: TipItem }) {
-  const meta = [tip.house, tip.odd !== null && `odd ${formatOdd(tip.odd)}`].filter(Boolean).join(" · ");
+  const meta = [tip.house && houseDisplayName(tip.house), tip.odd !== null && `odd ${formatOdd(tip.odd)}`].filter(Boolean).join(" · ");
   return (
     <div className="space-y-0.5">
       {tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
@@ -30,7 +30,7 @@ export function TipStakeFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="tip-stake" className="text-sm text-zinc-400">
+        <Label htmlFor="tip-stake" className="text-xs font-medium uppercase tracking-wider text-muted">
           Stake apostada
         </Label>
         <div className="relative">
@@ -71,7 +71,7 @@ export function TipStakeFields({
       {form.valid && (
         <p className="text-sm tabular-nums text-zinc-400">
           Retorno {formatMoney(form.retorno)} · lucro{" "}
-          <span className="text-success">{formatMoney(form.retorno - form.stakeValue)}</span>
+          <span className={signColor(form.retorno - form.stakeValue)}>{formatMoney(form.retorno - form.stakeValue, { signed: true })}</span>
         </p>
       )}
     </>
@@ -81,7 +81,7 @@ export function TipStakeFields({
 export function TipOddField({ form }: { form: TipPlanilharForm }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="tip-odd">Odd</Label>
+      <Label htmlFor="tip-odd" className="text-xs font-medium uppercase tracking-wider text-muted">Odd</Label>
       <Input
         id="tip-odd"
         inputMode="decimal"

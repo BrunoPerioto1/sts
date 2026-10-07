@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { ArrowsClockwise, Buildings, CaretDown, CheckCircle, Clock, ListChecks, MagnifyingGlass, PaperPlaneTilt, X } from "@phosphor-icons/react";
+import { ArrowsClockwise, Buildings, CheckCircle, Clock, ListChecks, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCardMobileItem } from "@/components/tips/TipCardMobileItem";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
@@ -17,9 +17,13 @@ import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { SearchField } from "@/components/ui/search-field";
+import { SectionLabel } from "@/components/ui/section-label";
+import { FilterChip, FilterChipRow } from "@/components/ui/filter-chips";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { actionToast } from "@/lib/action-toast";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatOdd, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTips } from "@/hooks/queries/use-tips";
 import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/tips/use-tips-page";
@@ -34,20 +38,6 @@ const tabs: { value: TipStatus; label: string; description: string; countKey: "p
   // "Caiu" = a odd saiu e a tip não foi apostada — não é aposta perdida.
   { value: "caiu", label: "Caíram", description: "Odd saiu antes de apostar", countKey: "caidas" },
 ];
-
-// Chip de filtro do mobile: preenchido quando o filtro está fora do padrão.
-const chipClass = (ativo: boolean) =>
-  cn(
-    "press flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors",
-    ativo ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-300",
-  );
-
-// Contador dentro do chip como badge, pra "Pendentes 40" não ler como frase.
-const chipBadgeClass = (ativo: boolean) =>
-  cn(
-    "rounded-full px-1.5 py-px text-[11px] tabular-nums",
-    ativo ? "bg-white/20 text-white" : "bg-foreground/[0.08] text-zinc-200",
-  );
 
 const emptyByTab: Record<TipStatus, { title: string; description: string }> = {
   pending: {
@@ -185,7 +175,7 @@ export default function TipsPage() {
     houseIds.length === 0
       ? null
       : houseIds.length === 1
-        ? (houses.find((h) => h.id === houseIds[0])?.name ?? "1 casa")
+        ? houseDisplayName(houses.find((h) => h.id === houseIds[0])?.name ?? "1 casa")
         : `${houseIds.length} casas`;
   const toggleInicio = (id: string) =>
     setInicio(inicio.includes(id) ? inicio.filter((v) => v !== id) : [...inicio, id]);
@@ -211,29 +201,28 @@ export default function TipsPage() {
           {isFetching ? "atualizando…" : dataUpdatedAt ? `atualizado ${format(dataUpdatedAt, "HH:mm")}` : "atualizar"}
         </button>
       }
-      titleWrapperClassName="flex items-baseline gap-3 min-w-0"
-      titleClassName="text-2xl font-semibold tracking-tight"
-      subtitleClassName="text-sm text-zinc-400 truncate"
       mobileHeader={
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">Tips</h1>
-          {/* Números em destaque, rótulos apagados: o olho pega "40" e "R$ 1.631". */}
-          {summary && (
-            <p className="mt-0.5 text-sm text-zinc-400">
-              <span className="font-medium text-zinc-100 tabular-nums">
-                {summary.pending} {summary.pending === 1 ? "tip" : "tips"}
-              </span>
-              {summary.pendingStake > 0 && (
-                <>
-                  {" · Stake sugerida "}
-                  <span className="font-medium text-zinc-100 tabular-nums">
-                    {formatMoney(summary.pendingStake, { cents: false })}
-                  </span>
-                </>
-              )}
-            </p>
-          )}
-        </div>
+        <PageHeader
+          title="Tips"
+          // Números em destaque, rótulos apagados: o olho pega "40" e "R$ 1.631".
+          subtitle={
+            summary && (
+              <>
+                <span className="font-medium text-zinc-100 tabular-nums">
+                  {summary.pending} {summary.pending === 1 ? "tip" : "tips"}
+                </span>
+                {summary.pendingStake > 0 && (
+                  <>
+                    {" · Stake sugerida "}
+                    <span className="font-medium text-zinc-100 tabular-nums">
+                      {formatMoney(summary.pendingStake, { cents: false })}
+                    </span>
+                  </>
+                )}
+              </>
+            )
+          }
+        />
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
@@ -274,23 +263,7 @@ export default function TipsPage() {
       </div>
 
       <div className="-mx-6 hidden items-center gap-3 border-b border-border px-6 py-3.5 md:flex">
-        <div className="flex h-10 w-[340px] items-center gap-2 rounded-md border border-foreground/10 bg-foreground/[0.03] px-3 transition-colors focus-within:border-foreground/25">
-          <MagnifyingGlass className="h-4 w-4 shrink-0 text-zinc-500" />
-          <input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setBusca("");
-            }}
-            placeholder="Buscar evento ou mercado"
-            className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-zinc-500"
-          />
-          {busca && (
-            <button type="button" onClick={() => setBusca("")} aria-label="Limpar busca" className="text-zinc-500 hover:text-zinc-300">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        <SearchField value={busca} onChange={setBusca} placeholder="Buscar evento ou mercado" className="h-10 w-[340px]" />
 
         <HouseMultiSelect
           houses={houses}
@@ -303,7 +276,7 @@ export default function TipsPage() {
         {tab === "pending" && (
           <>
             <span className="mx-1 h-5 w-px bg-foreground/10" />
-            <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Início</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-muted">Início</span>
             <div className="flex items-center gap-0.5">
               {TIP_GROUP_OPTIONS.map((o) => {
                 const ativo = inicio.includes(o.value);
@@ -343,25 +316,31 @@ export default function TipsPage() {
           inputRef={buscaRef}
           placeholder="Buscar por evento ou mercado..."
         />
-        <div className="mb-5 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <button type="button" onClick={() => setStatusSheetOpen(true)} className={chipClass(tab !== "pending")}>
-            <ListChecks size={13} /> {tabs.find((t) => t.value === tab)?.label}
-            {summary && <span className={chipBadgeClass(tab !== "pending")}>{summary[tabs.find((t) => t.value === tab)!.countKey]}</span>}
-            <CaretDown size={11} className="opacity-60" />
-          </button>
-          <button type="button" onClick={() => setCasaSheetOpen(true)} className={chipClass(houseIds.length > 0)}>
-            <Buildings size={13} /> {casaResumo ?? "Casas"}
-            <CaretDown size={11} className="opacity-60" />
-          </button>
+        <FilterChipRow className="mb-4">
+          <FilterChip
+            opensSheet
+            icon={ListChecks}
+            active={tab !== "pending"}
+            count={summary?.[tabs.find((t) => t.value === tab)!.countKey]}
+            onClick={() => setStatusSheetOpen(true)}
+          >
+            {tabs.find((t) => t.value === tab)?.label}
+          </FilterChip>
+          <FilterChip opensSheet icon={Buildings} active={houseIds.length > 0} onClick={() => setCasaSheetOpen(true)}>
+            {casaResumo ?? "Casas"}
+          </FilterChip>
           {tab === "pending" && (
-            <button type="button" onClick={() => setInicioSheetOpen(true)} className={chipClass(inicio.length > 0)}>
-              <Clock size={13} />{" "}
+            <FilterChip
+              opensSheet
+              icon={Clock}
+              active={inicio.length > 0}
+              count={inicio.length > 1 ? inicio.length : undefined}
+              onClick={() => setInicioSheetOpen(true)}
+            >
               {inicio.length === 1 ? TIP_GROUP_OPTIONS.find((o) => o.value === inicio[0])?.label : "Início"}
-              {inicio.length > 1 && <span className={chipBadgeClass(true)}>{inicio.length}</span>}
-              <CaretDown size={11} className="opacity-60" />
-            </button>
+            </FilterChip>
           )}
-        </div>
+        </FilterChipRow>
       </div>
 
       {isPending ? (
@@ -427,13 +406,11 @@ export default function TipsPage() {
             {/* Container único com divisórias, não cards soltos: a fila é pra
                 varrer de cima a baixo, e sombra por item vira ruído nisso. */}
             {(gruposDaLista ?? [{ key: "all", label: "", tips } as TipListGroup]).map((grupo) => (
-            <section key={grupo.key} className="mb-4 last:mb-0">
+            <section key={grupo.key} className="mb-6 last:mb-0">
             {grupo.label && (
-              <div className="mb-2 flex items-center gap-2 px-1">
-                <span className="text-[13px] font-semibold tracking-tight">{grupo.label}</span>
-                <span className="text-xs tabular-nums text-zinc-500">{grupo.tips.length}</span>
-                <span className="ml-auto">{grupo.action}</span>
-              </div>
+              <SectionLabel className="mb-2" count={grupo.tips.length} action={grupo.action}>
+                {grupo.label}
+              </SectionLabel>
             )}
             <div className="overflow-hidden rounded-xl border border-border">
               {grupo.tips.map((tip) => (
@@ -480,13 +457,12 @@ export default function TipsPage() {
               <li key={tip.id}>
                 <p className="font-medium">{tip.game ?? "Jogo não identificado"}</p>
                 <p className="text-xs text-zinc-400">{tip.market}</p>
-                <p className="text-zinc-400">{tip.house ?? "Casa não reconhecida"} · Odd {tip.odd ?? "—"} · {tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "Stake não informada"}</p>
+                <p className="text-zinc-400">{tip.house ? houseDisplayName(tip.house) : "Casa não reconhecida"} · Odd {tip.odd != null ? formatOdd(tip.odd) : "—"} · {tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "Stake não informada"}</p>
               </li>
             ))}
           </ul>
           <p className="text-sm">Stake total: {formatMoney(batchReview?.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0) ?? 0)}</p>
-          <Button className="border-transparent bg-success-solid text-white hover:bg-success-solid/90"
-            onClick={() => batchReview && runBatch("planilhar", batchReview)}>
+          <Button className="bg-success-solid hover:bg-success-solid/90" onClick={() => batchReview && runBatch("planilhar", batchReview)}>
             Confirmar e planilhar
           </Button>
         </DialogContent>

@@ -12,7 +12,7 @@ import {
   TipStakeFields,
 } from "./tip-planilhar-form";
 import { useTipPlanilhar } from "./use-tip-planilhar";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, houseDisplayName } from "@/lib/format";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
 
 // Você volta da casa e responde uma pergunta só: apostou quanto? A stake já
@@ -39,7 +39,7 @@ export function TipPlanilharSheet({
   const [casaOpen, setCasaOpen] = useState(false);
 
   const casaLabel =
-    houses.find((h) => h.id === form.houseIds[0])?.name ?? tip.house ?? "Escolher casa";
+    houseDisplayName(houses.find((h) => h.id === form.houseIds[0])?.name ?? tip.house ?? "Escolher casa");
 
   return (
     <BottomSheet

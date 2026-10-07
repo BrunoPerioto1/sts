@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent } from "@/lib/format";
+import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
 
@@ -41,7 +41,7 @@ export function TipDetailPanel({
   busy?: boolean;
   hasSelection?: boolean;
 }) {
-  const meta = [tip.sport, tip.house].filter(Boolean).join(" · ");
+  const meta = [tip.sport, tip.house && houseDisplayName(tip.house)].filter(Boolean).join(" · ");
 
   return (
     <aside aria-label="Detalhes da tip" className={cn(

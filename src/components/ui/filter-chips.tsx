@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Icon } from "@phosphor-icons/react";
+import { CaretDown, type Icon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface FilterChipProps {
@@ -9,7 +9,8 @@ interface FilterChipProps {
   /** Contagem dentro do chip, como badge ("Pendentes 40"). */
   count?: number;
   icon?: Icon;
-  /** Chip que abre um sheet em vez de alternar: vira botão comum pro leitor de tela. */
+  /** Chip que abre um sheet em vez de alternar: ganha a setinha e vira botão
+   *  comum pro leitor de tela. Ativo = filtro fora do padrão. */
   opensSheet?: boolean;
 }
 
@@ -42,6 +43,7 @@ export function FilterChip({ active, onClick, children, count, icon: IconCompone
           {count}
         </span>
       )}
+      {opensSheet && <CaretDown size={11} className="opacity-60" />}
     </button>
   );
 }

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatTime, kickoffParts, formatOdd, formatPercent } from "@/lib/format";
+import { formatMoney, formatTime, kickoffParts, formatOdd, formatPercent, houseDisplayName } from "@/lib/format";
 import { TIP_TIMING_TONE_CLASS, tipTiming, type TipTimingTone } from "@/lib/tip-schedule";
 import { TipKickoffBadge } from "./TipKickoffBadge";
 import type { TipItem, TipStatus } from "@/api/routes/get-tips";
@@ -196,7 +196,7 @@ export function TipRowDesktop({
       {/* Quebra em duas linhas em vez de cortar: "Esportes da Sorte" nao cabe
           numa linha sem uma coluna larga demais, e a linha ja tem duas alturas
           por causa do mercado. Ver a casa inteira importa mais que o alinhamento. */}
-      <span className="line-clamp-2 text-sm leading-tight opacity-70">{tip.house ?? "—"}</span>
+      <span className="line-clamp-2 text-sm leading-tight opacity-70">{tip.house ? houseDisplayName(tip.house) : "—"}</span>
 
       <span className="text-right text-sm font-medium tabular-nums">
         {tip.odd != null ? formatOdd(tip.odd) : "—"}
