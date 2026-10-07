@@ -117,7 +117,7 @@ export function TipCard({
       </div>
 
       {tip.isAviso && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-pending">
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-warning">
           <Warning size={14} weight="fill" /> SOBRECARGA — confira a odd na casa antes de apostar
         </p>
       )}

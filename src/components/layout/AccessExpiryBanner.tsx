@@ -72,8 +72,8 @@ export function AccessExpiryBanner() {
   };
 
   return (
-    <div role="status" className="flex items-center gap-3 px-4 sm:px-6 py-2.5 text-sm bg-pending/10 border-b border-pending/25">
-      <Hourglass size={16} className="shrink-0 text-pending" aria-hidden="true" />
+    <div role="status" className="flex items-center gap-3 px-4 sm:px-6 py-2.5 text-sm bg-warning/10 border-b border-warning/25">
+      <Hourglass size={16} className="shrink-0 text-warning" aria-hidden="true" />
       <p className="flex-1 min-w-0">
         Seu acesso vence <span className="font-medium">{when}</span>.
         {price != null && (
@@ -84,7 +84,7 @@ export function AccessExpiryBanner() {
         <button
           type="button"
           onClick={copy}
-          className="press shrink-0 flex items-center gap-1.5 rounded-md border border-pending/30 px-2.5 py-1 text-xs hover:bg-pending/10"
+          className="press shrink-0 flex items-center gap-1.5 rounded-md border border-warning/30 px-2.5 py-1 text-xs hover:bg-warning/10"
         >
           <Copy size={13} /> Copiar PIX
         </button>
@@ -93,7 +93,7 @@ export function AccessExpiryBanner() {
         <button
           type="button"
           onClick={claim}
-          className="press shrink-0 hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-zinc-300 hover:bg-pending/10"
+          className="press shrink-0 hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-zinc-300 hover:bg-warning/10"
         >
           Já paguei
         </button>

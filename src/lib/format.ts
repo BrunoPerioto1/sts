@@ -116,23 +116,6 @@ export function formatKickoff(value: string | number | Date): string {
   return eHoje ? hora : `${dia} ${hora}`;
 }
 
-// Paleta categórica do avatar da casa. Sem verde, vermelho e âmbar puros (são
-// ganho, perda e pendente) e com tons escuros o bastante pras iniciais brancas
-// passarem de 4.5:1 — o amarelo e o verde-claro antigos davam ~1.5:1.
-const AVATAR_PALETTE = ["#4f46e5", "#0e7490", "#0f766e", "#7c3aed", "#c026d3", "#db2777", "#c2410c", "#475569"];
-
-/** Cor do avatar pelo nome (hash), igual em todas as telas e sem depender do id. */
-export function houseColor(name: string): string {
-  let hash = 0;
-  for (const ch of name.trim().toLowerCase()) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
-}
-
-/** @deprecated use houseColor(nome) — some quando as telas migrarem pro <HouseAvatar>. */
-export function colorForHouse(id: number) {
-  return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
-}
-
 // Preposições ficam minúsculas no meio do nome ("Esportes da Sorte"). "bet" é
 // palavra, não sigla, apesar das 3 letras ("Esportiva Bet").
 const LOWER_WORDS = new Set(["da", "de", "do", "das", "dos", "e"]);
@@ -162,14 +145,6 @@ export function houseDisplayName(name: string): string {
 // pelo servidor ("bruno.souza2") e só aparece quando não há nome.
 export function displayName(user: { fullName?: string | null; username: string }): string {
   return user.fullName?.trim() || user.username;
-}
-
-/** Duas letras pro avatar da casa: "Esportes da Sorte" → "ES", "Betano" → "BE". */
-export function houseInitials(name: string): string {
-  const words = name.trim().split(/\s+/).filter((w) => w && !LOWER_WORDS.has(w.toLocaleLowerCase("pt-BR")));
-  if (!words.length) return "?";
-  const pair = words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2);
-  return pair.toLocaleUpperCase("pt-BR");
 }
 
 // Iniciais pro avatar redondo do usuário.

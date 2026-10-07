@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
-import { colorForHouse, initialsOf, formatMoney } from "@/lib/format";
+import { formatMoney, houseDisplayName } from "@/lib/format";
 import { houseActivity } from "@/lib/house-activity";
 import { houseMoney } from "@/lib/house-groups";
 import { HouseActivityBadge } from "../HouseActivityBadge";
@@ -62,16 +62,9 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
       className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-foreground/[0.04]"
       style={stagger(index)}
     >
-      <span
-        className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
-        style={{ background: colorForHouse(house.houseId) }}
-      >
-        {initialsOf(house.houseName)}
-      </span>
-
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-sm font-medium truncate">{house.houseName}</span>
+          <span className="text-sm font-medium truncate">{houseDisplayName(house.houseName)}</span>
           <HouseActivityBadge activity={houseActivity(house.lastBetAt, real, staleDays)} />
         </span>
         <span className="block text-xs text-zinc-400 leading-snug truncate">{betsSubtitle(house)}</span>

@@ -4,7 +4,7 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { colorForHouse, formatMoney, initialsOf, formatInt, formatPercent } from "@/lib/format";
+import { formatMoney, formatInt, formatPercent, houseDisplayName } from "@/lib/format";
 
 interface HouseDetailsModalProps {
   house: HouseBalanceDto | null;
@@ -51,15 +51,9 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
           className="fixed right-0 top-0 z-50 h-dvh w-full sm:w-[440px] border-l border-border bg-card flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-200"
         >
           <div className="flex items-start gap-3 p-5 border-b border-border">
-            <div
-              className="w-9 h-9 rounded-[9px] flex items-center justify-center text-xs font-semibold text-white shrink-0"
-              style={{ background: colorForHouse(house.houseId) }}
-            >
-              {initialsOf(house.houseName)}
-            </div>
             <div className="min-w-0 flex-1">
-              <DialogPrimitive.Title className="text-base font-semibold uppercase tracking-wide truncate">
-                {house.houseName}
+              <DialogPrimitive.Title className="text-base font-semibold truncate">
+                {houseDisplayName(house.houseName)}
               </DialogPrimitive.Title>
               <p className="text-xs opacity-45">
                 {bets} {bets === 1 ? "aposta" : "apostas"} · {noMovement ? "sem movimentação registrada" : `${formatMoney(deposit)} depositados`}

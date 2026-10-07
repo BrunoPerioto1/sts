@@ -2,7 +2,6 @@ import { Clock } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatTime, formatOdd, houseDisplayName } from "@/lib/format";
-import { HouseAvatar } from "@/components/ui/house-avatar";
 import { stagger } from "@/lib/motion";
 import { tapHaptic } from "@/lib/haptics";
 import { mapResultToStatus, statusLabel, type Status } from "@/lib/bet-status";
@@ -32,8 +31,7 @@ function StatusStrip({ status }: { status: Status }) {
 // Horário com contraste próprio para facilitar a leitura durante a rolagem.
 const timeChipClass = "inline-flex items-center gap-1 h-6 rounded-full border border-foreground/15 bg-foreground/10 px-2.5 text-xs font-semibold tabular-nums text-foreground shrink-0";
 const oddChipClass = "h-6 leading-[22px] text-xs px-2.5 rounded-full bg-foreground/[0.08] text-zinc-100 font-semibold tabular-nums shrink-0";
-// Casa com o mesmo avatar da tela de Casas: reconhece pela cor antes de ler.
-const houseChipClass = "inline-flex items-center gap-1.5 min-w-0 h-6 text-xs leading-none pl-0.5 pr-2.5 rounded-full bg-foreground/[0.08] text-zinc-200";
+const houseChipClass = "inline-flex items-center min-w-0 h-6 text-xs leading-none px-2.5 rounded-full bg-foreground/[0.08] text-zinc-200";
 
 export function BetCardMobile({
   aposta,
@@ -92,7 +90,6 @@ export function BetCardMobile({
         <span className={oddChipClass}>@{formatOdd(aposta.odd)} · {formatMoney(Number(aposta.stake))}</span>
         {aposta.houseName && (
           <span className={houseChipClass} title={houseDisplayName(aposta.houseName)}>
-            <HouseAvatar name={aposta.houseName} size="xs" />
             <span className="truncate">{houseDisplayName(aposta.houseName)}</span>
           </span>
         )}

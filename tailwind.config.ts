@@ -37,7 +37,7 @@ export default {
                 ),
                 // Tokens semânticos — ver index.css. `accent` (alias `primary`)
                 // é ação e seleção; success/danger, ganho e perda; pending,
-                // pendente e atenção; muted, neutro (anulada, zero).
+                // pendente; warning, atenção; muted, neutro (anulada, zero).
                 primary: {
                     DEFAULT: 'rgb(var(--rgb-accent) / <alpha-value>)',
                     foreground: 'var(--color-bg)'
@@ -54,6 +54,7 @@ export default {
                     solid: 'rgb(var(--rgb-danger-solid) / <alpha-value>)'
                 },
                 pending: 'rgb(var(--rgb-pending) / <alpha-value>)',
+                warning: 'rgb(var(--rgb-warning) / <alpha-value>)',
                 cashout: 'rgb(var(--rgb-cashout) / <alpha-value>)',
                 secondary: {
                     DEFAULT: 'var(--color-surface)',

@@ -9,6 +9,6 @@ import { type AiFieldMark } from "@/hooks/apostas/use-aposta-form";
  */
 export function aiFieldRing(mark?: AiFieldMark) {
   return mark?.check
-    ? "border-pending/50 bg-pending/[0.06] focus-visible:ring-pending"
+    ? "border-warning/50 bg-warning/[0.06] focus-visible:ring-warning"
     : undefined;
 }

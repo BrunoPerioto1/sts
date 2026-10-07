@@ -26,8 +26,8 @@ export function AiFieldLabel({ children, mark, htmlFor, className }: AiFieldLabe
       </Tag>
       {mark?.filled &&
         (mark.check ? (
-          <span className={cn(badge, "bg-pending/10 text-pending ring-pending/25")}>
-            <span className="h-1.5 w-1.5 rounded-full bg-pending" />
+          <span className={cn(badge, "bg-warning/10 text-warning ring-warning/25")}>
+            <span className="h-1.5 w-1.5 rounded-full bg-warning" />
             confira
           </span>
         ) : (

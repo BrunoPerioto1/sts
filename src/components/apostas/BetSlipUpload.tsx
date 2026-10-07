@@ -207,13 +207,13 @@ export function BetSlipUpload({
   const notes = (
     <>
       {missing.length > 0 && (
-        <p className="text-[11px] leading-snug text-pending">
+        <p className="text-[11px] leading-snug text-warning">
           Não identifiquei: {missing.join(", ")} — preencha na mão
           {preview && preview.parts < 4 ? " ou mande a parte que faltou" : ""}.
         </p>
       )}
       {oddFromSelections && (
-        <p className="text-[11px] leading-snug text-pending">
+        <p className="text-[11px] leading-snug text-warning">
           O bilhete não mostra a odd total: calculei pelas seleções. Confira.
         </p>
       )}
@@ -240,7 +240,7 @@ export function BetSlipUpload({
         <div className="flex items-start gap-3">
           {thumb}
           <div className="min-w-0 flex-1 space-y-1">
-            <p className="text-xs font-medium text-pending">
+            <p className="text-xs font-medium text-warning">
               {error ?? "Não consegui ler esse print"}
             </p>
             <p className="text-[11px] leading-snug text-zinc-500">
@@ -391,7 +391,7 @@ export function BetSlipUpload({
           dragging
             ? "border-accent bg-accent/10"
             : "border-foreground/10 bg-[var(--color-surface)]",
-          status === "error" && !dragging && "border-pending/40",
+          status === "error" && !dragging && "border-warning/40",
         )}
       >
         {body()}

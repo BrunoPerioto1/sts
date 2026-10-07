@@ -14,13 +14,16 @@
     --rgb-surface: 19 19 22;
     --rgb-surface-2: 28 28 32;
     --rgb-text: 242 242 244;
-    /* Tokens semanticos de cor (Tailwind: accent/primary, pending, muted).
-       accent = acao e selecao; pending = aposta pendente e "atencao";
-       muted = neutro (anulada, zero). Ganho/perda (success/danger) ficam mais
-       abaixo, porque seguem a cor escolhida em Preferencias. */
+    /* Tokens semanticos de cor (Tailwind: accent/primary, pending, warning,
+       muted). accent = acao e selecao; pending = aposta pendente (o azul de
+       leitura, como sempre foi); warning = "atencao" (casa parada, acesso
+       vencendo, campo lido pela IA); muted = neutro (anulada, zero).
+       Ganho/perda (success/danger) ficam mais abaixo, porque seguem a cor
+       escolhida em Preferencias. */
     --rgb-accent: 37 99 235;
     --rgb-accent-text: 59 130 246;
-    --rgb-pending: 251 191 36;
+    --rgb-pending: var(--rgb-accent-text);
+    --rgb-warning: 251 191 36;
     --rgb-muted: 113 113 122;
 
     /* Escala zinc do Tailwind em variavel: no tema claro ela inverte, entao os
@@ -52,6 +55,7 @@
     --color-accent-text: rgb(var(--rgb-accent-text));
     --color-accent-2: #3b82f6;
     --color-pending: rgb(var(--rgb-pending));
+    --color-warning: rgb(var(--rgb-warning));
     --color-muted: rgb(var(--rgb-muted));
     --color-divider: rgba(255, 255, 255, 0.1);
 
@@ -165,7 +169,7 @@
     --rgb-text: 24 24 27;
     --rgb-accent-text: 29 78 216;
     /* Ambar do escuro some no branco: no claro vai pro amber-700. */
-    --rgb-pending: 180 83 9;
+    --rgb-warning: 180 83 9;
     --rgb-cashout: 124 58 237;
 
     --zinc-50: 9 9 11;

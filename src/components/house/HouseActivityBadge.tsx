@@ -13,10 +13,10 @@ export function HouseActivityBadge({ activity }: { activity: HouseActivity }) {
   if (activity.kind === "withdraw") {
     return (
       <span
-        className={cn(badge, "bg-pending/10 text-pending ring-pending/25")}
+        className={cn(badge, "bg-warning/10 text-warning ring-warning/25")}
         title={`Sem apostas há ${activity.days} dias — considere sacar o saldo`}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-pending" />
+        <span className="h-1.5 w-1.5 rounded-full bg-warning" />
         sacar · {activity.days}d parada
       </span>
     );
