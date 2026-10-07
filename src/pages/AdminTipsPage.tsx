@@ -40,7 +40,6 @@ export default function AdminTipsPage() {
       title="Tips sem entrega"
       subtitle={data ? `${tips.length} nas últimas 24h · ${expected} deveriam ter chegado em alguém` : undefined}
       actions={back}
-      hideHeaderBorder
       mobileHeader={
         <PageHeader
           back="/admin/pipeline"

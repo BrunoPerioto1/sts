@@ -19,7 +19,6 @@ export default function PreferencesPage() {
   return (
     <MainLayout
       title="Preferências de aposta"
-      hideHeaderBorder
       hideBottomNav
       mobileHeader={<PageHeader back title="Preferências de aposta" />}
     >

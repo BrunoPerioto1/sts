@@ -68,7 +68,6 @@ export default function AccountPage() {
   return (
     <MainLayout
       title="Dados da conta"
-      hideHeaderBorder
       hideBottomNav
       mobileHeader={<PageHeader back title="Dados da conta" />}
     >

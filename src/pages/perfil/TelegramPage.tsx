@@ -95,7 +95,6 @@ export default function TelegramPage() {
   return (
     <MainLayout
       title={title}
-      hideHeaderBorder
       hideBottomNav
       mobileHeader={
         <PageHeader

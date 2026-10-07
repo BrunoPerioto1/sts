@@ -14,7 +14,7 @@ export default function PerfilPage() {
 
   if (!me) {
     return isMobile ? (
-      <MainLayout title="Perfil" hideHeaderBorder mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
+      <MainLayout title="Perfil" mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
         <PerfilSkeleton className="min-h-[calc(100dvh-190px)]" />
       </MainLayout>
     ) : (
@@ -27,7 +27,7 @@ export default function PerfilPage() {
   if (isMobile) {
     if (!metrics.isError && metrics.loading) {
       return (
-        <MainLayout title="Perfil" hideHeaderBorder mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
+        <MainLayout title="Perfil" mobileHeader={<div className="skeleton h-7 w-32 rounded" />}>
           <PerfilSkeleton className="min-h-[calc(100dvh-190px)]" />
         </MainLayout>
       );
@@ -35,7 +35,6 @@ export default function PerfilPage() {
     return (
       <MainLayout
         title="Perfil"
-        hideHeaderBorder
         mobileHeader={<PerfilMobileHeader me={me} />}
       >
         <PerfilMobileView

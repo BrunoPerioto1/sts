@@ -7,7 +7,6 @@ export default function AdminScannerPage() {
     <MainLayout
       title="Admin"
       subtitle="Scanner SofaScore"
-      hideHeaderBorder
       mobileHeader={<PageHeader back="/profile" title="Scanner" subtitle="SofaScore" />}
     >
       <AdminScanner />

@@ -7,7 +7,6 @@ interface MainLayoutProps {
   title: string;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
-  hideHeaderBorder?: boolean;
   hideBottomNav?: boolean;
   titleWrapperClassName?: string;
   titleClassName?: string;
@@ -33,10 +32,11 @@ export function MainLayout({
   title,
   subtitle,
   actions,
-  hideHeaderBorder = false,
   hideBottomNav = false,
-  titleWrapperClassName = "flex items-baseline gap-2.5 min-w-0",
-  titleClassName = "text-2xl font-semibold tracking-tight shrink-0",
+  // Subtítulo embaixo do título, não ao lado: a contagem mora no subtítulo
+  // (padrão do PageHeader no celular) e não disputa linha com o título.
+  titleWrapperClassName = "flex flex-col gap-0.5 min-w-0",
+  titleClassName = "text-2xl font-semibold tracking-tight",
   subtitleClassName = "text-sm text-zinc-500 truncate",
   mobileHeader,
   mobileFullBleed = false,
@@ -56,7 +56,6 @@ export function MainLayout({
       <header
         className={cn(
           "sticky top-0 z-40 bg-background",
-          !hideHeaderBorder && "border-b border-border",
           mobileFullBleed && "hidden sm:block"
         )}
       >
@@ -66,8 +65,8 @@ export function MainLayout({
           </div>
         )}
         <div
-          // Altura fixa: com subtitulo embaixo (Dashboard/Tips) ou ao lado
-          // (Apostas/Casas) o header tinha 68px numa tela e 84px na outra.
+          // Altura fixa: com e sem subtitulo o header ocupa o mesmo espaco.
+          // Sem divisoria embaixo em nenhuma tela — o respiro separa.
           className={cn("items-center justify-between gap-4 sm:min-h-[84px]", mobileHeader ? "hidden sm:flex" : "flex")}
           style={{ padding: "16px 24px" }}
         >

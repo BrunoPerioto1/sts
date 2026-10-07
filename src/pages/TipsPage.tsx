@@ -184,7 +184,6 @@ export default function TipsPage() {
     <MainLayout
       title="Tips"
       hideBottomNav={checkedTips.length > 0}
-      hideHeaderBorder
       subtitle={subtitle}
       actions={
         // No desktop nao ha pull-to-refresh: a tip chega de fora do app, e sem

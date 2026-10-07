@@ -41,7 +41,6 @@ export default function PasswordPage() {
   return (
     <MainLayout
       title="Alterar senha"
-      hideHeaderBorder
       hideBottomNav
       mobileHeader={<PageHeader back title="Alterar senha" />}
     >

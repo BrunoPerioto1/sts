@@ -18,7 +18,6 @@ export function CasasPage() {
     <MainLayout
       title="Casas de apostas"
       subtitle={subtitle}
-      hideHeaderBorder
       mobileHeader={<PageHeader title="Casas" subtitle={subtitle} />}
     >
       {isMobile ? <CasasMobileView /> : <CasasApostaView />}

@@ -12,7 +12,6 @@ export default function AdminUsersPage() {
     <MainLayout
       title="Admin"
       subtitle="Usuários"
-      hideHeaderBorder
       mobileHeader={
         <PageHeader
           back="/profile"

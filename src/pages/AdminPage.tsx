@@ -42,7 +42,6 @@ export default function AdminPage() {
       title="Admin"
       subtitle="Pipeline"
       actions={refresh}
-      hideHeaderBorder
       mobileHeader={
         // Sem botão de atualizar: no celular quem atualiza é o puxar pra baixo.
         <PageHeader back="/profile" title="Pipeline" subtitle={`atualizado ${updatedAt.slice(-5)} · horário de Brasília`} />

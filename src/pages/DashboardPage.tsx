@@ -130,9 +130,6 @@ export function DashboardPage() {
     <MainLayout
       title="Dashboard"
       subtitle={subtitle}
-      titleWrapperClassName="flex flex-col gap-0.5 min-w-0"
-      subtitleClassName="text-sm text-zinc-500 truncate"
-      hideHeaderBorder
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,7 +23,7 @@ import {
   lucroSugerido,
   tally,
 } from "@/lib/settlement-view";
-import { formatMoney, formatTime, formatOdd } from "@/lib/format";
+import { formatInt, formatMoney, formatTime, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SuggestionDetail } from "@/components/conferir/SuggestionDetail";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
@@ -424,14 +425,15 @@ export default function ConferirPage() {
           ? `${lista.length} proposta${lista.length === 1 ? "" : "s"} do bot · nada vira lucro até você confirmar`
           : "Nada aguardando conferência"
       }
-      titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
-      titleClassName="text-2xl font-semibold tracking-tight shrink-0"
-      subtitleClassName="text-sm text-zinc-500 truncate"
       mobileHeader={
-        <div className="flex items-baseline gap-2.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Conferência</h1>
-          <span className="text-sm text-zinc-500">{lista.length || ""}</span>
-        </div>
+        <PageHeader
+          title="Conferência"
+          subtitle={
+            lista.length
+              ? `${formatInt(lista.length)} proposta${lista.length === 1 ? "" : "s"} do bot`
+              : "Nada aguardando conferência"
+          }
+        />
       }
       actions={
         <Button

@@ -1,12 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
-import { CaretLeft } from "@phosphor-icons/react";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { useSettlementReview } from "@/hooks/apostas/use-settlement";
 import { diaRelativo } from "@/lib/settlement-view";
-import { formatMoney, formatTime, formatOdd } from "@/lib/format";
+import { formatInt, formatMoney, formatTime, formatOdd } from "@/lib/format";
 
 /**
  * As apostas que o bot nao soube resolver, em tela propria. Na Conferencia elas
@@ -14,7 +14,6 @@ import { formatMoney, formatTime, formatOdd } from "@/lib/format";
  * mao" na mesma lista era o que confundia.
  */
 export default function ConferirPendentesPage() {
-  const navigate = useNavigate();
   const { data, isLoading } = useSettlementReview(true);
   const n = data?.length ?? 0;
 
@@ -22,19 +21,7 @@ export default function ConferirPendentesPage() {
     <MainLayout
       title="Conferência"
       subtitle={n ? `${n} pra liquidar na mão` : undefined}
-      mobileHeader={
-        <div className="flex min-w-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Voltar"
-            className="-ml-1 p-1 text-zinc-400 hover:text-foreground"
-          >
-            <CaretLeft size={20} />
-          </button>
-          <h1 className="truncate text-lg font-semibold">Conferência</h1>
-        </div>
-      }
+      mobileHeader={<PageHeader back title="Conferência" subtitle={n ? `${formatInt(n)} pra liquidar na mão` : undefined} />}
     >
       {isLoading ? (
         <div className="space-y-2">

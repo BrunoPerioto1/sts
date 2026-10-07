@@ -77,7 +77,7 @@ function DashboardPreferencesMobile() {
     void save({ ...preferences, kpis: next });
   }
   const title = "Personalizar Dashboard";
-  return <MainLayout title={title} hideHeaderBorder hideBottomNav mobileHeader={<PageHeader back="/profile" title={title} />}>
+  return <MainLayout title={title} hideBottomNav mobileHeader={<PageHeader back="/profile" title={title} />}>
     <div className="max-w-xl space-y-7 pb-6">
       <p className="text-sm text-zinc-400">Escolha os indicadores, ordem, ícones e aparência do seu Dashboard.</p>
       {!me ? <div role="status" aria-label="Carregando preferências" className="space-y-4">

@@ -168,7 +168,6 @@ export default function ApostasPage() {
     <MainLayout
       title="Apostas"
       subtitle={`${formatInt(total)} registros`}
-      hideHeaderBorder
       hideBottomNav={selection.selectionMode}
       mobileHeader={
         <PageHeader

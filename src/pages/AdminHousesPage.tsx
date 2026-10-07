@@ -19,7 +19,6 @@ export default function AdminHousesPage() {
     <MainLayout
       title="Admin"
       subtitle="Casas de apostas"
-      hideHeaderBorder
       mobileHeader={
         <PageHeader
           // Admin entra pelo Perfil no celular: voltar leva pra lá.
