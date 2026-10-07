@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { BottomSheet } from "./BottomSheet";
 import { OptionRow } from "./OptionRow";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { HouseAvatar } from "@/components/ui/house-avatar";
+import { SearchField } from "@/components/ui/search-field";
+import { SectionLabel } from "@/components/ui/section-label";
 import { useHouseBalances } from "@/hooks/queries/use-houses";
-import { colorForHouse, initialsOf } from "@/lib/format";
+import { formatInt, houseDisplayName } from "@/lib/format";
 
 const RECENT_HOUSES_KEY = "apostas:recent-houses";
 
@@ -30,17 +31,6 @@ function pushRecentHouseIds(ids: number[]) {
   } catch {
     // localStorage indisponível (aba anônima etc.) — sem recentes, sem drama
   }
-}
-
-function HouseAvatar({ name, color }: { name: string; color: string }) {
-  return (
-    <span
-      className="h-8 w-8 shrink-0 rounded-[8px] flex items-center justify-center text-xs font-semibold text-white"
-      style={{ background: color }}
-    >
-      {initialsOf(name)}
-    </span>
-  );
 }
 
 interface CasaSheetProps {
@@ -115,27 +105,7 @@ export function CasaSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Casa"
-      subHeader={
-        <div className="relative">
-          <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-          <Input
-            placeholder="Buscar casa"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-9 min-h-[44px]"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Limpar busca"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center text-zinc-500 hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      }
+      subHeader={<SearchField value={search} onChange={setSearch} placeholder="Buscar casa" />}
       footer={
         multiple ? (
           <Button className="w-full min-h-[44px]" onClick={handleApply}>
@@ -145,15 +115,15 @@ export function CasaSheet({
       }
     >
       {!term && fallbackRecent.length > 0 && (
-        <div className="pb-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">Usadas recentemente</p>
+        <div className="pb-2 space-y-1">
+          <SectionLabel as="h3">Usadas recentemente</SectionLabel>
           <div className="flex flex-col gap-1">
             {fallbackRecent.map((h) => (
               <OptionRow
                 key={h.id}
-                leading={<HouseAvatar name={h.name} color={colorForHouse(h.id)} />}
-                label={h.name}
-                subtitle={balances[h.id] != null ? `${balances[h.id]} apostas` : undefined}
+                leading={<HouseAvatar name={h.name} />}
+                label={houseDisplayName(h.name)}
+                subtitle={balances[h.id] != null ? `${formatInt(balances[h.id])} apostas` : undefined}
                 selected={houseIds.includes(h.id)}
                 onToggle={() => toggle(h.id)}
               />
@@ -162,17 +132,15 @@ export function CasaSheet({
         </div>
       )}
 
-      <div className="pb-4">
-        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">
-          {term ? `Todas · "${search}"` : "Todas"}
-        </p>
+      <div className="pb-4 space-y-1">
+        <SectionLabel as="h3">{term ? `Todas · "${search}"` : "Todas"}</SectionLabel>
         <div className="flex flex-col gap-1">
           {filtered.map((h) => (
             <OptionRow
               key={h.id}
-              leading={<HouseAvatar name={h.name} color={colorForHouse(h.id)} />}
-              label={h.name}
-              subtitle={balances[h.id] != null ? `${balances[h.id]} apostas` : undefined}
+              leading={<HouseAvatar name={h.name} />}
+              label={houseDisplayName(h.name)}
+              subtitle={balances[h.id] != null ? `${formatInt(balances[h.id])} apostas` : undefined}
               selected={houseIds.includes(h.id)}
               onToggle={() => toggle(h.id)}
             />

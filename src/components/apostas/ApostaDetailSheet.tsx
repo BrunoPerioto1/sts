@@ -3,7 +3,9 @@ import { CheckCircle, PencilSimple, Copy, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatDate, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatDate, formatTime, formatOdd, houseDisplayName, signColor } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
+import { StatCard } from "@/components/ui/stat-card";
 import { colorByResultId, mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -32,6 +34,7 @@ export function ApostaDetailSheet({
   const stake = Number(aposta.stake);
   const profit = aposta.profit != null ? Number(aposta.profit) : null;
   const ganho = status !== "pendente" && profit != null ? stake + profit : null;
+  const house = aposta.houseName ? houseDisplayName(aposta.houseName) : null;
 
   return (
     <BottomSheet
@@ -44,7 +47,7 @@ export function ApostaDetailSheet({
       <div className="pb-4 space-y-4">
         <p className="text-sm text-zinc-500 -mt-1">
           {formatDate(betDate(aposta))} · {formatTime(betDate(aposta))}
-          {aposta.houseName && ` · ${aposta.houseName}`}
+          {house && ` · ${house}`}
         </p>
         {aposta.eventStartAt && (
           // Só aparece quando o jogo foi identificado: aí a data acima é a do
@@ -54,30 +57,21 @@ export function ApostaDetailSheet({
           </p>
         )}
 
-        <div>
-          <p className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Lucro</p>
-          <p className={cn("text-2xl font-semibold tabular-nums", profit == null ? "opacity-45" : profit >= 0 ? "text-success" : "text-danger")}>
+        <div className="space-y-1">
+          <SectionLabel as="p">Lucro</SectionLabel>
+          <p className={cn("px-1 text-2xl font-semibold tabular-nums", profit == null ? "text-muted" : signColor(profit))}>
             {profit != null ? formatMoney(profit, { signed: true }) : "—"}
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 border border-border rounded-md p-3">
-          <div>
-            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Cotação</p>
-            <p className="text-sm font-medium tabular-nums">{formatOdd(aposta.odd)}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Valor</p>
-            <p className="text-sm font-medium tabular-nums">{formatMoney(stake)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs uppercase tracking-wide opacity-55 mb-1">Retorno</p>
-            <p className="text-sm font-medium tabular-nums">{ganho != null ? formatMoney(ganho) : "—"}</p>
-          </div>
+        <div className="grid grid-cols-3 gap-3 rounded-xl border border-border bg-card p-3">
+          <StatCard label="Cotação" value={formatOdd(aposta.odd)} />
+          <StatCard label="Valor" value={formatMoney(stake)} />
+          <StatCard label="Retorno" value={ganho != null ? formatMoney(ganho) : "—"} />
         </div>
 
-        <div>
-          <p className="text-xs uppercase tracking-wide opacity-55 mb-1.5">Seleção</p>
+        <div className="space-y-1.5">
+          <SectionLabel as="p">Seleção</SectionLabel>
           <div
             className="flex items-start justify-between gap-2 rounded-md border-l-[3px] bg-card p-2.5"
             style={{ borderLeftColor: colorByResultId[String(aposta.resultId)] }}
@@ -86,7 +80,7 @@ export function ApostaDetailSheet({
               <p className="text-sm leading-snug">{aposta.market}</p>
               <p className="text-xs opacity-55">
                 {formatOdd(aposta.odd)}
-                {aposta.houseName && ` · ${aposta.houseName}`}
+                {house && ` · ${house}`}
               </p>
             </div>
             <Badge variant={statusVariant[status]} className="shrink-0">{statusLabel[status]}</Badge>
@@ -96,11 +90,13 @@ export function ApostaDetailSheet({
         <div className="flex flex-col gap-2 pt-1">
           {onFinalize && (
             <Button
+              size="lg"
+              // Pendente: ação principal (azul). Já liquidada: a cor do resultado,
+              // pra "Alterar liquidação" lembrar o que está registrado.
               className={cn(
-                "w-full min-h-[44px] gap-2 border-transparent text-foreground font-bold hover:opacity-90 active:opacity-90",
-                profit == null ? "bg-accent" : profit >= 0 ? "bg-success-solid" : "bg-danger-solid"
+                "w-full gap-2",
+                profit != null && (profit >= 0 ? "bg-success-solid hover:bg-success-solid/90" : "bg-danger-solid hover:bg-danger-solid/90")
               )}
-              style={{ boxShadow: "var(--shadow-sm)" }}
               onClick={() => setLiquidarOpen(true)}
             >
               <CheckCircle size={17} weight="fill" /> {status === "pendente" ? "Liquidar" : "Alterar liquidação"}
@@ -118,11 +114,7 @@ export function ApostaDetailSheet({
               </Button>
             )}
             {onDelete && (
-              <Button
-                variant="secondary"
-                className="gap-1.5 border-danger/40 text-danger hover:bg-danger/10 hover:text-danger"
-                onClick={() => { onDelete(aposta.id); onClose(); }}
-              >
+              <Button variant="destructive" className="gap-1.5" onClick={() => { onDelete(aposta.id); onClose(); }}>
                 <Trash size={14} /> Excluir
               </Button>
             )}

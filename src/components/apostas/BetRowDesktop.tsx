@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatTime, formatOdd } from "@/lib/format";
+import { formatMoney, formatTime, formatOdd, houseDisplayName } from "@/lib/format";
 import { mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
 import { betDate } from "@/lib/bet-grouping";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
@@ -85,7 +85,7 @@ export function BetRowDesktop({
 
       <span className="text-xs tabular-nums opacity-45">{formatTime(betDate(aposta))}</span>
 
-      <span className="text-[11px] uppercase tracking-wide opacity-45 truncate">{aposta.houseName}</span>
+      <span className="text-xs opacity-55 truncate">{aposta.houseName ? houseDisplayName(aposta.houseName) : ""}</span>
 
       <div className="min-w-0">
         <p className="font-medium text-sm truncate">{aposta.game}</p>

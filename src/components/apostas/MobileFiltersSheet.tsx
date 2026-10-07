@@ -13,7 +13,9 @@ import { PeriodCalendarSheet } from "./PeriodCalendarSheet";
 import { STATUS_OPTIONS } from "@/lib/bet-status";
 import { ORIGIN_OPTIONS } from "@/lib/bet-origin";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { FilterChip } from "@/components/ui/filter-chips";
+import { SectionLabel } from "@/components/ui/section-label";
+import { houseDisplayName } from "@/lib/format";
 import { defaultPeriod, periodRangeFor, type ApostasFilterState, type PeriodPreset } from "@/types/apostas-filters";
 
 const PERIOD_CHIPS: { value: Exclude<PeriodPreset, "custom">; label: string }[] = [
@@ -22,8 +24,6 @@ const PERIOD_CHIPS: { value: Exclude<PeriodPreset, "custom">; label: string }[] 
   { value: "ano", label: "Ano" },
   { value: "tudo", label: "Tudo" },
 ];
-
-const sectionLabel = "text-xs font-medium uppercase tracking-wider text-zinc-500";
 
 interface MobileFiltersSheetProps {
   open: boolean;
@@ -73,7 +73,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
     draft.houseIds.length === 0
       ? "Todas as casas"
       : draft.houseIds.length === 1
-        ? (houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
+        ? houseDisplayName(houses.find((h) => h.id === draft.houseIds[0])?.name ?? "1 casa")
         : `${draft.houseIds.length} casas`;
 
   const sportSummary =
@@ -127,39 +127,32 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
     >
       <div className="py-3 space-y-5">
         <section className="space-y-2">
-          <p className={sectionLabel}>Período</p>
+          <SectionLabel as="h3">Período</SectionLabel>
           <div className="flex flex-wrap gap-2">
-            {PERIOD_CHIPS.map((chip) => {
-              const isActive = draft.period.preset === chip.value;
-              return (
-                <button
-                  key={chip.value}
-                  type="button"
-                  onClick={() => setDraft((d) => ({ ...d, period: { preset: chip.value, ...periodRangeFor(chip.value) } }))}
-                  className={cn(
-                    "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
-                    isActive ? "bg-accent text-white" : "border border-foreground/10 text-zinc-400"
-                  )}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
+            {PERIOD_CHIPS.map((chip) => (
+              <FilterChip
+                key={chip.value}
+                active={draft.period.preset === chip.value}
+                onClick={() => setDraft((d) => ({ ...d, period: { preset: chip.value, ...periodRangeFor(chip.value) } }))}
+              >
+                {chip.label}
+              </FilterChip>
+            ))}
           </div>
         </section>
 
         <section className="space-y-1.5">
-          <p className={sectionLabel}>Status</p>
+          <SectionLabel as="h3">Status</SectionLabel>
           <SheetSelectField summary={statusSummary} onOpen={() => setStatusOpen(true)} />
         </section>
 
         <section className="space-y-1.5">
-          <p className={sectionLabel}>Casa</p>
+          <SectionLabel as="h3">Casa</SectionLabel>
           <SheetSelectField summary={casaSummary} onOpen={() => setCasaOpen(true)} />
         </section>
 
         <section className="space-y-1.5">
-          <p className={sectionLabel}>Esporte</p>
+          <SectionLabel as="h3">Esporte</SectionLabel>
           <SheetSelectField
             summary={sportSummary}
             onOpen={() => setSportOpen(true)}
@@ -172,7 +165,7 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
         </section>
 
         <section className="space-y-2">
-          <p className={sectionLabel}>Origem</p>
+          <SectionLabel as="h3">Origem</SectionLabel>
           <div className="flex flex-wrap gap-2">
             {[
               ...ORIGIN_OPTIONS.map((o) => ({ key: o.value, label: o.label, active: draft.origins.includes(o.value), toggle: () => toggleOrigin(o.value) })),
@@ -183,24 +176,15 @@ export function MobileFiltersSheet({ open, onOpenChange, value, onApply, houses 
                 toggle: () => setDraft((d) => ({ ...d, unmatched: !d.unmatched })),
               },
             ].map((chip) => (
-              <button
-                key={chip.key}
-                type="button"
-                aria-pressed={chip.active}
-                onClick={chip.toggle}
-                className={cn(
-                  "press h-9 px-3.5 rounded-full text-sm font-medium min-h-[44px] flex items-center",
-                  chip.active ? "bg-accent text-white" : "border border-foreground/10 text-zinc-400"
-                )}
-              >
+              <FilterChip key={chip.key} active={chip.active} onClick={chip.toggle}>
                 {chip.label}
-              </button>
+              </FilterChip>
             ))}
           </div>
         </section>
 
         <section className="space-y-1.5">
-          <p className={sectionLabel}>Período personalizado</p>
+          <SectionLabel as="h3">Período personalizado</SectionLabel>
           <button
             type="button"
             onClick={() => setCalendarOpen(true)}

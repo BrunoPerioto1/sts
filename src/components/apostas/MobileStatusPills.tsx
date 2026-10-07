@@ -1,34 +1,27 @@
-import { cn } from "@/lib/utils";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 
-const pills: { label: string; value: string[] }[] = [
-  { label: "Todas", value: [] },
-  { label: "Ganhas", value: [String(ResultIdEnum.WON)] },
-  { label: "Pendentes", value: [String(ResultIdEnum.PENDING)] },
-  { label: "Perdidas", value: [String(ResultIdEnum.LOST)] },
+type Pill = "all" | "won" | "pending" | "lost";
+
+const pills: { value: Pill; label: string; status: string[] }[] = [
+  { value: "all", label: "Todas", status: [] },
+  { value: "won", label: "Ganhas", status: [String(ResultIdEnum.WON)] },
+  { value: "pending", label: "Pendentes", status: [String(ResultIdEnum.PENDING)] },
+  { value: "lost", label: "Perdidas", status: [String(ResultIdEnum.LOST)] },
 ];
 
-// Chips de status rápido — só mobile, substitui o multi-select da toolbar desktop.
+// Chips de status rápido — só mobile, substitui o multi-select da toolbar
+// desktop. Combinação que não é um chip (ex.: 2 status pelo sheet de filtros)
+// deixa nenhum chip marcado.
 export function MobileStatusPills({ value, onChange }: { value: string[]; onChange: (status: string[]) => void }) {
+  const current =
+    value.length === 0 ? "all" : value.length === 1 ? pills.find((p) => p.status[0] === value[0])?.value : undefined;
   return (
-    <div className="flex md:hidden gap-2 overflow-x-auto pb-3 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      {pills.map((pill) => {
-        const isActive = pill.value.length === 0 ? value.length === 0 : value.length === 1 && value[0] === pill.value[0];
-        return (
-          <button
-            key={pill.label}
-            aria-pressed={isActive}
-            type="button"
-            onClick={() => onChange(pill.value)}
-            className={cn(
-              "shrink-0 h-11 px-3.5 rounded-full text-sm font-medium transition-colors",
-              isActive ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400"
-            )}
-          >
-            {pill.label}
-          </button>
-        );
-      })}
-    </div>
+    <FilterChips
+      className="md:hidden mb-2"
+      options={pills}
+      value={current as Pill}
+      onChange={(next) => onChange(pills.find((p) => p.value === next)!.status)}
+    />
   );
 }

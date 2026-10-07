@@ -40,6 +40,9 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-2.5 sm:h-9 sm:px-3",
         lg: "h-12 rounded-lg px-6 text-[15px] font-semibold",
         icon: "h-8 w-8 sm:h-9 sm:w-9",
+        // Botão flutuante redondo (Nova aposta no celular). A posição fica com
+        // quem usa — depende da bottom nav.
+        fab: "h-14 w-14 rounded-full p-0 shadow-lg [&_svg]:size-[22px]",
       },
     },
     // O botão redondo tem tamanho próprio (alvo de toque de 44px), seja qual

@@ -8,7 +8,7 @@ import { pickImages } from "@/hooks/apostas/use-bet-slip-scan";
 import { EditApostaModal } from "@/components/apostas/EditApostaModal";
 import { ApostasFilter } from "@/components/apostas/ApostasFilter";
 import { ConferenciaCallout } from "@/components/apostas/ConferenciaCallout";
-import { ApostasMobileHeader } from "@/components/apostas/ApostasMobileHeader";
+import { PageHeader } from "@/components/ui/page-header";
 import { BulkActionBar } from "@/components/apostas/BulkActionBar";
 import { MobileFiltersSheet } from "@/components/apostas/MobileFiltersSheet";
 import { MobileStatusPills } from "@/components/apostas/MobileStatusPills";
@@ -22,7 +22,7 @@ import { paramsFrom, useBetMonths } from "@/hooks/apostas/use-bets-query";
 import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
 import { Button } from "@/components/ui/button";
-import { Plus } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, SlidersHorizontal } from "@phosphor-icons/react";
 import { actionToast } from "@/lib/action-toast";
 import { tapHaptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -168,23 +168,39 @@ export default function ApostasPage() {
     <MainLayout
       title="Apostas"
       subtitle={`${formatInt(total)} registros`}
-      titleWrapperClassName="flex items-baseline gap-2.5 min-w-0"
-      titleClassName="text-2xl font-semibold tracking-tight shrink-0"
-      subtitleClassName="text-sm text-zinc-500 truncate"
+      hideHeaderBorder
       hideBottomNav={selection.selectionMode}
       mobileHeader={
-        <ApostasMobileHeader
-          searchExpanded={mobileSearchExpanded}
-          onToggleSearch={toggleMobileSearch}
-          onOpenFilters={() => setMobileFilterOpen(true)}
-          activeFilterCount={filters.activeMobileFilterCount}
+        <PageHeader
+          title="Apostas"
+          subtitle={`${formatInt(total)} registros`}
+          // Seleção múltipla entra por toque longo no card e o refresh por
+          // pull-to-refresh: no header ficam só busca e filtros.
+          actions={
+            <>
+              <Button
+                variant="icon"
+                onClick={toggleMobileSearch}
+                aria-label={mobileSearchExpanded ? "Fechar busca" : "Buscar apostas"}
+                aria-expanded={mobileSearchExpanded}
+                className={mobileSearchExpanded ? "text-accent-text" : undefined}
+              >
+                <MagnifyingGlass />
+              </Button>
+              <Button
+                variant="icon"
+                onClick={() => setMobileFilterOpen(true)}
+                aria-label="Abrir filtros"
+                badge={filters.activeMobileFilterCount}
+              >
+                <SlidersHorizontal />
+              </Button>
+            </>
+          }
         />
       }
       actions={
-        <Button
-          onClick={() => setCreateModalOpen(true)}
-          className="btn-cta hidden md:flex h-9 sm:h-9 gap-1.5 rounded-md px-4 sm:px-4 font-semibold bg-accent text-white hover:bg-accent/90 hover:opacity-100 active:opacity-100 [&_svg]:size-3.5"
-        >
+        <Button onClick={() => setCreateModalOpen(true)} className="btn-cta hidden md:flex gap-1.5 font-semibold [&_svg]:size-3.5">
           <Plus weight="bold" /> Nova aposta
         </Button>
       }
@@ -239,18 +255,18 @@ export default function ApostasPage() {
       </div>
 
       {/* FAB mobile — substitui o botão "Nova aposta" do header em telas estreitas */}
-      <button
-        type="button"
+      <Button
+        size="fab"
         onClick={() => {
           tapHaptic();
           setCreateModalOpen(true);
         }}
         aria-label="Nova aposta"
-        className="press animate-pop-in md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-foreground text-background flex items-center justify-center"
-        style={{ bottom: "calc(72px + env(safe-area-inset-bottom))", boxShadow: "var(--shadow-lg)" }}
+        className="animate-pop-in md:hidden fixed right-4 z-40"
+        style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
       >
-        <Plus size={22} weight="bold" />
-      </button>
+        <Plus weight="bold" />
+      </Button>
 
       <MobileFiltersSheet
         open={mobileFilterOpen}

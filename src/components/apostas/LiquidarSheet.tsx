@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatOdd } from "@/lib/format";
+import { formatMoney, formatOdd, signColor } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
 import { colorByResultId, mapResultToStatus, previewProfit } from "@/lib/bet-status";
 import { type BetItem, ResultIdEnum } from "@/api/routes/get-bets";
 import { BottomSheet } from "./BottomSheet";
 import { OptionBar } from "./OptionRow";
 import { CashoutSheet } from "./CashoutSheet";
 
-const rows: { resultId: ResultIdEnum; label: string; section: "RESULTADO" | "PARCIAL" }[] = [
-  { resultId: ResultIdEnum.WON, label: "Ganha", section: "RESULTADO" },
-  { resultId: ResultIdEnum.LOST, label: "Perdida", section: "RESULTADO" },
-  { resultId: ResultIdEnum.HALF_WON, label: "Meia ganha", section: "PARCIAL" },
-  { resultId: ResultIdEnum.HALF_LOST, label: "Meia perdida", section: "PARCIAL" },
+const rows: { resultId: ResultIdEnum; label: string; section: "Resultado" | "Parcial" }[] = [
+  { resultId: ResultIdEnum.WON, label: "Ganha", section: "Resultado" },
+  { resultId: ResultIdEnum.LOST, label: "Perdida", section: "Resultado" },
+  { resultId: ResultIdEnum.HALF_WON, label: "Meia ganha", section: "Parcial" },
+  { resultId: ResultIdEnum.HALF_LOST, label: "Meia perdida", section: "Parcial" },
 ];
 
 export function LiquidarSheet({
@@ -45,9 +46,9 @@ export function LiquidarSheet({
           {aposta.game} · {formatMoney(stake)} @ {formatOdd(odd)}
         </p>
 
-        {(["RESULTADO", "PARCIAL"] as const).map((section) => (
-          <div key={section}>
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">{section}</p>
+        {(["Resultado", "Parcial"] as const).map((section) => (
+          <div key={section} className="space-y-1">
+            <SectionLabel as="h3">{section}</SectionLabel>
             <div className="flex flex-col gap-1">
               {rows
                 .filter((r) => r.section === section)
@@ -62,7 +63,7 @@ export function LiquidarSheet({
                     >
                       <OptionBar color={colorByResultId[String(r.resultId)]} />
                       <span className="flex-1 text-sm text-foreground">{r.label}</span>
-                      <span className={cn("text-sm font-medium tabular-nums", value >= 0 ? "text-success" : "text-danger")}>
+                      <span className={cn("text-sm font-medium tabular-nums", signColor(value))}>
                         {formatMoney(value, { signed: true })}
                       </span>
                     </button>
@@ -72,8 +73,8 @@ export function LiquidarSheet({
           </div>
         ))}
 
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">ENCERRAMENTO</p>
+        <div className="space-y-1">
+          <SectionLabel as="h3">Encerramento</SectionLabel>
           <div className="flex flex-col gap-1">
             <button
               type="button"
@@ -91,14 +92,14 @@ export function LiquidarSheet({
             >
               <OptionBar color={colorByResultId[String(ResultIdEnum.CANCELED)]} />
               <span className="flex-1 text-sm text-foreground">Cancelada</span>
-              <span className="text-sm font-medium tabular-nums text-zinc-300">{formatMoney(0)}</span>
+              <span className={cn("text-sm font-medium tabular-nums", signColor(0))}>{formatMoney(0)}</span>
             </button>
           </div>
         </div>
 
         {mapResultToStatus(aposta) !== "pendente" && (
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1">PENDENTE</p>
+          <div className="space-y-1">
+            <SectionLabel as="h3">Pendente</SectionLabel>
             <button
               type="button"
               onClick={() => finalize(ResultIdEnum.PENDING)}

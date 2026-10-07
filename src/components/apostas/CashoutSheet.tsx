@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { BottomSheet } from "./BottomSheet";
+import { FormField, FormSheet } from "@/components/ui/form-sheet";
 
 // Versão em bottom sheet do CashoutDialog, só pro fluxo mobile do
 // LiquidarSheet: o Dialog (radix) empilhado em cima de dois níveis de drawer
@@ -23,13 +21,8 @@ export function CashoutSheet({
   const numeric = Number(value);
   const valid = value !== "" && !Number.isNaN(numeric);
 
-  const close = () => {
-    setValue("");
-    onOpenChange(false);
-  };
-
   return (
-    <BottomSheet
+    <FormSheet
       nested
       open={open}
       onOpenChange={(o) => {
@@ -37,28 +30,15 @@ export function CashoutSheet({
         onOpenChange(o);
       }}
       title="Cashout"
-      footer={
-        <div className="flex flex-col gap-2">
-          <Button
-            className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
-            disabled={!valid}
-            onClick={() => {
-              onConfirm(numeric);
-              close();
-            }}
-          >
-            Confirmar
-          </Button>
-          <Button variant="secondary" className="w-full min-h-[44px]" onClick={close}>
-            Cancelar
-          </Button>
-        </div>
-      }
+      submitLabel="Confirmar"
+      submitDisabled={!valid}
+      onSubmit={() => {
+        onConfirm(numeric);
+        setValue("");
+        onOpenChange(false);
+      }}
     >
-      <div className="space-y-1.5 pb-4">
-        <Label htmlFor="cashout-value-mobile" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-          Valor recebido (R$)
-        </Label>
+      <FormField label="Valor recebido (R$)" htmlFor="cashout-value-mobile">
         <Input
           id="cashout-value-mobile"
           type="number"
@@ -69,7 +49,7 @@ export function CashoutSheet({
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-      </div>
-    </BottomSheet>
+      </FormField>
+    </FormSheet>
   );
 }

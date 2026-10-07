@@ -3,6 +3,7 @@ import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SectionLabel } from "@/components/ui/section-label";
 import { cn } from "@/lib/utils";
 import { AnimatedSignedCurrency } from "@/components/ui/animated-currency";
 import { settledProfit } from "@/lib/bet-status";
@@ -53,15 +54,19 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
               const total = day.bets.reduce((sum, bet) => sum + settledProfit(bet), 0);
               return (
                 <section key={day.key} aria-label={day.label} className="ml-2 border-l border-foreground/[0.06] pl-2">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1 min-h-8 py-1">
+                  <div className="flex items-center gap-2 mb-1 min-h-8 py-1">
                     {selection.selectionMode && (
                       <Checkbox checked={groupCheckState(dayIds, selection.selected)}
                         onCheckedChange={() => selection.toggleMany(dayIds)}
                         aria-label={`Selecionar todas as apostas de ${day.label}`} />
                     )}
-                    <h2 className="text-base font-medium text-zinc-300">{format(betDate(day.bets[0]), "dd MMM yyyy", { locale: ptBR })}</h2>
-                    <span className="text-[11px] text-zinc-400">{day.bets.length} {day.bets.length === 1 ? "aposta" : "apostas"}</span>
-                    <AnimatedSignedCurrency value={total} className="ml-auto text-xs shrink-0" />
+                    <SectionLabel
+                      className="flex-1 px-0"
+                      count={day.bets.length}
+                      action={<AnimatedSignedCurrency value={total} className="text-xs" />}
+                    >
+                      {format(betDate(day.bets[0]), "dd MMM yyyy", { locale: ptBR })}
+                    </SectionLabel>
                   </div>
                   <div className="space-y-2">
                     {day.bets.map((bet) => (

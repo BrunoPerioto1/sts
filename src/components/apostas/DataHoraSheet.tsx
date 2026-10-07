@@ -124,7 +124,7 @@ export function DataHoraSheet({ open, onOpenChange, value, onApply, nested = tru
             <CalendarBlank size={18} weight="bold" className="shrink-0 text-zinc-400" />
             {format(date, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
           </p>
-          <Button className="w-full min-h-[44px] bg-accent text-white hover:bg-accent/90" onClick={handleApply}>
+          <Button className="w-full min-h-[44px]" onClick={handleApply}>
             Aplicar
           </Button>
         </div>

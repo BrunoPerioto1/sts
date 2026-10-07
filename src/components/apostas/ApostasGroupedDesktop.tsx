@@ -111,7 +111,7 @@ export function ApostasGroupedDesktop({
                             className="shrink-0"
                           />
                         )}
-                        <span className="text-xs font-medium uppercase tracking-wider opacity-55 truncate">{day.label}</span>
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted truncate">{day.label}</span>
                         <span className="h-px flex-1 bg-border" />
                         <AnimatedSignedCurrency value={day.total} className="text-xs font-medium shrink-0" />
                       </div>

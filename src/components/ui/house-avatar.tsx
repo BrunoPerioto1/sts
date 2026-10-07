@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 import { houseColor, houseInitials } from "@/lib/format";
 
 const SIZES = {
+  // Dentro de chip (badge de casa no card de aposta).
+  xs: "h-5 w-5 rounded-full text-[9px]",
   sm: "h-6 w-6 rounded-md text-[10px]",
   md: "h-8 w-8 rounded-[9px] text-xs",
   lg: "h-10 w-10 rounded-[11px] text-sm",

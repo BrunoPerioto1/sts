@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { BottomSheet } from "./BottomSheet";
 import { SheetSelectField } from "./SheetSelectField";
 import { CasaSheet } from "./CasaSheet";
 import { SportSheet } from "./SportSheet";
@@ -7,8 +6,8 @@ import { SportIcon } from "./SportIcon";
 import { useSports, findSport } from "@/hooks/queries/use-sports";
 import { DataHoraSheet, formatDataHora } from "./DataHoraSheet";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { formatMoney } from "@/lib/format";
+import { FormSheet } from "@/components/ui/form-sheet";
+import { formatMoney, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useApostaForm } from "@/hooks/apostas/use-aposta-form";
 import { type BetItem } from "@/api/routes/get-bets";
@@ -19,7 +18,8 @@ import { aiFieldRing } from "@/lib/ai-field";
 import { OddBoostHint } from "./OddBoostHint";
 import { MatchedTipsCard } from "./MatchedTipsCard";
 
-const fieldLabel = "text-xs font-medium uppercase tracking-wider text-zinc-400";
+// Mesmo rótulo do FormField (AiFieldLabel acrescenta o selo de "lido pela IA").
+const fieldLabel = "text-xs font-medium uppercase tracking-wider text-muted";
 
 interface MobileApostaFormSheetProps {
   open: boolean;
@@ -84,27 +84,25 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
   }, [pendingImage]);
 
   return (
-    <BottomSheet
+    <FormSheet
       open={open}
       onOpenChange={(o) => {
         if (!o) onClose();
       }}
       title={isEditing ? "Editar aposta" : "Nova aposta"}
-      footer={
-        <Button type="submit" form="mobile-aposta-form" disabled={submitting} className="w-full min-h-[44px]">
-          {submitting
-            ? "Salvando…"
-            : isEditing
-              ? "Atualizar aposta"
-              : scan.remaining > 0
-                ? `Registrar e ler o próximo (${scan.remaining})`
-                : tipId
-                  ? "Registrar e vincular"
-                  : "Registrar aposta"}
-        </Button>
+      formId="mobile-aposta-form"
+      submitting={submitting}
+      submitLabel={
+        isEditing
+          ? "Atualizar aposta"
+          : scan.remaining > 0
+            ? `Registrar e ler o próximo (${scan.remaining})`
+            : tipId
+              ? "Registrar e vincular"
+              : "Registrar aposta"
       }
     >
-      <form id="mobile-aposta-form" onSubmit={handleSubmit} className="flex flex-col gap-4 pb-4">
+      <form id="mobile-aposta-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Edição de aposta já registrada não lê print — só o cadastro novo. */}
         {!isEditing && (
           <BetSlipUpload
@@ -155,7 +153,7 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
           <div className="space-y-1.5">
             <AiFieldLabel mark={aiMarks.houseId} className={fieldLabel}>Casa *</AiFieldLabel>
             <SheetSelectField
-              summary={formData.houseId ? (houses.find((h) => h.id === formData.houseId)?.name ?? "Selecionar") : "Selecionar"}
+              summary={houseName ? houseDisplayName(houseName) : "Selecionar"}
               onOpen={() => setCasaOpen(true)}
               className="min-h-[44px] sm:min-h-[36px]"
             />
@@ -227,7 +225,7 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
             </div>
             <div>
               <p className={fieldLabel}>Lucro se ganhar</p>
-              <p className="text-xl font-semibold tabular-nums text-foreground">+{formatMoney(potentialReturn.profit)}</p>
+              <p className="text-xl font-semibold tabular-nums text-foreground">{formatMoney(potentialReturn.profit, { signed: true })}</p>
             </div>
           </div>
         )}
@@ -257,6 +255,6 @@ export function MobileApostaFormSheet({ open, onClose, onApostaAdded, initialDat
         houseIds={formData.houseId ? [formData.houseId] : []}
         onChange={(ids) => setFormData({ ...formData, houseId: ids[0] })}
       />
-    </BottomSheet>
+    </FormSheet>
   );
 }
