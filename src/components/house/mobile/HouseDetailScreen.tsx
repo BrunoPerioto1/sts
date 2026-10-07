@@ -1,10 +1,12 @@
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
-import { formatMoney, formatInt, formatPercent } from "@/lib/format";
+import { formatMoney, formatInt, formatPercent, houseDisplayName, signColor } from "@/lib/format";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionLabel } from "@/components/ui/section-label";
 
 function StatRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
@@ -46,23 +48,22 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
       className="animate-screen-in fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
     >
-      <div className="flex items-center justify-between gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-foreground">
-            <CaretLeft size={20} />
-          </button>
-          <h1 className="text-lg font-semibold truncate">{house.houseName}</h1>
-        </div>
-        <Badge variant={isProfit ? "won" : "lost"} className="shrink-0 uppercase">
-          {isProfit ? "Lucro" : "Prejuízo"}
-        </Badge>
-      </div>
+      <PageHeader
+        className="px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3"
+        back={onBack}
+        title={houseDisplayName(house.houseName)}
+        actions={
+          <Badge variant={isProfit ? "won" : "lost"} className="shrink-0">
+            {isProfit ? "Lucro" : "Prejuízo"}
+          </Badge>
+        }
+      />
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6">
         <div>
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo atual</p>
+          <SectionLabel as="p" className="px-0 mb-1">Saldo atual</SectionLabel>
           <p className="text-3xl font-semibold tabular-nums">{formatMoney(Math.max(0, realBalance))}</p>
-          <p className={`text-sm font-medium tabular-nums mt-0.5 ${isProfit ? "text-success" : "text-danger"}`}>
+          <p className={`text-sm font-medium tabular-nums mt-0.5 ${signColor(profit)}`}>
             {formatMoney(profit, { signed: true })} de lucro · ROI {formatPercent(roi)}
           </p>
         </div>
@@ -75,7 +76,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           <StatRow label="Apostas encerradas" value={formatInt(settledBets)} />
           <StatRow label="Apostas abertas" value={formatInt(house.pendingBets)} />
           <StatRow label="Taxa de acerto" value={formatPercent(hitRate)} />
-          <StatRow label="Lucro em apostas" value={formatMoney(profit)} valueClass={profit >= 0 ? "text-success" : "text-danger"} />
+          <StatRow label="Lucro em apostas" value={formatMoney(profit)} valueClass={signColor(profit)} />
         </div>
       </div>
 
@@ -84,7 +85,8 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
         style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
       >
         <Button
-          className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
+          size="lg"
+          className="w-full"
           onClick={() => onNewTransaction(house)}
         >
           Nova movimentação
@@ -98,7 +100,7 @@ export function HouseDetailScreen({ house, onBack, onNewTransaction, onOpenHisto
           </Button>
           {house.websiteUrl && (
             <Button asChild variant="secondary" className="min-h-[44px] gap-1.5">
-              <a href={house.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Abrir site da ${house.houseName}`}>
+              <a href={house.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Abrir site da ${houseDisplayName(house.houseName)}`}>
                 Site <ArrowSquareOut size={15} />
               </a>
             </Button>

@@ -1,7 +1,7 @@
 import { MagnifyingGlass, DownloadSimple } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SortSelect, type SortOption } from "@/components/ui/sort-select";
 import { HouseMultiSelect } from "./HouseMultiSelect";
 import type { HouseOption } from "@/hooks/queries/use-houses";
 
@@ -22,6 +22,14 @@ interface HousesSearchProps {
 }
 
 const divider = <div className="h-5 w-px bg-foreground/10 shrink-0" />;
+
+const SORT_OPTIONS: SortOption<HouseSort>[] = [
+  { value: "balance", label: "Saldo", hint: "maior saldo primeiro" },
+  { value: "name", label: "Nome", hint: "A → Z" },
+  { value: "profit", label: "Lucro", hint: "melhor desempenho primeiro" },
+  { value: "bets", label: "Apostas", hint: "mais movimentadas primeiro" },
+  { value: "idle", label: "Parada há mais tempo", hint: "mais dias sem apostar primeiro" },
+];
 
 // Mesma barra única da tela de apostas — antes eram três controles soltos
 // flutuando com alturas diferentes.
@@ -47,7 +55,7 @@ export function HousesSearch({
           value={searchTerm}
           onChange={(e) => onChange(e.target.value)}
           disabled={isLoading}
-          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-foreground placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-foreground placeholder:text-zinc-600 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
         />
       </div>
 
@@ -73,19 +81,7 @@ export function HousesSearch({
       {divider}
 
       <div className="px-3.5 shrink-0">
-        <Select value={sort} onValueChange={(v) => onSortChange(v as HouseSort)} disabled={isLoading}>
-          <SelectTrigger className="w-auto min-h-0 h-auto gap-1.5 border-transparent bg-transparent hover:border-transparent hover:bg-transparent px-0 text-sm text-foreground">
-            <span className="text-zinc-500 shrink-0">Ordenar</span>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="balance">Saldo</SelectItem>
-            <SelectItem value="name">Nome</SelectItem>
-            <SelectItem value="profit">Lucro</SelectItem>
-            <SelectItem value="bets">Apostas</SelectItem>
-            <SelectItem value="idle">Parada há mais tempo</SelectItem>
-          </SelectContent>
-        </Select>
+        <SortSelect options={SORT_OPTIONS} value={sort} onChange={onSortChange} disabled={isLoading} />
       </div>
 
       {onExportCsv && (

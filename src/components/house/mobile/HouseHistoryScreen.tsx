@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowDownLeft, ArrowUpRight, CaretLeft, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
+import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal, WarningCircle } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { getTransactions, type TransactionDto } from "@/api/routes/get-transaction";
-import { formatMoney, formatTime } from "@/lib/format";
+import { formatInt, formatMoney, formatTime, houseDisplayName, signColor } from "@/lib/format";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionLabel } from "@/components/ui/section-label";
+import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TransactionActions } from "../TransactionActions";
 
@@ -72,28 +75,17 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
       className="animate-screen-in fixed inset-0 z-50 isolate flex flex-col overscroll-contain bg-background"
       style={{ backgroundColor: "var(--color-bg)" }}
     >
-      <div className="flex items-center gap-2 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3">
-        <button type="button" onClick={onBack} aria-label="Voltar" className="press h-11 w-11 flex items-center justify-center -ml-2 text-zinc-400 hover:text-foreground">
-          <CaretLeft size={20} />
-        </button>
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold truncate">Histórico</h1>
-          <p className="text-sm text-zinc-400 truncate">
-            {house.houseName} · {transactions.length} movimentaç{transactions.length === 1 ? "ão" : "ões"}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        className="px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3"
+        back={onBack}
+        title="Histórico"
+        subtitle={`${houseDisplayName(house.houseName)} · ${formatInt(transactions.length)} movimentaç${transactions.length === 1 ? "ão" : "ões"}`}
+      />
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6 space-y-4">
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Entrou</p>
-            <p className="text-lg font-medium tabular-nums text-success">{formatMoney(entrou, { signed: true })}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saiu</p>
-            <p className="text-lg font-medium tabular-nums text-danger">{formatMoney(saiu)}</p>
-          </div>
+          <StatCard label="Entrou" value={formatMoney(entrou, { signed: true })} signed={entrou} />
+          <StatCard label="Saiu" value={formatMoney(saiu, { signed: true })} signed={saiu} />
         </div>
 
         {loading ? (
@@ -115,7 +107,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
         ) : (
           groups.map((g) => (
             <div key={g.day}>
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 px-1 pb-1.5">{g.day}</p>
+              <SectionLabel as="h3" className="mb-1.5">{g.day}</SectionLabel>
               <div className="flex flex-col gap-1">
                 {g.items.map((t) => {
                   const meta = TYPE_META[t.transactionType] ?? { label: t.transactionType, icon: SlidersHorizontal };
@@ -131,7 +123,7 @@ export function HouseHistoryScreen({ house, onBack }: HouseHistoryScreenProps) {
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className={`block text-base font-medium tabular-nums ${value >= 0 ? "text-success" : "text-danger"}`}>
+                        <span className={`block text-base font-medium tabular-nums ${signColor(value)}`}>
                           {formatMoney(value, { signed: true })}
                         </span>
                         <span className="block text-sm text-zinc-400 tabular-nums">{formatMoney(t.runningBalance)}</span>

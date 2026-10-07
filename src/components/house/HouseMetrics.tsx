@@ -1,6 +1,6 @@
 import { HouseMetricsDto } from "@/api/routes/get-houses";
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, signColor } from "@/lib/format";
 
 interface HousesMetricsProps {
   metrics: HouseMetricsDto;
@@ -42,8 +42,8 @@ export function HousesMetrics({
     },
     {
       label: "Lucro consolidado",
-      value: `${profit >= 0 ? "+" : ""}${formatMoney(profit)}`,
-      valueClass: profit >= 0 ? "text-success" : "text-danger",
+      value: formatMoney(profit, { signed: true }),
+      valueClass: signColor(profit),
       hint: "desde o início",
     },
     {

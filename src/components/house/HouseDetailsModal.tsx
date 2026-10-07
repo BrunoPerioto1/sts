@@ -4,7 +4,7 @@ import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatInt, formatPercent, houseDisplayName } from "@/lib/format";
+import { formatMoney, formatInt, formatPercent, houseDisplayName, signColor } from "@/lib/format";
 import { HouseAvatar } from "@/components/ui/house-avatar";
 
 interface HouseDetailsModalProps {
@@ -42,7 +42,6 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
   // do ranking. Dividir pelo total apostado contava as pendentes.
   const roi = Number(house.roi ?? 0);
   const noMovement = deposit === 0 && withdrawal === 0;
-  const signClass = (v: number) => (v >= 0 ? "text-success" : "text-danger");
 
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
@@ -72,7 +71,7 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
               <div className={cn("text-[34px] leading-tight font-medium tabular-nums", realBalance < 0 && "opacity-45")}>
                 {formatMoney(Math.max(0, realBalance))}
               </div>
-              <p className={cn("text-xs", noMovement ? signClass(profit) : "opacity-45")}>
+              <p className={cn("text-xs", noMovement ? signColor(profit) : "opacity-45")}>
                 {noMovement
                   ? profit >= 0
                     ? "Todo o saldo vem de lucro em apostas"
@@ -87,11 +86,11 @@ export function HouseDetailsModal({ house, isOpen, onClose, onNewTransaction }: 
               )}
               <Row label="Depósitos" value={formatMoney(deposit)} />
               <Row label="Saques" value={formatMoney(withdrawal)} />
-              <Row label="Lucro em apostas" value={formatMoney(profit)} valueClass={signClass(profit)} />
+              <Row label="Lucro em apostas" value={formatMoney(profit)} valueClass={signColor(profit)} />
               <Row label="Apostas encerradas" value={formatInt(settledBets)} />
               <Row label="Apostas abertas" value={formatInt(house.pendingBets)} />
               <Row label="Taxa de acerto" value={formatPercent(hitRate)} />
-              <Row label="ROI" value={formatPercent(roi, { signed: true })} valueClass={signClass(roi)} />
+              <Row label="ROI" value={formatPercent(roi, { signed: true })} valueClass={signColor(roi)} />
             </div>
           </div>
 

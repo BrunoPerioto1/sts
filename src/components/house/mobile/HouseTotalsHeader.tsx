@@ -1,6 +1,8 @@
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatInt, formatMoney, signColor } from "@/lib/format";
+import { SectionLabel } from "@/components/ui/section-label";
+import { StatCard } from "@/components/ui/stat-card";
 import { stagger } from "@/lib/motion";
 import type { HouseMetricsDto } from "@/api/routes/get-houses";
 
@@ -21,34 +23,26 @@ export function HouseTotalsHeader({ metrics, loading }: { metrics: HouseMetricsD
 
   return (
     <div className="animate-rise stagger" style={stagger(0)}>
-      <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Saldo total</p>
+      <SectionLabel as="p" className="px-0 mb-1">Saldo total</SectionLabel>
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="text-3xl font-semibold tabular-nums">
           <AnimatedNumber value={metrics.totalBalance} format={formatMoney} />
         </span>
-        <span className={cn("text-sm font-medium tabular-nums", metrics.consolidatedProfit >= 0 ? "text-success" : "text-danger")}>
+        <span className={cn("text-sm font-medium tabular-nums", signColor(metrics.consolidatedProfit))}>
           Lucro {formatMoney(metrics.consolidatedProfit, { signed: true })}
         </span>
       </div>
 
-      <div className="grid grid-cols-3 divide-x divide-border border-t border-border mt-3 pt-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Depositado</p>
-          <p className="text-base font-medium tabular-nums">{formatMoney(metrics.totalDeposit)}</p>
-        </div>
-        <div className="pl-3">
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">Sacado</p>
-          <p className="text-base font-medium tabular-nums">{formatMoney(metrics.totalWithdrawal)}</p>
-        </div>
-        <div className="pl-3">
-          <p className="text-xs uppercase tracking-wide opacity-75 mb-1">A conferir</p>
-          <p className={cn("text-base font-medium tabular-nums", metrics.negativeHouses > 0 && "text-danger")}>
-            {metrics.negativeHouses}
-          </p>
-          {metrics.negativeHouses > 0 && (
-            <p className="text-xs text-danger tabular-nums">{formatMoney(metrics.negativeAmount)}</p>
-          )}
-        </div>
+      <div className="grid grid-cols-3 gap-3 border-t border-border mt-3 pt-3">
+        <StatCard label="Depositado" value={formatMoney(metrics.totalDeposit)} />
+        <StatCard label="Sacado" value={formatMoney(metrics.totalWithdrawal)} />
+        {/* Casa no vermelho é lançamento faltando: vermelho só quando há. */}
+        <StatCard
+          label="A conferir"
+          value={formatInt(metrics.negativeHouses)}
+          color={metrics.negativeHouses > 0 ? "var(--color-danger)" : undefined}
+          hint={metrics.negativeHouses > 0 && <span className="text-danger">{formatMoney(metrics.negativeAmount)}</span>}
+        />
       </div>
     </div>
   );

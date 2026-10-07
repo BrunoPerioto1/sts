@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { HouseBalanceDto } from "@/api/routes/get-houses";
-import type { HouseSortMobile } from "@/components/house/mobile/SortSheet";
+import type { HouseSortMobile } from "@/components/house/mobile/HouseFiltersBar";
 import { idleDays } from "@/lib/house-activity";
 
 // Busca, chips e ordenação da lista de casas (mobile). "Com saldo" e

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal } from "@phosphor-icons/react";
-import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormField, FormSheet } from "@/components/ui/form-sheet";
+import { Segmented } from "@/components/ui/segmented";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { createTransaction, getTransactionTypes, type TransactionTypeDto } from "@/api/routes/get-transaction";
-import { centsToDisplay, formatMoney } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { centsToDisplay, formatMoney, houseDisplayName } from "@/lib/format";
 
 const TYPE_META: Record<string, { label: string; icon: typeof ArrowDownLeft; submitLabel: string }> = {
   DEPOSIT: { label: "Depósito", icon: ArrowDownLeft, submitLabel: "Adicionar depósito" },
@@ -86,96 +86,65 @@ export function NovaMovimentacaoSheet({ house, onClose, onSuccess }: NovaMovimen
   };
 
   return (
-    <BottomSheet
+    <FormSheet
       nested
       open={!!house}
       onOpenChange={(o) => {
         if (!o) onClose();
       }}
       title="Nova movimentação"
-      titleExtra={
-        <span className="text-xs px-[8px] py-[2px] rounded-[5px] bg-foreground/[0.07] opacity-70 truncate">{house.houseName}</span>
-      }
-      footer={
-        <Button
-          className="w-full min-h-[44px] bg-accent text-white font-bold hover:opacity-90 active:opacity-90"
-          disabled={loading || !valid}
-          onClick={handleSubmit}
-        >
-          {loading ? "Enviando…" : meta?.submitLabel ?? "Confirmar"}
-        </Button>
-      }
+      submitLabel={meta?.submitLabel ?? "Confirmar"}
+      submitting={loading}
+      submittingLabel="Enviando…"
+      submitDisabled={!valid}
+      onSubmit={handleSubmit}
     >
-      <div className="pb-4 space-y-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 px-1 pb-1.5">Tipo</p>
-          <div className="inline-flex w-full overflow-hidden rounded-md border border-border">
-            {types.map((t, i) => {
-              const m = TYPE_META[t.name] ?? { label: t.name, icon: SlidersHorizontal };
-              const active = t.id === typeId;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTypeId(t.id)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-sm whitespace-nowrap transition-colors",
-                    i > 0 && "border-l border-border",
-                    active ? "text-foreground" : "text-zinc-400 hover:bg-foreground/[0.04]"
-                  )}
-                  style={active ? { background: "var(--color-accent)" } : undefined}
-                >
-                  <m.icon size={14} /> {m.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <p className="-mt-2 text-sm text-zinc-500 truncate">{houseDisplayName(house.houseName)}</p>
 
-        <div>
-          <div className="flex items-center justify-between px-1 pb-1.5">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isAdjust ? "Saldo na casa" : "Valor"}</p>
-            {isAdjust ? (
-              <p className="text-xs text-zinc-500">
-                {typed ? `Ajuste ${diff > 0 ? "+" : ""}${formatMoney(diff)}` : `Disponível ${formatMoney(available)}`}
-              </p>
-            ) : numericValue > 0 && (
-              <p className="text-xs text-zinc-500">Saldo passa a {formatMoney(projectedBalance)}</p>
-            )}
-          </div>
-          <Input
-            inputMode="numeric"
-            placeholder="0,00"
-            value={typed ? centsToDisplay(cents) : ""}
-            onChange={(e) => { setTyped(e.target.value !== ""); setCents(Number(e.target.value.replace(/\D/g, "")) || 0); }}
-            className="text-3xl font-semibold h-auto py-2 tabular-nums"
-          />
-          {isAdjust && openStake > 0 && (
-            <p className="text-xs text-zinc-500 px-1 pt-1.5">
-              Digite o saldo disponível que a casa mostra. {formatMoney(openStake)} em apostas abertas já ficam de fora.
-            </p>
-          )}
-          <div className="flex gap-2 pt-2">
-            {QUICK_AMOUNTS.map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                onClick={() => addAmount(amount)}
-                className="px-3 py-1.5 rounded-full text-sm font-medium border border-foreground/10 text-zinc-300 hover:bg-foreground/[0.06]"
-              >
-                +{amount}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={useFullBalance}
-              className="px-3 py-1.5 rounded-full text-sm font-medium border border-foreground/10 text-zinc-300 hover:bg-foreground/[0.06]"
-            >
-              Tudo
-            </button>
-          </div>
+      <FormField label="Tipo">
+        <Segmented
+          label="Tipo de movimentação"
+          className="flex w-full"
+          value={String(typeId ?? "")}
+          options={types.map((t) => {
+            const m = TYPE_META[t.name] ?? { label: t.name, icon: SlidersHorizontal };
+            return { value: String(t.id), label: m.label, icon: m.icon };
+          })}
+          onChange={(id) => setTypeId(Number(id))}
+        />
+      </FormField>
+
+      <FormField
+        label={isAdjust ? "Saldo na casa" : "Valor"}
+        help={
+          isAdjust
+            ? [
+                typed ? `Ajuste ${formatMoney(diff, { signed: true })}` : `Disponível ${formatMoney(available)}`,
+                openStake > 0 && `Digite o saldo disponível que a casa mostra. ${formatMoney(openStake)} em apostas abertas já ficam de fora.`,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : numericValue > 0 && `Saldo passa a ${formatMoney(projectedBalance)}`
+        }
+      >
+        <Input
+          inputMode="numeric"
+          placeholder="0,00"
+          value={typed ? centsToDisplay(cents) : ""}
+          onChange={(e) => { setTyped(e.target.value !== ""); setCents(Number(e.target.value.replace(/\D/g, "")) || 0); }}
+          className="text-3xl font-semibold h-auto py-2 tabular-nums"
+        />
+        <div className="flex gap-2 pt-1">
+          {QUICK_AMOUNTS.map((amount) => (
+            <Button key={amount} type="button" variant="secondary" size="sm" className="rounded-full" onClick={() => addAmount(amount)}>
+              +{amount}
+            </Button>
+          ))}
+          <Button type="button" variant="secondary" size="sm" className="rounded-full" onClick={useFullBalance}>
+            Tudo
+          </Button>
         </div>
-      </div>
-    </BottomSheet>
+      </FormField>
+    </FormSheet>
   );
 }

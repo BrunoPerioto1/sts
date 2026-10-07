@@ -12,6 +12,7 @@ import { useHousePanel } from "@/hooks/house/use-house-panel";
 import { actionToast } from "@/lib/action-toast";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { ListGroup } from "@/components/ui/list-group";
 import { HouseRowMobile } from "./HouseRowMobile";
 import { HouseTotalsHeader } from "./HouseTotalsHeader";
 import { HouseFiltersBar } from "./HouseFiltersBar";
@@ -20,7 +21,6 @@ import { metricsFromBalances } from "@/lib/house-metrics";
 import { staleDaysFrom } from "@/lib/house-activity";
 import { groupHouses } from "@/lib/house-groups";
 import { useMe } from "@/hooks/queries/use-me";
-import { SortSheet } from "./SortSheet";
 import { HouseActionsSheet } from "./HouseActionsSheet";
 import { NovaMovimentacaoSheet } from "./NovaMovimentacaoSheet";
 import { HouseDetailScreen } from "./HouseDetailScreen";
@@ -47,7 +47,6 @@ export function CasasMobileView() {
   const filters = useHouseFilters(houses);
   const panel = useHousePanel(houses);
 
-  const [sortSheetOpen, setSortSheetOpen] = useState(false);
   const [casaSheetOpen, setCasaSheetOpen] = useState(false);
   const [actionsHouse, setActionsHouse] = useState<HouseBalanceDto | null>(null);
   const [novaMovHouse, setNovaMovHouse] = useState<HouseBalanceDto | null>(null);
@@ -87,7 +86,7 @@ export function CasasMobileView() {
         onlyNegative={filters.onlyNegative}
         onToggleNegative={filters.toggleOnlyNegative}
         sort={filters.sort}
-        onOpenSort={() => setSortSheetOpen(true)}
+        onSortChange={filters.setSort}
         selectedHousesCount={filters.houseIds.length}
         onOpenCasas={() => setCasaSheetOpen(true)}
       />
@@ -118,31 +117,25 @@ export function CasasMobileView() {
           ) : undefined}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Com "negativas" ligado a lista já é o recorte; sem ele, os três
               blocos (em uso, paradas, sem uso) separam o que merece olhar. */}
           {(filters.onlyNegative
             ? [{ id: "negative", label: "A conferir", houses: filters.filteredHouses }]
             : groupHouses(filters.filteredHouses, staleDays)
           ).map((group) => (
-            <section key={group.id}>
-              <p className="flex items-baseline gap-2 text-xs font-medium uppercase tracking-wider text-zinc-400 pb-1">
-                {group.label}
-                <span className="tabular-nums opacity-70">{group.houses.length}</span>
-              </p>
-              <div className="flex flex-col divide-y divide-border">
-                {group.houses.map((house, index) => (
-                  <HouseRowMobile
-                    key={house.houseId}
-                    index={index}
-                    house={house}
-                    staleDays={staleDays}
-                    onTap={() => panel.pushDetail(house)}
-                    onLongPress={() => setActionsHouse(house)}
-                  />
-                ))}
-              </div>
-            </section>
+            <ListGroup key={group.id} title={group.label} count={group.houses.length}>
+              {group.houses.map((house, index) => (
+                <HouseRowMobile
+                  key={house.houseId}
+                  index={index}
+                  house={house}
+                  staleDays={staleDays}
+                  onTap={() => panel.pushDetail(house)}
+                  onLongPress={() => setActionsHouse(house)}
+                />
+              ))}
+            </ListGroup>
           ))}
         </div>
       )}
@@ -155,8 +148,6 @@ export function CasasMobileView() {
         houseIds={filters.houseIds}
         onChange={filters.setHouseIds}
       />
-
-      <SortSheet open={sortSheetOpen} onOpenChange={setSortSheetOpen} value={filters.sort} onChange={filters.setSort} />
 
       <HouseActionsSheet
         house={actionsHouse}

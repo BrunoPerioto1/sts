@@ -1,25 +1,25 @@
 import { useRef } from "react";
-import { CaretRight } from "@phosphor-icons/react";
 import { HouseBalanceDto } from "@/api/routes/get-houses";
 import { useLongPress } from "@/hooks/apostas/use-long-press";
-import { formatMoney, houseDisplayName } from "@/lib/format";
+import { formatInt, formatMoney, houseDisplayName, signColor } from "@/lib/format";
 import { HouseAvatar } from "@/components/ui/house-avatar";
+import { ListRow } from "@/components/ui/list-group";
 import { houseActivity } from "@/lib/house-activity";
 import { houseMoney } from "@/lib/house-groups";
 import { HouseActivityBadge } from "../HouseActivityBadge";
 import { stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-
-// "N apostas" · "N aberta(s)" quando há pendentes, ou "· liquidada" quando é
-// a única aposta da casa e já foi liquidada — replica a leitura do mock.
-function betsSubtitle(house: HouseBalanceDto) {
+// Uma linha só de contexto: "N apostas · N abertas · R$ X em aberto", ou
+// "N apostas · Stake R$ X" sem nada em aberto. O que antes virava linha extra
+// (em aberto, a conferir) entra aqui, pra todas as linhas terem a mesma altura.
+function subtitleParts(house: HouseBalanceDto, open: number, real: number) {
   const total = Number(house.totalBets);
   const pending = Number(house.pendingBets);
-  const stake = `Stake ${formatMoney(Number(house.totalStake))}`;
-  const totalLabel = `${total} aposta${total === 1 ? "" : "s"}`;
-  if (pending > 0) return `${totalLabel} · ${pending} aberta${pending === 1 ? "" : "s"} · ${stake}`;
-  return `${totalLabel} · ${stake}`;
+  const parts = [`${formatInt(total)} aposta${total === 1 ? "" : "s"}`];
+  if (pending > 0) parts.push(`${formatInt(pending)} aberta${pending === 1 ? "" : "s"}`);
+  parts.push(open > 0 ? `${formatMoney(open)} em aberto` : `Stake ${formatMoney(Number(house.totalStake))}`);
+  return { text: parts.join(" · "), conferir: real < 0 ? `a conferir ${formatMoney(real)}` : null };
 }
 
 interface HouseRowMobileProps {
@@ -38,6 +38,7 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
   // real negativo aparece como "a conferir" e no detalhe da casa.
   const real = Number(house.realHouseBalance);
   const money = houseMoney(house);
+  const subtitle = subtitleParts(house, money.open, real);
   // O toque longo dispara onLongPress, mas o navegador ainda emite o click
   // logo depois (ao soltar o dedo) — sem essa flag, esse click "fantasma"
   // também chamaria onTap e navegaria pro detalhe por cima do sheet aberto.
@@ -56,39 +57,32 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
   };
 
   return (
-    <button
-      type="button"
+    <ListRow
       onClick={handleClick}
       {...longPress}
-      className="press animate-rise stagger flex w-full items-center gap-3 min-h-[64px] py-2 text-left active:bg-foreground/[0.04]"
+      className="animate-rise stagger"
       style={stagger(index)}
-    >
-      <HouseAvatar name={house.houseName} />
-
-      <span className="flex-1 min-w-0">
+      leading={<HouseAvatar name={house.houseName} />}
+      title={
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-sm font-medium truncate">{houseDisplayName(house.houseName)}</span>
+          <span className="truncate">{houseDisplayName(house.houseName)}</span>
           <HouseActivityBadge activity={houseActivity(house.lastBetAt, real, staleDays)} />
         </span>
-        <span className="block text-xs text-zinc-400 leading-snug truncate">{betsSubtitle(house)}</span>
-        {real < 0 && (
-          <span className="block text-xs text-danger leading-snug">a conferir {formatMoney(real)}</span>
-        )}
-      </span>
-
-      <span className="shrink-0 text-right">
-        {/* Disponível, como o site da casa mostra; o preso em aposta aberta
-            vem embaixo quando existe. */}
-        <span className="block text-sm font-medium tabular-nums">{formatMoney(money.available)}</span>
-        {money.open > 0 && (
-          <span className="block text-xs text-zinc-400 tabular-nums">+{formatMoney(money.open)} em aberto</span>
-        )}
-        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-success" : "text-danger")}>
-          Lucro {formatMoney(profit, { signed: true })}
-        </span>
-      </span>
-
-      <CaretRight size={14} className="shrink-0 text-zinc-600" />
-    </button>
+      }
+      subtitle={
+        <>
+          {subtitle.conferir && <span className="text-danger">{subtitle.conferir} · </span>}
+          {subtitle.text}
+        </>
+      }
+      trailing={
+        // Disponível, como o site da casa mostra, e o lucro em apostas.
+        <>
+          <span className="block text-sm font-medium tabular-nums">{formatMoney(money.available)}</span>
+          <span className={cn("block text-xs tabular-nums", signColor(profit))}>Lucro {formatMoney(profit, { signed: true })}</span>
+        </>
+      }
+      chevron
+    />
   );
 }

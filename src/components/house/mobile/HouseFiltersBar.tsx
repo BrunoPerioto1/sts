@@ -1,17 +1,19 @@
-import { ArrowsDownUp, Buildings, MagnifyingGlass } from "@phosphor-icons/react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Buildings } from "@phosphor-icons/react";
+import { SearchField } from "@/components/ui/search-field";
+import { FilterChip, FilterChipRow } from "@/components/ui/filter-chips";
+import { SortSelect, type SortOption } from "@/components/ui/sort-select";
 import { stagger } from "@/lib/motion";
-import type { HouseSortMobile } from "./SortSheet";
 
-const SORT_LABEL: Record<HouseSortMobile, string> = {
-  balance: "Saldo",
-  profit: "Lucro",
-  name: "Nome",
-  bets: "Apostas",
-  idle: "Parada",
-  lastMovement: "Última mov.",
-};
+export type HouseSortMobile = "balance" | "profit" | "name" | "bets" | "idle" | "lastMovement";
+
+const SORT_OPTIONS: SortOption<HouseSortMobile>[] = [
+  { value: "balance", label: "Saldo", hint: "maior saldo primeiro" },
+  { value: "profit", label: "Lucro", hint: "melhor desempenho primeiro" },
+  { value: "name", label: "Nome", hint: "A → Z" },
+  { value: "bets", label: "Apostas", hint: "mais movimentadas primeiro" },
+  { value: "idle", label: "Parada", hint: "mais dias sem apostar primeiro" },
+  { value: "lastMovement", label: "Última mov.", hint: "mais recente primeiro" },
+];
 
 interface HouseFiltersBarProps {
   loading: boolean;
@@ -23,7 +25,7 @@ interface HouseFiltersBarProps {
   onlyNegative: boolean;
   onToggleNegative: () => void;
   sort: HouseSortMobile;
-  onOpenSort: () => void;
+  onSortChange: (sort: HouseSortMobile) => void;
   selectedHousesCount: number;
   onOpenCasas: () => void;
 }
@@ -38,45 +40,51 @@ export function HouseFiltersBar({
   onlyNegative,
   onToggleNegative,
   sort,
-  onOpenSort,
+  onSortChange,
   selectedHousesCount,
   onOpenCasas,
 }: HouseFiltersBarProps) {
   if (loading) {
     return (
       <div className="space-y-3" aria-hidden="true">
-        <div className="skeleton h-11 rounded-md" style={{ animationDelay: "140ms" }} />
+        <div className="skeleton h-11 rounded-xl" style={{ animationDelay: "140ms" }} />
         <div className="flex items-center gap-2">
-          <div className="skeleton h-11 w-28 rounded-full" style={{ animationDelay: "200ms" }} />
-          <div className="skeleton h-11 w-24 rounded-full" style={{ animationDelay: "260ms" }} />
-          <div className="skeleton h-11 w-24 rounded-full ml-auto" style={{ animationDelay: "320ms" }} />
+          <div className="skeleton h-9 w-28 rounded-full" style={{ animationDelay: "200ms" }} />
+          <div className="skeleton h-9 w-24 rounded-full" style={{ animationDelay: "260ms" }} />
+          <div className="skeleton h-9 w-20 rounded-full ml-auto" style={{ animationDelay: "320ms" }} />
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="relative animate-rise stagger" style={stagger(1)}>
-        <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-        <Input placeholder="Buscar casa" value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} className="pl-9 min-h-[44px]" />
+    <div className="space-y-2">
+      {/* Buscar é a ação principal da tela: campo aberto, não ícone no header. */}
+      <div className="animate-rise stagger" style={stagger(1)}>
+        <SearchField value={searchTerm} onChange={onSearchChange} placeholder="Buscar casa" />
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-rise stagger [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={stagger(2)}>
-        <button type="button" aria-pressed={onlyWithBalance} onClick={onToggleWithBalance} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyWithBalance ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
-          Com saldo {withBalanceCount}
-        </button>
-        <button type="button" aria-pressed={onlyNegative} onClick={onToggleNegative} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium", onlyNegative ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
+      <FilterChipRow className="animate-rise stagger">
+        <FilterChip active={onlyWithBalance} count={withBalanceCount} onClick={onToggleWithBalance}>
+          Com saldo
+        </FilterChip>
+        <FilterChip active={onlyNegative} onClick={onToggleNegative}>
           Negativas
-        </button>
-        <button type="button" aria-pressed={selectedHousesCount > 0} onClick={onOpenCasas} className={cn("press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium flex items-center gap-1.5", selectedHousesCount > 0 ? "bg-accent text-white" : "border border-foreground/10 bg-transparent text-zinc-400")}>
-          <Buildings size={13} /> Casas
-          {selectedHousesCount > 0 && <span className="tabular-nums opacity-75">{selectedHousesCount}</span>}
-        </button>
-        <button type="button" onClick={onOpenSort} className="press shrink-0 h-11 px-3.5 rounded-full text-sm font-medium border border-foreground/10 bg-transparent text-zinc-400 flex items-center gap-1.5 ml-auto">
-          <ArrowsDownUp size={13} /> {SORT_LABEL[sort]}
-        </button>
-      </div>
-    </>
+        </FilterChip>
+        <FilterChip
+          opensSheet
+          icon={Buildings}
+          active={selectedHousesCount > 0}
+          count={selectedHousesCount > 0 ? selectedHousesCount : undefined}
+          onClick={onOpenCasas}
+        >
+          Casas
+        </FilterChip>
+        {/* Ordenar não é filtro: fica separado, à direita, sem cara de chip. */}
+        <div className="ml-auto shrink-0 pl-1">
+          <SortSelect options={SORT_OPTIONS} value={sort} onChange={onSortChange} />
+        </div>
+      </FilterChipRow>
+    </div>
   );
 }

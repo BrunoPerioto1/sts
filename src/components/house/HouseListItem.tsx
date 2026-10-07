@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowSquareOut, DotsThreeOutline, Plus } from "@phosphor-icons/react";
 import { openHouseSite, siteLabel } from "@/lib/house-url";
 import { cn } from "@/lib/utils";
-import { formatMoney, houseDisplayName } from "@/lib/format";
+import { formatMoney, houseDisplayName, signColor } from "@/lib/format";
 import { HouseAvatar } from "@/components/ui/house-avatar";
 import { formatIdleDays, houseActivity } from "@/lib/house-activity";
 import { HouseActivityBadge } from "./HouseActivityBadge";
@@ -96,7 +96,7 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
         >
           {formatMoney(balance)}
         </span>
-        <span className={cn("block text-xs tabular-nums", profit >= 0 ? "text-success" : "text-danger")}>
+        <span className={cn("block text-xs tabular-nums", signColor(profit))}>
           {formatMoney(profit, { signed: true })}
         </span>
       </span>
