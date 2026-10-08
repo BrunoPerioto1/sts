@@ -26,8 +26,15 @@ export default function AdminHousesPage() {
           title="Casas de aposta"
           subtitle={houses ? `${formatInt(houses.length)} casas · catálogo compartilhado` : "catálogo compartilhado"}
           actions={
-            <Button size="sm" className="gap-1.5" onClick={() => setEditing("new")}>
-              <Plus size={14} /> Nova
+            // Tonal, não cheio: o azul sólido competia com o chip "Todas" ativo,
+            // que tem a mesma cor, logo abaixo.
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-9 gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-3 font-medium hover:bg-accent/20"
+              onClick={() => setEditing("new")}
+            >
+              <Plus size={16} weight="bold" /> Nova casa
             </Button>
           }
         />
