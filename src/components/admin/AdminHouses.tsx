@@ -13,6 +13,7 @@ import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import type { AdminHouse } from "@/api/routes/get-admin";
 import { cn } from "@/lib/utils";
+import { HouseLogoPicker } from "@/components/admin/HouseLogoPicker";
 
 const GRID = "sm:grid sm:items-center sm:gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_90px_64px]";
 
@@ -91,6 +92,7 @@ function HouseRow({ house }: { house: AdminHouse }) {
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
+        <HouseLogoPicker house={house} />
         <span className={cn("text-sm font-medium truncate", !house.isActive && "opacity-40")}>{house.name}</span>
         {house.websiteUrl && (
           <a

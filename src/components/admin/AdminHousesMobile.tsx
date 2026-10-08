@@ -10,6 +10,8 @@ import { FilterChips } from "@/components/ui/filter-chips";
 import { SortSelect, type SortOption } from "@/components/ui/sort-select";
 import { ListGroup, ListRow } from "@/components/ui/list-group";
 import { HouseAvatar } from "@/components/ui/house-avatar";
+import { HouseLogoPicker } from "@/components/admin/HouseLogoPicker";
+import { adminLogoUrl } from "@/lib/house-logo";
 import { useAdminHouses, useCreateAdminHouse, useUpdateAdminHouse } from "@/hooks/queries/use-admin";
 import { useHouseCatalog, type CatalogSort } from "@/hooks/admin/use-admin-houses-view";
 import { siteLabel } from "@/lib/house-url";
@@ -55,6 +57,10 @@ function HouseSheet({ house, onClose }: { house: AdminHouse | null; onClose: () 
   const [site, setSite] = useState(house?.websiteUrl ?? "");
   const [active, setActive] = useState(house?.isActive ?? true);
   const pending = create.isPending || update.isPending;
+  // `house` é a foto de quando a folha abriu; o logo é salvo na hora, então
+  // o seletor lê a linha atual da lista.
+  const { data: houses } = useAdminHouses();
+  const live = house ? (houses?.find((h) => h.id === house.id) ?? house) : null;
 
   const addAlias = () => {
     const alias = draft.trim();
@@ -101,6 +107,14 @@ function HouseSheet({ house, onClose }: { house: AdminHouse | null; onClose: () 
       submitting={pending}
       submitDisabled={!name.trim()}
     >
+      {/* Logo salva sozinho, sem esperar o "Salvar" da folha. Casa nova ainda
+          não tem id: o logo entra depois de cadastrada. */}
+      {live && (
+        <FormField label="Logo">
+          <HouseLogoPicker house={live} withLabel />
+        </FormField>
+      )}
+
       <FormField label="Nome" htmlFor="house-name">
         <Input id="house-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Betano" className="h-[46px] rounded-xl" />
       </FormField>
@@ -208,7 +222,7 @@ function HouseRow({ house, onEdit }: { house: AdminHouse; onEdit: () => void }) 
     <ListRow
       onClick={onEdit}
       dimmed={!house.isActive}
-      leading={<HouseAvatar name={house.name} className={cn(!house.isActive && "opacity-50")} />}
+      leading={<HouseAvatar name={house.name} logoUrl={adminLogoUrl(house)} className={cn(!house.isActive && "opacity-50")} />}
       title={
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="truncate">{houseDisplayName(house.name)}</span>

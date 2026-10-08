@@ -52,6 +52,8 @@ export type AdminHouse = {
   aliases: string[];
   websiteUrl: string | null;
   betCount: number;
+  /** Versão do avatar no banco; null = sem logo (iniciais). */
+  logoVersion: number | null;
 };
 
 // websiteUrl: só .bet.br (o servidor recusa o resto); "" ou null apaga o link.
@@ -104,6 +106,22 @@ export async function postAdminHouse(data: CreateAdminHouseParams): Promise<Admi
 
 export async function patchAdminHouse(id: number, data: UpdateAdminHouseParams): Promise<AdminHouse> {
   const res = await apiClient().admin.patch<AdminHouse>(`houses/${id}`, data);
+  return res.data;
+}
+
+export type HouseLogoResult = { id: number; logoVersion: number | null };
+
+// PUT /admin/houses/:id/logo (multipart, campo "logo"). O tipo é conferido
+// pelos bytes no servidor; aqui já vai o PNG de 128px gerado no navegador.
+export async function putAdminHouseLogo(id: number, logo: Blob): Promise<HouseLogoResult> {
+  const form = new FormData();
+  form.append("logo", logo, "logo.png");
+  const res = await apiClient().admin.put<HouseLogoResult>(`houses/${id}/logo`, form);
+  return res.data;
+}
+
+export async function deleteAdminHouseLogo(id: number): Promise<HouseLogoResult> {
+  const res = await apiClient().admin.delete<HouseLogoResult>(`houses/${id}/logo`);
   return res.data;
 }
 

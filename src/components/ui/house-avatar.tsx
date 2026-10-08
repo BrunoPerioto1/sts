@@ -16,8 +16,20 @@ const SIZES = {
  * (offline no PWA), ficam as duas letras do nome sobre uma cor derivada do
  * próprio nome (hash — a mesma casa tem a mesma cor em todas as telas).
  */
-export function HouseAvatar({ name, size = "md", className }: { name: string; size?: keyof typeof SIZES; className?: string }) {
-  const logoUrl = useHouseLogoUrl(name);
+export function HouseAvatar({
+  name,
+  size = "md",
+  className,
+  logoUrl: logoOverride,
+}: {
+  name: string;
+  size?: keyof typeof SIZES;
+  className?: string;
+  /** URL já conhecida (admin, que também lista inativas). null = sem logo; omitido = procura pelo nome. */
+  logoUrl?: string | null;
+}) {
+  const byName = useHouseLogoUrl(name);
+  const logoUrl = logoOverride === undefined ? byName : (logoOverride ?? undefined);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   if (logoUrl && failedUrl !== logoUrl) {

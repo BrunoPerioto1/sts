@@ -7,6 +7,8 @@ import {
   getAdminScannerSample,
   getAdminUsers,
   patchAdminHouse,
+  putAdminHouseLogo,
+  deleteAdminHouseLogo,
   patchAdminScanner,
   patchAdminScannerSport,
   patchAdminUser,
@@ -87,6 +89,21 @@ export function useUpdateAdminHouse() {
       qc.setQueryData<AdminHouse[]>(HOUSES_KEY, (old) =>
         old?.map((h) => (h.id === updated.id ? updated : h)),
       );
+      void qc.invalidateQueries({ queryKey: ["houses"] });
+    },
+  });
+}
+
+// Envia (blob) ou remove (null) o logo. A lista do admin já mostra a versão
+// nova; a lista pública vem da CDN e pode levar até 1h pra trocar nas outras telas.
+export function useSetAdminHouseLogo() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, logo }: { id: number; logo: Blob | null }) =>
+      logo ? putAdminHouseLogo(id, logo) : deleteAdminHouseLogo(id),
+    onSuccess: ({ id, logoVersion }) => {
+      qc.setQueryData<AdminHouse[]>(HOUSES_KEY, (old) => old?.map((h) => (h.id === id ? { ...h, logoVersion } : h)));
       void qc.invalidateQueries({ queryKey: ["houses"] });
     },
   });
