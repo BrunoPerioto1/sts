@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { SelectCheckButton } from "@/components/ui/select-check";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatTime, formatOdd, houseDisplayName } from "@/lib/format";
 import { mapResultToStatus, statusLabel, statusVariant } from "@/lib/bet-status";
@@ -71,15 +71,12 @@ export function BetRowDesktop({
         className={cn("transition-opacity", selection.selectionMode || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100")}
         onClick={(e) => e.stopPropagation()}
       >
-        <Checkbox
+        {/* onClick traz o shiftKey (intervalo). Círculo no accent, como em
+            Tips e Conferência: verde aqui competia com o resultado. */}
+        <SelectCheckButton
           checked={isSelected}
-          // onClick e não onCheckedChange: é o que traz o shiftKey. O checked
-          // é controlado, então o Radix não alterna nada sozinho.
           onClick={(e) => handleSelect(e.shiftKey)}
-          aria-label="Selecionar aposta"
-          // Verde apagado (sem o neon do padrão) e borda que acende no hover:
-          // o checkbox indica a seleção sem competir com o resultado.
-          className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-success)_62%,var(--color-bg))]"
+          label="Selecionar aposta"
         />
       </span>
 

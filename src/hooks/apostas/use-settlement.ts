@@ -7,16 +7,29 @@ import {
   dismissSettlement,
   getSettlementQueue,
   getSettlementReview,
+  revertManualSettlement,
+  revertSettlement,
+  settleManually,
   type SettlementReviewItem,
   getSettlementSuggestions,
   type SettlementQueue,
   type SettlementSuggestion,
 } from "@/api/routes/get-settlement";
+import type { ResultIdEnum } from "@/api/routes/result-id";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
 
 const SETTLEMENT_KEY = ["settlement", "suggestions"] as const;
 const QUEUE_KEY = ["settlement", "queue"] as const;
 const REVIEW_KEY = ["settlement", "review"] as const;
+
+// Quanto o "Desfazer" fica no toast. O Recusar só vai pra API depois disso.
+const UNDO_MS = 5000;
+
+// Recusas esperando a janela do "Desfazer" passar. A API não tem como
+// des-recusar (dismissed_at não volta), então a proposta só some da tela e a
+// chamada sai quando o toast expira. Fica fora do hook de propósito: trocar de
+// tela não pode cancelar o envio, nem fazer a proposta reaparecer num refetch.
+const recusasPendentes = new Set<number>();
 
 export function useSettlementReview(enabled: boolean) {
   return useQuery<SettlementReviewItem[]>({
@@ -29,7 +42,8 @@ export function useSettlementReview(enabled: boolean) {
 export function useSettlementSuggestions() {
   return useQuery<SettlementSuggestion[]>({
     queryKey: SETTLEMENT_KEY,
-    queryFn: getSettlementSuggestions,
+    queryFn: async () =>
+      (await getSettlementSuggestions()).filter((s) => !recusasPendentes.has(s.betId)),
   });
 }
 
@@ -61,6 +75,8 @@ export function useSettlementQueue() {
   });
 }
 
+const RESULT_LABEL: Record<number, string> = { 1: "ganhou", 2: "perdeu", 3: "anulada" };
+
 export function useSettlementActions() {
   const queryClient = useQueryClient();
   const invalidateBetData = useInvalidateBetData();
@@ -71,6 +87,10 @@ export function useSettlementActions() {
     void queryClient.invalidateQueries({ queryKey: SETTLEMENT_KEY });
     void queryClient.invalidateQueries({ queryKey: QUEUE_KEY });
     void queryClient.invalidateQueries({ queryKey: REVIEW_KEY });
+  };
+  const refreshAll = () => {
+    refresh();
+    void invalidateBetData();
   };
 
   const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
@@ -113,35 +133,94 @@ export function useSettlementActions() {
       actionToast.error({ title: "Não deu pra buscar resultados", description: e.message || "Tente de novo em instantes." }),
   });
 
+  const revert = useMutation({
+    mutationFn: revertSettlement,
+    onSuccess: () => actionToast.success({ title: "Desfeito", description: "As apostas voltaram para pendentes." }),
+    onError: (e: Error) =>
+      actionToast.error({ title: "Não deu pra desfazer", description: e.message || "Volte a aposta para pendente em Apostas." }),
+    onSettled: refreshAll,
+  });
+
   const confirm = useMutation({
     mutationFn: confirmSettlement,
     // Planilhar altera lucro e saldo: invalida os dados de aposta junto, senão
     // o dashboard fica mostrando o total antigo.
-    onSuccess: ({ confirmed }) => {
-      void refresh();
-      void invalidateBetData();
+    onSuccess: ({ confirmed }, betIds) => {
+      refreshAll();
       actionToast.success({
         title: plural(confirmed, "aposta planilhada", "apostas planilhadas"),
         description: "Lucro e saldo já foram atualizados.",
+        action: { label: "Desfazer", onClick: () => revert.mutate(betIds) },
+        duration: UNDO_MS,
       });
     },
     onError: (e: Error) =>
       actionToast.error({ title: "Não deu pra planilhar", description: e.message || "Tente de novo em instantes." }),
   });
 
-  const dismiss = useMutation({
-    mutationFn: dismissSettlement,
-    onSuccess: ({ dismissed }) => {
-      void refresh();
+  // Recusar com envio adiado: some da lista na hora, vai pra API quando a
+  // janela do "Desfazer" fecha.
+  const dismiss = (betIds: number[], title?: string) => {
+    if (!betIds.length) return;
+    betIds.forEach((id) => recusasPendentes.add(id));
+    queryClient.setQueryData<SettlementSuggestion[]>(SETTLEMENT_KEY, (lista) =>
+      lista?.filter((s) => !betIds.includes(s.betId)),
+    );
+
+    const timer = window.setTimeout(async () => {
+      try {
+        await dismissSettlement(betIds);
+      } catch (e) {
+        actionToast.error({
+          title: "Não deu pra recusar",
+          description: (e as Error).message || "A proposta voltou para a lista.",
+        });
+      } finally {
+        betIds.forEach((id) => recusasPendentes.delete(id));
+        refresh();
+      }
+    }, UNDO_MS);
+
+    actionToast.success({
+      icon: Trash,
+      title: title ?? plural(betIds.length, "proposta recusada", "propostas recusadas"),
+      description: "As apostas seguem pendentes pra liquidar na mão.",
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          window.clearTimeout(timer);
+          betIds.forEach((id) => recusasPendentes.delete(id));
+          refresh();
+        },
+      },
+      duration: UNDO_MS,
+    });
+  };
+
+  const revertManual = useMutation({
+    mutationFn: revertManualSettlement,
+    onSuccess: () => actionToast.success({ title: "Desfeito", description: "As apostas voltaram para pendentes." }),
+    onError: (e: Error) =>
+      actionToast.error({ title: "Não deu pra desfazer", description: e.message || "Volte a aposta para pendente em Apostas." }),
+    onSettled: refreshAll,
+  });
+
+  // "Liquidar na mão" em lote: grava o resultado escolhido nas que o bot não
+  // resolveu. Mexe em lucro e saldo como o Confirmar, e desfaz do mesmo jeito.
+  const settleManual = useMutation({
+    mutationFn: ({ betIds, resultId }: { betIds: number[]; resultId: ResultIdEnum }) =>
+      settleManually(betIds, resultId),
+    onSuccess: (_res, { betIds, resultId }) => {
+      refreshAll();
       actionToast.success({
-        icon: Trash,
-        title: plural(dismissed, "proposta descartada", "propostas descartadas"),
-        description: "As apostas seguem pendentes pra liquidar na mão.",
+        title: `${plural(betIds.length, "liquidada", "liquidadas")} como ${RESULT_LABEL[resultId] ?? "resolvida"}`,
+        action: { label: "Desfazer", onClick: () => revertManual.mutate(betIds) },
+        duration: UNDO_MS,
       });
     },
     onError: (e: Error) =>
-      actionToast.error({ title: "Não deu pra descartar", description: e.message || "Tente de novo em instantes." }),
+      actionToast.error({ title: "Não deu pra liquidar", description: e.message || "Tente de novo em instantes." }),
   });
 
-  return { compute, confirm, dismiss };
+  return { compute, confirm, dismiss, settleManual };
 }

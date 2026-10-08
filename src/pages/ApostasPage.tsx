@@ -280,7 +280,7 @@ export default function ApostasPage() {
         loading={actions.bulkLoading}
         onSetStatus={(resultId) => actions.bulkFinalize(Array.from(selection.selected), resultId, selection.clear)}
         onDelete={() => actions.bulkDelete(Array.from(selection.selected), selection.clear)}
-        onCancel={selection.clear}
+        onCancel={selection.clearSelected}
       />
     </MainLayout>
   );

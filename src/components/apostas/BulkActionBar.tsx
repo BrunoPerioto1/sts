@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Clock, Trash, CheckSquare, CircleNotch, type Icon } from "@phosphor-icons/react";
+import { CheckCircle, XCircle, Clock, Trash, CircleNotch, type Icon } from "@phosphor-icons/react";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { cn } from "@/lib/utils";
 
@@ -88,7 +88,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
       >
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 min-w-0">
-            <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
+            <CheckCircle size={18} weight="fill" className="text-accent shrink-0" />
             <span aria-live="polite" className="text-base font-semibold text-foreground truncate">
               {count} selecionada{plural}
             </span>
@@ -99,7 +99,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             disabled={loading}
             className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
           >
-            Cancelar
+            Limpar
           </button>
         </div>
 

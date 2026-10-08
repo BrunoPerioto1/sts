@@ -5,6 +5,7 @@ export function useBulkSelection() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [lastId, setLastId] = useState<number | null>(null);
 
+
   // `id` obrigatório: o modo de seleção sempre começa com a aposta que o
   // usuário tocou. Entrar vazio agora seria desfeito na hora pelo efeito abaixo.
   const enter = useCallback((id: number) => {
@@ -81,9 +82,16 @@ export function useBulkSelection() {
     setLastId(null);
   }, []);
 
+  // "Limpar" da barra: desmarca tudo, e ficar sem nada marcado já sai do modo
+  // (efeito acima).
+  const clearSelected = useCallback(() => {
+    setSelected(new Set());
+    setLastId(null);
+  }, []);
+
   const isSelected = useCallback((id: number) => selected.has(id), [selected]);
 
-  return { selectionMode, selected, enter, toggle, toggleMany, selectRange, clear, isSelected };
+  return { selectionMode, selected, enter, toggle, toggleMany, selectRange, clear, clearSelected, isSelected };
 }
 
 export type BulkSelection = ReturnType<typeof useBulkSelection>;

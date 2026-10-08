@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Check } from "@phosphor-icons/react";
+import { SelectCheck } from "@/components/ui/select-check";
 import { cn } from "@/lib/utils";
 import { tapHaptic } from "@/lib/haptics";
 import { parseFairOdd } from "@/lib/odd-calc";
@@ -90,17 +90,7 @@ export function TipCardMobileItem({
           selecting={selectionMode}
           leading={
             selectionMode && (
-              <span
-                role="checkbox"
-                aria-checked={checked}
-                aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`}
-                className={cn(
-                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-                  checked ? "border-accent bg-accent text-white" : "border-foreground/25",
-                )}
-              >
-                {checked && <Check size={12} weight="bold" />}
-              </span>
+              <SelectCheck checked={checked} />
             )
           }
         />

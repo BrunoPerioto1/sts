@@ -1,5 +1,5 @@
 import { Clock } from "@phosphor-icons/react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { SelectCheck } from "@/components/ui/select-check";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatTime, formatOdd, houseDisplayName } from "@/lib/format";
 import { stagger } from "@/lib/motion";
@@ -63,7 +63,8 @@ export function BetCardMobile({
     <div
       className={cn(
         "press animate-rise stagger relative overflow-hidden rounded-lg p-3 pr-4 flex flex-col gap-2",
-        isSelected ? "ring-2 ring-accent/60 bg-accent/[0.08]" : "bg-card"
+        // Mesmo marcado de Tips e Conferência: contorno e fundo no accent.
+        isSelected ? "ring-1 ring-accent bg-accent/[0.08]" : "bg-card"
       )}
       style={{ boxShadow: isSelected ? undefined : "var(--shadow-sm)", ...stagger(index) }}
       role={selection.selectionMode ? "group" : "button"}
@@ -79,11 +80,8 @@ export function BetCardMobile({
       {...longPress}
     >
       <div className="flex items-center gap-1.5 min-w-0">
-        {selection.selectionMode && (
-          <span onClick={(e) => e.stopPropagation()}>
-            <Checkbox checked={isSelected} onCheckedChange={() => selection.toggle(aposta.id)} aria-label="Selecionar aposta" />
-          </span>
-        )}
+        {/* Só visual: no modo de seleção o card inteiro marca/desmarca. */}
+        {selection.selectionMode && <SelectCheck checked={isSelected} />}
         <span className={timeChipClass}>
           <Clock size={12} weight="bold" /> {formatTime(betDate(aposta))}
         </span>

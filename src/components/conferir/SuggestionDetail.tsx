@@ -11,11 +11,12 @@ import { tintStyle, usePerformanceColor } from "@/hooks/use-performance-color";
 
 interface Props {
   suggestion: SettlementSuggestion | null;
-  checked: boolean;
   busy: boolean;
   onClose: () => void;
-  onToggle: () => void;
-  onDismiss: () => void;
+  /** Grava o resultado proposto (tem "Desfazer" no toast). */
+  onConfirm: () => void;
+  /** Recusa a proposta: a aposta segue pendente. */
+  onReject: () => void;
 }
 
 // Múltipla chega como "sel A / sel B" e a explicação como "parte 1; parte 2" —
@@ -25,12 +26,12 @@ const itens = (texto: string, sep: string) =>
 
 // sign escolhe a cor de ganho/perda de Preferências; anulada fica neutra.
 const VISUAL = {
-  [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", sign: 1, Icone: CheckCircle },
-  [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", sign: -1, Icone: XCircle },
+  [ResultIdEnum.WON]: { rotulo: "Ganhou", acao: "Marcar ganhou", valor: "Lucro", sign: 1, Icone: CheckCircle },
+  [ResultIdEnum.LOST]: { rotulo: "Perdeu", acao: "Marcar perdeu", valor: "Prejuízo", sign: -1, Icone: XCircle },
 } as const;
-const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", sign: 0, Icone: MinusCircle };
+const ANULADA = { rotulo: "Anulada", acao: "Marcar anulada", valor: "Devolvido", sign: 0, Icone: MinusCircle };
 
-function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }: Props & { suggestion: SettlementSuggestion }) {
+function Conteudo({ suggestion: s, busy, onConfirm, onReject }: Props & { suggestion: SettlementSuggestion }) {
   const v = VISUAL[s.suggestedResultId as keyof typeof VISUAL] ?? ANULADA;
   const color = usePerformanceColor();
   const cor = v.sign ? color(v.sign) : "var(--color-text)";
@@ -53,9 +54,9 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
           <p className="text-2xl font-medium" style={{ color: cor }}>{v.rotulo}</p>
         </div>
         <div className="text-right">
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Lucro</p>
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted">{v.valor}</p>
           <p className="text-xl tabular-nums" style={{ color: cor }}>
-            {lucro > 0 ? "+" : ""}{formatMoney(lucro)}
+            {v.sign ? `${lucro > 0 ? "+" : ""}${formatMoney(lucro)}` : formatMoney(s.stake)}
           </p>
         </div>
       </div>
@@ -93,13 +94,13 @@ function Conteudo({ suggestion: s, checked, busy, onToggle, onDismiss, onClose }
         </ul>
       </div>
 
-      <div className="grid grid-cols-[auto_1fr] gap-2 pt-1">
-        <Button variant="secondary" className="h-12 px-6" disabled={busy} onClick={() => { onDismiss(); onClose(); }}>
-          Descartar
+      <div className="grid grid-cols-[0.75fr_1.6fr] gap-2.5 pt-1">
+        <Button variant="secondary" className="h-12 rounded-xl" disabled={busy} onClick={onReject}>
+          Recusar
         </Button>
-        <Button className="h-12" onClick={() => { onToggle(); onClose(); }}>
-          {!checked && <Check size={18} />}
-          {checked ? "Desmarcar" : v.acao}
+        <Button className="h-12 rounded-xl font-semibold" disabled={busy} onClick={onConfirm}>
+          <Check size={16} weight="bold" />
+          {v.acao}
         </Button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import { groupPendingTips, TIP_GROUP_OPTIONS } from "@/lib/tip-schedule";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { TipBatchReview } from "@/components/tips/TipBatchReview";
+import { SelectToggleButton } from "@/components/ui/select-toggle-button";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -234,18 +235,10 @@ export default function TipsPage() {
           actions={
             canSelect &&
             tips.length > 0 && (
-              <button
-                type="button"
-                onClick={() => (selectionMode ? exitSelection() : setSelectMode(true))}
-                className={cn(
-                  "press h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
-                  selectionMode
-                    ? "bg-foreground/[0.08] text-foreground"
-                    : "border border-foreground/10 text-zinc-300 hover:text-foreground",
-                )}
-              >
-                {selectionMode ? "Cancelar" : "Selecionar"}
-              </button>
+              <SelectToggleButton
+                selecting={selectionMode}
+                onToggle={() => (selectionMode ? exitSelection() : setSelectMode(true))}
+              />
             )
           }
         />

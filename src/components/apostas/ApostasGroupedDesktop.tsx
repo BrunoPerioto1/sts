@@ -1,5 +1,5 @@
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { SelectCheckButton } from "@/components/ui/select-check";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { AnimatedSignedCurrency } from "@/components/ui/animated-currency";
@@ -74,11 +74,11 @@ export function ApostasGroupedDesktop({
             <div className="w-full flex items-center gap-2 py-3 min-w-0">
               {/* Mês fechado não tem linhas carregadas: não há o que marcar. */}
               {selection.selectionMode && monthIds.length > 0 && (
-                <Checkbox
-                  checked={monthCheckState}
-                  onCheckedChange={() => selection.toggleMany(monthIds)}
-                  aria-label={`Selecionar todas as apostas de ${month.label}`}
-                  className="shrink-0"
+                <SelectCheckButton
+                  checked={monthCheckState === true}
+                  indeterminate={monthCheckState === "indeterminate"}
+                  onClick={() => selection.toggleMany(monthIds)}
+                  label={`Selecionar todas as apostas de ${month.label}`}
                 />
               )}
               <button
@@ -104,11 +104,11 @@ export function ApostasGroupedDesktop({
                     <div key={day.key} className="min-w-0">
                       <div className="flex items-center gap-2 pt-3 pb-1 min-w-0">
                         {selection.selectionMode && (
-                          <Checkbox
-                            checked={dayCheckState}
-                            onCheckedChange={() => selection.toggleMany(dayIds)}
-                            aria-label={`Selecionar todas as apostas de ${day.label}`}
-                            className="shrink-0"
+                          <SelectCheckButton
+                            checked={dayCheckState === true}
+                            indeterminate={dayCheckState === "indeterminate"}
+                            onClick={() => selection.toggleMany(dayIds)}
+                            label={`Selecionar todas as apostas de ${day.label}`}
                           />
                         )}
                         <span className="text-xs font-medium uppercase tracking-wider text-muted truncate">{day.label}</span>

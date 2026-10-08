@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { SelectCheckButton } from "@/components/ui/select-check";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionLabel } from "@/components/ui/section-label";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,11 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
           <section key={month.key} className="space-y-3">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
               {selection.selectionMode && monthIds.length > 0 && (
-                <Checkbox checked={groupCheckState(monthIds, selection.selected)}
-                  onCheckedChange={() => selection.toggleMany(monthIds)}
-                  aria-label={`Selecionar todas as apostas de ${month.label}`} />
+                <SelectCheckButton
+                  checked={groupCheckState(monthIds, selection.selected) === true}
+                  indeterminate={groupCheckState(monthIds, selection.selected) === "indeterminate"}
+                  onClick={() => selection.toggleMany(monthIds)}
+                  label={`Selecionar todas as apostas de ${month.label}`} />
               )}
               <button type="button" aria-expanded={isOpen} onClick={() => onToggleMonth(month.key)}
                 className="min-h-12 flex flex-1 items-center gap-2 min-w-0 text-left">
@@ -56,9 +58,11 @@ export function ApostasGroupedMobile({ groups, selection, isMonthOpen, onToggleM
                 <section key={day.key} aria-label={day.label} className="ml-2 border-l border-foreground/[0.06] pl-2">
                   <div className="flex items-center gap-2 mb-1 min-h-8 py-1">
                     {selection.selectionMode && (
-                      <Checkbox checked={groupCheckState(dayIds, selection.selected)}
-                        onCheckedChange={() => selection.toggleMany(dayIds)}
-                        aria-label={`Selecionar todas as apostas de ${day.label}`} />
+                      <SelectCheckButton
+                        checked={groupCheckState(dayIds, selection.selected) === true}
+                        indeterminate={groupCheckState(dayIds, selection.selected) === "indeterminate"}
+                        onClick={() => selection.toggleMany(dayIds)}
+                        label={`Selecionar todas as apostas de ${day.label}`} />
                     )}
                     <SectionLabel
                       className="flex-1 px-0"
