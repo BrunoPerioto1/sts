@@ -33,16 +33,21 @@ export function HouseAvatar({
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   if (logoUrl && failedUrl !== logoUrl) {
+    // Muito logo é ícone de app com canto arredondado transparente ou um filete
+    // claro na borda: com fundo branco atrás, isso vazava como um resquício de
+    // borda branca. Sem fundo, e com um leve zoom dentro do recorte, a borda
+    // embutida na imagem fica pra fora.
     return (
-      <img
-        src={logoUrl}
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        decoding="async"
-        onError={() => setFailedUrl(logoUrl)}
-        className={cn("shrink-0 object-cover bg-white", SIZES[size], className)}
-      />
+      <span aria-hidden="true" className={cn("shrink-0 overflow-hidden", SIZES[size], className)}>
+        <img
+          src={logoUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailedUrl(logoUrl)}
+          className="h-full w-full scale-[1.12] object-cover"
+        />
+      </span>
     );
   }
 
