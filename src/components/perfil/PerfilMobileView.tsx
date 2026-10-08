@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeSelect } from "./ThemeSelect";
-import { Bank, IdentificationCard, Palette, Pulse, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
+import { Bank, Broadcast, IdentificationCard, Palette, Pulse, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ListGroup, ListIcon, ListRow } from "@/components/ui/list-group";
@@ -163,6 +163,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
     { to: "/admin/houses", icon: Bank, label: "Casas", value: "Catálogo e apelidos" },
     { to: "/admin/users", icon: Users, label: "Usuários", value: "Papéis e bloqueios" },
     { to: "/admin/pipeline", icon: Pulse, label: "Pipeline", value: "Saúde da coleta" },
+    { to: "/admin/sources", icon: Broadcast, label: "Fontes de tips", value: "Modelo de cada tipster" },
   ];
 
   return (

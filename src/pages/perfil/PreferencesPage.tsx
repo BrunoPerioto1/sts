@@ -5,6 +5,7 @@ import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { useMe } from "@/hooks/queries/use-me";
 import { usePreferencesForm } from "@/hooks/use-preferences-form";
 import { PreferencesFields } from "@/components/perfil/PreferencesFields";
+import { TipSourcesCard } from "@/components/perfil/TipSourcesCard";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function PreferencesPage() {
@@ -28,6 +29,7 @@ export default function PreferencesPage() {
         <div className="flex flex-col">
           <div className="flex flex-col gap-7">
             <PreferencesFields form={form} />
+            <TipSourcesCard bare />
           </div>
 
           <ScreenFooter onSave={form.handleSave} onDiscard={form.handleDiscard} saving={form.saving} disabled={!form.canSave} />

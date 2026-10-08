@@ -15,6 +15,7 @@ import { ThemeSelect } from "./ThemeSelect";
 import { BankrollSignalsCard } from "./BankrollSignalsCard";
 import { ExportDataCard } from "./ExportDataCard";
 import { TelegramCard } from "./TelegramCard";
+import { TipSourcesCard } from "./TipSourcesCard";
 
 const labelClass = "text-[13px] font-normal text-zinc-400";
 
@@ -102,6 +103,8 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
         </section>
 
         <BankrollSignalsCard form={prefsForm} />
+
+        <TipSourcesCard />
 
         <section className="flex items-center justify-between gap-4" aria-labelledby="theme-title">
           <div>

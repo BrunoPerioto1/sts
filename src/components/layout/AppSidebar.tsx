@@ -12,6 +12,7 @@ import {
   UsersThree,
   GitFork,
   Scan,
+  Broadcast,
   GearSix,
   CaretUpDown,
   type Icon as PhosphorIcon,
@@ -74,6 +75,7 @@ const sections: NavSection[] = [
       { label: "Usuários", icon: UsersThree, href: "/admin/users" },
       { label: "Pipeline", icon: GitFork, href: "/admin/pipeline" },
       { label: "Scanner", icon: Scan, href: "/admin/scanner" },
+      { label: "Fontes de tips", icon: Broadcast, href: "/admin/sources" },
     ],
   },
   {
