@@ -103,7 +103,6 @@ export function TipOddCalcSheet({
             <Input
               id="calc-odd"
               inputMode="decimal"
-              autoFocus
               value={oddInput}
               onChange={(e) => setOddInput(e.target.value)}
               onFocus={(e) => e.target.select()}
