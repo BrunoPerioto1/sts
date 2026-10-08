@@ -199,7 +199,7 @@ export function TipRowDesktop({
       <span className="line-clamp-2 text-sm leading-tight opacity-70">{tip.house ? houseDisplayName(tip.house) : "—"}</span>
 
       <span className="text-right text-sm font-medium tabular-nums">
-        {tip.odd != null ? formatOdd(tip.odd) : "—"}
+        {tip.odd != null ? formatOdd(tip.odd, { decimals: 2 }) : "—"}
       </span>
 
       <span className="text-right text-sm tabular-nums opacity-70">

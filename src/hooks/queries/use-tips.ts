@@ -6,6 +6,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { runTipBatch, tipPlanilharDefaults } from "@/lib/tip-batch";
+import { deleteMultipleBets } from "@/api/routes/get-bets";
 import {
   dismissTip,
   getTipCounts,
@@ -202,21 +203,38 @@ export function useTipActions() {
     }),
     batch: useMutation({
       mutationKey: TIP_WRITE_KEY,
-      mutationFn: ({ tips, action }: { tips: TipItem[]; action: TipAction }) =>
-        runTipBatch(tips, async (tip) => {
+      mutationFn: async ({ tips, action }: { tips: TipItem[]; action: TipAction }) => {
+        // Apostas que ESTE lote criou: é o que o "Desfazer" apaga. A que já
+        // existia (tip planilhada antes) fica de fora.
+        const createdBetIds: number[] = [];
+        const result = await runTipBatch(tips, async (tip) => {
           if (action === "undismiss") {
             if (tip.status !== "caiu") throw new Error("Esta tip não está marcada como caiu.");
             return undismissTip(tip.id);
           }
           if (tip.status !== "pending") throw new Error("Esta tip não está pendente.");
-          return action === "planilhar"
-            ? planilharTip(tip.id, tipPlanilharDefaults(tip))
-            : dismissTip(tip.id);
-        }, action === "planilhar" ? 1 : 6),
+          if (action === "dismiss") return dismissTip(tip.id);
+          const res = (await planilharTip(tip.id, tipPlanilharDefaults(tip))) as {
+            bet?: { id: number };
+            alreadyExisted?: boolean;
+          };
+          if (res?.bet?.id != null && !res.alreadyExisted) createdBetIds.push(res.bet.id);
+          return res;
+        }, action === "planilhar" ? 1 : 6);
+        return { ...result, createdBetIds };
+      },
       onMutate: ({ tips, action }) => optimistic(tips.map((tip) => tip.id), action),
       // O lote inteiro sai da lista no clique; as que falharem voltam sozinhas
       // na revalidação do onSettled, com o toast explicando o que sobrou.
       onError: (_error, _vars, context) => context?.rollback(),
+      onSettled: invalidateAll,
+    }),
+    // Desfazer do "Apostei" em lote: a tip é "planilhada" porque tem aposta
+    // vinculada, então apagar a aposta (que estorna o saldo da casa, como na
+    // tela de Apostas) devolve a tip pra fila.
+    undoPlanilhar: useMutation({
+      mutationKey: TIP_WRITE_KEY,
+      mutationFn: (betIds: number[]) => deleteMultipleBets(betIds),
       onSettled: invalidateAll,
     }),
   };

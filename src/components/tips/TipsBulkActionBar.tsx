@@ -1,8 +1,11 @@
-import { ArrowCounterClockwise, CheckSquare, CircleNotch, Table, XCircle, type Icon } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, Check, CheckCircle, CircleNotch, XCircle, type Icon } from "@phosphor-icons/react";
+import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface TipsBulkActionBarProps {
   count: number;
+  /** Soma das stakes sugeridas das selecionadas — o quanto o lote vai apostar. */
+  stakeTotal?: number;
   loading: boolean;
   /** Na aba "Caíram" a única ação é devolver pra fila. */
   variant: "pending" | "caiu";
@@ -49,6 +52,7 @@ function BulkActionButton({
 
 export function TipsBulkActionBar({
   count,
+  stakeTotal,
   loading,
   variant,
   onPlanilhar,
@@ -74,9 +78,12 @@ export function TipsBulkActionBar({
     >
       <div className="flex items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-2 min-w-0">
-          <CheckSquare size={18} weight="fill" className="text-accent shrink-0" />
-          <span aria-live="polite" className="text-base font-semibold text-foreground truncate">
+          <CheckCircle size={18} weight="fill" className="text-accent shrink-0" />
+          <span aria-live="polite" className="min-w-0 truncate text-base font-semibold text-foreground">
             {count} selecionada{plural}
+            {variant === "pending" && stakeTotal !== undefined && stakeTotal > 0 && (
+              <span className="font-normal text-zinc-400 tabular-nums"> · {formatMoney(stakeTotal)}</span>
+            )}
           </span>
         </div>
         <button
@@ -85,19 +92,12 @@ export function TipsBulkActionBar({
           disabled={loading}
           className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
         >
-          Cancelar
+          Limpar
         </button>
       </div>
 
       {variant === "pending" ? (
         <div className="grid grid-cols-2 gap-2">
-          <BulkActionButton
-            icon={Table}
-            label="Planilhar"
-            onClick={onPlanilhar}
-            disabled={loading}
-            className="bg-success/[0.12] border border-success/25 text-success hover:bg-success/20"
-          />
           <BulkActionButton
             icon={XCircle}
             label="Caiu"
@@ -105,6 +105,13 @@ export function TipsBulkActionBar({
             disabled={loading}
             pending={loading}
             className="bg-danger/[0.12] border border-danger/25 text-danger hover:bg-danger/20"
+          />
+          <BulkActionButton
+            icon={Check}
+            label="Apostei"
+            onClick={onPlanilhar}
+            disabled={loading}
+            className="bg-success/[0.12] border border-success/25 text-success hover:bg-success/20"
           />
         </div>
       ) : (

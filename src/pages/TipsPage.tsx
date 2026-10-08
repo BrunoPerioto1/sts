@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ArrowsClockwise, Buildings, CheckCircle, Clock, ListChecks, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { TipCardMobileItem } from "@/components/tips/TipCardMobileItem";
+import { TipCardMobileItem, type TipPlanilharInitial } from "@/components/tips/TipCardMobileItem";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
 import { TipPlanilharDialog } from "@/components/tips/TipPlanilharDialog";
 import { MobileSearchBar } from "@/components/apostas/MobileSearchHeader";
@@ -13,17 +13,16 @@ import { TipInicioSheet, TipStatusSheet } from "@/components/tips/TipFilterSheet
 import { groupPendingTips, TIP_GROUP_OPTIONS } from "@/lib/tip-schedule";
 import { TipDetailPanel } from "@/components/tips/TipDetailPanel";
 import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
+import { TipBatchReview } from "@/components/tips/TipBatchReview";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchField } from "@/components/ui/search-field";
 import { SectionLabel } from "@/components/ui/section-label";
 import { FilterChip, FilterChipRow } from "@/components/ui/filter-chips";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { actionToast } from "@/lib/action-toast";
-import { formatMoney, formatOdd, houseDisplayName } from "@/lib/format";
+import { formatMoney, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTips } from "@/hooks/queries/use-tips";
 import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/tips/use-tips-page";
@@ -62,6 +61,8 @@ export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
   const isMobile = useIsMobile();
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
+  // Stake/odd do "Odd mudou?" (mobile), que o sheet de planilhar abre usando.
+  const [planilharInitial, setPlanilharInitial] = useState<TipPlanilharInitial | undefined>();
 
   // Filtro de casas: mesma multi-seleção de Apostas. A casa da tip vem como
   // texto do canal, então quem casa nome com casa cadastrada é o backend —
@@ -121,12 +122,21 @@ export default function TipsPage() {
   const selecionada = tips.find((t) => t.id === selecionadaId) ?? tips[0] ?? null;
   const [batchReview, setBatchReview] = useState<TipItem[] | null>(null);
   const canSelect = tab !== "planilhada";
+  // Mobile: "Selecionar" no header liga o modo mesmo sem nada marcado (o
+  // toque longo continua funcionando e liga marcando a tip tocada).
+  const [selectMode, setSelectMode] = useState(false);
   const selection = useTipSelection(tips, [tab, buscaDebounced, houseIds.join(","), inicio.join(",")].join("|"));
   const { checkedIds, setCheckedIds, checkedTips, allChecked } = selection;
   const toggleChecked = selection.toggle;
   const clearSelection = selection.clear;
   // Trocar aba/filtro também fecha a revisão do lote.
   useEffect(() => setBatchReview(null), [tab, buscaDebounced, houseIds, inicio]);
+  useEffect(() => setSelectMode(false), [tab]);
+  const selectionMode = canSelect && (selectMode || checkedTips.length > 0);
+  const exitSelection = () => {
+    setSelectMode(false);
+    clearSelection();
+  };
 
   const { dismiss, undismiss, runBatch: runBatchWith, run, doPlanilhar } = useTipPageActions({
     onStart: () => setPlanilhando(null),
@@ -134,7 +144,7 @@ export default function TipsPage() {
   const runBatch = (action: "planilhar" | "dismiss" | "undismiss", items = checkedTips) =>
     runBatchWith(action, items, () => {
       setBatchReview(null);
-      clearSelection();
+      exitSelection();
     });
 
   // Jogo que já começou quase sempre é tip perdida: um clique limpa o bloco.
@@ -183,7 +193,7 @@ export default function TipsPage() {
   return (
     <MainLayout
       title="Tips"
-      hideBottomNav={checkedTips.length > 0}
+      hideBottomNav={selectionMode}
       subtitle={subtitle}
       actions={
         // No desktop nao ha pull-to-refresh: a tip chega de fora do app, e sem
@@ -219,6 +229,23 @@ export default function TipsPage() {
                   </>
                 )}
               </>
+            )
+          }
+          actions={
+            canSelect &&
+            tips.length > 0 && (
+              <button
+                type="button"
+                onClick={() => (selectionMode ? exitSelection() : setSelectMode(true))}
+                className={cn(
+                  "press h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
+                  selectionMode
+                    ? "bg-foreground/[0.08] text-foreground"
+                    : "border border-foreground/10 text-zinc-300 hover:text-foreground",
+                )}
+              >
+                {selectionMode ? "Cancelar" : "Selecionar"}
+              </button>
             )
           }
         />
@@ -315,8 +342,9 @@ export default function TipsPage() {
           inputRef={buscaRef}
           placeholder="Buscar por evento ou mercado..."
         />
-        <FilterChipRow className="mb-4">
+        <FilterChipRow className="mb-4 gap-2.5">
           <FilterChip
+            size="lg"
             opensSheet
             icon={ListChecks}
             active={tab !== "pending"}
@@ -325,11 +353,12 @@ export default function TipsPage() {
           >
             {tabs.find((t) => t.value === tab)?.label}
           </FilterChip>
-          <FilterChip opensSheet icon={Buildings} active={houseIds.length > 0} onClick={() => setCasaSheetOpen(true)}>
+          <FilterChip size="lg" opensSheet icon={Buildings} active={houseIds.length > 0} onClick={() => setCasaSheetOpen(true)}>
             {casaResumo ?? "Casas"}
           </FilterChip>
           {tab === "pending" && (
             <FilterChip
+              size="lg"
               opensSheet
               icon={Clock}
               active={inicio.length > 0}
@@ -402,8 +431,8 @@ export default function TipsPage() {
           </div>
 
           <div className="md:hidden">
-            {/* Container único com divisórias, não cards soltos: a fila é pra
-                varrer de cima a baixo, e sombra por item vira ruído nisso. */}
+            {/* Um card por tip (v3): cada uma tem ações próprias com rótulo,
+                e a separação deixa claro de qual tip é cada botão. */}
             {(gruposDaLista ?? [{ key: "all", label: "", tips } as TipListGroup]).map((grupo) => (
             <section key={grupo.key} className="mb-6 last:mb-0">
             {grupo.label && (
@@ -411,16 +440,19 @@ export default function TipsPage() {
                 {grupo.label}
               </SectionLabel>
             )}
-            <div className="overflow-hidden rounded-xl border border-border">
+            <div className="space-y-3">
               {grupo.tips.map((tip) => (
                 <TipCardMobileItem
                   key={tip.id}
                   tip={tip}
                   canSelect={canSelect}
-                  selectionMode={checkedTips.length > 0}
+                  selectionMode={selectionMode}
                   checked={checkedIds.has(tip.id)}
                   onToggle={() => toggleChecked(tip.id)}
-                  onPlanilhar={() => setPlanilhando(tip)}
+                  onPlanilhar={(initial) => {
+                    setPlanilharInitial(initial);
+                    setPlanilhando(tip);
+                  }}
                   onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
                   onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
                 />
@@ -437,6 +469,7 @@ export default function TipsPage() {
       {checkedTips.length > 0 && <div className="h-32" aria-hidden="true" />}
       <TipsBulkActionBar
         count={checkedTips.length}
+        stakeTotal={checkedTips.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0)}
         loading={false}
         variant={tab === "pending" ? "pending" : "caiu"}
         onPlanilhar={() => setBatchReview([...checkedTips])}
@@ -445,27 +478,12 @@ export default function TipsPage() {
         onCancel={clearSelection}
       />
 
-      <Dialog open={batchReview !== null} onOpenChange={(open) => !open && setBatchReview(null)}>
-        <DialogContent aria-describedby="batch-description" className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Planilhar {batchReview?.length} tips</DialogTitle>
-            <p id="batch-description" className="text-sm text-zinc-400">Confirme as apostas realizadas. Cada tip usará a stake, odd e casa exibidas abaixo.</p>
-          </DialogHeader>
-          <ul className="max-h-[40dvh] space-y-3 overflow-y-auto text-sm">
-            {batchReview?.map((tip) => (
-              <li key={tip.id}>
-                <p className="font-medium">{tip.game ?? "Jogo não identificado"}</p>
-                <p className="text-xs text-zinc-400">{tip.market}</p>
-                <p className="text-zinc-400">{tip.house ? houseDisplayName(tip.house) : "Casa não reconhecida"} · Odd {tip.odd != null ? formatOdd(tip.odd) : "—"} · {tip.recommendedStake !== null ? formatMoney(tip.recommendedStake) : "Stake não informada"}</p>
-              </li>
-            ))}
-          </ul>
-          <p className="text-sm">Stake total: {formatMoney(batchReview?.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0) ?? 0)}</p>
-          <Button className="bg-success-solid hover:bg-success-solid/90" onClick={() => batchReview && runBatch("planilhar", batchReview)}>
-            Confirmar e planilhar
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <TipBatchReview
+        tips={batchReview}
+        isMobile={isMobile}
+        onOpenChange={(open) => !open && setBatchReview(null)}
+        onConfirm={(items) => runBatch("planilhar", items)}
+      />
 
       <TipStatusSheet
         open={statusSheetOpen}
@@ -498,6 +516,7 @@ export default function TipsPage() {
         <TipPlanilharSheet
           key={planilhando.id}
           tip={planilhando}
+          initial={planilharInitial}
           open
           onOpenChange={(o) => !o && setPlanilhando(null)}
           onConfirm={(overrides) => doPlanilhar(planilhando.id, overrides)}

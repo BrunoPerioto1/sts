@@ -14,6 +14,7 @@ import {
 import { useTipPlanilhar } from "./use-tip-planilhar";
 import { formatMoney, houseDisplayName } from "@/lib/format";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
+import type { TipPlanilharInitial } from "./TipCardMobileItem";
 
 // Você volta da casa e responde uma pergunta só: apostou quanto? A stake já
 // vem preenchida com a recomendada, então o caminho comum é abrir e confirmar
@@ -21,6 +22,7 @@ import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
 // Versão mobile; o desktop usa TipPlanilharDialog com os mesmos campos.
 export function TipPlanilharSheet({
   tip,
+  initial,
   open,
   onOpenChange,
   onConfirm,
@@ -28,6 +30,8 @@ export function TipPlanilharSheet({
   busy,
 }: {
   tip: TipItem;
+  /** Stake e odd vindas do "Odd mudou?". */
+  initial?: TipPlanilharInitial;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (overrides: PlanilharTipDto) => void;
@@ -35,7 +39,7 @@ export function TipPlanilharSheet({
   busy: boolean;
 }) {
   const houses = useHouses();
-  const form = useTipPlanilhar(tip);
+  const form = useTipPlanilhar(tip, initial);
   const [casaOpen, setCasaOpen] = useState(false);
 
   const casaLabel =
@@ -64,22 +68,18 @@ export function TipPlanilharSheet({
             {busy ? "Planilhando…" : `Planilhar ${form.valid ? formatMoney(form.stakeValue) : ""}`}
           </Button>
 
-          <div className="flex">
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 py-3 text-center text-sm text-zinc-400 hover:text-zinc-200"
-            >
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Button variant="secondary" className="h-11" onClick={() => onOpenChange(false)}>
               Ainda não apostei
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               disabled={busy}
               onClick={onDismiss}
-              className="flex-1 py-3 text-center text-sm text-danger hover:text-danger/80 disabled:opacity-45"
+              className="h-11 border-danger/30 text-danger hover:bg-danger/10"
             >
               Não deu · caiu
-            </button>
+            </Button>
           </div>
         </div>
       }

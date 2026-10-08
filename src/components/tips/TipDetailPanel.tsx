@@ -50,7 +50,9 @@ export function TipDetailPanel({
     )}>
       <div className="min-h-0 overflow-y-auto overscroll-contain">
       <div className="border-b border-border px-5 py-4">
-        <div className="flex items-center gap-2 text-xs opacity-50">
+        <div className="flex items-center gap-2 text-xs">
+          {/* O apagado é só do "recebida": no badge, metade da opacidade
+              sumia com o status. */}
           <Badge
             variant={
               tip.status === "planilhada" ? "won" : tip.status === "caiu" ? "canceled" : "pending"
@@ -58,7 +60,7 @@ export function TipDetailPanel({
           >
             {tip.status === "planilhada" ? "Planilhada" : tip.status === "caiu" ? "Caiu" : "Pendente"}
           </Badge>
-          <span>recebida {formatTime(tip.createdAt)}</span>
+          <span className="opacity-50">recebida {formatTime(tip.createdAt)}</span>
         </div>
 
         <h2 className="mt-3 text-xl font-semibold leading-tight">

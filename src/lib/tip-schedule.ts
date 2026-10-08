@@ -1,11 +1,15 @@
 // Fila de Tips pelo relógio do jogo. A pergunta de quem abre a fila é "ainda
 // dá tempo de entrar?", e a ordem de chegada no canal não responde isso.
 
+// Minuto só importa na última hora; daí pra cima arredonda pra hora cheia, e
+// passando de um dia vira "13d 20h" — "331h57" não se lê de relance.
 function duration(totalMin: number): string {
   if (totalMin < 60) return `${totalMin} min`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
+  const totalH = Math.round(totalMin / 60);
+  if (totalH < 24) return `${totalH}h`;
+  const d = Math.floor(totalH / 24);
+  const h = totalH % 24;
+  return h === 0 ? `${d}d` : `${d}d ${h}h`;
 }
 
 /** "começa em 40 min", "começou há 2h15". */

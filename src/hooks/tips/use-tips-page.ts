@@ -81,7 +81,7 @@ export function useTipSelection(tips: TipItem[], resetKey: string) {
  * gravação corre por baixo e a fila continua clicável.
  */
 export function useTipPageActions({ onStart }: { onStart: () => void }) {
-  const { dismiss, undismiss, planilhar, batch } = useTipActions();
+  const { dismiss, undismiss, planilhar, batch, undoPlanilhar } = useTipActions();
 
   // O lote roda em background e o toast chega quando terminar; quem clicou já
   // pode continuar varrendo a fila.
@@ -94,7 +94,30 @@ export function useTipPageActions({ onStart }: { onStart: () => void }) {
         onSuccess: (result) => {
           if (result.succeeded.length) {
             const label = action === "planilhar" ? "planilhadas" : action === "dismiss" ? "marcadas como caiu" : "devolvidas para a fila";
-            actionToast.success({ title: `${result.succeeded.length} tips ${label}` });
+            // Desfazer: o lote é um toque só, então errar o alvo também é. Caiu
+            // volta pra fila; Apostei apaga só as apostas que este lote criou.
+            const done = new Set(result.succeeded);
+            const undo =
+              action === "dismiss"
+                ? () =>
+                    batch.mutate({
+                      tips: items.filter((t) => done.has(t.id)).map((t) => ({ ...t, status: "caiu" as const })),
+                      action: "undismiss",
+                    }, {
+                      onSuccess: () => actionToast.success({ title: "Tips de volta na fila" }),
+                      onError: (e: Error) => actionToast.error({ description: e.message }),
+                    })
+                : action === "planilhar" && result.createdBetIds.length
+                  ? () =>
+                      undoPlanilhar.mutate(result.createdBetIds, {
+                        onSuccess: () => actionToast.success({ title: "Apostas desfeitas, tips de volta na fila" }),
+                        onError: (e: Error) => actionToast.error({ description: e.message }),
+                      })
+                  : undefined;
+            actionToast.success({
+              title: `${result.succeeded.length} tips ${label}`,
+              ...(undo ? { action: { label: "Desfazer", onClick: undo }, duration: 5000 } : {}),
+            });
           }
           // As que falharem voltam pra lista sozinhas na revalidação.
           if (result.failed.length) {

@@ -183,7 +183,10 @@ export function formatCountdown(ms: number): string {
 // Odd com 2 casas, ou 3 quando a terceira existe (1.855). A coluna guarda 3
 // desde a migration de precisao; toFixed(2) arredondava 1.855 pra 1.86.
 // Ponto e não vírgula de propósito: é a convenção das casas e do mercado.
-export function formatOdd(value: number | string): string {
+// `decimals: 2` arredonda de vez (1.895 → 1.90): leitura rápida na fila de
+// tips, onde a terceira casa não muda a decisão.
+export function formatOdd(value: number | string, { decimals }: { decimals?: 2 } = {}): string {
+  if (decimals === 2) return Number(value).toFixed(2);
   const fixed = Number(value).toFixed(3);
   return fixed.endsWith("0") ? fixed.slice(0, -1) : fixed;
 }
