@@ -38,7 +38,7 @@ export function HouseAvatar({
     // borda branca. Sem fundo, e com um leve zoom dentro do recorte, a borda
     // embutida na imagem fica pra fora.
     return (
-      <span aria-hidden="true" className={cn("shrink-0 overflow-hidden", SIZES[size], className)}>
+      <span aria-hidden="true" className={cn("block shrink-0 overflow-hidden", SIZES[size], className)}>
         <img
           src={logoUrl}
           alt=""
