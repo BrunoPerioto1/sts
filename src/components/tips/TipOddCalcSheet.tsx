@@ -64,7 +64,31 @@ export function TipOddCalcSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Odd mudou?"
-      subHeader={tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
+      // O campo fica no subHeader (fora da área rolável): com o teclado aberto
+      // sobra pouca altura entre o título e o rodapé, e dentro da rolagem ele
+      // acabava cortado atrás dos botões.
+      subHeader={
+        <div className="space-y-3">
+          {tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
+          <div className="space-y-2">
+            <Label htmlFor="calc-odd" className="text-xs font-medium uppercase tracking-wider text-muted">
+              Odd que está na casa agora
+            </Label>
+            <div className="relative">
+              <Calculator size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Input
+                id="calc-odd"
+                inputMode="decimal"
+                value={oddInput}
+                onChange={(e) => setOddInput(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                className="h-14 rounded-xl pl-12 text-2xl font-semibold tabular-nums"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+        </div>
+      }
       footer={
         <div className="space-y-2">
           <Button
@@ -82,36 +106,7 @@ export function TipOddCalcSheet({
         </div>
       }
     >
-      <div className="space-y-5 pb-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
-            <p className="text-xs text-zinc-500">Odd da tip</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums">{tip.odd !== null ? formatOdd(tip.odd) : "—"}</p>
-          </div>
-          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
-            <p className="text-xs text-zinc-500">Odd justa</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums">{formatOdd(fair)}</p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="calc-odd" className="text-xs font-medium uppercase tracking-wider text-muted">
-            Odd que está na casa agora
-          </Label>
-          <div className="relative">
-            <Calculator size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <Input
-              id="calc-odd"
-              inputMode="decimal"
-              value={oddInput}
-              onChange={(e) => setOddInput(e.target.value)}
-              onFocus={(e) => e.target.select()}
-              className="h-14 rounded-xl pl-12 text-2xl font-semibold tabular-nums"
-              placeholder="0,00"
-            />
-          </div>
-        </div>
-
+      <div className="space-y-3 pt-2 pb-2">
         {result && meta && VerdictIcon && (
           <div className={cn("space-y-2 rounded-xl border px-4 py-3.5", meta.box)}>
             <p className="flex items-center gap-2 text-base font-semibold">
@@ -134,6 +129,17 @@ export function TipOddCalcSheet({
             )}
           </div>
         )}
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
+            <p className="text-xs text-zinc-500">Odd da tip</p>
+            <p className="mt-0.5 text-lg font-semibold tabular-nums">{tip.odd !== null ? formatOdd(tip.odd) : "—"}</p>
+          </div>
+          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
+            <p className="text-xs text-zinc-500">Odd justa</p>
+            <p className="mt-0.5 text-lg font-semibold tabular-nums">{formatOdd(fair)}</p>
+          </div>
+        </div>
       </div>
     </BottomSheet>
   );
