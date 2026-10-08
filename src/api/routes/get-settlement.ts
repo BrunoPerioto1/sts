@@ -1,6 +1,7 @@
 import { api } from '../apiClient';
 import { unwrap } from '../request';
 import { ResultIdEnum } from './get-bets';
+import { MOCK_CONFERIR, settlementMock } from '@/mocks/settlement';
 
 export interface SettlementSuggestion {
   betId: number;
@@ -32,21 +33,25 @@ export interface ComputeSummary {
 
 /** Recalcula as sugestões. Não altera resultado nenhum. */
 export function computeSettlement() {
+  if (MOCK_CONFERIR) return settlementMock.compute();
   return unwrap<ComputeSummary>(api.settlement.post('compute'));
 }
 
 export function getSettlementSuggestions() {
+  if (MOCK_CONFERIR) return settlementMock.getSuggestions();
   return unwrap<SettlementSuggestion[]>(api.settlement.get('suggestions'));
 }
 
 /** Planilha as sugestões aceitas — é o que finalmente mexe no lucro. */
 export function confirmSettlement(betIds: number[]) {
+  if (MOCK_CONFERIR) return settlementMock.confirm(betIds);
   return unwrap<{ confirmed: number }>(
     api.settlement.post('confirm', { betIds }),
   );
 }
 
 export function dismissSettlement(betIds: number[]) {
+  if (MOCK_CONFERIR) return settlementMock.dismiss(betIds);
   return unwrap<{ dismissed: number }>(
     api.settlement.post('dismiss', { betIds }),
   );
@@ -74,6 +79,7 @@ export interface SettlementQueue {
 }
 
 export function getSettlementQueue() {
+  if (MOCK_CONFERIR) return settlementMock.getQueue();
   return unwrap<SettlementQueue>(api.settlement.get('queue'));
 }
 
@@ -90,5 +96,6 @@ export interface SettlementReviewItem {
 }
 
 export function getSettlementReview() {
+  if (MOCK_CONFERIR) return settlementMock.getReview();
   return unwrap<SettlementReviewItem[]>(api.settlement.get('review'));
 }

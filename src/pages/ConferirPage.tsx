@@ -35,7 +35,6 @@ import {
   HandPointing,
   CheckCircle,
   CheckSquare,
-  Info,
   X,
   XCircle,
 } from "@phosphor-icons/react";
@@ -216,45 +215,16 @@ function SuggestionRow({ suggestion, checked, onToggle, onDismiss, onOpen, busy 
 }
 
 /**
- * O que a fila deixou de fora. As duas coisas eram silêncio: aposta com jogo
- * encerrado que o bot não soube resolver ficava invisível, e lote cheio dava a
- * impressão de que não havia mais nada esperando.
+ * Aposta com jogo encerrado que o bot não soube resolver ficava invisível. A
+ * fila que sobra de um lote não precisa de aviso: a API drena sozinha a cada
+ * leitura da fila (abertura da tela, a cada 2 min e ao voltar pra aba).
  */
-function FilaNotes({
-  fila,
-  busy,
-  onCompute,
-}: {
-  fila: SettlementQueue | undefined;
-  busy: boolean;
-  onCompute: () => void;
-}) {
-  if (!fila || (!fila.hasMore && !fila.undecided)) return null;
-  const n = fila.undecided;
+function FilaNotes({ fila }: { fila: SettlementQueue | undefined }) {
+  if (!fila?.undecided) return null;
 
   return (
-    <div className="flex flex-col gap-2 border-b border-foreground/[0.06] px-4 py-2.5 text-xs md:flex-row md:items-center md:justify-between">
-      {fila.hasMore ? (
-        <p className="flex items-start gap-2 text-zinc-400">
-          <Info size={14} className="mt-px shrink-0 text-zinc-500" />
-          Ainda há apostas na fila que não entraram neste lote.
-          <button
-            type="button"
-            onClick={onCompute}
-            disabled={busy}
-            className="shrink-0 text-accent underline-offset-4 hover:underline disabled:opacity-50 md:hidden"
-          >
-            Calcular
-          </button>
-        </p>
-      ) : (
-        <span />
-      )}
-      {!!n && (
-        <p className="text-zinc-500">
-          {n} sem proposta — lista abaixo.
-        </p>
-      )}
+    <div className="border-b border-foreground/[0.06] px-4 py-2.5 text-xs">
+      <p className="text-zinc-500">{fila.undecided} sem proposta — lista abaixo.</p>
     </div>
   );
 }
@@ -310,41 +280,16 @@ function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
 
 function Vazio({
   fila,
-  busy,
   buscando,
-  onCompute,
 }: {
   fila: SettlementQueue | undefined;
-  busy: boolean;
   /** Busca em andamento: o card fica, só troca o ícone e a frase. */
   buscando: boolean;
-  onCompute: () => void;
 }) {
   return (
     // A tela vazia ocupa a altura toda e empurra o cartao das pendentes pro
     // rodape: ali ele e' a unica saida, em vez de mais um bloco na pilha.
     <div className="flex min-h-[calc(100svh-13rem)] flex-col gap-3 md:min-h-[calc(100vh-11rem)]">
-      {fila?.hasMore && (
-        <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4">
-          <p className="text-[11px] font-semibold tracking-wide text-zinc-500">
-            FILA RESTANTE
-          </p>
-          <p className="mt-1.5 text-sm text-zinc-400">
-            Ainda há apostas na fila que não entraram neste lote.
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onCompute}
-            disabled={busy}
-            className="mt-3 w-full gap-2"
-          >
-            <ArrowsClockwise size={16} className={busy ? "animate-spin" : undefined} />
-            Calcular próximo lote
-          </Button>
-        </div>
-      )}
-
       {/* Sem moldura: o vazio e' a propria tela, nao um card dentro dela. */}
       <div className="grid flex-1 place-items-center p-8 text-center">
         <div>
@@ -406,9 +351,9 @@ export default function ConferirPage() {
   const marcadas = lista.filter((s) => selected.has(s.betId));
   const total = marcadas.reduce((sum, s) => sum + lucroSugerido(s), 0);
   const ocupado = confirm.isPending || dismiss.isPending || compute.isPending;
-  // Puxar a lista no celular busca resultados novos, igual ao botão "Calcular
-  // próximo lote" do desktop. Desligado com o detalhe aberto: o gesto ali é
-  // rolar o sheet. O erro já vira toast no onError da mutation.
+  // Puxar a lista no celular força o cálculo agora (ele já roda sozinho ao ler
+  // a fila). Desligado com o detalhe aberto: o gesto ali é rolar o sheet. O
+  // erro já vira toast no onError da mutation.
   const pull = usePullToRefresh(
     () => compute.mutateAsync().catch(() => undefined),
     !aberta && !ocupado,
@@ -435,23 +380,6 @@ export default function ConferirPage() {
           }
         />
       }
-      actions={
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => compute.mutate()}
-          disabled={ocupado}
-          className="hidden shrink-0 gap-2 md:inline-flex"
-        >
-          <ArrowsClockwise
-            size={16}
-            className={compute.isPending ? "animate-spin" : undefined}
-          />
-          {/* O cálculo já roda sozinho (fim do job de placar e abertura da
-              tela); o botão fica pra quem quer forçar agora. */}
-          {fila?.hasMore ? "Calcular próximo lote" : "Atualizar"}
-        </Button>
-      }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
       <SuggestionDetail
@@ -469,15 +397,10 @@ export default function ConferirPage() {
         {isLoading ? (
           <LendoPlacares fila={fila} />
         ) : lista.length === 0 ? (
-          <Vazio
-            fila={fila}
-            busy={ocupado}
-            buscando={compute.isPending}
-            onCompute={() => compute.mutate()}
-          />
+          <Vazio fila={fila} buscando={compute.isPending} />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
-            <FilaNotes fila={fila} busy={ocupado} onCompute={() => compute.mutate()} />
+            <FilaNotes fila={fila} />
 
             <div className="flex items-center justify-between gap-3 border-b border-foreground/[0.06] px-4 py-2.5">
               <div className="flex min-w-0 items-center gap-3">

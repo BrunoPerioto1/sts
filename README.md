@@ -132,7 +132,6 @@ src/
 ├── lib/                formatação, sessão, compressão de imagem, exportação CSV
 └── pages/              telas de rota (perfil/ com as sub-rotas)
 
-tests/                  testes de lib/ com node --test
 ```
 
 Vale notar uma decisão: os formulários de aposta do desktop e do mobile são duas apresentações sobre **um** hook, o `use-aposta-form`. Mesma validação, mesmo payload, mesmo comportamento da IA. Só o layout muda. Foi isso que evitou que a leitura do bilhete precisasse ser implementada duas vezes.
@@ -153,7 +152,6 @@ Só existe uma variável: `VITE_API_URL`, a URL base da API do stsbackend, com b
 npm run build
 npm run typecheck
 npm run lint
-npm run test
 ```
 
 ---
