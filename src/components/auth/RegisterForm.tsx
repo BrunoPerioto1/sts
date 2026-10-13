@@ -1,29 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
-import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
+import { AuthHeading } from "./AuthHeading";
+import { CircleNotch } from "@phosphor-icons/react";
 import { MIN_PASSWORD, useRegisterForm } from "@/hooks/auth/use-register-form";
 import { cn } from "@/lib/utils";
 
-interface RegisterFormProps {
-  onSwitchToLogin: () => void;
-}
+// Curta em vermelho, Fraca em âmbar, daí pra cima verde. Classes por extenso
+// pro Tailwind enxergar.
+const TONES = [
+  { text: "text-danger", bar: "bg-danger" },
+  { text: "text-warning", bar: "bg-warning" },
+  { text: "text-success", bar: "bg-success" },
+];
 
-export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+export function RegisterForm() {
   const { data, setData, error, setError, submitting, strength, emailValid, submit } = useRegisterForm();
+  const tone = TONES[Math.min(strength.score, 2)];
 
   return (
-    <form onSubmit={submit} className="w-full max-w-[380px] flex flex-col gap-5">
-      <div>
-        <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Criar conta</h1>
-        <p className="text-sm text-zinc-500 mt-1">Três campos e você já registra a primeira aposta</p>
-      </div>
+    <form onSubmit={submit} className="flex flex-col gap-[18px] lg:gap-4">
+      <AuthHeading title="Criar conta" sub="Leva menos de um minuto." />
 
       <AuthField
         id="nome"
         label="Nome"
         type="text"
         autoComplete="name"
-        placeholder="Seu nome"
+        placeholder="Como quer ser chamado"
         value={data.nome}
         onChange={(e) => setData((prev) => ({ ...prev, nome: e.target.value }))}
         required
@@ -34,25 +37,25 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         label="E-mail"
         type="email"
         autoComplete="email"
-        placeholder="seu@email.com"
+        placeholder="voce@email.com"
         value={data.email}
         valid={emailValid}
         onChange={(e) => setData((prev) => ({ ...prev, email: e.target.value }))}
         required
       />
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 lg:gap-[7px]">
         <AuthField
           id="password"
           label="Senha"
           type="password"
           autoComplete="new-password"
-          placeholder="Sua senha"
+          placeholder="Crie uma senha"
           value={data.password}
           error={error}
           hint={
             strength.label && (
-              <span className={cn("text-sm", strength.score >= 2 ? "text-accent" : "text-zinc-500")}>
+              <span className={cn("whitespace-nowrap text-[12.5px] lg:text-xs font-medium", tone.text)}>
                 {strength.label}
               </span>
             )
@@ -64,43 +67,36 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           required
         />
 
-        <div className="flex gap-1.5" aria-hidden>
-          {[0, 1, 2].map((i) => (
+        <div className="grid grid-cols-4 gap-1 pt-0.5" aria-hidden>
+          {[0, 1, 2, 3].map((i) => (
             <span
               key={i}
               className={cn(
-                "h-[3px] flex-1 rounded-full transition-colors",
-                i < strength.score ? "bg-accent" : "bg-foreground/10"
+                "h-[3px] rounded-full transition-colors",
+                data.password && i < Math.max(strength.score, 1) ? tone.bar : "bg-foreground/10"
               )}
             />
           ))}
         </div>
-        <p className="text-sm text-zinc-500">
-          {MIN_PASSWORD} caracteres ou mais. Toque no olho para conferir — não pedimos duas vezes.
-        </p>
+        <p className="text-[12.5px] lg:text-xs text-zinc-500">Mínimo de {MIN_PASSWORD} caracteres</p>
       </div>
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2" disabled={submitting}>
+      <Button
+        type="submit"
+        className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2"
+        disabled={submitting}
+      >
         {submitting ? (
           <>
             <CircleNotch size={18} className="animate-spin" /> Criando conta…
           </>
         ) : (
-          <>
-            Criar conta <ArrowRight size={18} />
-          </>
+          "Criar conta"
         )}
       </Button>
 
-      <p className="text-center text-sm text-zinc-500">
-        Ao criar a conta você aceita os termos de uso e a política de privacidade.
-      </p>
-
-      <p className="text-center text-sm text-zinc-500">
-        Já tem uma conta?{" "}
-        <button type="button" onClick={onSwitchToLogin} className="text-accent underline underline-offset-4 hover:no-underline">
-          Entrar
-        </button>
+      <p className="-mt-1.5 lg:-mt-1 text-[12.5px] lg:text-xs leading-normal text-zinc-500 text-pretty">
+        Ao criar a conta, você aceita os termos de uso e a política de privacidade.
       </p>
     </form>
   );

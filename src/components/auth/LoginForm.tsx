@@ -2,37 +2,36 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AuthField } from "./AuthField";
+import { AuthHeading } from "./AuthHeading";
 import { formatCountdown } from "@/lib/format";
-import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
+import { CircleNotch } from "@phosphor-icons/react";
 import { useLoginForm } from "@/hooks/auth/use-login-form";
 
 interface LoginFormProps {
-  onSwitchToRegister: () => void;
   /** Abre o "Esqueci a senha" já com o e-mail digitado aqui. */
   onForgotPassword: (email: string) => void;
 }
 
-export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormProps) {
+export function LoginForm({ onForgotPassword }: LoginFormProps) {
   const { data, setData, error, setError, submitting, locked, lockRemainingMs, submit } = useLoginForm();
 
   return (
-    <form onSubmit={submit} className="w-full max-w-[380px] flex flex-col gap-4 lg:gap-5">
-      <div className="text-center lg:text-left">
-        <h1 className="text-2xl lg:text-[2rem] leading-tight font-semibold tracking-tight">Entrar</h1>
-        <p className="text-sm text-zinc-500 mt-0.5 lg:mt-1">Sua banca, do jeito que você deixou</p>
-      </div>
+    <form onSubmit={submit} className="flex flex-col gap-[18px] lg:gap-4">
+      <AuthHeading title="Entrar" sub="Bem-vindo de volta." />
 
       <AuthField
         id="email"
         label="E-mail"
         type="email"
         autoComplete="email"
-        placeholder="seu@email.com"
+        placeholder="voce@email.com"
         value={data.email}
         onChange={(e) => setData((prev) => ({ ...prev, email: e.target.value }))}
         required
       />
 
+      {/* "Esqueci a senha" ao lado do rótulo, pra "Manter conectado" ficar
+          sozinho na linha. */}
       <AuthField
         id="password"
         label="Senha"
@@ -40,6 +39,15 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         autoComplete="current-password"
         placeholder="Sua senha"
         value={data.password}
+        hint={
+          <button
+            type="button"
+            onClick={() => onForgotPassword(data.email)}
+            className="whitespace-nowrap text-[13.5px] lg:text-[13px] font-medium text-accent-text hover:underline underline-offset-4"
+          >
+            Esqueci a senha
+          </button>
+        }
         onChange={(e) => {
           setError(null);
           setData((prev) => ({ ...prev, password: e.target.value }));
@@ -54,25 +62,21 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="remember"
-            checked={data.rememberMe}
-            onCheckedChange={(checked) => setData((prev) => ({ ...prev, rememberMe: checked as boolean }))}
-          />
-          <Label htmlFor="remember" className="text-sm font-normal">Manter conectado</Label>
-        </div>
-        <button
-          type="button"
-          onClick={() => onForgotPassword(data.email)}
-          className="text-sm text-accent underline underline-offset-4 hover:no-underline"
-        >
-          Esqueci a senha
-        </button>
+      <div className="flex items-center gap-2.5 h-8 -my-1 lg:h-6 lg:my-0">
+        <Checkbox
+          id="remember"
+          className="h-[18px] w-[18px] rounded-[4px]"
+          checked={data.rememberMe}
+          onCheckedChange={(checked) => setData((prev) => ({ ...prev, rememberMe: checked as boolean }))}
+        />
+        <Label htmlFor="remember" className="text-sm lg:text-[13.5px] font-normal text-zinc-300">Manter conectado</Label>
       </div>
 
-      <Button type="submit" className="w-full min-h-[44px] lg:min-h-[48px] text-base gap-2 mt-1 lg:mt-0" disabled={submitting || locked}>
+      <Button
+        type="submit"
+        className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2"
+        disabled={submitting || locked}
+      >
         {submitting ? (
           <>
             <CircleNotch size={18} className="animate-spin" /> Verificando…
@@ -80,24 +84,9 @@ export function LoginForm({ onSwitchToRegister, onForgotPassword }: LoginFormPro
         ) : locked ? (
           `Bloqueado por ${formatCountdown(lockRemainingMs)}`
         ) : (
-          <>
-            Entrar <ArrowRight size={18} />
-          </>
+          "Entrar"
         )}
       </Button>
-
-      {/* Celular: duas linhas e link sem sublinhado — é a ação secundária da
-          tela e não deve disputar atenção com o botão de entrar. */}
-      <p className="flex flex-col items-center gap-0.5 lg:block text-center text-sm text-zinc-500">
-        Ainda não tem conta?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToRegister}
-          className="font-medium text-accent hover:underline underline-offset-4 lg:font-normal lg:underline lg:hover:no-underline"
-        >
-          Criar conta
-        </button>
-      </p>
     </form>
   );
 }

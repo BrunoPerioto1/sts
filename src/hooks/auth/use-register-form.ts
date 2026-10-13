@@ -8,16 +8,19 @@ import { saveToken } from "@/lib/auth-session";
 
 export const MIN_PASSWORD = 6;
 
-// Três critérios, três barras: tamanho, número e um caractere fora de letra e
-// número. Não é medida de entropia — é o que a tela promete e o que o
-// formulário cobra.
-function passwordStrength(password: string) {
-  const checks = [password.length >= MIN_PASSWORD, /\d/.test(password), /[^A-Za-z0-9]/.test(password)];
-  const score = checks.filter(Boolean).length;
-  const label = password.length === 0 ? null : score <= 1 ? "Fraca" : score === 2 ? "Boa" : "Forte";
-  // Só o tamanho barra o cadastro — número e símbolo entram como força, não
-  // como exigência, pra não inventar regra que o backend não cobra.
-  return { score, label, meetsMinimum: checks[0] };
+// Quatro barras, cada uma pede mais tamanho e mais variedade. Não é medida de
+// entropia — é o que a tela promete. Só o tamanho mínimo barra o cadastro;
+// o resto entra como força, não como exigência que o backend não cobra.
+const LEVELS = ["Curta", "Fraca", "Boa", "Forte", "Muito forte"] as const;
+
+function passwordStrength(p: string) {
+  const digit = /\d/.test(p), symbol = /[^A-Za-z0-9]/.test(p);
+  let score = 0;
+  if (p.length >= MIN_PASSWORD) score = 1;
+  if (p.length >= 8 && digit) score = 2;
+  if (p.length >= 10 && digit && symbol) score = 3;
+  if (p.length >= 12 && digit && symbol && /[A-Z]/.test(p)) score = 4;
+  return { score, label: p ? LEVELS[score] : null, meetsMinimum: score >= 1 };
 }
 
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);

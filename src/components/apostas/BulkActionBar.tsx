@@ -15,11 +15,11 @@ interface BulkActionBarProps {
 
 type PendingAction = "won" | "lost" | "pending" | "delete" | null;
 
-// Só o símbolo: as quatro ações são reconhecíveis pelo ícone + cor e o texto
-// embaixo duplicava a informação num espaço apertado. `aria-label` continua
-// nomeando o botão pra leitor de tela.
+// Mobile: só o símbolo, ícone + cor bastam no espaço apertado. Desktop: barra
+// numa linha só, com rótulo ao lado do ícone. `aria-label` nomeia o botão.
 function BulkActionButton({
   icon: Icon,
+  label,
   ariaLabel,
   onClick,
   disabled,
@@ -27,6 +27,7 @@ function BulkActionButton({
   className,
 }: {
   icon: Icon;
+  label: string;
   ariaLabel: string;
   onClick: () => void;
   disabled?: boolean;
@@ -40,12 +41,14 @@ function BulkActionButton({
       disabled={disabled}
       aria-label={ariaLabel}
       className={cn(
-        "h-12 rounded-xl flex items-center justify-center transition-colors disabled:pointer-events-none",
+        "h-12 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:pointer-events-none",
+        "md:h-9 md:px-3 md:rounded-lg md:text-sm md:font-medium",
         disabled && !pending && "opacity-40",
         className
       )}
     >
       {pending ? <CircleNotch size={20} className="animate-spin" /> : <Icon size={20} />}
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 }
@@ -82,14 +85,17 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           "fixed z-50 p-3 space-y-3 rounded-2xl border border-foreground/10 bg-zinc-900/95 backdrop-blur-md",
           "animate-in slide-in-from-bottom-4 duration-200",
           "inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))]",
-          "md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:w-full md:max-w-[480px]"
+          "md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-6",
+          "md:flex md:items-center md:gap-3 md:space-y-0 md:p-2 md:pl-4 md:rounded-xl md:whitespace-nowrap"
         )}
         style={{ boxShadow: "var(--shadow-lg)" }}
       >
-        <div className="flex items-center justify-between gap-3 px-1">
+        {/* No desktop vira `contents`: contagem e Limpar entram na mesma
+            linha dos botões, Limpar no fim. */}
+        <div className="flex items-center justify-between gap-3 px-1 md:contents">
           <div className="flex items-center gap-2 min-w-0">
             <CheckCircle size={18} weight="fill" className="text-accent shrink-0" />
-            <span aria-live="polite" className="text-base font-semibold text-foreground truncate">
+            <span aria-live="polite" className="text-base font-semibold text-foreground truncate md:text-sm">
               {count} selecionada{plural}
             </span>
           </div>
@@ -97,15 +103,16 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="shrink-0 h-8 px-4 rounded-lg text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
+            className="shrink-0 h-8 px-4 rounded-lg md:order-last md:h-9 text-sm text-zinc-300 bg-foreground/[0.06] hover:bg-foreground/[0.1] disabled:opacity-45 disabled:pointer-events-none transition-colors"
           >
             Limpar
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 md:flex">
           <BulkActionButton
             icon={CheckCircle}
+            label="Ganha"
             ariaLabel={`Marcar ${count} aposta${plural} como ganha`}
             onClick={() => handleStatus("won", ResultIdEnum.WON)}
             disabled={loading}
@@ -114,6 +121,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={XCircle}
+            label="Perdida"
             ariaLabel={`Marcar ${count} aposta${plural} como perdida`}
             onClick={() => handleStatus("lost", ResultIdEnum.LOST)}
             disabled={loading}
@@ -122,6 +130,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Clock}
+            label="Pendente"
             ariaLabel={`Marcar ${count} aposta${plural} como pendente`}
             onClick={() => handleStatus("pending", ResultIdEnum.PENDING)}
             disabled={loading}
@@ -130,6 +139,7 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
           />
           <BulkActionButton
             icon={Trash}
+            label="Excluir"
             ariaLabel={`Excluir ${count} aposta${plural}`}
             onClick={() => setConfirmOpen(true)}
             disabled={loading}

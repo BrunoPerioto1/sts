@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, CircleNotch, TelegramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
+import { AuthHeading } from "./AuthHeading";
 import { postForgotPassword, postResetPassword } from "@/api/routes/post-login";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
@@ -58,15 +59,15 @@ export function ForgotPasswordForm({ initialEmail = "", onBack }: ForgotPassword
   };
 
   return (
-    <form onSubmit={step === "email" ? requestCode : reset} className="w-full max-w-[380px] flex flex-col gap-5">
-      <div>
-        <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Esqueci a senha</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          {step === "email"
+    <form onSubmit={step === "email" ? requestCode : reset} className="flex flex-col gap-[18px] lg:gap-4">
+      <AuthHeading
+        title="Esqueci a senha"
+        sub={
+          step === "email"
             ? "O código chega no bot do Telegram vinculado à sua conta."
-            : "Se o e-mail tiver Telegram vinculado, o código já chegou no bot. Vale 15 minutos."}
-        </p>
-      </div>
+            : "Se o e-mail tiver Telegram vinculado, o código já chegou no bot. Vale 15 minutos."
+        }
+      />
 
       {step === "email" ? (
         <AuthField
@@ -116,7 +117,7 @@ export function ForgotPasswordForm({ initialEmail = "", onBack }: ForgotPassword
         </>
       )}
 
-      <Button type="submit" className="w-full min-h-[48px] text-base gap-2" disabled={busy}>
+      <Button type="submit" className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2" disabled={busy}>
         {busy ? (
           <CircleNotch size={18} className="animate-spin" />
         ) : step === "email" ? (

@@ -32,9 +32,9 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
   const errorId = error ? `${id}-error` : undefined;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2 lg:gap-[7px]">
       <div className="flex items-baseline justify-between gap-2">
-        <Label htmlFor={id} className="text-sm font-normal text-zinc-400">
+        <Label htmlFor={id} className="text-[13.5px] lg:text-[13px] font-medium text-zinc-300">
           {label}
         </Label>
         {hint}
@@ -49,11 +49,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
           aria-invalid={!!error}
           aria-describedby={errorId}
           className={cn(
-            "w-full min-h-[44px] lg:min-h-[48px] rounded-lg bg-card px-3.5 text-base text-foreground",
+            "w-full h-12 lg:h-10 rounded-[10px] lg:rounded-[8px] bg-card lg:bg-background px-3.5 lg:px-3 text-[15px] lg:text-sm text-foreground",
             "border transition-colors outline-none",
             "placeholder:text-zinc-600",
-            "focus:ring-2 focus:ring-accent/25",
-            error ? "border-danger focus:border-danger" : "border-foreground/[0.14] focus:border-accent",
+            "focus:ring-[3px] focus:ring-accent/25",
+            error ? "border-danger focus:border-danger" : "border-foreground/10 focus:border-accent",
             (isPassword || valid) && "pr-11"
           )}
         />
@@ -63,9 +63,9 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(function A
             type="button"
             onClick={() => setReveal((v) => !v)}
             aria-label={reveal ? "Ocultar senha" : "Mostrar senha"}
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center text-zinc-500 hover:text-zinc-200"
+            className="absolute right-0.5 top-0.5 h-11 w-11 lg:h-9 lg:w-9 rounded-[8px] lg:rounded-[6px] flex items-center justify-center text-zinc-500 hover:text-zinc-300"
           >
-            {reveal ? <EyeSlash size={18} /> : <Eye size={18} />}
+            {reveal ? <EyeSlash className="size-[18px] lg:size-4" /> : <Eye className="size-[18px] lg:size-4" />}
           </button>
         ) : (
           valid && (
