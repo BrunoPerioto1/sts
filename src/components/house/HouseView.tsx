@@ -16,6 +16,7 @@ import { groupHouses, houseMoney } from "@/lib/house-groups";
 import { useMe } from "@/hooks/queries/use-me";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
+import { SaqueLoteModal } from "./SaqueLoteModal";
 
 // Referencia estavel: `?? []` inline criaria array novo a cada render e
 // invalidaria o useMemo que depende de `houses`.
@@ -44,6 +45,7 @@ export function CasasApostaView() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isMovimentacaoModalOpen, setIsMovimentacaoModalOpen] = useState(false);
   const [isNovaTransacaoModalOpen, setIsNovaTransacaoModalOpen] = useState(false);
+  const [isSaqueLoteOpen, setIsSaqueLoteOpen] = useState(false);
 
   useEffect(() => {
     if (balancesQuery.isError || metricsQuery.isError) {
@@ -54,7 +56,7 @@ export function CasasApostaView() {
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
     if (houseIds.length > 0) list = list.filter((h) => houseIds.includes(h.houseId));
-    if (onlyWithBalance) list = list.filter((h) => Number(h.realHouseBalance) > 0);
+    if (onlyWithBalance) list = list.filter((h) => houseMoney(h).available > 0);
     if (onlyShortfall) list = list.filter((h) => Number(h.realHouseBalance) < 0);
     list = [...list].sort((a, b) => {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);
@@ -94,7 +96,7 @@ export function CasasApostaView() {
   // enquanto a lista mostra três casas seria um número que não explica a tela.
   const shownMetrics = houseIds.length > 0 ? metricsFromBalances(filteredHouses) : metrics;
   const withBalanceCount = (houseIds.length > 0 ? filteredHouses : houses).filter(
-    (h) => Number(h.realHouseBalance) > 0
+    (h) => houseMoney(h).available > 0
   ).length;
 
   return (
@@ -121,6 +123,7 @@ export function CasasApostaView() {
         sort={sort}
         onSortChange={setSort}
         onExportCsv={() => exportHousesCsv(filteredHouses)}
+        onWithdraw={() => setIsSaqueLoteOpen(true)}
         isLoading={loading}
       />
 
@@ -155,6 +158,12 @@ export function CasasApostaView() {
           ))}
         </div>
       )}
+
+      <SaqueLoteModal
+        isOpen={isSaqueLoteOpen}
+        onClose={() => { setIsSaqueLoteOpen(false); invalidate(); }}
+        houses={houses}
+      />
 
       {selectedHouse && (
         <>

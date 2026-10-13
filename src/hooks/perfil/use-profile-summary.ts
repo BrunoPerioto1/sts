@@ -1,3 +1,4 @@
+import { houseMoney } from "@/lib/house-groups";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { useHouses, useHouseBalances, useHouseMetrics } from "@/hooks/queries/use-houses";
@@ -34,7 +35,7 @@ export function useProfileSummary() {
     roi: Number(metricsQuery.data?.roi ?? 0),
     hitRate: Number(metricsQuery.data?.hitRate ?? 0),
     totalHouses: houses.length,
-    housesWithBalance: (balances.data ?? []).filter((h) => Number(h.houseBalance) > 0).length,
+    housesWithBalance: (balances.data ?? []).filter((h) => houseMoney(h).available > 0).length,
     bankroll: Number(houseMetrics.data?.totalBalance ?? 0),
   };
 

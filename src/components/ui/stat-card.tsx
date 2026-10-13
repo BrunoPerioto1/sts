@@ -28,27 +28,35 @@ interface StatCardProps {
 /** Número com rótulo — o mesmo bloco no Dashboard, no Perfil e em Casas. */
 export function StatCard({ label, value, hint, icon: IconComponent, signed, color, variant = "plain", wide, className, style }: StatCardProps) {
   const valueClass = color ? undefined : signed !== undefined ? signColor(signed) : undefined;
+  const card = variant === "card";
   return (
     <div
       className={cn(
         "min-w-0",
-        variant === "card" && "flex items-center gap-2 min-h-[76px] rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] p-3",
+        // Card: ícone pequeno na linha do rótulo e valor sem quebra. Ícone de
+        // 36px em caixa deixava ~98px pro valor em 390; "+R$ 5.315,99" quebrava
+        // e, com auto-rows-fr, esticava todas as linhas da grade.
+        card && "flex items-start gap-2.5 rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] px-3.5 py-3",
         wide && "col-span-2",
         className,
       )}
       style={style}
     >
       {IconComponent && (
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.04] text-zinc-400 max-[359px]:h-7 max-[359px]:w-7"
-          aria-hidden="true"
-        >
-          <IconComponent size={21} />
+        <span className={cn("flex shrink-0 items-center justify-center text-zinc-400", card ? "h-4 w-4 mt-px" : "h-9 w-9 rounded-xl bg-foreground/[0.04] max-[359px]:h-7 max-[359px]:w-7")} aria-hidden="true">
+          <IconComponent size={card ? 16 : 21} />
         </span>
       )}
       <div className="min-w-0 space-y-0.5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted truncate">{label}</p>
-        <p className={cn("text-lg leading-tight font-semibold tracking-tight tabular-nums break-words", valueClass)} style={color ? { color } : undefined}>
+        <p
+          className={cn(
+            "text-lg leading-tight font-semibold tracking-tight tabular-nums",
+            card ? "whitespace-nowrap max-[399px]:text-base" : "break-words",
+            valueClass,
+          )}
+          style={color ? { color } : undefined}
+        >
           {value}
         </p>
         {hint && <p className="text-[11px] text-zinc-500 tabular-nums truncate">{hint}</p>}

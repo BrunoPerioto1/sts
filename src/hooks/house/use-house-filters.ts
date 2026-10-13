@@ -1,3 +1,4 @@
+import { houseMoney } from "@/lib/house-groups";
 import { useMemo, useState } from "react";
 import type { HouseBalanceDto } from "@/api/routes/get-houses";
 import type { HouseSortMobile } from "@/components/house/mobile/HouseFiltersBar";
@@ -15,7 +16,7 @@ export function useHouseFilters(houses: HouseBalanceDto[]) {
   const filteredHouses = useMemo(() => {
     let list = houses.filter((h) => h.houseName.toLowerCase().includes(searchTerm.toLowerCase()));
     if (houseIds.length > 0) list = list.filter((h) => houseIds.includes(h.houseId));
-    if (onlyWithBalance) list = list.filter((h) => Number(h.houseBalance) > 0);
+    if (onlyWithBalance) list = list.filter((h) => houseMoney(h).available > 0);
     if (onlyNegative) list = list.filter((h) => Number(h.realHouseBalance) < 0);
     list = [...list].sort((a, b) => {
       if (sort === "name") return a.houseName.localeCompare(b.houseName);

@@ -66,7 +66,7 @@ export function HouseRowMobile({ house, onTap, onLongPress, index = 0, staleDays
       title={
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="truncate">{houseDisplayName(house.houseName)}</span>
-          <HouseActivityBadge activity={houseActivity(house.lastBetAt, real, staleDays)} />
+          <HouseActivityBadge activity={houseActivity(house.lastBetAt, money.available, staleDays)} />
         </span>
       }
       subtitle={

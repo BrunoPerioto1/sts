@@ -1,3 +1,4 @@
+import { houseMoney } from "@/lib/house-groups";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CasasApostaView } from "@/components/house/HouseView";
 import { CasasMobileView } from "@/components/house/mobile/CasasMobileView";
@@ -11,7 +12,7 @@ export function CasasPage() {
   // Mesma query das views (cacheada) — evita o vaivém de estado só pra contar
   // linhas no cabeçalho.
   const houses = useHouseBalances().data ?? [];
-  const withBalance = houses.filter((h) => Number(h.realHouseBalance) > 0).length;
+  const withBalance = houses.filter((h) => houseMoney(h).available > 0).length;
   const subtitle = `${formatInt(houses.length)} casas · ${formatInt(withBalance)} com saldo`;
 
   return (

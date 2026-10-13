@@ -1,4 +1,4 @@
-import { MagnifyingGlass, DownloadSimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, DownloadSimple, ArrowUpRight } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SortSelect, type SortOption } from "@/components/ui/sort-select";
@@ -18,6 +18,7 @@ interface HousesSearchProps {
   sort: HouseSort;
   onSortChange: (val: HouseSort) => void;
   onExportCsv?: () => void;
+  onWithdraw?: () => void;
   isLoading?: boolean;
 }
 
@@ -44,6 +45,7 @@ export function HousesSearch({
   sort,
   onSortChange,
   onExportCsv,
+  onWithdraw,
   isLoading = false,
 }: HousesSearchProps) {
   return (
@@ -94,6 +96,20 @@ export function HousesSearch({
             className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-foreground transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
           >
             <DownloadSimple className="h-4 w-4" /> CSV
+          </button>
+        </>
+      )}
+
+      {onWithdraw && (
+        <>
+          {divider}
+          <button
+            type="button"
+            onClick={onWithdraw}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-foreground transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+          >
+            <ArrowUpRight className="h-4 w-4" /> Saque em lote
           </button>
         </>
       )}

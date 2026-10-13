@@ -16,7 +16,8 @@ export function houseMoney(house: HouseLike) {
   const real = Number(house.realHouseBalance);
   const open = Math.max(0, Number(house.openStake ?? 0));
   return {
-    available: Math.max(0, real - open),
+    // Em centavos: resto de float (0,004) não pode virar "com saldo" mostrando R$ 0,00.
+    available: Math.max(0, Math.round((real - open) * 100) / 100),
     open,
     shortfall: Math.min(0, real),
   };
@@ -37,9 +38,10 @@ const LABELS: Record<HouseGroupId, { label: string; hint: string }> = {
 export function groupHouses<T extends HouseLike>(houses: T[], staleDays: number, now: number = Date.now()) {
   const byId: Record<HouseGroupId, T[]> = { inUse: [], stopped: [], unused: [] };
   for (const house of houses) {
-    const real = Number(house.realHouseBalance);
-    const activity = houseActivity(house.lastBetAt, real, staleDays, now);
-    if (activity.kind === "never") byId[real > 0 ? "inUse" : "unused"].push(house);
+    // Disponível, não o real: stake de aposta aberta não é saldo pra sacar.
+    const available = houseMoney(house).available;
+    const activity = houseActivity(house.lastBetAt, available, staleDays, now);
+    if (activity.kind === "never") byId[available > 0 ? "inUse" : "unused"].push(house);
     else if (activity.kind === "active") byId.inUse.push(house);
     else byId.stopped.push(house);
   }

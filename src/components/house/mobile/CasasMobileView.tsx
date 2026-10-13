@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Buildings, WarningCircle } from "@phosphor-icons/react";
+import { Buildings, CaretRight, WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,12 +19,13 @@ import { HouseFiltersBar } from "./HouseFiltersBar";
 import { CasaSheet } from "@/components/apostas/CasaSheet";
 import { metricsFromBalances } from "@/lib/house-metrics";
 import { staleDaysFrom } from "@/lib/house-activity";
-import { groupHouses } from "@/lib/house-groups";
+import { groupHouses, houseMoney } from "@/lib/house-groups";
 import { useMe } from "@/hooks/queries/use-me";
 import { HouseActionsSheet } from "./HouseActionsSheet";
 import { NovaMovimentacaoSheet } from "./NovaMovimentacaoSheet";
 import { HouseDetailScreen } from "./HouseDetailScreen";
 import { HouseHistoryScreen } from "./HouseHistoryScreen";
+import { SaqueLoteModal } from "../SaqueLoteModal";
 
 // Referencia estavel: `?? []` inline criaria array novo a cada render e
 // invalidaria os useMemo que dependem de `houses`.
@@ -50,6 +51,7 @@ export function CasasMobileView() {
   const [casaSheetOpen, setCasaSheetOpen] = useState(false);
   const [actionsHouse, setActionsHouse] = useState<HouseBalanceDto | null>(null);
   const [novaMovHouse, setNovaMovHouse] = useState<HouseBalanceDto | null>(null);
+  const [saqueOpen, setSaqueOpen] = useState(false);
 
   // Puxar do topo recarrega saldos e métricas — a tela não tem botão de
   // recarregar e ficava só no cache até a próxima navegação. Desligado com uma
@@ -67,7 +69,7 @@ export function CasasMobileView() {
   const shownMetrics =
     filters.houseIds.length > 0 ? metricsFromBalances(filters.filteredHouses) : metrics;
   const withBalanceCount = (filters.houseIds.length > 0 ? filters.filteredHouses : houses).filter(
-    (h) => Number(h.realHouseBalance) > 0
+    (h) => houseMoney(h).available > 0
   ).length;
 
   return (
@@ -118,6 +120,22 @@ export function CasasMobileView() {
         />
       ) : (
         <div className="space-y-6">
+          {/* Saque em lote só aparece no contexto: com "Com saldo" ligado a
+              lista já é o que dá pra sacar. */}
+          {filters.onlyWithBalance && (
+            <div className="flex items-center justify-between gap-2 -mb-3">
+              <span className="text-sm text-zinc-400">
+                {filters.filteredHouses.length} {filters.filteredHouses.length === 1 ? "casa" : "casas"} com saldo
+              </span>
+              <button
+                type="button"
+                onClick={() => setSaqueOpen(true)}
+                className="press -mr-1 inline-flex h-11 items-center gap-1 px-1 text-sm font-semibold text-accent-text"
+              >
+                Selecionar para sacar <CaretRight size={14} weight="bold" />
+              </button>
+            </div>
+          )}
           {/* Com "negativas" ligado a lista já é o recorte; sem ele, os três
               blocos (em uso, paradas, sem uso) separam o que merece olhar. */}
           {(filters.onlyNegative
@@ -161,6 +179,12 @@ export function CasasMobileView() {
           setActionsHouse(null);
           panel.pushHistory(h);
         }}
+      />
+
+      <SaqueLoteModal
+        isOpen={saqueOpen}
+        onClose={() => { setSaqueOpen(false); invalidate(); }}
+        houses={filters.filteredHouses}
       />
 
       <NovaMovimentacaoSheet
