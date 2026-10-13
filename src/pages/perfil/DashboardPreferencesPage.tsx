@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { StatCard } from "@/components/ui/stat-card";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
-import { DASHBOARD_KPI_REGISTRY, ICON_IDS, POSITIVE_COLORS, NEGATIVE_COLORS, defaultDashboardPreferences, performanceColor, moveKpi, toggleKpi, type KpiId, type KpiPreference, type DashboardPreferences } from "@/lib/dashboard-preferences";
+import { DASHBOARD_KPI_REGISTRY, ICON_IDS, POSITIVE_COLORS, NEGATIVE_COLORS, defaultDashboardPreferences, performanceColor, moveKpi, toggleKpi, MIN_VISIBLE_KPIS, MAX_VISIBLE_KPIS, type KpiId, type KpiPreference, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { formatPercent, formatUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -62,7 +62,7 @@ function DashboardPreferencesMobile() {
     const current = gesture.current;
     gesture.current = null;
     if (!cancel && drag && current && drag.rows.some((row, index) => row.id !== current.rows[index].id)) {
-      setAnnouncement(`${DASHBOARD_KPI_REGISTRY[drag.id].label}: posição ${drag.rows.findIndex((row) => row.id === drag.id) + 1} de 8.`);
+      setAnnouncement(`${DASHBOARD_KPI_REGISTRY[drag.id].label}: posição ${drag.rows.findIndex((row) => row.id === drag.id) + 1} de ${drag.rows.length}.`);
       void save({ ...preferences, kpis: drag.rows });
     }
     setDrag(null);
@@ -70,7 +70,7 @@ function DashboardPreferencesMobile() {
   function toggle(id: KpiId) {
     const next = toggleKpi(preferences.kpis, id);
     if (next === preferences.kpis) {
-      setAnnouncement("Selecione pelo menos 2 indicadores.");
+      setAnnouncement(preferences.kpis.find((kpi) => kpi.id === id)?.visible ? `Selecione pelo menos ${MIN_VISIBLE_KPIS} indicadores.` : `Máximo de ${MAX_VISIBLE_KPIS} indicadores. Desmarque um para adicionar.`);
       return;
     }
     setAnnouncement("");
@@ -114,7 +114,7 @@ function DashboardPreferencesMobile() {
                 <span className={cn("flex-1 min-w-0 pl-2 text-sm", !kpi.visible && "text-zinc-400")}>{meta.label}</span>
                 <div className="flex shrink-0">
                   <button type="button" disabled={saving || !!drag || index === 0} aria-label={`Mover ${meta.label} para cima`} onClick={() => reorder(index, index - 1)} className="w-11 h-11 flex items-center justify-center text-zinc-400 disabled:opacity-25"><ArrowUp size={14} /></button>
-                  <button type="button" disabled={saving || !!drag || index === 7} aria-label={`Mover ${meta.label} para baixo`} onClick={() => reorder(index, index + 1)} className="w-11 h-11 flex items-center justify-center text-zinc-400 disabled:opacity-25"><ArrowDown size={14} /></button>
+                  <button type="button" disabled={saving || !!drag || index === preferences.kpis.length - 1} aria-label={`Mover ${meta.label} para baixo`} onClick={() => reorder(index, index + 1)} className="w-11 h-11 flex items-center justify-center text-zinc-400 disabled:opacity-25"><ArrowDown size={14} /></button>
                 </div>
                 <label className="h-11 w-11 shrink-0 flex items-center justify-center cursor-pointer"><Checkbox aria-label={`Mostrar ${meta.label}`} checked={kpi.visible} disabled={saving || !!drag} onCheckedChange={() => toggle(kpi.id)} /></label>
               </li>

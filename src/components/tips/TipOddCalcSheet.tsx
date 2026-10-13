@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Calculator, Check, CheckCircle, WarningCircle, XCircle } from "@phosphor-icons/react";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMe } from "@/hooks/queries/use-me";
@@ -19,11 +20,12 @@ const verdictMeta: Record<OddVerdict, { icon: typeof CheckCircle; title: string;
 // A odd da tip envelhece: você volta da casa com a odd de agora e a pergunta é
 // "ainda vale? quanto?". Mesma conta da calculadora que o canal linka, só que
 // na sua banca e sem sair do app. "Apostei" segue pro planilhar já com a stake
-// e a odd daqui.
+// e a odd daqui. No desktop o mesmo conteúdo vai num diálogo.
 export function TipOddCalcSheet({
   tip,
   fair,
   open,
+  desktop = false,
   onOpenChange,
   onApostei,
   onDismiss,
@@ -31,6 +33,7 @@ export function TipOddCalcSheet({
   tip: TipItem;
   fair: number;
   open: boolean;
+  desktop?: boolean;
   onOpenChange: (open: boolean) => void;
   onApostei: (values: { stake: number | null; odd: number }) => void;
   onDismiss: () => void;
@@ -59,6 +62,100 @@ export function TipOddCalcSheet({
   const percentLabel = vale ? formatPercent(result.percent / 100, { decimals: 2 }) : "—";
   const apostarLabel = vale && result.stake !== null ? formatMoney(result.stake) : "—";
 
+  const field = (
+    <div className="space-y-3">
+      {tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
+      <div className="space-y-2">
+        <Label htmlFor="calc-odd" className="text-xs font-medium uppercase tracking-wider text-muted">
+          Odd que está na casa agora
+        </Label>
+        <div className="relative">
+          <Calculator size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Input
+            id="calc-odd"
+            inputMode="decimal"
+            autoFocus={desktop}
+            value={oddInput}
+            onChange={(e) => setOddInput(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            className="h-14 rounded-xl pl-12 text-2xl font-semibold tabular-nums"
+            placeholder="0,00"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const verdict = (
+    <div className="space-y-3 pt-2 pb-2">
+      {result && meta && VerdictIcon && (
+        <div className={cn("space-y-2 rounded-xl border px-4 py-3.5", meta.box)}>
+          <p className="flex items-center gap-2 text-base font-semibold">
+            <VerdictIcon size={20} weight="fill" />
+            {meta.title}
+          </p>
+          <p className="text-sm leading-relaxed text-zinc-400">{body}</p>
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            <div>
+              <p className="text-xs text-zinc-500">% da banca</p>
+              <p className="text-[17px] font-semibold tabular-nums">{percentLabel}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Apostar</p>
+              <p className="text-[17px] font-semibold tabular-nums">{apostarLabel}</p>
+            </div>
+          </div>
+          {bankroll === null && vale && (
+            <p className="text-xs text-zinc-500">Defina sua banca no Perfil para ver a stake em reais.</p>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
+          <p className="text-xs text-zinc-500">Odd da tip</p>
+          <p className="mt-0.5 text-lg font-semibold tabular-nums">{tip.odd !== null ? formatOdd(tip.odd) : "—"}</p>
+        </div>
+        <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
+          <p className="text-xs text-zinc-500">Odd justa</p>
+          <p className="mt-0.5 text-lg font-semibold tabular-nums">{formatOdd(fair)}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const actions = (
+    <div className="space-y-2">
+      <Button
+        size="lg"
+        className="h-12 w-full border-transparent bg-success-solid text-base text-white hover:bg-success-solid/90"
+        disabled={!vale}
+        onClick={() => result && onApostei({ stake: result.stake, odd })}
+      >
+        <Check size={16} weight="bold" />
+        {!result ? "Informe a odd" : vale ? (result.stake !== null ? `Apostei ${formatMoney(result.stake)}` : "Apostei") : "Não vale apostar"}
+      </Button>
+      <Button variant="secondary" className="h-11 w-full border-danger/30 text-danger hover:bg-danger/10" onClick={onDismiss}>
+        Não vale mais · caiu
+      </Button>
+    </div>
+  );
+
+  if (desktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Odd mudou?</DialogTitle>
+          </DialogHeader>
+          {field}
+          {verdict}
+          {actions}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <BottomSheet
       open={open}
@@ -67,80 +164,10 @@ export function TipOddCalcSheet({
       // O campo fica no subHeader (fora da área rolável): com o teclado aberto
       // sobra pouca altura entre o título e o rodapé, e dentro da rolagem ele
       // acabava cortado atrás dos botões.
-      subHeader={
-        <div className="space-y-3">
-          {tip.market && <p className="text-sm text-zinc-400">{tip.market}</p>}
-          <div className="space-y-2">
-            <Label htmlFor="calc-odd" className="text-xs font-medium uppercase tracking-wider text-muted">
-              Odd que está na casa agora
-            </Label>
-            <div className="relative">
-              <Calculator size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-              <Input
-                id="calc-odd"
-                inputMode="decimal"
-                value={oddInput}
-                onChange={(e) => setOddInput(e.target.value)}
-                onFocus={(e) => e.target.select()}
-                className="h-14 rounded-xl pl-12 text-2xl font-semibold tabular-nums"
-                placeholder="0,00"
-              />
-            </div>
-          </div>
-        </div>
-      }
-      footer={
-        <div className="space-y-2">
-          <Button
-            size="lg"
-            className="h-12 w-full border-transparent bg-success-solid text-base text-white hover:bg-success-solid/90"
-            disabled={!vale}
-            onClick={() => result && onApostei({ stake: result.stake, odd })}
-          >
-            <Check size={16} weight="bold" />
-            {!result ? "Informe a odd" : vale ? (result.stake !== null ? `Apostei ${formatMoney(result.stake)}` : "Apostei") : "Não vale apostar"}
-          </Button>
-          <Button variant="secondary" className="h-11 w-full border-danger/30 text-danger hover:bg-danger/10" onClick={onDismiss}>
-            Não vale mais · caiu
-          </Button>
-        </div>
-      }
+      subHeader={field}
+      footer={actions}
     >
-      <div className="space-y-3 pt-2 pb-2">
-        {result && meta && VerdictIcon && (
-          <div className={cn("space-y-2 rounded-xl border px-4 py-3.5", meta.box)}>
-            <p className="flex items-center gap-2 text-base font-semibold">
-              <VerdictIcon size={20} weight="fill" />
-              {meta.title}
-            </p>
-            <p className="text-sm leading-relaxed text-zinc-400">{body}</p>
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              <div>
-                <p className="text-xs text-zinc-500">% da banca</p>
-                <p className="text-[17px] font-semibold tabular-nums">{percentLabel}</p>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500">Apostar</p>
-                <p className="text-[17px] font-semibold tabular-nums">{apostarLabel}</p>
-              </div>
-            </div>
-            {bankroll === null && vale && (
-              <p className="text-xs text-zinc-500">Defina sua banca no Perfil para ver a stake em reais.</p>
-            )}
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
-            <p className="text-xs text-zinc-500">Odd da tip</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums">{tip.odd !== null ? formatOdd(tip.odd) : "—"}</p>
-          </div>
-          <div className="rounded-xl bg-foreground/[0.04] px-4 py-3">
-            <p className="text-xs text-zinc-500">Odd justa</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums">{formatOdd(fair)}</p>
-          </div>
-        </div>
-      </div>
+      {verdict}
     </BottomSheet>
   );
 }

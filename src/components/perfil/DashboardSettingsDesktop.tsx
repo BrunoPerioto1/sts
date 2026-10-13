@@ -7,12 +7,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
-import { DASHBOARD_KPI_REGISTRY, ICON_IDS, KPI_IDS, NEGATIVE_COLORS, POSITIVE_COLORS, moveKpi, type DashboardPreferences, type KpiId, type KpiPreference } from "@/lib/dashboard-preferences";
+import { DASHBOARD_KPI_REGISTRY, ICON_IDS, MAX_VISIBLE_KPIS, MIN_VISIBLE_KPIS, NEGATIVE_COLORS, POSITIVE_COLORS, moveKpi, type DashboardPreferences, type KpiId, type KpiPreference } from "@/lib/dashboard-preferences";
 import { cn } from "@/lib/utils";
 import { DashboardPreview } from "./DashboardPreview";
 
-const MIN_KPIS = 2;
-const MAX_KPIS = KPI_IDS.length;
+const MIN_KPIS = MIN_VISIBLE_KPIS;
+const MAX_KPIS = MAX_VISIBLE_KPIS;
 
 type ColorMode = "neutral" | "default" | "custom";
 const COLOR_MODES = [
@@ -57,6 +57,7 @@ export function DashboardSettingsDesktop() {
     commit(visible.filter((row) => row.id !== kpi.id), [...hidden, kpi]);
   }
   function add(kpi: KpiPreference) {
+    if (visible.length >= MAX_KPIS) return;
     commit([...visible, { ...kpi, visible: true }], hidden.filter((row) => row.id !== kpi.id));
   }
   function setIcon(id: KpiId, icon: KpiPreference["icon"]) {
@@ -201,7 +202,7 @@ export function DashboardSettingsDesktop() {
               <p className="text-[13px] text-zinc-400 mb-2">Adicionar ao dashboard</p>
               <div className="flex flex-wrap gap-2">
                 {hidden.map((kpi) => (
-                  <Button key={kpi.id} variant="secondary" size="sm" className="gap-1.5" disabled={saving} onClick={() => add(kpi)}>
+                  <Button key={kpi.id} variant="secondary" size="sm" className="gap-1.5" disabled={saving || visible.length >= MAX_KPIS} title={visible.length >= MAX_KPIS ? `Máximo de ${MAX_KPIS} indicadores — remova um para adicionar` : undefined} onClick={() => add(kpi)}>
                     <Plus size={13} /> {DASHBOARD_KPI_REGISTRY[kpi.id].label}
                   </Button>
                 ))}

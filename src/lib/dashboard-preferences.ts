@@ -7,7 +7,21 @@ export const DASHBOARD_KPI_REGISTRY = {
   averageStake: { label: "Stake médio", defaultIcon: "chart-bar", semanticType: "neutral" },
   averageOdd: { label: "Odd média", defaultIcon: "trending-up", semanticType: "neutral" },
   hitRate: { label: "Taxa de acerto", defaultIcon: "target", semanticType: "neutral" },
+  // Os de baixo nascem ocultos: quem já tinha dashboard montado não ganha 4
+  // cards novos do nada; liga em Indicadores se quiser.
+  profit: { label: "Lucro", defaultIcon: "wallet", semanticType: "performance", defaultHidden: true },
+  totalReturn: { label: "Retorno", defaultIcon: "banknote", semanticType: "neutral", defaultHidden: true },
+  wonLost: { label: "Vitórias / Derrotas", defaultIcon: "trophy", semanticType: "neutral", defaultHidden: true },
+  canceled: { label: "Canceladas", defaultIcon: "ticket", semanticType: "neutral", defaultHidden: true },
+  streak: { label: "Sequência atual", defaultIcon: "activity", semanticType: "performance", defaultHidden: true },
+  biggestWin: { label: "Melhor aposta", defaultIcon: "chart-line", semanticType: "performance", defaultHidden: true },
+  biggestLoss: { label: "Pior aposta", defaultIcon: "crosshair", semanticType: "performance", defaultHidden: true },
+  maxDrawdown: { label: "Drawdown máx.", defaultIcon: "hourglass", semanticType: "performance", defaultHidden: true },
 } as const;
+
+// Na régua do desktop mais que isso espreme os números.
+export const MIN_VISIBLE_KPIS = 2;
+export const MAX_VISIBLE_KPIS = 8;
 
 export const ICON_IDS = ["trending-up", "coins", "database", "clock", "credit-card", "chart-bar", "target", "chart-line", "percent", "activity", "layers", "list", "ticket", "timer", "hourglass", "wallet", "banknote", "crosshair", "trophy", "check-circle"] as const;
 export type IconId = typeof ICON_IDS[number];
@@ -41,7 +55,7 @@ export interface DashboardPreferences {
 
 export function defaultDashboardPreferences(): DashboardPreferences {
   return {
-    kpis: KPI_IDS.map((id) => ({ id, visible: true, icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
+    kpis: KPI_IDS.map((id) => ({ id, visible: !("defaultHidden" in DASHBOARD_KPI_REGISTRY[id]), icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
     performanceColors: { enabled: true, customEnabled: false, positive: "default-positive", negative: "default-negative" },
   };
 }
@@ -66,6 +80,7 @@ export function normalizeDashboardPreferences(value: unknown): DashboardPreferen
     }
   }
   kpis.push(...defaults.kpis.filter(({ id }) => !seen.has(id)));
+  kpis.filter((kpi) => kpi.visible).slice(MAX_VISIBLE_KPIS).forEach((kpi) => { kpi.visible = false; });
   if (kpis.filter((kpi) => kpi.visible).length < 2) kpis.slice(0, 2).forEach((kpi) => { kpi.visible = true; });
   const colors = record(raw.performanceColors);
   return { kpis, performanceColors: {
@@ -106,6 +121,8 @@ export function moveKpi(kpis: KpiPreference[], from: number, to: number): KpiPre
 }
 
 export function toggleKpi(kpis: KpiPreference[], id: KpiId): KpiPreference[] {
-  if (kpis.find((kpi) => kpi.id === id)?.visible && kpis.filter((kpi) => kpi.visible).length <= 2) return kpis;
+  const visibleCount = kpis.filter((kpi) => kpi.visible).length;
+  const turningOn = !kpis.find((kpi) => kpi.id === id)?.visible;
+  if (turningOn ? visibleCount >= MAX_VISIBLE_KPIS : visibleCount <= MIN_VISIBLE_KPIS) return kpis;
   return kpis.map((kpi) => kpi.id === id ? { ...kpi, visible: !kpi.visible } : kpi);
 }

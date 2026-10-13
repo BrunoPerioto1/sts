@@ -62,7 +62,7 @@ export default function TipsPage() {
   const [tab, setTab] = useState<TipStatus>("pending");
   const isMobile = useIsMobile();
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
-  // Stake/odd do "Odd mudou?" (mobile), que o sheet de planilhar abre usando.
+  // Stake/odd do "Odd mudou?", que o sheet de planilhar abre usando.
   const [planilharInitial, setPlanilharInitial] = useState<TipPlanilharInitial | undefined>();
 
   // Filtro de casas: mesma multi-seleção de Apostas. A casa da tip vem como
@@ -415,7 +415,10 @@ export default function TipsPage() {
               <TipDetailPanel
                 key={selecionada.id}
                 tip={selecionada}
-                onPlanilhar={() => setPlanilhando(selecionada)}
+                onPlanilhar={(initial) => {
+                  setPlanilharInitial(initial);
+                  setPlanilhando(selecionada);
+                }}
                 onDismiss={() => run(dismiss, selecionada.id, "Tip marcada como caiu")}
                 onUndismiss={() => run(undismiss, selecionada.id, "Tip devolvida para a fila")}
                 hasSelection={checkedTips.length > 0}
@@ -520,6 +523,7 @@ export default function TipsPage() {
           <TipPlanilharDialog
             key={planilhando.id}
             tip={planilhando}
+            initial={planilharInitial}
             open
             onOpenChange={(o) => !o && setPlanilhando(null)}
             onConfirm={(overrides) => doPlanilhar(planilhando.id, overrides)}

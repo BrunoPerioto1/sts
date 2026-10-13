@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowCounterClockwise,
   ArrowSquareOut,
@@ -13,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { formatMoney, formatKickoff, formatTime, formatOdd, formatPercent, houseDisplayName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TipItem } from "@/api/routes/get-tips";
+import type { TipPlanilharInitial } from "./TipCardMobileItem";
+import { parseFairOdd } from "@/lib/odd-calc";
+import { TipOddCalcSheet } from "./TipOddCalcSheet";
 
 function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
@@ -35,12 +39,14 @@ export function TipDetailPanel({
   hasSelection = false,
 }: {
   tip: TipItem;
-  onPlanilhar: () => void;
+  onPlanilhar: (initial?: TipPlanilharInitial) => void;
   onDismiss: () => void;
   onUndismiss: () => void;
   busy?: boolean;
   hasSelection?: boolean;
 }) {
+  const [calcOpen, setCalcOpen] = useState(false);
+  const fair = parseFairOdd(tip.calcLink);
   const meta = [tip.sport, tip.house && houseDisplayName(tip.house)].filter(Boolean).join(" · ");
 
   return (
@@ -125,7 +131,13 @@ export function TipDetailPanel({
           </Button>
         )}
 
-        {tip.calcLink && (
+        {/* Com odd justa no link a conta é feita aqui, como no celular; sem
+            ela só resta a calculadora externa do canal. */}
+        {tip.status === "pending" && fair !== null ? (
+          <Button variant="secondary" className="mt-2 w-full justify-center gap-2" onClick={() => setCalcOpen(true)}>
+            <Calculator size={16} weight="bold" /> Odd mudou?
+          </Button>
+        ) : tip.calcLink && (
           <Button asChild variant="secondary" className="mt-2 w-full justify-center gap-2">
             <a href={tip.calcLink} target="_blank" rel="noopener noreferrer">
               <Calculator size={16} weight="bold" /> Calcular odd justa
@@ -158,7 +170,7 @@ export function TipDetailPanel({
               // success-solid/danger-solid: o tom de texto, virando fundo,
               // deixava o rotulo branco em ~2:1 (ver index.css).
               className="h-11 flex-1 border-transparent bg-success-solid text-white hover:bg-success-solid/90"
-              onClick={onPlanilhar}
+              onClick={() => onPlanilhar()}
               disabled={busy}
             >
               <Check size={16} weight="bold" /> Planilhar
@@ -181,6 +193,25 @@ export function TipDetailPanel({
           </p>
         )}
       </div>
+
+      {/* Monta só aberto: o campo de odd nasce da tip a cada abertura. */}
+      {calcOpen && fair !== null && (
+        <TipOddCalcSheet
+          tip={tip}
+          fair={fair}
+          open
+          desktop
+          onOpenChange={setCalcOpen}
+          onApostei={(initial) => {
+            setCalcOpen(false);
+            onPlanilhar(initial);
+          }}
+          onDismiss={() => {
+            setCalcOpen(false);
+            onDismiss();
+          }}
+        />
+      )}
     </aside>
   );
 }

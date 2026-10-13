@@ -22,6 +22,13 @@ export interface DashboardMetrics {
   totalProfit: string | number;
   roi: string | number;
   hitRate: string | number;
+  /** Aposta liquidada que mais lucrou (>= 0) e a que mais perdeu (<= 0). */
+  biggestWin: string | number;
+  biggestLoss: string | number;
+  /** > 0 vitórias seguidas até a mais recente; < 0 derrotas. */
+  streak: number;
+  /** Maior queda do lucro acumulado a partir de um pico, em R$ (>= 0). */
+  maxDrawdown: number;
 }
 
 export async function getDashboardMetrics(params: DashboardQueryParams) {

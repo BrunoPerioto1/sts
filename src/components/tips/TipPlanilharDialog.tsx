@@ -21,6 +21,7 @@ import {
   TipStakeFields,
 } from "./tip-planilhar-form";
 import { useTipPlanilhar } from "./use-tip-planilhar";
+import type { TipPlanilharInitial } from "./TipCardMobileItem";
 import type { PlanilharTipDto, TipItem } from "@/api/routes/get-tips";
 import { houseDisplayName } from "@/lib/format";
 
@@ -29,6 +30,7 @@ import { houseDisplayName } from "@/lib/format";
 // pergunta pro rodapé — a decisão é curta e cabe numa caixa.
 export function TipPlanilharDialog({
   tip,
+  initial,
   open,
   onOpenChange,
   onConfirm,
@@ -36,6 +38,7 @@ export function TipPlanilharDialog({
   busy,
 }: {
   tip: TipItem;
+  initial?: TipPlanilharInitial;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (overrides: PlanilharTipDto) => void;
@@ -43,7 +46,7 @@ export function TipPlanilharDialog({
   busy: boolean;
 }) {
   const houses = useHouses();
-  const form = useTipPlanilhar(tip);
+  const form = useTipPlanilhar(tip, initial);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

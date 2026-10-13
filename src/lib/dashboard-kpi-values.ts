@@ -8,6 +8,7 @@ export function kpiValues(metrics: DashboardMetrics, stake: number): Record<KpiI
   const roi = Number(metrics.roi);
   const unitValue = Number.isFinite(stake) && stake > 0 ? stake / 100 : null;
   const units = unitValue != null ? profit / unitValue : null;
+  const streak = Number(metrics.streak ?? 0);
   return {
     roi: { value: formatPercent(roi, { signed: true }), signed: roi },
     units: { value: units != null ? formatUnits(units) : "—", signed: units },
@@ -17,5 +18,14 @@ export function kpiValues(metrics: DashboardMetrics, stake: number): Record<KpiI
     averageStake: { value: formatMoney(Number(metrics.averageStake), { cents: false }) },
     averageOdd: { value: formatOdd(metrics.averageOdd) },
     hitRate: { value: formatPercent(metrics.hitRate) },
+    profit: { value: formatMoney(profit, { signed: true, cents: false }), signed: profit },
+    totalReturn: { value: formatMoney(Number(metrics.totalReturn), { cents: false }) },
+    wonLost: { value: `${formatInt(metrics.wonBets)} V · ${formatInt(metrics.lostBets)} D` },
+    canceled: { value: formatInt(metrics.canceledBets) },
+    streak: { value: streak === 0 ? "—" : `${Math.abs(streak)} ${streak > 0 ? (streak === 1 ? "vitória" : "vitórias") : (streak === -1 ? "derrota" : "derrotas")}`, signed: streak },
+    biggestWin: { value: formatMoney(Number(metrics.biggestWin), { signed: true, cents: false }), signed: Number(metrics.biggestWin) },
+    biggestLoss: { value: formatMoney(Number(metrics.biggestLoss), { signed: true, cents: false }), signed: Number(metrics.biggestLoss) },
+    // Queda é perda: mostra negativo pra ler e colorir como prejuízo.
+    maxDrawdown: { value: formatMoney(-Number(metrics.maxDrawdown), { signed: true, cents: false }), signed: -Number(metrics.maxDrawdown) },
   };
 }

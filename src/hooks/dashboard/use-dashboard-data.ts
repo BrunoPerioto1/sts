@@ -27,6 +27,10 @@ const emptyMetrics: DashboardMetrics = {
   totalProfit: 0,
   roi: 0,
   hitRate: 0,
+  biggestWin: 0,
+  biggestLoss: 0,
+  streak: 0,
+  maxDrawdown: 0,
 };
 
 // Período imediatamente anterior, com a mesma duração do período selecionado —
