@@ -96,7 +96,7 @@ export function useBetActions() {
     patchCachedBets((a) => (a.id === id ? settle(a, resultId, cashoutValue) : a));
     try {
       await finalizeBet(id, { resultId, cashoutValue });
-      actionToast.success({ icon: Check, title: "Aposta liquidada" });
+      actionToast.success({ icon: Check, title: resultId === ResultIdEnum.PENDING ? "Aposta voltou para pendente" : "Aposta liquidada" });
     } catch (e) {
       actionToast.error({ description: errText(e, "Falha ao liquidar aposta") });
     }

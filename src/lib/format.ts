@@ -1,3 +1,6 @@
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 // ─── Números (pt-BR) ────────────────────────────────────────────────────────
 // Toda exibição de número passa por aqui. Fica de fora só o que não é leitura:
 // valor de campo em edição (centsToDisplay, toPtBr), CSV (ponto, pra planilha)
@@ -85,6 +88,13 @@ export function formatDate(value: string | number | Date): string {
 
 export function formatTime(value: string | number | Date): string {
   return new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+// "21 out"; de outro ano leva o ano ("21 out 2025"): no período "Tudo" o dia
+// sem ano era ambíguo.
+export function formatDayMonth(value: string | Date): string {
+  const date = typeof value === "string" ? parseISO(value) : value;
+  return format(date, date.getFullYear() === new Date().getFullYear() ? "d MMM" : "d MMM yyyy", { locale: ptBR });
 }
 
 // Horário de jogo, em duas partes. Separadas porque a lista do desktop empilha

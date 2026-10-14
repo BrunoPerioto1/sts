@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatMoney } from "@/lib/format";
+import { formatDayMonth, formatMoney } from "@/lib/format";
 
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
 const POS = "var(--color-success)";
@@ -30,7 +30,7 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
     <div>
       <div className="mb-3 flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2.5 text-sm">
         <span className="flex items-center gap-2.5">
-          <span className="text-zinc-400">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
+          <span className="text-zinc-400">{formatDayMonth(atual.date)}</span>
           <span className="h-4 w-px bg-foreground/10" />
           <span className="text-zinc-400">
             Acum. <span className="font-medium tabular-nums text-zinc-100">{formatMoney(atual.acum)}</span>

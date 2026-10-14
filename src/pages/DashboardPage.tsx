@@ -1,5 +1,3 @@
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { WarningCircle } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DashboardChecklist } from "@/components/dashboard/DashboardChecklist";
@@ -17,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatInt } from "@/lib/format";
+import { formatDayMonth, formatInt } from "@/lib/format";
 
 interface DashboardPageContentProps {
   hasNoBets: boolean;
@@ -81,7 +79,7 @@ export function DashboardPage() {
 
   const rangeLabel =
     ready && filters.startDate && filters.endDate
-      ? `${format(parseISO(filters.startDate), "dd MMM", { locale: ptBR })} – ${format(parseISO(filters.endDate), "dd MMM", { locale: ptBR })}`
+      ? `${formatDayMonth(filters.startDate)} – ${formatDayMonth(filters.endDate)}`
       : undefined;
 
   // "Visao geral ... - 21 ago - 3 set - 82 apostas liquidadas": o periodo e o

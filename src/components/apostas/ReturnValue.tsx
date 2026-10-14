@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, signColor } from "@/lib/format";
 import { mapResultToStatus } from "@/lib/bet-status";
 import { useAnimatedNumber } from "@/hooks/use-animated-number";
 import type { BetItem } from "@/api/routes/get-bets";
@@ -18,7 +18,7 @@ export function ReturnValue({ aposta, className }: { aposta: BetItem; className?
     <span
       className={cn(
         "inline-block tabular-nums font-medium whitespace-nowrap",
-        lucro >= 0 ? "text-success" : "text-danger",
+        signColor(Math.round(lucro * 100)),
         animating && "animate-value-pop",
         className
       )}

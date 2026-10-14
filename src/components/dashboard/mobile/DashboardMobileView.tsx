@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { differenceInCalendarDays, format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { ChartLine, SlidersHorizontal } from "@phosphor-icons/react";
 import { useMe } from "@/hooks/queries/use-me";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { stagger } from "@/lib/motion";
+import { formatDayMonth } from "@/lib/format";
 import { DashboardKpiGrid } from "../DashboardKpiGrid";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
@@ -63,7 +63,7 @@ export function DashboardMobileView({
   const profit = Number(metrics.totalProfit);
 
   const days = differenceInCalendarDays(parseISO(filters.endDate), parseISO(filters.startDate)) + 1;
-  const shortDate = (iso: string) => format(parseISO(iso), "d MMM", { locale: ptBR });
+  const shortDate = formatDayMonth;
   const rangeSuffix = preset === "custom" ? `${days} dias` : PRESET_LABEL[preset].toLowerCase();
 
   return (

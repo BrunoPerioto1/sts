@@ -32,7 +32,7 @@ export function RowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]">
+        <Button variant="ghost" size="icon" aria-label={`Ações da aposta ${aposta.game}`} className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]">
           <DotsThreeOutline size={18} weight="fill" />
         </Button>
       </DropdownMenuTrigger>
@@ -58,6 +58,13 @@ export function RowActions({
               <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.HALF_LOST)}>Meia Perdida</DropdownMenuItem>
               <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setCashoutOpen(true); }}>Cashout</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.CANCELED)}>Cancelada</DropdownMenuItem>
+              {/* Desfaz liquidação errada; mesmo caminho do "Pendente" do LiquidarSheet no celular. */}
+              {aposta.resultId !== ResultIdEnum.PENDING && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onFinalize(aposta.id, ResultIdEnum.PENDING)}>Voltar para pendente</DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         )}

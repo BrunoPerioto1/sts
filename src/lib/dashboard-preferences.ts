@@ -11,7 +11,8 @@ export const DASHBOARD_KPI_REGISTRY = {
   // cards novos do nada; liga em Indicadores se quiser.
   profit: { label: "Lucro", defaultIcon: "wallet", semanticType: "performance", defaultHidden: true },
   totalReturn: { label: "Retorno", defaultIcon: "banknote", semanticType: "neutral", defaultHidden: true },
-  wonLost: { label: "Vitórias / Derrotas", defaultIcon: "trophy", semanticType: "neutral", defaultHidden: true },
+  // shortLabel: card de 2 colunas do celular corta rótulo acima de ~16 letras.
+  wonLost: { label: "Vitórias / Derrotas", shortLabel: "Placar", defaultIcon: "trophy", semanticType: "neutral", defaultHidden: true },
   canceled: { label: "Canceladas", defaultIcon: "ticket", semanticType: "neutral", defaultHidden: true },
   streak: { label: "Sequência atual", defaultIcon: "activity", semanticType: "performance", defaultHidden: true },
   biggestWin: { label: "Melhor aposta", defaultIcon: "chart-line", semanticType: "performance", defaultHidden: true },

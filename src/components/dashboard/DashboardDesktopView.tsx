@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfWeek } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useMe } from "@/hooks/queries/use-me";
 import { useBankrollSeries } from "@/hooks/dashboard/use-bankroll-series";
 import { useHouseProfit } from "@/hooks/dashboard/use-house-profit";
@@ -9,7 +8,7 @@ import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { stagger } from "@/lib/motion";
-import { formatMoney } from "@/lib/format";
+import { formatDayMonth, formatMoney } from "@/lib/format";
 import { SectionLabel } from "@/components/ui/section-label";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
@@ -99,7 +98,7 @@ export function DashboardDesktopView({
       className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] overflow-hidden animate-rise stagger"
       style={stagger(0)}
     >
-      <div className="grid lg:grid-cols-[minmax(280px,340px)_1fr]">
+      <div className="grid lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         <div className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r">
           <DashboardProfitHero
             size="desktop"
@@ -113,7 +112,7 @@ export function DashboardDesktopView({
               label="Melhor dia"
               value={
                 bestDay
-                  ? `${formatMoney(bestDay.profitDay, { signed: true })} · ${format(parseISO(bestDay.date), "d MMM", { locale: ptBR })}`
+                  ? `${formatMoney(bestDay.profitDay, { signed: true })} · ${formatDayMonth(bestDay.date)}`
                   : "—"
               }
               color={bestDay && bestDay.profitDay > 0 ? "var(--color-success)" : undefined}
@@ -123,7 +122,7 @@ export function DashboardDesktopView({
               label="Pior dia"
               value={
                 worstDay && worstDay.profitDay < 0
-                  ? `${formatMoney(worstDay.profitDay, { signed: true })} · ${format(parseISO(worstDay.date), "d MMM", { locale: ptBR })}`
+                  ? `${formatMoney(worstDay.profitDay, { signed: true })} · ${formatDayMonth(worstDay.date)}`
                   : "—"
               }
               color={worstDay && worstDay.profitDay < 0 ? "var(--color-danger)" : undefined}
@@ -148,7 +147,7 @@ export function DashboardDesktopView({
           }
         >
           {hasData ? (
-            <ProfitBarChart data={chartData} height={300} />
+            <ProfitBarChart data={chartData} height={300} semanal={dailyData.length > 31} />
           ) : (
             <div className="h-[300px] flex flex-col items-start justify-center gap-2">
               <p className="text-[13px] text-zinc-400">

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, signColor } from "@/lib/format";
 import { useAnimatedNumber } from "@/hooks/use-animated-number";
 
 // Valor com sinal que corre até o novo quando muda (liquidar, totais do dia e
@@ -11,7 +11,8 @@ export function AnimatedSignedCurrency({ value, className }: { value: number; cl
     <span
       className={cn(
         "inline-block tabular-nums whitespace-nowrap",
-        display >= 0 ? "text-success" : "text-danger",
+        // Pelo centavo exibido: zero (mês só de pendentes) fica neutro, não verde.
+        signColor(Math.round(display * 100)),
         animating && "animate-value-pop",
         className
       )}

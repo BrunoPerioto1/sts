@@ -3,11 +3,13 @@ import { ArrowsHorizontal } from "@phosphor-icons/react";
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatMoney } from "@/lib/format";
+import { formatDayMonth, formatMoney } from "@/lib/format";
 
 interface ProfitBarChartProps {
   data: { date: string; profitDay: number }[];
   height?: number;
+  /** Cada ponto é uma semana (desktop agrupa períodos longos). */
+  semanal?: boolean;
 }
 
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
@@ -24,7 +26,7 @@ const cor = (v: number) => (v > 0 ? POS : v < 0 ? NEG : "var(--color-muted)");
  * Lucro por dia. A leitura fica numa caixa acima das barras (não em tooltip
  * flutuante); abre no melhor dia do período, que é o que o olho procura primeiro.
  */
-export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
+export function ProfitBarChart({ data, height = 180, semanal = false }: ProfitBarChartProps) {
   const melhor = data.reduce((m, d, i) => (d.profitDay > data[m].profitDay ? i : m), 0);
   const pior = data.reduce((m, d, i) => (d.profitDay < data[m].profitDay ? i : m), 0);
   const [sel, setSel] = useState(melhor);
@@ -39,9 +41,10 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
 
   if (!data.length) return null;
   const atual = data[Math.min(sel, data.length - 1)];
+  const unidade = semanal ? "semana" : "dia";
   const nota = sel === melhor && atual.profitDay > 0
-    ? "melhor dia do período"
-    : sel === pior && atual.profitDay < 0 ? "pior dia do período" : "";
+    ? `melhor ${unidade} do período`
+    : sel === pior && atual.profitDay < 0 ? `pior ${unidade} do período` : "";
   const ticks = data.length > 2
     ? [data[0].date, data[Math.floor(data.length / 2)].date, data[data.length - 1].date]
     : data.map((d) => d.date);
@@ -74,7 +77,7 @@ export function ProfitBarChart({ data, height = 180 }: ProfitBarChartProps) {
     <div>
       <div className="mb-3 flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2.5 text-sm">
         <span className="flex items-center gap-2.5">
-          <span className="text-zinc-100">{format(parseISO(atual.date), "d MMM", { locale: ptBR })}</span>
+          <span className="text-zinc-100">{semanal && "semana de "}{formatDayMonth(atual.date)}</span>
           <span className="h-4 w-px bg-foreground/10" />
           <span className="tabular-nums" style={{ color: cor(atual.profitDay) }}>
             {formatMoney(atual.profitDay, { signed: true })}

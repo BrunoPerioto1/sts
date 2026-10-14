@@ -16,7 +16,6 @@ export interface DashboardMetrics {
   totalStaked: string | number;
   /** Stake das liquidadas: a base do ROI. */
   settledStake: string | number;
-  totalReturn: string | number;
   averageStake: string | number;
   averageOdd: string | number;
   totalProfit: string | number;

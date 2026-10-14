@@ -1,6 +1,6 @@
 import { endOfMonth, format, parseISO, startOfMonth, subDays, subMonths } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
+import { formatDayMonth } from "@/lib/format";
 
 export type SheetPreset = Extract<DatePreset, "7d" | "14d" | "currentMonth" | "lastMonth" | "60d" | "allTime">;
 
@@ -15,7 +15,7 @@ export const PRESET_LABEL: Record<DatePreset, string> = {
   custom: "Personalizado",
 };
 
-const shortDate = (date: Date) => format(date, "d MMM", { locale: ptBR });
+const shortDate = formatDayMonth;
 const iso = (date: Date) => format(date, "yyyy-MM-dd");
 
 // Intervalo (yyyy-MM-dd, inclusivo nas duas pontas) de cada preset fixo.

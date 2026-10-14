@@ -19,7 +19,8 @@ export function kpiValues(metrics: DashboardMetrics, stake: number): Record<KpiI
     averageOdd: { value: formatOdd(metrics.averageOdd) },
     hitRate: { value: formatPercent(metrics.hitRate) },
     profit: { value: formatMoney(profit, { signed: true, cents: false }), signed: profit },
-    totalReturn: { value: formatMoney(Number(metrics.totalReturn), { cents: false }) },
+    // API não manda retorno pronto: é o stake liquidado de volta mais o lucro.
+    totalReturn: { value: formatMoney(Number(metrics.settledStake) + profit, { cents: false }) },
     wonLost: { value: `${formatInt(metrics.wonBets)} V · ${formatInt(metrics.lostBets)} D` },
     canceled: { value: formatInt(metrics.canceledBets) },
     streak: { value: streak === 0 ? "—" : `${Math.abs(streak)} ${streak > 0 ? (streak === 1 ? "vitória" : "vitórias") : (streak === -1 ? "derrota" : "derrotas")}`, signed: streak },

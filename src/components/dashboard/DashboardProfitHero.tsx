@@ -1,8 +1,6 @@
 import type { CSSProperties } from "react";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { AnimatedNumber } from "@/components/ui/animated-number";
-import { formatMoney } from "@/lib/format";
+import { formatDayMonth, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SectionLabel } from "@/components/ui/section-label";
 import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
@@ -11,7 +9,7 @@ import type { DailySummaryPoint } from "@/api/routes/get-dashboard-daily";
 export function daysSummary(dailyData: DailySummaryPoint[]): string {
   if (dailyData.length === 0) return "Nenhum dia com resultado";
   if (dailyData.length === 1)
-    return `1 dia com resultado · ${format(parseISO(dailyData[0].date), "d MMM", { locale: ptBR })}`;
+    return `1 dia com resultado · ${formatDayMonth(dailyData[0].date)}`;
 
   const positives = dailyData.filter((d) => d.profitDay > 0).length;
   const negatives = dailyData.filter((d) => d.profitDay < 0).length;

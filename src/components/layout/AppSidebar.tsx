@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   ChartLineUp,
   SidebarSimple,
@@ -20,6 +20,7 @@ import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { useTipCounts } from "@/hooks/queries/use-tips";
 import { cn } from "@/lib/utils";
+import { ResultIdEnum } from "@/api/routes/get-bets";
 import { ADMIN_ROLE_ID } from "@/lib/admin-health";
 import { displayName, initialsOf } from "@/lib/format";
 import { useTheme } from "next-themes";
@@ -45,6 +46,9 @@ interface NavItem {
   badge?: BadgeKey;
   // Badge em destaque (azul) em vez de neutro: pede ação do usuário.
   badgeHighlight?: boolean;
+  // O número vira link próprio: leva direto ao que ele conta.
+  badgeHref?: string;
+  badgeLabel?: string;
 }
 
 interface NavSection {
@@ -60,7 +64,9 @@ const sections: NavSection[] = [
     title: "Gestão",
     items: [
       { label: "Dashboard", icon: SquaresFour, href: "/dashboard" },
-      { label: "Apostas", icon: Receipt, href: "/bets", badge: "overdue" },
+      // A lista abre no mês atual e o badge conta pendentes de qualquer data:
+      // sem o link próprio, clicar no número caía numa lista vazia.
+      { label: "Apostas", icon: Receipt, href: "/bets", badge: "overdue", badgeHref: `/bets?status=${ResultIdEnum.PENDING}&period=tudo`, badgeLabel: "pendentes de jogo encerrado" },
       { label: "Tips", icon: PaperPlaneTilt, href: "/tips", badge: "tips" },
       { label: "Conferência", icon: ClipboardText, href: "/settlement", badge: "suggestions", badgeHighlight: true },
       { label: "Casas de Apostas", icon: Buildings, href: "/houses" },
@@ -197,9 +203,13 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.href);
               const badge = item.badge === "tips" ? tipCounts?.pending : item.badge ? fila?.[item.badge] : undefined;
+              const badgeClass = cn(
+                "shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                item.badgeHighlight ? "bg-accent/[0.22] text-accent-text" : "bg-foreground/[0.08] text-foreground/70",
+              );
               return (
+                <div key={item.href} className="relative">
                 <NavLink
-                  key={item.href}
                   to={item.href}
                   onClick={onNavigate}
                   title={collapsed ? item.label : undefined}
@@ -221,19 +231,23 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                   {!collapsed && (
                     <>
                       <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
-                      {!!badge && (
-                        <span
-                          className={cn(
-                            "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-                            item.badgeHighlight ? "bg-accent/[0.22] text-accent-text" : "bg-foreground/[0.08] text-foreground/70",
-                          )}
-                        >
-                          {badge}
-                        </span>
-                      )}
+                      {!!badge && !item.badgeHref && <span className={cn("ml-auto", badgeClass)}>{badge}</span>}
                     </>
                   )}
                 </NavLink>
+                {/* Irmão do NavLink, não filho: link dentro de link não é HTML válido. */}
+                {!collapsed && !!badge && item.badgeHref && (
+                  <Link
+                    to={item.badgeHref}
+                    onClick={onNavigate}
+                    aria-label={`${badge} ${item.badgeLabel}`}
+                    title={`Ver ${item.badgeLabel}`}
+                    className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors hover:bg-foreground/[0.16] hover:text-foreground", badgeClass)}
+                  >
+                    {badge}
+                  </Link>
+                )}
+                </div>
               );
             })}
           </div>

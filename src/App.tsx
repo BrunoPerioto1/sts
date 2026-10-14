@@ -24,7 +24,7 @@ const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminScannerPage = lazy(() => import("./pages/AdminScannerPage"));
 const RenovarPage = lazy(() => import("./pages/RenovarPage"));
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
 import { useMe } from '@/hooks/queries/use-me';
@@ -43,6 +43,14 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Os filtros de /bets só leem a URL ao montar; o badge da sidebar leva a
+// ?status=9&period=tudo estando já na tela, então a chave remonta. Só esses
+// dois: ?compartilhado some da URL depois de lido e não pode remontar.
+function BetsRoute() {
+  const [params] = useSearchParams();
+  return <ApostasPage key={`${params.get("status")}|${params.get("period")}`} />;
+}
 
 const App = () => (
   // Escuro e o padrao: quem nunca escolheu continua vendo o app como sempre.
@@ -65,7 +73,7 @@ const App = () => (
           <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
           <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
           <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
-          <Route path="/bets" element={<RequireAuth><ApostasPage /></RequireAuth>} />
+          <Route path="/bets" element={<RequireAuth><BetsRoute /></RequireAuth>} />
           <Route path="/settlement" element={<RequireAuth><ConferirPage /></RequireAuth>} />
           <Route path="/settlement/review" element={<RequireAuth><ConferirPendentesPage /></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
