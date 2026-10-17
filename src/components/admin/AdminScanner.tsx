@@ -52,6 +52,8 @@ import { useSports } from "@/hooks/queries/use-sports";
 import { SportIcon } from "@/components/apostas/SportIcon";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { OptionRow } from "@/components/apostas/OptionRow";
+import { SportSheet } from "@/components/apostas/SportSheet";
+import { SheetSelectField } from "@/components/apostas/SheetSelectField";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
@@ -832,9 +834,12 @@ function NewTournamentForm({
 }) {
   const create = useCreateAdminScanner();
   const sports = useSports();
+  const isMobile = useIsMobile();
   const [raw, setRaw] = useState("");
   const [name, setName] = useState("");
   const [sportId, setSportId] = useState("");
+  const [sportOpen, setSportOpen] = useState(false);
+  const sportName = sports.find((s) => String(s.id) === sportId)?.name;
   const id = parseTournamentId(raw);
   const dup = id ? existing.find((t) => t.id === id) : undefined;
   const ready = !!id && !dup && name.trim().length >= 2 && !!sportId;
@@ -902,18 +907,32 @@ function NewTournamentForm({
           placeholder="Nome"
           aria-label="Nome"
         />
-        <Select value={sportId} onValueChange={setSportId}>
-          <SelectTrigger aria-label="Esporte">
-            <SelectValue placeholder="Esporte" />
-          </SelectTrigger>
-          <SelectContent>
-            {sports.map((s) => (
-              <SelectItem key={s.id} value={String(s.id)}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Celular: mesmo campo do form de aposta, abrindo a lista com ícones. */}
+        {isMobile ? (
+          <SheetSelectField
+            summary={sportName ?? ""}
+            placeholder="Esporte"
+            onOpen={() => setSportOpen(true)}
+            leading={
+              sportName && (
+                <SportIcon name={sportName} className="text-zinc-400 shrink-0" />
+              )
+            }
+          />
+        ) : (
+          <Select value={sportId} onValueChange={setSportId}>
+            <SelectTrigger aria-label="Esporte">
+              <SelectValue placeholder="Esporte" />
+            </SelectTrigger>
+            <SelectContent>
+              {sports.map((s) => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button type="submit" disabled={create.isPending || !ready}>
           Cadastrar
         </Button>
@@ -939,7 +958,44 @@ function NewTournamentForm({
           Cancelar
         </button>
       </div>
+      {isMobile && (
+        <SportSheet
+          multiple={false}
+          nested={false}
+          open={sportOpen}
+          onOpenChange={setSportOpen}
+          sports={sports}
+          selected={sportId ? [Number(sportId)] : []}
+          onChange={(ids) => setSportId(String(ids[0]))}
+        />
+      )}
     </form>
+  );
+}
+
+/** Filtro do celular que abre um sheet: rótulo apagado, valor atual e setinha. */
+function SheetButton({
+  label,
+  value,
+  leading,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  leading?: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 h-9 pl-3 pr-2.5 rounded-lg border border-border text-sm whitespace-nowrap"
+    >
+      <span className="opacity-55">{label}</span>
+      {leading}
+      {value}
+      <CaretDown size={12} className="opacity-55" />
+    </button>
   );
 }
 
@@ -982,38 +1038,50 @@ export function AdminScanner() {
   const setFlag = useSetFlag();
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
-  const [sport, setSport] = useState<string | null>(null);
+  // Vazio = todos. O desktop marca um por vez (chips); o sheet do celular, vários.
+  const [sportIds, setSportIds] = useState<number[]>([]);
   const [status, setStatus] = useState<StatusId | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState<ScannerTournament | null>(null);
   const [statusSheet, setStatusSheet] = useState(false);
+  const [sportSheet, setSportSheet] = useState(false);
   const isMobile = useIsMobile();
 
   const all = data ?? [];
-  const sports = [...new Set(all.map((t) => t.sportName))].map((name) => ({
-    name,
-    rows: all.filter((t) => t.sportName === name),
-  }));
+  const sports = [...new Set(all.map((t) => t.sportName))].map((name) => {
+    const rows = all.filter((t) => t.sportName === name);
+    return { id: rows[0].sportId, name, rows };
+  });
   const term = search.trim().toLowerCase();
   const statusTest = STATUS_FILTERS.find((f) => f.id === status)?.test;
   const matchSearch = (t: ScannerTournament) =>
     !term || t.name.toLowerCase().includes(term) || String(t.id).includes(term);
   const visible = (t: ScannerTournament) =>
     matchSearch(t) && (!statusTest || statusTest(t));
+  const inSportFilter = (id: number) =>
+    !sportIds.length || sportIds.includes(id);
   // Contagens seguem os outros filtros: chip mostra o que vai aparecer ao clicar.
-  const sportCount = (name: string | null) =>
-    all.filter((t) => (!name || t.sportName === name) && visible(t)).length;
-  const inSport = all.filter(
-    (t) => matchSearch(t) && (!sport || t.sportName === sport),
-  );
+  const sportCount = (id: number | null) =>
+    all.filter((t) => (id === null || t.sportId === id) && visible(t)).length;
+  const inSport = all.filter((t) => matchSearch(t) && inSportFilter(t.sportId));
   // O cabeçalho do grupo age e conta sobre o esporte inteiro; busca e estado só escondem linhas.
   const groups = sports
-    .filter((g) => !sport || g.name === sport)
+    .filter((g) => inSportFilter(g.id))
     .filter((g) => g.rows.some(visible));
+  // Chips e sheet: mais competições primeiro; esporte zerado pelos outros
+  // filtros some, a não ser que esteja marcado.
+  const sportOptions = [...sports]
+    .sort((a, b) => b.rows.length - a.rows.length)
+    .filter((g) => sportIds.includes(g.id) || sportCount(g.id) > 0);
+  const singleSport =
+    sportIds.length === 1 ? sports.find((g) => g.id === sportIds[0]) : undefined;
+  const sportLabel = !sportIds.length
+    ? "Todos"
+    : (singleSport?.name ?? `${sportIds.length} esportes`);
   const summary = collectSummary(all);
   const lastRun = ageParts(summary.lastCheckAt);
   const active = all.filter((t) => t.isActive).length;
-  const filtered = !!term || sport !== null || status !== null;
+  const filtered = !!term || sportIds.length > 0 || status !== null;
   const statusLabel =
     STATUS_FILTERS.find((f) => f.id === status)?.label ?? "Todos";
   const statusOptions = [
@@ -1028,7 +1096,7 @@ export function AdminScanner() {
 
   const clearFilters = () => {
     setSearch("");
-    setSport(null);
+    setSportIds([]);
     setStatus(null);
   };
 
@@ -1102,7 +1170,7 @@ export function AdminScanner() {
                   type="button"
                   onClick={() => {
                     setStatus("problem");
-                    setSport(null);
+                    setSportIds([]);
                   }}
                   className={cn(
                     "inline-flex items-center gap-1.5 h-8 sm:h-6 px-2 sm:-ml-1 rounded-md transition hover:brightness-125",
@@ -1150,76 +1218,84 @@ export function AdminScanner() {
         }
         filters={
           data && (
-            // Celular: uma linha só, rolando de lado, com o Status na frente.
+            // Celular: Status e Esporte abrem sheet, como os filtros das outras
+            // telas; a linha ainda rola de lado se os rótulos não couberem.
             <div className="flex w-[calc(100%+2rem)] sm:w-full items-center gap-1.5 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible [&>*]:shrink-0">
-              <FilterChip
-                active={sport === null}
-                count={sportCount(null)}
-                onClick={() => setSport(null)}
-              >
-                Todos
-              </FilterChip>
-              {[...sports]
-                .sort((a, b) => b.rows.length - a.rows.length)
-                .filter((g) => sport === g.name || sportCount(g.name) > 0)
-                .map((g) => (
-                  <FilterChip
-                    key={g.name}
-                    active={sport === g.name}
-                    count={sportCount(g.name)}
-                    onClick={() => setSport(g.name)}
-                  >
-                    {g.name}
-                  </FilterChip>
-                ))}
-              {/* Estado num dropdown só: segunda fileira de chips pesava o topo. */}
               {isMobile ? (
-                <button
-                  type="button"
-                  onClick={() => setStatusSheet(true)}
-                  className="order-first flex items-center gap-1.5 h-9 pl-3 pr-2.5 rounded-lg border border-border text-sm whitespace-nowrap"
-                >
-                  <span className="opacity-55">Status</span>
-                  {statusLabel}
-                  <CaretDown size={12} className="opacity-55" />
-                </button>
+                <>
+                  <SheetButton
+                    label="Status"
+                    value={statusLabel}
+                    onClick={() => setStatusSheet(true)}
+                  />
+                  <SheetButton
+                    label="Esporte"
+                    value={sportLabel}
+                    leading={
+                      singleSport && (
+                        <SportIcon name={singleSport.name} size={14} className="opacity-70" />
+                      )
+                    }
+                    onClick={() => setSportSheet(true)}
+                  />
+                </>
               ) : (
-                <Select
-                  value={status ?? "all"}
-                  onValueChange={(v) =>
-                    setStatus(v === "all" ? null : (v as StatusId))
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Filtrar por status"
-                    className="h-8 w-auto ml-auto gap-2 text-sm whitespace-nowrap"
+                <>
+                  <FilterChip
+                    active={sportIds.length === 0}
+                    count={sportCount(null)}
+                    onClick={() => setSportIds([])}
                   >
-                    <span className="opacity-55">Status</span>
-                    {/* Texto próprio em vez de SelectValue: o item tem a contagem, o botão não. */}
-                    <span>{statusLabel}</span>
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    {statusOptions.map((o) => (
-                      <SelectItem
-                        key={o.id}
-                        value={o.id}
-                        className="py-1 data-[state=checked]:bg-foreground/[0.06] [&>span:last-child]:flex-1"
-                      >
-                        <span className="flex items-center justify-between gap-6">
-                          <span>{o.label}</span>
-                          <span
-                            className={cn(
-                              "tabular-nums text-xs",
-                              o.warn ? ORANGE : "opacity-50",
-                            )}
-                          >
-                            {o.n}
+                    Todos
+                  </FilterChip>
+                  {sportOptions.map((g) => (
+                    <FilterChip
+                      key={g.name}
+                      active={sportIds.includes(g.id)}
+                      count={sportCount(g.id)}
+                      onClick={() => setSportIds([g.id])}
+                    >
+                      {g.name}
+                    </FilterChip>
+                  ))}
+                  {/* Estado num dropdown só: segunda fileira de chips pesava o topo. */}
+                  <Select
+                    value={status ?? "all"}
+                    onValueChange={(v) =>
+                      setStatus(v === "all" ? null : (v as StatusId))
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label="Filtrar por status"
+                      className="h-8 w-auto ml-auto gap-2 text-sm whitespace-nowrap"
+                    >
+                      <span className="opacity-55">Status</span>
+                      {/* Texto próprio em vez de SelectValue: o item tem a contagem, o botão não. */}
+                      <span>{statusLabel}</span>
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      {statusOptions.map((o) => (
+                        <SelectItem
+                          key={o.id}
+                          value={o.id}
+                          className="py-1 data-[state=checked]:bg-foreground/[0.06] [&>span:last-child]:flex-1"
+                        >
+                          <span className="flex items-center justify-between gap-6">
+                            <span>{o.label}</span>
+                            <span
+                              className={cn(
+                                "tabular-nums text-xs",
+                                o.warn ? ORANGE : "opacity-50",
+                              )}
+                            >
+                              {o.n}
+                            </span>
                           </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
               )}
             </div>
           )
@@ -1340,6 +1416,18 @@ export function AdminScanner() {
           ))}
         </div>
       </BottomSheet>
+
+      <SportSheet
+        nested={false}
+        open={sportSheet}
+        onOpenChange={setSportSheet}
+        sports={sportOptions.map(({ id, name }) => ({ id, name }))}
+        counts={Object.fromEntries(
+          sportOptions.map((g) => [g.id, sportCount(g.id)]),
+        )}
+        selected={sportIds}
+        onChange={setSportIds}
+      />
 
       <AlertDialog
         open={deleting !== null}

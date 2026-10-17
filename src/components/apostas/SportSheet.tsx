@@ -14,11 +14,13 @@ interface SportSheetProps {
   // rodapé — mesmo contrato do CasaSheet.
   multiple?: boolean;
   nested?: boolean;
+  /** Contagem por esporte (id → n), à direita da linha. */
+  counts?: Record<number, number>;
 }
 
 // Mesmo padrão do StatusSheet: no filtro edita o rascunho do
 // MobileFiltersSheet e "Aplicar" só fecha. Lista curta, sem busca.
-export function SportSheet({ open, onOpenChange, sports, selected, onChange, multiple = true, nested = true }: SportSheetProps) {
+export function SportSheet({ open, onOpenChange, sports, selected, onChange, multiple = true, nested = true, counts }: SportSheetProps) {
   const toggle = (id: number) => {
     if (!multiple) {
       onChange([id]);
@@ -63,6 +65,7 @@ export function SportSheet({ open, onOpenChange, sports, selected, onChange, mul
               </span>
             }
             label={s.name}
+            count={counts?.[s.id]}
             selected={selected.includes(s.id)}
             onToggle={() => toggle(s.id)}
           />

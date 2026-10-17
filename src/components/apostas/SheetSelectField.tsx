@@ -6,11 +6,13 @@ interface SheetSelectFieldProps {
   onOpen: () => void;
   className?: string;
   leading?: React.ReactNode;
+  /** Mostrado apagado, como o placeholder do Input, enquanto `summary` está vazio. */
+  placeholder?: string;
 }
 
 // Campo "select" que, em vez de abrir um dropdown, abre um bottom sheet
 // (Status/Casa) — usado dentro do MobileFiltersSheet.
-export function SheetSelectField({ summary, onOpen, className, leading }: SheetSelectFieldProps) {
+export function SheetSelectField({ summary, onOpen, className, leading, placeholder }: SheetSelectFieldProps) {
   const handleClick = () => {
     // Se outro campo (Evento, Odd, Stake...) estava focado, o teclado ainda
     // está aberto quando o sheet começa a subir — as duas animações brigam e
@@ -33,7 +35,7 @@ export function SheetSelectField({ summary, onOpen, className, leading }: SheetS
     >
       <span className="flex items-center gap-2 min-w-0">
         {leading}
-        <span className="text-foreground truncate">{summary}</span>
+        <span className={cn("truncate", summary ? "text-foreground" : "text-zinc-600")}>{summary || placeholder}</span>
       </span>
       <CaretDown className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
     </button>
