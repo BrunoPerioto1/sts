@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { format } from "date-fns";
-import { ArrowsClockwise, Buildings, CheckCircle, Clock, ListChecks, PaperPlaneTilt } from "@phosphor-icons/react";
+import { Buildings, CheckCircle, Clock, ListChecks, PaperPlaneTilt } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TipCardMobileItem, type TipPlanilharInitial } from "@/components/tips/TipCardMobileItem";
 import { TipPlanilharSheet } from "@/components/tips/TipPlanilharSheet";
@@ -16,6 +15,7 @@ import { TipsBulkActionBar } from "@/components/tips/TipsBulkActionBar";
 import { TipBatchReview } from "@/components/tips/TipBatchReview";
 import { SelectToggleButton } from "@/components/ui/select-toggle-button";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { RefreshButton } from "@/components/ui/refresh-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
@@ -198,18 +198,14 @@ export default function TipsPage() {
       subtitle={subtitle}
       actions={
         // No desktop nao ha pull-to-refresh: a tip chega de fora do app, e sem
-        // isso a unica forma de buscar a proxima e' recarregar a pagina. Texto
-        // discreto com a hora da última busca, não um botão competindo.
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          disabled={isFetching}
-          aria-label="Atualizar tips"
-          className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-foreground/[0.04] hover:text-zinc-300 disabled:opacity-60 md:flex"
-        >
-          <ArrowsClockwise size={13} className={cn(isFetching && "animate-spin")} />
-          {isFetching ? "atualizando…" : dataUpdatedAt ? `atualizado ${format(dataUpdatedAt, "HH:mm")}` : "atualizar"}
-        </button>
+        // isso a unica forma de buscar a proxima e' recarregar a pagina.
+        <RefreshButton
+          onRefresh={() => void refetch()}
+          isFetching={isFetching}
+          updatedAt={dataUpdatedAt}
+          label="Atualizar tips"
+          className="hidden md:flex"
+        />
       }
       mobileHeader={
         <PageHeader

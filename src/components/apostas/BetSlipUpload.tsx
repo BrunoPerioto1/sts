@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowCounterClockwise,
+  ArrowsClockwise,
   Camera,
-  Plus,
+  CircleNotch,
   Image as ImageIcon,
-  Loader2,
-  RefreshCw,
-  RotateCcw,
-  Sparkles,
-  Trash2,
-  Upload,
-  ZoomIn,
-} from "lucide-react";
+  MagnifyingGlassPlus,
+  Plus,
+  Sparkle,
+  Trash,
+  UploadSimple,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { pickImages, type ScanPreview, type ScanStatus } from "@/hooks/apostas/use-bet-slip-scan";
 
@@ -227,7 +227,7 @@ export function BetSlipUpload({
           {thumb}
           <div className="min-w-0 flex-1 space-y-1">
             <span className={cn(chip, "bg-accent/15 text-accent-text")}>
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <CircleNotch className="h-3 w-3 animate-spin" />
               Lendo bilhete…
             </span>
             {fileLine}
@@ -253,7 +253,7 @@ export function BetSlipUpload({
                 onClick={onRetry}
                 className={cn(chip, "text-accent-text hover:bg-accent/15")}
               >
-                <RotateCcw className="h-3 w-3" />
+                <ArrowCounterClockwise className="h-3 w-3" />
                 Tentar de novo
               </button>
               {addPartButton}
@@ -262,7 +262,7 @@ export function BetSlipUpload({
                 onClick={replace}
                 className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
-                <RefreshCw className="h-3 w-3" />
+                <ArrowsClockwise className="h-3 w-3" />
                 Escolher outra
               </button>
             </div>
@@ -276,7 +276,7 @@ export function BetSlipUpload({
           {thumb}
           <div className="min-w-0 flex-1 space-y-1">
             <span className={cn(chip, "bg-success/15 font-medium text-success")}>
-              <Sparkles className="h-3 w-3" />
+              <Sparkle className="h-3 w-3" />
               Lido pela IA
             </span>
             {fileLine}
@@ -288,7 +288,7 @@ export function BetSlipUpload({
                 onClick={() => setZoom(true)}
                 className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
-                <ZoomIn className="h-3 w-3" />
+                <MagnifyingGlassPlus className="h-3 w-3" />
                 Ampliar
               </button>
               <button
@@ -296,7 +296,7 @@ export function BetSlipUpload({
                 onClick={replace}
                 className={cn(chip, "text-zinc-400 hover:bg-foreground/5 hover:text-foreground")}
               >
-                <RefreshCw className="h-3 w-3" />
+                <ArrowsClockwise className="h-3 w-3" />
                 Trocar
               </button>
               <button
@@ -304,7 +304,7 @@ export function BetSlipUpload({
                 onClick={onReset}
                 className={cn(chip, "text-danger hover:bg-danger/10")}
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash className="h-3 w-3" />
                 Remover
               </button>
             </div>
@@ -356,7 +356,7 @@ export function BetSlipUpload({
             dragging ? "border-accent bg-accent/10" : "border-foreground/15",
           )}
         >
-          <Upload className={cn("h-4 w-4", dragging ? "text-accent-text" : "text-zinc-600")} />
+          <UploadSimple className={cn("h-4 w-4", dragging ? "text-accent-text" : "text-zinc-600")} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium">

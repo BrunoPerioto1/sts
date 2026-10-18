@@ -6,7 +6,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ArrowSquareOut, DotsThreeOutline } from "@phosphor-icons/react";
+import { RowMenuButton } from "@/components/ui/row-menu-button";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 import { siteLabel } from "@/lib/house-url";
 import { cn } from "@/lib/utils";
 import { formatMoney, houseDisplayName, signColor } from "@/lib/format";
@@ -136,9 +137,7 @@ export function HouseListItem({ house, maxBalance, staleDays, onViewDetails, onO
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]">
-            <DotsThreeOutline size={18} weight="fill" />
-          </Button>
+          <RowMenuButton aria-label={`Ações da ${house.houseName}`} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => onViewDetails?.(house.houseId)}>Ver detalhes</DropdownMenuItem>

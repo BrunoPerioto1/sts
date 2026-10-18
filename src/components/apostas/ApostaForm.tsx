@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -221,7 +221,7 @@ export function ApostaForm({
             </Button>
           )}
           <Button type="submit" disabled={submitting} className="gap-1.5">
-            {!submitting && <Check className="h-4 w-4" />}
+            {!submitting && <Check weight="bold" className="h-4 w-4" />}
             {submitting
               ? "Salvando…"
               : isEditing

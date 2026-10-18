@@ -1,18 +1,10 @@
 import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, DotsThreeVertical, SlidersHorizontal } from "@phosphor-icons/react";
+import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal } from "@phosphor-icons/react";
 import { deleteTransaction, updateTransaction, type TransactionDto } from "@/api/routes/get-transaction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RowMenuButton } from "@/components/ui/row-menu-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { useInvalidateBetData } from "@/hooks/queries/use-invalidate";
@@ -178,13 +170,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Ações da movimentação"
-            className="press h-9 w-9 shrink-0 flex items-center justify-center rounded-md text-zinc-400 hover:text-foreground hover:bg-foreground/[0.06]"
-          >
-            <DotsThreeVertical size={18} weight="bold" />
-          </button>
+          <RowMenuButton aria-label="Ações da movimentação" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={openEdit}>Corrigir</DropdownMenuItem>
@@ -249,30 +235,16 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
         </HouseDialog>
       )}
 
-      <AlertDialog open={confirmDelete} onOpenChange={(open) => !busy && setConfirmDelete(open)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir esta movimentação?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {formatMoney(Number(tx.value), { signed: true })} sai do histórico e o saldo real da casa é recalculado sem ela.
-              Não dá pra desfazer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={busy}
-              onClick={(e) => {
-                e.preventDefault();
-                void remove();
-              }}
-              className="bg-danger text-white hover:bg-danger/90"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir esta movimentação?"
+        description={`${formatMoney(Number(tx.value), { signed: true })} sai do histórico e o saldo real da casa é recalculado sem ela. Não dá pra desfazer.`}
+        confirmLabel={busy ? "Excluindo…" : "Excluir"}
+        destructive
+        pending={busy}
+        onConfirm={() => void remove()}
+      />
     </>
   );
 }

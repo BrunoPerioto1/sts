@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   CaretDown,
   Check,
   CheckCircle,
   Database,
   Info,
+  LinkSimple,
   MagnifyingGlass,
   Plus,
+  SlidersHorizontal,
   Trash,
   Warning,
   X,
 } from "@phosphor-icons/react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,18 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminPanel, COLUMN_HEAD } from "@/components/admin/AdminPanel";
 import { FilterChip } from "@/components/ui/filter-chips";
+import { SearchField } from "@/components/ui/search-field";
 import {
   useAdminScanner,
   useAdminScannerSample,
@@ -51,7 +45,6 @@ import {
 import { useSports } from "@/hooks/queries/use-sports";
 import { SportIcon } from "@/components/apostas/SportIcon";
 import { BottomSheet } from "@/components/apostas/BottomSheet";
-import { OptionRow } from "@/components/apostas/OptionRow";
 import { SportSheet } from "@/components/apostas/SportSheet";
 import { SheetSelectField } from "@/components/apostas/SheetSelectField";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -128,6 +121,10 @@ const ICON_BUTTON =
 const ORANGE = "text-[var(--dashboard-orange)]";
 const ORANGE_BG =
   "bg-[color-mix(in_srgb,var(--dashboard-orange)_12%,transparent)]";
+
+// Título de grupo no sheet de filtros do celular, o mesmo do de Usuários.
+const SHEET_GROUP =
+  "text-[11px] font-semibold uppercase tracking-[0.06em] text-muted";
 
 const FAILURE: Record<string, string> = {
   blocked: "bloqueio do SofaScore ou do proxy",
@@ -274,16 +271,18 @@ function SportHeader({
     <div
       className={cn(
         GRID,
-        // Separador de categoria: fundo mais forte e faixa de destaque à
-        // esquerda, pra não se confundir com uma linha.
-        "flex items-center px-4 sm:px-6 h-12 sm:h-11 border-y border-border shadow-[inset_2px_0_0_var(--accent)] bg-foreground/[0.06]",
+        // Desktop: separador de categoria, com fundo mais forte e faixa de
+        // destaque à esquerda, pra não se confundir com uma linha. Celular:
+        // preso embaixo do header da página (68px) enquanto a lista rola, com
+        // fundo sólido pra linha não aparecer por trás.
+        "sticky top-[68px] z-10 sm:static flex items-center px-4 sm:px-6 h-12 sm:h-11 border-b sm:border-y border-border bg-card sm:bg-foreground/[0.06] sm:shadow-[inset_2px_0_0_var(--accent)]",
       )}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={!collapsed}
-        className="flex flex-1 sm:flex-none items-center gap-2 h-8 min-w-0 text-left justify-self-start"
+        className="flex flex-1 sm:flex-none items-center gap-2.5 sm:gap-2 h-full sm:h-8 min-w-0 text-left justify-self-start"
       >
         <CaretDown
           size={12}
@@ -294,17 +293,21 @@ function SportHeader({
         />
         <SportIcon name={sport} size={16} className="shrink-0 opacity-60" />
         <span className="text-sm font-semibold truncate">{sport}</span>
-        <span className="text-[11.5px] tabular-nums min-w-[22px] h-5 px-1.5 rounded-md bg-foreground/[0.07] opacity-70 flex items-center justify-center">
+        <span className="sm:hidden text-[12.5px] tabular-nums text-muted">
           {rows.length}
         </span>
-        <span className="sm:hidden ml-auto text-xs tabular-nums opacity-45">
+        <span className="hidden sm:flex text-[11.5px] tabular-nums min-w-[22px] h-5 px-1.5 rounded-md bg-foreground/[0.07] opacity-70 items-center justify-center">
+          {rows.length}
+        </span>
+        <span className="sm:hidden ml-auto text-[12.5px] tabular-nums text-muted">
           {gamesText(rows)}
         </span>
+        {/* Pra cima aberto, pra baixo recolhido. */}
         <CaretDown
           size={13}
           className={cn(
-            "sm:hidden shrink-0 opacity-50 transition-transform",
-            collapsed && "-rotate-90",
+            "sm:hidden shrink-0 text-muted transition-transform",
+            !collapsed && "rotate-180",
           )}
         />
       </button>
@@ -825,24 +828,27 @@ function TournamentRow({
   );
 }
 
-function NewTournamentForm({
-  existing,
-  onDone,
-}: {
-  existing: ScannerTournament[];
-  onDone: (created: boolean) => void;
-}) {
+/** "o id", "o id e o nome", "o id, o nome e o esporte". */
+const joinPt = (parts: string[]) =>
+  parts.length <= 1
+    ? parts.join("")
+    : `${parts.slice(0, -1).join(", ")} e ${parts.at(-1)}`;
+
+/** Estado e regras do cadastro: os mesmos no form do desktop e na folha do celular. */
+function useNewTournament(
+  existing: ScannerTournament[],
+  onDone: (created: boolean) => void,
+) {
   const create = useCreateAdminScanner();
   const sports = useSports();
-  const isMobile = useIsMobile();
   const [raw, setRaw] = useState("");
   const [name, setName] = useState("");
   const [sportId, setSportId] = useState("");
-  const [sportOpen, setSportOpen] = useState(false);
   const sportName = sports.find((s) => String(s.id) === sportId)?.name;
   const id = parseTournamentId(raw);
   const dup = id ? existing.find((t) => t.id === id) : undefined;
-  const ready = !!id && !dup && name.trim().length >= 2 && !!sportId;
+  const nameOk = name.trim().length >= 2;
+  const ready = !!id && !dup && nameOk && !!sportId;
 
   const changeRaw = (value: string) => {
     setRaw(value);
@@ -852,8 +858,7 @@ function NewTournamentForm({
     if (sport) setSportId(String(sport.id));
   };
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = () => {
     if (!ready || !id) return;
     create.mutate(
       { id, name: name.trim(), sportId: Number(sportId) },
@@ -876,7 +881,7 @@ function NewTournamentForm({
   const hint: ["info" | "warn" | "ok", string] = !raw.trim()
     ? [
         "info",
-        "Ache o torneio no sofascore.com e cole a URL: o id é o número no fim, antes do #.",
+        "No sofascore.com, abra o torneio e copie a URL. O id é o número no fim, antes do #.",
       ]
     : !id
       ? ["warn", "Não achei o id. Cole a URL do torneio ou só o número."]
@@ -887,60 +892,96 @@ function NewTournamentForm({
             `id ${id} encontrado${nameFromUrl(raw) ? " · nome sugerido a partir da URL" : ""}`,
           ];
 
+  // O botão da folha diz o que falta, em vez de só ficar apagado.
+  const missing = [
+    !id && "o id",
+    !nameOk && "o nome",
+    !sportId && "o esporte",
+  ].filter((p): p is string => !!p);
+  const submitLabel = create.isPending
+    ? "Cadastrando…"
+    : ready
+      ? "Cadastrar"
+      : dup
+        ? "Id já cadastrado"
+        : `Falta ${joinPt(missing)}`;
+
+  return {
+    sports,
+    raw,
+    name,
+    setName,
+    sportId,
+    setSportId,
+    sportName,
+    id,
+    dup,
+    ready,
+    hint,
+    submitLabel,
+    pending: create.isPending,
+    changeRaw,
+    submit,
+    reset: () => {
+      setRaw("");
+      setName("");
+      setSportId("");
+    },
+  };
+}
+
+/** Desktop: o cadastro abre numa faixa em cima da lista. */
+function NewTournamentForm({
+  existing,
+  onDone,
+}: {
+  existing: ScannerTournament[];
+  onDone: (created: boolean) => void;
+}) {
+  const form = useNewTournament(existing, onDone);
+
   return (
     <form
-      onSubmit={submit}
-      className="px-4 sm:px-6 py-3.5 border-b border-border bg-foreground/[0.03] space-y-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.submit();
+      }}
+      className="px-6 py-3.5 border-b border-border bg-foreground/[0.03] space-y-2"
     >
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_190px_auto_auto]">
+      <div className="grid gap-2 grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_190px_auto_auto]">
         <Input
-          value={raw}
-          onChange={(e) => changeRaw(e.target.value)}
+          value={form.raw}
+          onChange={(e) => form.changeRaw(e.target.value)}
           placeholder="URL do torneio no SofaScore ou o id"
           aria-label="URL do torneio no SofaScore ou o id"
-          aria-invalid={raw.trim() !== "" && (!id || !!dup)}
+          aria-invalid={form.raw.trim() !== "" && (!form.id || !!form.dup)}
           autoFocus
         />
         <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={form.name}
+          onChange={(e) => form.setName(e.target.value)}
           placeholder="Nome"
           aria-label="Nome"
         />
-        {/* Celular: mesmo campo do form de aposta, abrindo a lista com ícones. */}
-        {isMobile ? (
-          <SheetSelectField
-            summary={sportName ?? ""}
-            placeholder="Esporte"
-            onOpen={() => setSportOpen(true)}
-            leading={
-              sportName && (
-                <SportIcon name={sportName} className="text-zinc-400 shrink-0" />
-              )
-            }
-          />
-        ) : (
-          <Select value={sportId} onValueChange={setSportId}>
-            <SelectTrigger aria-label="Esporte">
-              <SelectValue placeholder="Esporte" />
-            </SelectTrigger>
-            <SelectContent>
-              {sports.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <Button type="submit" disabled={create.isPending || !ready}>
+        <Select value={form.sportId} onValueChange={form.setSportId}>
+          <SelectTrigger aria-label="Esporte">
+            <SelectValue placeholder="Esporte" />
+          </SelectTrigger>
+          <SelectContent>
+            {form.sports.map((s) => (
+              <SelectItem key={s.id} value={String(s.id)}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button type="submit" disabled={form.pending || !form.ready}>
           Cadastrar
         </Button>
         <Button
           type="button"
           variant="secondary"
           size="icon"
-          className="hidden sm:inline-flex"
           onClick={() => onDone(false)}
           aria-label="Cancelar cadastro"
           title="Cancelar"
@@ -948,53 +989,195 @@ function NewTournamentForm({
           <X size={15} />
         </Button>
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <Note tone={hint[0]}>{hint[1]}</Note>
-        <button
-          type="button"
-          onClick={() => onDone(false)}
-          className="sm:hidden h-11 px-2 text-sm opacity-60"
-        >
-          Cancelar
-        </button>
-      </div>
-      {isMobile && (
-        <SportSheet
-          multiple={false}
-          nested={false}
-          open={sportOpen}
-          onOpenChange={setSportOpen}
-          sports={sports}
-          selected={sportId ? [Number(sportId)] : []}
-          onChange={(ids) => setSportId(String(ids[0]))}
-        />
-      )}
+      <Note tone={form.hint[0]}>{form.hint[1]}</Note>
     </form>
   );
 }
 
-/** Filtro do celular que abre um sheet: rótulo apagado, valor atual e setinha. */
-function SheetButton({
-  label,
-  value,
-  leading,
-  onClick,
+const FIELD_LABEL = "text-sm font-medium text-zinc-300";
+
+/**
+ * Celular: o + do header abre o cadastro numa folha. O esporte é um select
+ * (a lista com ícones do form de aposta): são 13 esportes, chips não cabem.
+ */
+function NewTournamentSheet({
+  open,
+  existing,
+  onDone,
 }: {
-  label: string;
-  value: string;
-  leading?: React.ReactNode;
-  onClick: () => void;
+  open: boolean;
+  existing: ScannerTournament[];
+  onDone: (created: boolean) => void;
 }) {
+  const form = useNewTournament(existing, onDone);
+  const [sportOpen, setSportOpen] = useState(false);
+  // Cada abertura começa do zero: o rascunho de um cadastro cancelado não volta.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) form.reset();
+  }
+  const [tone, text] = form.hint;
+
+  return (
+    <BottomSheet
+      open={open}
+      onOpenChange={(next) => !next && !form.pending && onDone(false)}
+      title="Nova competição"
+      footer={
+        <Button
+          size="lg"
+          // Desabilitado fica neutro, não azul apagado: o texto diz o que falta.
+          className="w-full disabled:opacity-100 disabled:bg-foreground/[0.06] disabled:text-zinc-500"
+          disabled={!form.ready || form.pending}
+          onClick={form.submit}
+        >
+          {form.submitLabel}
+        </Button>
+      }
+    >
+      <div className="pb-4 flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="scanner-new-id" className={FIELD_LABEL}>
+            Torneio no SofaScore
+          </label>
+          <div className="relative">
+            <LinkSimple
+              size={17}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+            />
+            <Input
+              id="scanner-new-id"
+              value={form.raw}
+              onChange={(e) => form.changeRaw(e.target.value)}
+              placeholder="Cole a URL ou digite o id"
+              autoComplete="off"
+              aria-invalid={form.raw.trim() !== "" && (!form.id || !!form.dup)}
+              className="min-h-12 rounded-lg pl-10"
+            />
+          </div>
+          {tone === "info" ? (
+            <p className="text-[12.5px] leading-snug text-zinc-500">{text}</p>
+          ) : (
+            <Note tone={tone}>{text}</Note>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="scanner-new-name" className={FIELD_LABEL}>
+            Nome
+          </label>
+          <Input
+            id="scanner-new-name"
+            value={form.name}
+            onChange={(e) => form.setName(e.target.value)}
+            placeholder="Como aparece no app, ex.: NBA"
+            autoComplete="off"
+            className="min-h-12 rounded-lg"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className={FIELD_LABEL}>Esporte</span>
+          <SheetSelectField
+            summary={form.sportName ?? ""}
+            placeholder="Escolha o esporte"
+            onOpen={() => setSportOpen(true)}
+            leading={
+              form.sportName && (
+                <SportIcon
+                  name={form.sportName}
+                  className="text-zinc-400 shrink-0"
+                />
+              )
+            }
+            className="min-h-12 rounded-lg"
+          />
+        </div>
+      </div>
+      {/* Dentro da folha: o sheet aninhado do vaul precisa do Drawer pai. */}
+      <SportSheet
+        multiple={false}
+        open={sportOpen}
+        onOpenChange={setSportOpen}
+        sports={form.sports}
+        selected={form.sportId ? [Number(form.sportId)] : []}
+        onChange={(ids) => form.setSportId(String(ids[0]))}
+      />
+    </BottomSheet>
+  );
+}
+
+/** "Última coleta há 15 dias": o dia por extenso, hora e minuto abreviados. */
+function lastRunText(lastCheckAt: string | null): string {
+  if (!lastCheckAt) return "nunca coletado";
+  const { value, unit } = ageParts(lastCheckAt);
+  return `última coleta há ${value} ${unit === "d" ? "dias" : unit}`;
+}
+
+/**
+ * Celular: "última coleta" e "N problemas" numa linha só. Com problema ela é
+ * o atalho do filtro Problemas (tocar de novo volta pra todas); sem, só informa.
+ */
+function StatusLine({
+  problems,
+  shown,
+  lastCheckAt,
+  showing,
+  onToggle,
+}: {
+  problems: number;
+  /** Linhas na lista agora: com busca ou esporte junto, são menos que `problems`. */
+  shown: number;
+  lastCheckAt: string | null;
+  showing: boolean;
+  onToggle: () => void;
+}) {
+  if (problems === 0) {
+    return (
+      <div className="h-11 px-3 rounded-[10px] border border-border flex items-center gap-2.5 text-[13px] tabular-nums">
+        <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
+        <span className="truncate">
+          <span className="text-success">Tudo OK</span> · {lastRunText(lastCheckAt)}
+        </span>
+      </div>
+    );
+  }
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="flex items-center gap-1.5 h-9 pl-3 pr-2.5 rounded-lg border border-border text-sm whitespace-nowrap"
+      onClick={onToggle}
+      aria-pressed={showing}
+      className={cn(
+        "w-full h-11 px-3 rounded-[10px] border flex items-center gap-2.5 text-left transition-colors",
+        showing
+          ? "border-[color-mix(in_srgb,var(--dashboard-orange)_45%,transparent)] bg-[color-mix(in_srgb,var(--dashboard-orange)_10%,transparent)]"
+          : "border-[color-mix(in_srgb,var(--dashboard-orange)_22%,transparent)] bg-[color-mix(in_srgb,var(--dashboard-orange)_5%,transparent)]",
+      )}
     >
-      <span className="opacity-55">{label}</span>
-      {leading}
-      {value}
-      <CaretDown size={12} className="opacity-55" />
+      <Warning size={15} className={cn("shrink-0", ORANGE)} />
+      <span className="flex-1 min-w-0 truncate text-[13px] tabular-nums">
+        {showing
+          ? `Mostrando só ${shown === 1 ? "a" : "as"} ${formatInt(shown)} com problema`
+          : `${formatInt(problems)} com problema · ${lastRunText(lastCheckAt)}`}
+      </span>
+      <span className={cn("shrink-0 text-[13px] font-medium", ORANGE)}>
+        {showing ? "Ver todas" : "Ver"}
+      </span>
+    </button>
+  );
+}
+
+/** Filtro ligado, embaixo da busca: o X tira só ele. */
+function ActiveFilter({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      aria-label={`Tirar filtro ${label}`}
+      // 30px de altura visual; o after estende o toque.
+      className="relative h-[30px] pl-[11px] pr-2 rounded-full border border-accent/60 bg-accent/15 text-accent-text text-[12.5px] flex items-center gap-1.5 after:absolute after:inset-x-0 after:-inset-y-1.5"
+    >
+      {label}
+      <X size={11} />
     </button>
   );
 }
@@ -1032,19 +1215,23 @@ function LegendPopover() {
   );
 }
 
-export function AdminScanner() {
+export function AdminScanner({
+  adding,
+  setAdding,
+}: {
+  adding: boolean;
+  setAdding: Dispatch<SetStateAction<boolean>>;
+}) {
   const { data, isPending, isError, refetch } = useAdminScanner();
   const remove = useDeleteAdminScanner();
   const setFlag = useSetFlag();
-  const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
-  // Vazio = todos. O desktop marca um por vez (chips); o sheet do celular, vários.
-  const [sportIds, setSportIds] = useState<number[]>([]);
+  // Null = todos. Um esporte por vez, nos chips do desktop e no sheet do celular.
+  const [sportId, setSportId] = useState<number | null>(null);
   const [status, setStatus] = useState<StatusId | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState<ScannerTournament | null>(null);
-  const [statusSheet, setStatusSheet] = useState(false);
-  const [sportSheet, setSportSheet] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const all = data ?? [];
@@ -1058,8 +1245,7 @@ export function AdminScanner() {
     !term || t.name.toLowerCase().includes(term) || String(t.id).includes(term);
   const visible = (t: ScannerTournament) =>
     matchSearch(t) && (!statusTest || statusTest(t));
-  const inSportFilter = (id: number) =>
-    !sportIds.length || sportIds.includes(id);
+  const inSportFilter = (id: number) => sportId === null || sportId === id;
   // Contagens seguem os outros filtros: chip mostra o que vai aparecer ao clicar.
   const sportCount = (id: number | null) =>
     all.filter((t) => (id === null || t.sportId === id) && visible(t)).length;
@@ -1068,20 +1254,16 @@ export function AdminScanner() {
   const groups = sports
     .filter((g) => inSportFilter(g.id))
     .filter((g) => g.rows.some(visible));
-  // Chips e sheet: mais competições primeiro; esporte zerado pelos outros
-  // filtros some, a não ser que esteja marcado.
+  // Chips: mais competições primeiro; esporte zerado pelos outros filtros
+  // some, a não ser que esteja marcado.
   const sportOptions = [...sports]
     .sort((a, b) => b.rows.length - a.rows.length)
-    .filter((g) => sportIds.includes(g.id) || sportCount(g.id) > 0);
-  const singleSport =
-    sportIds.length === 1 ? sports.find((g) => g.id === sportIds[0]) : undefined;
-  const sportLabel = !sportIds.length
-    ? "Todos"
-    : (singleSport?.name ?? `${sportIds.length} esportes`);
+    .filter((g) => g.id === sportId || sportCount(g.id) > 0);
+  const sportName = sports.find((g) => g.id === sportId)?.name;
   const summary = collectSummary(all);
   const lastRun = ageParts(summary.lastCheckAt);
   const active = all.filter((t) => t.isActive).length;
-  const filtered = !!term || sportIds.length > 0 || status !== null;
+  const filtered = !!term || sportId !== null || status !== null;
   const statusLabel =
     STATUS_FILTERS.find((f) => f.id === status)?.label ?? "Todos";
   const statusOptions = [
@@ -1093,11 +1275,31 @@ export function AdminScanner() {
       return { id: f.id, label: f.label, n, warn };
     }),
   ];
+  // O que a lista mostra com os filtros de agora: o "Ver N" do sheet.
+  const shown = inSport.filter(visible).length;
+
+  // Celular: cada filtro ligado vira um chip removível embaixo da busca.
+  const activeFilters: { label: string; clear: () => void }[] = [];
+  if (status)
+    activeFilters.push({ label: statusLabel, clear: () => setStatus(null) });
+  if (sportName)
+    activeFilters.push({ label: sportName, clear: () => setSportId(null) });
 
   const clearFilters = () => {
     setSearch("");
-    setSportIds([]);
+    setSportId(null);
     setStatus(null);
+  };
+
+  const finishAdding = (created: boolean) => {
+    setAdding(false);
+    // A nova entra sem jogos: limpa o filtro pra ela aparecer.
+    if (created) clearFilters();
+  };
+
+  const showProblems = () => {
+    setStatus("problem");
+    setSportId(null);
   };
 
   const toggleGroup = (name: string) =>
@@ -1130,6 +1332,238 @@ export function AdminScanner() {
     );
     setDeleting(null);
   };
+
+  const body = isPending ? (
+    <div className="p-4 space-y-2">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 rounded-lg" delay={i * 60} />
+      ))}
+    </div>
+  ) : isError ? (
+    <EmptyState
+      bare
+      title="Não foi possível carregar o scanner"
+      action={
+        <Button variant="secondary" size="sm" onClick={() => void refetch()}>
+          Tentar de novo
+        </Button>
+      }
+    />
+  ) : (
+    <>
+      <div className="hidden sm:block border-b border-border">
+        <div className={cn(GRID, "px-6 pt-2")}>
+          <span className="col-start-3 col-span-4 mx-2.5 pb-1 border-b border-foreground/15 text-center text-[11px] tracking-[0.08em] opacity-40">
+            o que o scanner busca
+          </span>
+        </div>
+        <div className={cn(GRID, "px-6 h-8")}>
+          <span className={COLUMN_HEAD}>Competição</span>
+          <span className={COLUMN_HEAD}>Próximos 30 dias</span>
+          {FLAGS.map((f) => (
+            <span
+              key={f.key}
+              className={cn(COLUMN_HEAD, "text-center")}
+              title={f.hint}
+            >
+              {f.label}
+            </span>
+          ))}
+          <span />
+        </div>
+      </div>
+      {adding && !isMobile && (
+        <NewTournamentForm existing={all} onDone={finishAdding} />
+      )}
+      {groups.length === 0 ? (
+        <EmptyState
+          bare
+          title={
+            filtered
+              ? "Nenhuma competição com esses filtros"
+              : "Nenhuma competição no scanner"
+          }
+          action={
+            filtered && (
+              <Button variant="secondary" size="sm" onClick={clearFilters}>
+                Limpar filtros
+              </Button>
+            )
+          }
+        />
+      ) : (
+        groups.map((g) => (
+          <div key={g.name}>
+            <SportHeader
+              sport={g.name}
+              rows={g.rows}
+              collapsed={collapsed.has(g.name)}
+              onToggle={() => toggleGroup(g.name)}
+            />
+            {!collapsed.has(g.name) &&
+              g.rows
+                .filter(visible)
+                .map((t) => (
+                  <TournamentRow
+                    key={t.id}
+                    t={t}
+                    onDelete={() => setDeleting(t)}
+                  />
+                ))}
+          </div>
+        ))
+      )}
+    </>
+  );
+
+  const deleteDialog = (
+    <ConfirmDialog
+      open={deleting !== null}
+      onOpenChange={(open) => !open && setDeleting(null)}
+      title={`Excluir ${deleting?.name ?? ""}?`}
+      description="Use só pra cadastro incorreto. Pra parar de coletar, desmarque Coleta. Excluir remove a configuração, e apostas pendentes em jogos desta competição voltam a buscar todos os dados."
+      confirmLabel="Excluir"
+      destructive
+      alternative={{ label: "Desmarcar Coleta", onClick: pauseInstead }}
+      onConfirm={confirmDelete}
+    />
+  );
+
+  // Celular: o título e o + ficam no header da página. Aqui só a linha de
+  // status, a busca com o botão de filtros e a lista de ponta a ponta.
+  if (isMobile) {
+    const lastRunLine = lastRunText(summary.lastCheckAt);
+    return (
+      <>
+        <div className="-mx-4 -mt-1 px-4 pb-3 space-y-2.5 border-b border-border">
+          {data && (
+            <StatusLine
+              problems={summary.problems}
+              shown={shown}
+              lastCheckAt={summary.lastCheckAt}
+              showing={status === "problem"}
+              onToggle={() =>
+                status === "problem" ? setStatus(null) : showProblems()
+              }
+            />
+          )}
+          <div className="flex gap-2">
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              placeholder="Buscar nome ou id"
+              className="flex-1 min-w-0"
+            />
+            <FilterChip
+              active={activeFilters.length > 0}
+              icon={SlidersHorizontal}
+              aria-label={
+                activeFilters.length
+                  ? `Filtros, ${activeFilters.length} ativos`
+                  : "Filtros"
+              }
+              onClick={() => setFiltersOpen(true)}
+              className="h-11 min-w-11 rounded-xl justify-center"
+            >
+              {activeFilters.length || null}
+            </FilterChip>
+          </div>
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {activeFilters.map((f) => (
+                <ActiveFilter key={f.label} label={f.label} onClear={f.clear} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="-mx-4">{body}</div>
+
+        <NewTournamentSheet
+          open={adding}
+          existing={all}
+          onDone={finishAdding}
+        />
+
+        <BottomSheet
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          title="Filtros"
+          // Fecha pelo "Ver N" embaixo, pelo arrasto ou tocando fora.
+          hideClose
+          action={
+            <Button
+              variant="ghost"
+              className="h-11 px-3"
+              onClick={() => {
+                setStatus(null);
+                setSportId(null);
+              }}
+            >
+              Limpar
+            </Button>
+          }
+          footer={
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Ver {formatInt(shown)} {shown === 1 ? "competição" : "competições"}
+            </Button>
+          }
+        >
+          <div className="pb-3 flex flex-col gap-[18px]">
+            <div className="flex flex-col gap-2">
+              <span className={SHEET_GROUP}>Status</span>
+              <div className="flex flex-wrap gap-1.5">
+                {[{ id: null, label: "Todos" }, ...STATUS_FILTERS].map((o) => (
+                  <FilterChip
+                    key={o.label}
+                    size="lg"
+                    active={status === o.id}
+                    onClick={() => setStatus(o.id)}
+                  >
+                    {o.label}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className={SHEET_GROUP}>Esporte</span>
+              <div className="flex flex-wrap gap-1.5">
+                <FilterChip
+                  size="lg"
+                  active={sportId === null}
+                  onClick={() => setSportId(null)}
+                >
+                  Todos
+                </FilterChip>
+                {sportOptions.map((g) => (
+                  <FilterChip
+                    key={g.id}
+                    size="lg"
+                    active={sportId === g.id}
+                    onClick={() => setSportId(g.id)}
+                  >
+                    {g.name}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+            {/* Os contadores saíram do topo: zerados, só ocupavam espaço lá. */}
+            <p className="pt-1 text-[12.5px] text-muted tabular-nums">
+              {lastRunLine[0].toUpperCase() + lastRunLine.slice(1)} ·{" "}
+              {formatInt(summary.games)} jogos coletados · {summary.empty} sem
+              jogos
+            </p>
+          </div>
+        </BottomSheet>
+
+        {deleteDialog}
+      </>
+    );
+  }
 
   return (
     <>
@@ -1164,16 +1598,13 @@ export function AdminScanner() {
                 · {formatInt(summary.games)} jogos ·{" "}
                 {summary.empty} sem jogos
               </span>
-              <span className="hidden sm:inline">·</span>
+              <span>·</span>
               {summary.problems > 0 ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    setStatus("problem");
-                    setSportIds([]);
-                  }}
+                  onClick={showProblems}
                   className={cn(
-                    "inline-flex items-center gap-1.5 h-8 sm:h-6 px-2 sm:-ml-1 rounded-md transition hover:brightness-125",
+                    "inline-flex items-center gap-1.5 h-6 px-2 -ml-1 rounded-md transition hover:brightness-125",
                     ORANGE,
                     ORANGE_BG,
                   )}
@@ -1193,7 +1624,7 @@ export function AdminScanner() {
         }
         actions={
           <>
-            <div className="relative flex-1 sm:w-[260px]">
+            <div className="relative w-[260px]">
               <MagnifyingGlass
                 size={15}
                 className="absolute left-3 top-1/2 -translate-y-1/2 opacity-45"
@@ -1203,263 +1634,84 @@ export function AdminScanner() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar nome ou id"
                 aria-label="Buscar nome ou id"
-                className="pl-9 h-11 sm:h-9 rounded-lg"
+                className="pl-9 h-9 rounded-lg"
               />
             </div>
             <Button
               onClick={() => setAdding((v) => !v)}
-              className="shrink-0 w-11 px-0 h-11 sm:w-auto sm:h-9 sm:px-3.5 rounded-lg gap-1.5 text-[13.5px] [&_svg]:size-3.5"
+              className="shrink-0 h-9 px-3.5 rounded-lg gap-1.5 text-[13.5px] [&_svg]:size-3.5"
               aria-label="Cadastrar competição"
             >
               <Plus size={14} />
-              <span className="hidden sm:inline">Competição</span>
+              Competição
             </Button>
           </>
         }
         filters={
           data && (
-            // Celular: Status e Esporte abrem sheet, como os filtros das outras
-            // telas; a linha ainda rola de lado se os rótulos não couberem.
-            <div className="flex w-[calc(100%+2rem)] sm:w-full items-center gap-1.5 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible [&>*]:shrink-0">
-              {isMobile ? (
-                <>
-                  <SheetButton
-                    label="Status"
-                    value={statusLabel}
-                    onClick={() => setStatusSheet(true)}
-                  />
-                  <SheetButton
-                    label="Esporte"
-                    value={sportLabel}
-                    leading={
-                      singleSport && (
-                        <SportIcon name={singleSport.name} size={14} className="opacity-70" />
-                      )
-                    }
-                    onClick={() => setSportSheet(true)}
-                  />
-                </>
-              ) : (
-                <>
-                  <FilterChip
-                    active={sportIds.length === 0}
-                    count={sportCount(null)}
-                    onClick={() => setSportIds([])}
-                  >
-                    Todos
-                  </FilterChip>
-                  {sportOptions.map((g) => (
-                    <FilterChip
-                      key={g.name}
-                      active={sportIds.includes(g.id)}
-                      count={sportCount(g.id)}
-                      onClick={() => setSportIds([g.id])}
+            <div className="flex w-full flex-wrap items-center gap-1.5">
+              <FilterChip
+                active={sportId === null}
+                count={sportCount(null)}
+                onClick={() => setSportId(null)}
+              >
+                Todos
+              </FilterChip>
+              {sportOptions.map((g) => (
+                <FilterChip
+                  key={g.name}
+                  active={sportId === g.id}
+                  count={sportCount(g.id)}
+                  onClick={() => setSportId(g.id)}
+                >
+                  {g.name}
+                </FilterChip>
+              ))}
+              {/* Estado num dropdown só: segunda fileira de chips pesava o topo. */}
+              <Select
+                value={status ?? "all"}
+                onValueChange={(v) =>
+                  setStatus(v === "all" ? null : (v as StatusId))
+                }
+              >
+                <SelectTrigger
+                  aria-label="Filtrar por status"
+                  className="h-8 w-auto ml-auto gap-2 text-sm whitespace-nowrap"
+                >
+                  <span className="opacity-55">Status</span>
+                  {/* Texto próprio em vez de SelectValue: o item tem a contagem, o botão não. */}
+                  <span>{statusLabel}</span>
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {statusOptions.map((o) => (
+                    <SelectItem
+                      key={o.id}
+                      value={o.id}
+                      className="py-1 data-[state=checked]:bg-foreground/[0.06] [&>span:last-child]:flex-1"
                     >
-                      {g.name}
-                    </FilterChip>
-                  ))}
-                  {/* Estado num dropdown só: segunda fileira de chips pesava o topo. */}
-                  <Select
-                    value={status ?? "all"}
-                    onValueChange={(v) =>
-                      setStatus(v === "all" ? null : (v as StatusId))
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label="Filtrar por status"
-                      className="h-8 w-auto ml-auto gap-2 text-sm whitespace-nowrap"
-                    >
-                      <span className="opacity-55">Status</span>
-                      {/* Texto próprio em vez de SelectValue: o item tem a contagem, o botão não. */}
-                      <span>{statusLabel}</span>
-                    </SelectTrigger>
-                    <SelectContent align="end">
-                      {statusOptions.map((o) => (
-                        <SelectItem
-                          key={o.id}
-                          value={o.id}
-                          className="py-1 data-[state=checked]:bg-foreground/[0.06] [&>span:last-child]:flex-1"
+                      <span className="flex items-center justify-between gap-6">
+                        <span>{o.label}</span>
+                        <span
+                          className={cn(
+                            "tabular-nums text-xs",
+                            o.warn ? ORANGE : "opacity-50",
+                          )}
                         >
-                          <span className="flex items-center justify-between gap-6">
-                            <span>{o.label}</span>
-                            <span
-                              className={cn(
-                                "tabular-nums text-xs",
-                                o.warn ? ORANGE : "opacity-50",
-                              )}
-                            >
-                              {o.n}
-                            </span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
+                          {o.n}
+                        </span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )
         }
       >
-        {isPending ? (
-          <div className="p-4 space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 rounded-lg" delay={i * 60} />
-            ))}
-          </div>
-        ) : isError ? (
-          <EmptyState
-            bare
-            title="Não foi possível carregar o scanner"
-            action={
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => void refetch()}
-              >
-                Tentar de novo
-              </Button>
-            }
-          />
-        ) : (
-          <>
-            <div className="hidden sm:block border-b border-border">
-              <div className={cn(GRID, "px-6 pt-2")}>
-                <span className="col-start-3 col-span-4 mx-2.5 pb-1 border-b border-foreground/15 text-center text-[11px] tracking-[0.08em] opacity-40">
-                  o que o scanner busca
-                </span>
-              </div>
-              <div className={cn(GRID, "px-6 h-8")}>
-                <span className={COLUMN_HEAD}>Competição</span>
-                <span className={COLUMN_HEAD}>Próximos 30 dias</span>
-                {FLAGS.map((f) => (
-                  <span
-                    key={f.key}
-                    className={cn(COLUMN_HEAD, "text-center")}
-                    title={f.hint}
-                  >
-                    {f.label}
-                  </span>
-                ))}
-                <span />
-              </div>
-            </div>
-            {adding && (
-              <NewTournamentForm
-                existing={all}
-                onDone={(created) => {
-                  setAdding(false);
-                  // A nova entra sem jogos: limpa o filtro pra ela aparecer.
-                  if (created) clearFilters();
-                }}
-              />
-            )}
-            {groups.length === 0 ? (
-              <EmptyState
-                bare
-                title={
-                  filtered
-                    ? "Nenhuma competição com esses filtros"
-                    : "Nenhuma competição no scanner"
-                }
-                action={
-                  filtered && (
-                    <Button variant="secondary" size="sm" onClick={clearFilters}>
-                      Limpar filtros
-                    </Button>
-                  )
-                }
-              />
-            ) : (
-              groups.map((g) => (
-                <div key={g.name}>
-                  <SportHeader
-                    sport={g.name}
-                    rows={g.rows}
-                    collapsed={collapsed.has(g.name)}
-                    onToggle={() => toggleGroup(g.name)}
-                  />
-                  {!collapsed.has(g.name) &&
-                    g.rows
-                      .filter(visible)
-                      .map((t) => (
-                        <TournamentRow
-                          key={t.id}
-                          t={t}
-                          onDelete={() => setDeleting(t)}
-                        />
-                      ))}
-                </div>
-              ))
-            )}
-          </>
-        )}
+        {body}
       </AdminPanel>
 
-      <BottomSheet
-        open={statusSheet}
-        onOpenChange={setStatusSheet}
-        title="Status"
-      >
-        <div className="flex flex-col gap-0.5 py-2">
-          {statusOptions.map((o) => (
-            <OptionRow
-              key={o.id}
-              label={o.label}
-              count={o.n}
-              selected={(status ?? "all") === o.id}
-              onToggle={() => {
-                setStatus(o.id === "all" ? null : (o.id as StatusId));
-                setStatusSheet(false);
-              }}
-            />
-          ))}
-        </div>
-      </BottomSheet>
-
-      <SportSheet
-        nested={false}
-        open={sportSheet}
-        onOpenChange={setSportSheet}
-        sports={sportOptions.map(({ id, name }) => ({ id, name }))}
-        counts={Object.fromEntries(
-          sportOptions.map((g) => [g.id, sportCount(g.id)]),
-        )}
-        selected={sportIds}
-        onChange={setSportIds}
-      />
-
-      <AlertDialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {deleting?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Use só pra cadastro incorreto. Pra parar de coletar, desmarque
-              Coleta. Excluir remove a configuração, e apostas pendentes em
-              jogos desta competição voltam a buscar todos os dados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button
-              variant="secondary"
-              className="sm:mr-auto"
-              onClick={pauseInstead}
-            >
-              Desmarcar Coleta
-            </Button>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className={buttonVariants({ variant: "destructive" })}
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteDialog}
     </>
   );
 }

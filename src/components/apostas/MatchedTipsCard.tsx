@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@phosphor-icons/react";
 import { type MatchedTip } from "@/api/routes/post-parse-image";
 import { formatMoney, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -62,7 +62,7 @@ export function MatchedTipsCard({ tips, selected, onSelect }: MatchedTipsCardPro
                     on ? "bg-accent" : "border border-foreground/25",
                   )}
                 >
-                  {on && <Check className="h-3 w-3 text-foreground" strokeWidth={3} />}
+                  {on && <Check weight="bold" className="h-3 w-3 text-foreground" />}
                 </span>
                 <span className="min-w-0 flex-1 space-y-0.5">
                   <span className="block truncate text-xs font-medium">{tip.event}</span>

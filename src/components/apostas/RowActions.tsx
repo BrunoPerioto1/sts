@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { DotsThreeOutline } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { RowMenuButton } from "@/components/ui/row-menu-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,9 +31,7 @@ export function RowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Ações da aposta ${aposta.game}`} className="h-8 w-8 text-foreground/55 hover:text-foreground hover:bg-foreground/[0.07]">
-          <DotsThreeOutline size={18} weight="fill" />
-        </Button>
+        <RowMenuButton aria-label={`Ações da aposta ${aposta.game}`} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
         {onEdit && (

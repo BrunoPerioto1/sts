@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Sparkle } from "@phosphor-icons/react";
 import { type AiFieldMark } from "@/hooks/apostas/use-aposta-form";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +32,7 @@ export function AiFieldLabel({ children, mark, htmlFor, className }: AiFieldLabe
           </span>
         ) : (
           <span className={cn(badge, "bg-accent/15 text-accent-text ring-accent/30")}>
-            <Sparkles className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
+            <Sparkle weight="fill" className="h-2.5 w-2.5" />
             IA
           </span>
         ))}

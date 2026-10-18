@@ -1,16 +1,7 @@
 import { useState } from "react";
 import { TelegramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
@@ -90,27 +81,16 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
         </div>
       )}
 
-      <AlertDialog open={confirmUnlink} onOpenChange={(open) => !unlinking && setConfirmUnlink(open)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Desvincular o Telegram?</AlertDialogTitle>
-            <AlertDialogDescription>{UNLINK_TELEGRAM_WARNING}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={unlinking}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={unlinking}
-              onClick={(e) => {
-                e.preventDefault();
-                void handleUnlink();
-              }}
-              className="bg-danger text-white hover:bg-danger/90"
-            >
-              Desvincular
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmUnlink}
+        onOpenChange={setConfirmUnlink}
+        title="Desvincular o Telegram?"
+        description={UNLINK_TELEGRAM_WARNING}
+        confirmLabel={unlinking ? "Desvinculando…" : "Desvincular"}
+        destructive
+        pending={unlinking}
+        onConfirm={() => void handleUnlink()}
+      />
     </section>
   );
 }

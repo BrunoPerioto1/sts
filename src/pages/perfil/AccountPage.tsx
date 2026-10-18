@@ -5,8 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
 import { FormSkeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { BottomSheet } from "@/components/apostas/BottomSheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScreenFooter } from "@/components/perfil/ScreenFooter";
 import { actionToast } from "@/lib/action-toast";
 import { patchMe } from "@/api/routes/patch-me";
@@ -134,53 +133,37 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* Confirmacao no padrao do app: sheet de baixo pra cima. Pede a senha:
-          excluir a conta apaga apostas, casas e historico, e so' o token
-          (sessao aberta num aparelho alheio) nao pode bastar. */}
-      <BottomSheet
+      {/* Pede a senha: excluir a conta apaga apostas, casas e historico, e
+          so' o token (sessao aberta num aparelho alheio) nao pode bastar. */}
+      <ConfirmDialog
         open={confirmOpen}
         onOpenChange={(open) => {
           setConfirmOpen(open);
           if (!open) setDeletePassword("");
         }}
         title="Excluir a conta?"
-        footer={
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="destructive"
-              className="w-full min-h-[48px] text-base"
-              disabled={deleting || deletePassword.length === 0}
-              onClick={handleDelete}
-            >
-              {deleting ? "Excluindo…" : "Excluir para sempre"}
-            </Button>
-            <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmOpen(false)}>
-              Cancelar
-            </Button>
-          </div>
-        }
+        description={`Apaga suas apostas, saldos de casas e movimentações${me?.telegramUserId ? ", e seu Telegram sai do grupo de Tips" : ""}. Não dá pra desfazer nem recuperar depois.`}
+        confirmLabel={deleting ? "Excluindo…" : "Excluir para sempre"}
+        destructive
+        pending={deleting}
+        confirmDisabled={deletePassword.length === 0}
+        onConfirm={() => void handleDelete()}
       >
-        <div className="pb-4 flex flex-col gap-3">
-          <p className="text-sm text-zinc-400">
-            Apaga suas apostas, saldos de casas e movimentações
-            {me?.telegramUserId ? ", e seu Telegram sai do grupo de Tips" : ""}. Não dá pra desfazer nem recuperar depois.
-          </p>
-          <div className="space-y-1.5">
-            <Label htmlFor="delete-password" className="text-sm font-normal text-zinc-400">
-              Digite sua senha para confirmar
-            </Label>
-            <Input
-              id="delete-password"
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="Sua senha"
-              className="min-h-[48px] rounded-lg px-3.5"
-              autoComplete="current-password"
-            />
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="delete-password" className="text-sm font-normal text-zinc-400">
+            Digite sua senha para confirmar
+          </Label>
+          <Input
+            id="delete-password"
+            type="password"
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
+            placeholder="Sua senha"
+            className="min-h-[48px] rounded-lg px-3.5"
+            autoComplete="current-password"
+          />
         </div>
-      </BottomSheet>
+      </ConfirmDialog>
     </MainLayout>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { BottomSheet } from "./BottomSheet";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CheckCircle, XCircle, Clock, Trash, CircleNotch, type Icon } from "@phosphor-icons/react";
 import { ResultIdEnum } from "@/api/routes/get-bets";
 import { cn } from "@/lib/utils";
@@ -149,28 +148,15 @@ export function BulkActionBar({ count, loading, onSetStatus, onDelete, onCancel 
         </div>
       </div>
 
-      {/* Confirmacao no mesmo padrao dos outros sheets do app: sobe de baixo,
-          na altura do polegar. O dialogo centralizado era o unico que ainda
-          aparecia no meio da tela. */}
-      <BottomSheet
+      <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={`Excluir ${count} aposta${plural}?`}
-        footer={
-          <div className="flex flex-col gap-2">
-            <Button variant="destructive" className="w-full min-h-[48px] text-base" onClick={handleConfirmDelete}>
-              Excluir {count} aposta{plural}
-            </Button>
-            <Button variant="ghost" className="w-full min-h-[44px]" onClick={() => setConfirmOpen(false)}>
-              Cancelar
-            </Button>
-          </div>
-        }
-      >
-        <p className="pb-4 text-sm text-zinc-400">
-          As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer.
-        </p>
-      </BottomSheet>
+        description="As apostas somem da lista e do histórico, e o lucro do período é recalculado sem elas. Não dá pra desfazer."
+        confirmLabel={`Excluir ${count} aposta${plural}`}
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

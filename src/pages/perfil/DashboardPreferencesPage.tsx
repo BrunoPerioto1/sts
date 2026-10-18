@@ -5,7 +5,7 @@ import { BottomSheet } from "@/components/apostas/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard } from "@/components/ui/stat-card";
 import { ICON_REGISTRY, resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
 import { useDashboardPreferences } from "@/hooks/dashboard/use-dashboard-preferences";
@@ -180,8 +180,6 @@ function DashboardPreferencesMobile() {
         setColorSide(null);
       }}><span className="w-6 h-6 rounded-full" style={{ backgroundColor: color.token }} aria-hidden="true" />{color.label}</button>)}</div>
     </BottomSheet>
-    <AlertDialog open={restoreOpen} onOpenChange={setRestoreOpen}>
-      <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Restaurar personalização?</AlertDialogTitle><AlertDialogDescription>Indicadores, ordem, ícones e cores voltarão para o padrão.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction disabled={saving} onClick={() => void save(null)}>Restaurar</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog open={restoreOpen} onOpenChange={setRestoreOpen} title="Restaurar personalização?" description="Indicadores, ordem, ícones e cores voltarão para o padrão." confirmLabel="Restaurar" confirmDisabled={saving} onConfirm={() => { setRestoreOpen(false); void save(null); }} />
   </MainLayout>;
 }

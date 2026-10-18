@@ -340,12 +340,12 @@ export function PipelineHealth({ data, isPending, isError, onRetry }: PipelineHe
     );
   }
 
-  // Erro isolado: a lista de usuários é outra chamada e continua na tela.
+  // Usuários saiu daqui pra tela própria: o erro só fala do pipeline.
   if (isError || !data) {
     return (
       <EmptyState
         title="Não foi possível ler o pipeline"
-        description="A lista de usuários abaixo continua valendo."
+        description="O resumo não chegou do servidor. As outras telas do admin não dependem dele."
         action={
           <Button variant="secondary" size="sm" onClick={onRetry}>
             Tentar de novo

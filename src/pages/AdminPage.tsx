@@ -1,7 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import { ArrowClockwise } from "@phosphor-icons/react";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
+import { RefreshButton } from "@/components/ui/refresh-button";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminPanel } from "@/components/admin/AdminPanel";
@@ -9,7 +8,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PipelineHealth, PipelineSummary, buildGroups, countAlerts } from "@/components/admin/PipelineHealth";
 import { useAdminOverview } from "@/hooks/queries/use-admin";
 import { formatSaoPaulo } from "@/lib/admin-health";
-import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
   const isMobile = useIsMobile();
@@ -22,26 +20,18 @@ export default function AdminPage() {
   // o número na tela chegou é o cache, não a tela.
   const updatedAt = overview.dataUpdatedAt ? formatSaoPaulo(new Date(overview.dataUpdatedAt).toISOString()) : "—";
 
-  const refresh = (
-    <>
-      <span className="text-xs opacity-40">atualizado {updatedAt}</span>
-      <Button
-        variant="secondary"
-        size="sm"
-        disabled={overview.isFetching}
-        onClick={() => void overview.refetch()}
-      >
-        <ArrowClockwise size={14} className={cn(overview.isFetching && "animate-spin")} />
-        Atualizar
-      </Button>
-    </>
-  );
-
   return (
     <MainLayout
       title="Admin"
       subtitle="Pipeline"
-      actions={refresh}
+      actions={
+        <RefreshButton
+          onRefresh={() => void overview.refetch()}
+          isFetching={overview.isFetching}
+          updatedAt={overview.dataUpdatedAt}
+          label="Atualizar pipeline"
+        />
+      }
       mobileHeader={
         // Sem botão de atualizar: no celular quem atualiza é o puxar pra baixo.
         <PageHeader back="/profile" title="Pipeline" subtitle={`atualizado ${updatedAt.slice(-5)} · horário de Brasília`} />

@@ -25,7 +25,7 @@ import { SelectToggleButton } from "@/components/ui/select-toggle-button";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { tintStyle, usePerformanceColor } from "@/hooks/use-performance-color";
 import { PullToRefreshIndicator } from "@/components/ui/pull-to-refresh";
-import { ArrowsClockwise, CaretRight, Check, HandPointing, X } from "@phosphor-icons/react";
+import { CaretRight, Check, CircleNotch, HandPointing, X } from "@phosphor-icons/react";
 
 // Sinal de cada resultado pra cor de Preferências (ganho/perda); anulada fica neutra.
 const BADGES: Record<number, { label: string; sign: number }> = {
@@ -188,7 +188,7 @@ function Vazio({ buscando }: { buscando: boolean }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card px-5 py-6 md:px-7" aria-live="polite">
       <p className="flex items-center gap-2 text-[17px] font-semibold text-foreground">
-        {buscando && <ArrowsClockwise size={17} className="animate-spin text-zinc-500" />}
+        {buscando && <CircleNotch size={17} className="animate-spin text-zinc-500" />}
         {buscando ? "Buscando resultados…" : "Nada pra confirmar"}
       </p>
       <p className="text-[13px] text-zinc-500">

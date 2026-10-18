@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/ui/page-header";
 import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BottomSheet } from "@/components/apostas/BottomSheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
 import { actionToast } from "@/lib/action-toast";
 import { useMe } from "@/hooks/queries/use-me";
@@ -243,28 +243,16 @@ export default function TelegramPage() {
         </div>
       )}
 
-      <BottomSheet
+      <ConfirmDialog
         open={confirmUnlink}
-        onOpenChange={(open) => !unlinking && setConfirmUnlink(open)}
+        onOpenChange={setConfirmUnlink}
         title="Desvincular o Telegram?"
-        footer={
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="destructive"
-              className="w-full min-h-[48px] text-base"
-              disabled={unlinking}
-              onClick={handleUnlink}
-            >
-              {unlinking ? "Desvinculando…" : "Desvincular"}
-            </Button>
-            <Button variant="ghost" className="w-full min-h-[44px]" disabled={unlinking} onClick={() => setConfirmUnlink(false)}>
-              Cancelar
-            </Button>
-          </div>
-        }
-      >
-        <p className="pb-4 text-sm text-zinc-400">{UNLINK_TELEGRAM_WARNING}</p>
-      </BottomSheet>
+        description={UNLINK_TELEGRAM_WARNING}
+        confirmLabel={unlinking ? "Desvinculando…" : "Desvincular"}
+        destructive
+        pending={unlinking}
+        onConfirm={() => void handleUnlink()}
+      />
     </MainLayout>
   );
 }

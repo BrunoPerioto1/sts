@@ -12,6 +12,8 @@ interface BottomSheetProps {
   nested?: boolean;
   title: React.ReactNode;
   titleExtra?: React.ReactNode;
+  // Ação de texto à direita do cabeçalho, antes do X (o "Limpar" dos filtros).
+  action?: React.ReactNode;
   // Faixa fixa logo abaixo do titulo, FORA da area rolavel — pra busca/filtro
   // que precisa ficar parado enquanto a lista rola por baixo.
   subHeader?: React.ReactNode;
@@ -30,6 +32,7 @@ export function BottomSheet({
   nested = false,
   title,
   titleExtra,
+  action,
   subHeader,
   footer,
   hideClose = false,
@@ -83,15 +86,18 @@ export function BottomSheet({
               </DrawerPrimitive.Title>
               {titleExtra}
             </div>
-            {!hideClose && (
-              <DrawerPrimitive.Close
-                onClick={() => onOpenChange(false)}
-                aria-label="Fechar"
-                className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-foreground shrink-0"
-              >
-                <X size={18} />
-              </DrawerPrimitive.Close>
-            )}
+            <div className="flex items-center shrink-0">
+              {action}
+              {!hideClose && (
+                <DrawerPrimitive.Close
+                  onClick={() => onOpenChange(false)}
+                  aria-label="Fechar"
+                  className="h-11 w-11 -mr-1 flex items-center justify-center text-zinc-400 hover:text-foreground shrink-0"
+                >
+                  <X size={18} />
+                </DrawerPrimitive.Close>
+              )}
+            </div>
           </div>
 
           {subHeader && <div className="shrink-0 px-4 pb-2">{subHeader}</div>}

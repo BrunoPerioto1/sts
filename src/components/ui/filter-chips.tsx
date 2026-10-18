@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { CaretDown, type Icon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
-interface FilterChipProps {
+// ref e props extras: o chip também serve de gatilho de popover (asChild).
+interface FilterChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   active: boolean;
-  onClick: () => void;
   children: ReactNode;
   /** Contagem dentro do chip, como badge ("Pendentes 40"). */
   count?: number;
@@ -21,18 +21,23 @@ interface FilterChipProps {
  * fundo neutro e borda sutil. 36px de altura visual, mas o alvo de toque
  * estende até 44px.
  */
-export function FilterChip({ active, onClick, children, count, icon: IconComponent, opensSheet, size = "default" }: FilterChipProps) {
+export const FilterChip = forwardRef<HTMLButtonElement, FilterChipProps>(function FilterChip(
+  { active, children, count, icon: IconComponent, opensSheet, size = "default", className, ...props },
+  ref,
+) {
   const lg = size === "lg";
   return (
     <button
+      ref={ref}
       type="button"
-      onClick={onClick}
       aria-pressed={opensSheet ? undefined : active}
+      {...props}
       className={cn(
         "press relative shrink-0 rounded-full flex items-center font-medium whitespace-nowrap transition-colors",
         lg ? "h-10 px-4 gap-2 text-sm" : "h-9 px-3 gap-1.5 text-[13px]",
         "after:absolute after:inset-x-0 after:-inset-y-1",
         active ? "bg-accent text-white" : "border border-foreground/10 bg-foreground/[0.04] text-zinc-300 hover:text-foreground",
+        className,
       )}
     >
       {IconComponent && <IconComponent size={lg ? 16 : 14} />}
@@ -51,7 +56,7 @@ export function FilterChip({ active, onClick, children, count, icon: IconCompone
       {opensSheet && <CaretDown size={lg ? 12 : 11} className="opacity-60" />}
     </button>
   );
-}
+});
 
 /**
  * Faixa de chips que rola de lado em vez de quebrar linha. Sangra até a borda
