@@ -55,7 +55,7 @@ Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números
 - O próprio produto funcionando, com os componentes reais do Dashboard renderizáveis com dados de exemplo (`src/components/landing/NumbersPreview.tsx`).
 - Mais de 80 casas cadastradas no cadastro global.
 - Mais de 200 usuários: número informado pelo dono em 2026-10-18 e usado na abertura da landing.
-- Total de apostas registradas na plataforma: ainda não informado. A conta de teste (`admin@gmail.com`) não tem papel de admin e não enxerga o total.
+- 11.979 apostas registradas na plataforma (sem as apagadas), 247 delas nos últimos 30 dias: consulta no banco feita pelo dono em 2026-10-18. A landing usa "+11 mil".
 - Ausências que não podem ser inventadas: depoimentos, resultados de clientes, logos de parceria com casas, estatísticas de lucro ou acerto de usuários.
 - `docs/screenshots/` mostra a UI antiga com dados reais do admin; não usar em material público.
 

@@ -26,9 +26,12 @@ const SIGNUP = "/login?cadastro=1";
 // Rótulo dos CTAs principais: diz o que acontece ao tocar (o teste começa).
 const START = "Começar teste gratuito";
 
-// Números do produto na abertura. Só entra número confirmado pelo dono
-// (PRODUCT.md, "Evidence on Hand"); o total de apostas entra quando vier o real.
-const PROOF: { value: string; label: string }[] = [{ value: "+200", label: "usuários já organizam suas apostas no SportsBet" }];
+// Números do produto na abertura. Só entra número confirmado (PRODUCT.md,
+// "Evidence on Hand"), arredondado pra baixo: 11.979 apostas viram "+11 mil".
+const PROOF: { value: string; label: string }[] = [
+  { value: "+200", label: "usuários organizando suas apostas" },
+  { value: "+11 mil", label: "apostas registradas no app" },
+];
 
 /**
  * Página de entrada pra quem ainda não tem conta. Sempre no escuro (a classe
@@ -145,11 +148,13 @@ function Hero() {
               </Button>
             </div>
             <p className="mt-4 text-[14px] text-zinc-400">3 dias de teste gratuito. Depois, {PRICE}/mês via PIX, sem fidelidade.</p>
-            <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t border-foreground/[0.07] pt-6">
+            {/* Número em cima e rótulo embaixo, em duas colunas: lado a lado o
+                rótulo quebrava em três linhas. */}
+            <div className="mt-8 grid grid-cols-2 gap-6 border-t border-foreground/[0.07] pt-6">
               {PROOF.map(({ value, label }) => (
-                <p key={label} className="flex items-baseline gap-3">
-                  <span className="landing-display text-[40px] tabular-nums">{value}</span>
-                  <span className="max-w-[24ch] text-[15px] leading-snug text-zinc-400">{label}</span>
+                <p key={label} className="flex flex-col gap-1.5">
+                  <span className="landing-display text-[34px] tabular-nums sm:text-[40px]">{value}</span>
+                  <span className="max-w-[22ch] text-balance text-[14px] leading-snug text-zinc-400">{label}</span>
                 </p>
               ))}
             </div>
