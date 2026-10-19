@@ -198,7 +198,7 @@ export default function PlanoPage() {
             >
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="payer-email" className="text-[13px] font-normal text-zinc-400">
-                  E-mail da sua conta do Mercado Pago
+                  E-mail pra cobrança
                 </Label>
                 <Input
                   id="payer-email"
@@ -208,7 +208,9 @@ export default function PlanoPage() {
                   value={payerEmail}
                   onChange={(e) => setPayerEmail(e.target.value)}
                 />
-                <p className="text-xs text-zinc-500">O Mercado Pago pede login com este e-mail na hora de pagar.</p>
+                <p className="text-xs text-zinc-500">
+                  Tem conta no Mercado Pago? Use o e-mail dela. Não tem? Dá pra pagar sem conta no próprio checkout.
+                </p>
               </div>
               <Button type="submit" size="lg" className="w-full" disabled={subscribing || !payerEmail.trim()}>
                 {subscribing ? "Abrindo o Mercado Pago…" : `Assinar o Pro · ${formatMoney(plan.price)}/mês`}

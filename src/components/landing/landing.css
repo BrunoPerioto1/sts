@@ -120,3 +120,122 @@
   .ws-out { animation: none; visibility: hidden; }
   .ws-scan { display: none; }
 }
+
+/* Entrada ao rolar (Reveal): sobe, sai do desfoque e aparece. Uma entrada só
+   pra página inteira, em cascata pelo --reveal-delay. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  filter: blur(6px);
+  transition:
+    opacity 700ms var(--ease-out-soft),
+    transform 900ms var(--ease-out-soft),
+    filter 700ms var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Diagrama do topo: trilho fixo e um pulso azul que corre por ele. Com
+   pathLength=100 o traço de 10 sai do começo e some no fim, sem dar a volta. */
+.flow-track {
+  stroke: rgb(var(--rgb-text) / 0.14);
+}
+.flow-pulse {
+  stroke: rgb(var(--rgb-accent-text));
+  stroke-linecap: round;
+  stroke-dasharray: 10 100;
+  stroke-dashoffset: 10;
+  animation: flow-pulse var(--dur, 2800ms) linear infinite;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes flow-pulse {
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: -100; }
+}
+/* No celular o trilho é vertical: um risco azul desce por ele. */
+.flow-drop::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 14px;
+  background: rgb(var(--rgb-accent-text));
+  animation: flow-drop 1800ms var(--ease-out-soft) infinite;
+  animation-delay: var(--d, 0ms);
+  transform: translateY(-100%);
+}
+@keyframes flow-drop {
+  to { transform: translateY(420%); }
+}
+[data-paused] .flow-pulse,
+[data-paused] .flow-drop::after {
+  animation-play-state: paused;
+}
+
+/* Fundo dos cards dos passos: noite em azul (um azul só, sem brilho de
+   neon), cada um com a luz de um lado, e um grão por cima pra não parecer
+   degradê de template. */
+.step-art::after,
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.step-bg-1 {
+  background:
+    radial-gradient(120% 90% at 0% 100%, rgb(var(--rgb-accent) / 0.38), transparent 55%),
+    linear-gradient(160deg, #10172a 0%, #0b0d14 55%, #09090b 100%);
+}
+.step-bg-2 {
+  background:
+    radial-gradient(90% 75% at 100% 0%, rgb(var(--rgb-accent-text) / 0.26), transparent 60%),
+    linear-gradient(200deg, #161a26 0%, #0c0d12 60%, #09090b 100%);
+}
+.step-bg-3 {
+  background:
+    radial-gradient(110% 80% at 50% 115%, rgb(var(--rgb-accent) / 0.34), transparent 60%),
+    linear-gradient(180deg, #0d1220 0%, #09090b 100%);
+}
+.step-art {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  transition-timing-function: var(--ease-out-soft);
+}
+.group:hover .step-art {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 24px 48px -16px rgba(0, 0, 0, 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
+  .flow-pulse, .flow-drop::after { display: none; }
+}
+
+/* Perguntas frequentes: a resposta abre deslizando onde o navegador já anima
+   <details> (::details-content + interpolate-size). Nos outros abre na hora,
+   como sempre abriu. */
+.faq details {
+  interpolate-size: allow-keywords;
+}
+.faq details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 320ms var(--ease-out-soft),
+    content-visibility 320ms allow-discrete;
+}
+.faq details[open]::details-content {
+  block-size: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq details::details-content {
+    transition: none;
+  }
+}
