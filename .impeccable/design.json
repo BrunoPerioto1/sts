@@ -11,7 +11,7 @@
       "superficie-2": { "role": "neutral", "displayName": "Superfície Elevada", "canonical": "rgb(28 28 32)", "tonalRamp": ["#09090b", "#131316", "#1c1c20", "#27272a", "#3f3f46", "#71717a", "#a1a1aa", "#e4e4e7"] },
       "texto": { "role": "neutral", "displayName": "Texto", "canonical": "rgb(242 242 244)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
       "texto-secundario": { "role": "neutral", "displayName": "Texto Secundário", "canonical": "rgb(161 161 170)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
-      "texto-apagado": { "role": "neutral", "displayName": "Texto Apagado", "canonical": "rgb(113 113 122)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
+      "texto-apagado": { "role": "neutral", "displayName": "Texto Apagado", "canonical": "rgb(133 133 141)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
       "divisoria": { "role": "neutral", "displayName": "Divisória", "canonical": "rgba(255, 255, 255, 0.1)", "tonalRamp": ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.08)", "rgba(255,255,255,0.1)", "rgba(255,255,255,0.12)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.24)"] },
       "ganho": { "role": "tertiary", "displayName": "Ganho", "canonical": "#4ade9e", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#4ade9e", "#6ee7b7", "#a7f3d0"] },
       "perda": { "role": "tertiary", "displayName": "Perda", "canonical": "#f0797e", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#c0272e", "#dc2626", "#f0797e", "#fca5a5", "#fecaca"] },
@@ -107,7 +107,7 @@
       "refersTo": "card-kpi",
       "description": "Número com rótulo, o mesmo bloco no Dashboard, no Perfil e em Casas.",
       "html": "<div class=\"ds-kpi\"><svg class=\"ds-kpi-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"16\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"224 208 32 208 32 48\"/><polyline points=\"224 96 160 152 96 104 32 160\"/></svg><div><p class=\"ds-kpi-label\">Lucro líquido</p><p class=\"ds-kpi-value\">+R$ 120,80</p><p class=\"ds-kpi-hint\">48 resolvidas</p></div></div>",
-      "css": ".ds-kpi { display: flex; align-items: flex-start; gap: 10px; width: 200px; padding: 12px 14px; border: 1px solid rgba(242, 242, 244, 0.07); border-radius: 12px; background: rgba(242, 242, 244, 0.015); font-family: Inter, system-ui, sans-serif; } .ds-kpi-icon { flex-shrink: 0; margin-top: 1px; color: #a1a1aa; } .ds-kpi p { margin: 0; } .ds-kpi-label { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #71717a; } .ds-kpi-value { margin-top: 2px; font-size: 18px; font-weight: 600; line-height: 1.25; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #4ade9e; white-space: nowrap; } .ds-kpi-hint { margin-top: 2px; font-size: 11px; color: #71717a; font-variant-numeric: tabular-nums; }"
+      "css": ".ds-kpi { display: flex; align-items: flex-start; gap: 10px; width: 200px; padding: 12px 14px; border: 1px solid rgba(242, 242, 244, 0.07); border-radius: 12px; background: rgba(242, 242, 244, 0.015); font-family: Inter, system-ui, sans-serif; } .ds-kpi-icon { flex-shrink: 0; margin-top: 1px; color: #a1a1aa; } .ds-kpi p { margin: 0; } .ds-kpi-label { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #85858d; } .ds-kpi-value { margin-top: 2px; font-size: 18px; font-weight: 600; line-height: 1.25; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #4ade9e; white-space: nowrap; } .ds-kpi-hint { margin-top: 2px; font-size: 11px; color: #85858d; font-variant-numeric: tabular-nums; }"
     },
     {
       "name": "Navegação lateral",
@@ -145,6 +145,7 @@
       "Números tabulares em todo valor de dinheiro, odd e contagem."
     ],
     "rules": [
+      { "name": "A Regra do Cinza Legível", "body": "Nenhum texto fica abaixo de 4,5:1, nem o apagado: o cinza mais claro do texto é #85858d no escuro (5,4:1 no fundo, 4,6:1 na superfície elevada) e #686871 no claro. Apagar texto com opacidade baixa (45% ou menos) dá o mesmo contraste reprovado do cinza antigo.", "section": "colors" },
       { "name": "A Regra do Azul Único", "body": "O app tem um azul. Pendente usa o mesmo azul em tom de texto; não existe segundo acento de marca. Ícone, favicon e logo também são azuis.", "section": "colors" },
       { "name": "A Regra do Azul Legível", "body": "Azul de superfície (#2563eb) nunca vira texto sobre o fundo escuro (dá 3.29:1); texto e ícone azuis usam o tom de texto (#3b82f6, 5.41:1).", "section": "colors" },
       { "name": "A Regra da Cor do Usuário", "body": "Verde e vermelho são leitura de resultado e de operação concluída ou com erro (\"Lido pela IA\", \"Registrada\"), e pertencem à preferência do usuário. Botão cheio usa as versões sólidas, que não mudam.", "section": "colors" },

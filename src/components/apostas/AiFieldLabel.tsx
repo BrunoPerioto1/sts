@@ -3,7 +3,7 @@ import { type AiFieldMark } from "@/hooks/apostas/use-aposta-form";
 import { cn } from "@/lib/utils";
 
 const badge =
-  "inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 ring-1 ring-inset";
+  "inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-semibold leading-4 ring-1 ring-inset";
 
 interface AiFieldLabelProps {
   children: React.ReactNode;

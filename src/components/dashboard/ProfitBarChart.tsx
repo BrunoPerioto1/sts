@@ -66,7 +66,7 @@ export function ProfitBarChart({ data, height = 180, semanal = false }: ProfitBa
       ticks={yTicks}
       axisLine={false}
       tickLine={false}
-      tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 10 }}
+      tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
       tickFormatter={(v: number) => v.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 })}
     />
   );
@@ -116,7 +116,7 @@ export function ProfitBarChart({ data, height = 180, semanal = false }: ProfitBa
               minTickGap={rola ? 40 : 24}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 10 }}
+              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
               tickFormatter={(v) => format(parseISO(v), "d MMM", { locale: ptBR })}
             />
             <ReferenceLine y={0} stroke="color-mix(in srgb, var(--color-text) 30%, transparent)" />

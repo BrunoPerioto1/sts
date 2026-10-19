@@ -39,19 +39,6 @@ const METRICS: DashboardMetrics = {
   maxDrawdown: 67.5,
 };
 
-const PREVIOUS: DashboardMetrics = {
-  ...METRICS,
-  totalBets: 49,
-  settledBets: 44,
-  wonBets: 21,
-  lostBets: 21,
-  totalStaked: 2380,
-  settledStake: 2200,
-  averageOdd: 2.01,
-  totalProfit: 63.8,
-  roi: 63.8 / 2200,
-  hitRate: 21 / 42,
-};
 
 const HOUSES = [
   { house: "Betano", profit: 88.4 },
@@ -85,7 +72,7 @@ export default function NumbersPreview() {
       </div>
       <div className="border-t border-foreground/[0.06]">
         {/* `stake` aqui é a banca: a unidade é 1% dela, R$ 50 como nas cenas de cima. */}
-        <DashboardKpiGrid metrics={METRICS} previous={PREVIOUS} stake={5000} preferences={PREFERENCES} desktop />
+        <DashboardKpiGrid metrics={METRICS} stake={5000} preferences={PREFERENCES} desktop />
       </div>
     </div>
   );

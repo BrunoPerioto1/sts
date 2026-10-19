@@ -63,7 +63,7 @@ export function DashboardPage() {
   const isMobile = useIsMobile();
   const { filters, preset, setPreset, setCustomRange, setHouseIds, setSportIds, firstBetDate, hasNoBets, ready } =
     useDashboardFilters();
-  const { metrics, previousMetrics, dailyData, loading, error, reload } = useDashboardData(filters);
+  const { metrics, dailyData, loading, error, reload } = useDashboardData(filters);
   const houses = useHouses();
   const sports = useSports();
 
@@ -144,7 +144,6 @@ export function DashboardPage() {
             filters={filters}
             preset={preset}
             metrics={metrics}
-            previousMetrics={previousMetrics}
             dailyData={dailyData}
             onPresetChange={setPreset}
           />
@@ -156,7 +155,6 @@ export function DashboardPage() {
               preset={preset}
               firstBetDate={firstBetDate}
               metrics={metrics}
-              previousMetrics={previousMetrics}
               dailyData={dailyData}
               houses={houses}
               sports={sports}

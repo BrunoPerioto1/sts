@@ -23,7 +23,9 @@
     --rgb-accent-text: 59 130 246;
     --rgb-pending: var(--rgb-accent-text);
     --rgb-warning: 251 191 36;
-    --rgb-muted: 113 113 122;
+    /* Cinza apagado: #85858d passa de 4,5:1 no fundo, no card e na superficie
+       elevada. O #71717a de antes dava 4,1:1 no fundo e 3,8:1 no card. */
+    --rgb-muted: 133 133 141;
 
     /* Escala zinc do Tailwind em variavel: no tema claro ela inverte, entao os
        ~300 text-zinc-400/500 (texto secundario) continuam legiveis sem trocar
@@ -33,7 +35,7 @@
     --zinc-200: 228 228 231;
     --zinc-300: 212 212 216;
     --zinc-400: 161 161 170;
-    --zinc-500: 113 113 122;
+    --zinc-500: 133 133 141;
     --zinc-600: 82 82 91;
     --zinc-700: 63 63 70;
     --zinc-800: 39 39 42;
@@ -174,13 +176,15 @@
     /* Ambar do escuro some no branco: no claro vai pro amber-700. */
     --rgb-warning: 180 83 9;
     --rgb-cashout: 124 58 237;
+    /* Cinza apagado no claro: #686871 da 5:1 no fundo (o #71717a dava 4,4:1). */
+    --rgb-muted: 104 104 113;
 
     --zinc-50: 9 9 11;
     --zinc-100: 24 24 27;
     --zinc-200: 39 39 42;
     --zinc-300: 63 63 70;
     --zinc-400: 82 82 91;
-    --zinc-500: 113 113 122;
+    --zinc-500: 104 104 113;
     --zinc-600: 161 161 170;
     --zinc-700: 212 212 216;
     --zinc-800: 228 228 231;

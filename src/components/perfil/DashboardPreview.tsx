@@ -109,7 +109,7 @@ export function DashboardPreview({ preferences, stake }: { preferences: Dashboar
                       interval={0}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: "var(--color-text)", opacity: 0.45, fontSize: 10 }}
+                      tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
                       tickFormatter={(v) => format(parseISO(v), "dd/MM")}
                     />
                     <Area type="monotone" dataKey="acum" stroke={lineColor} strokeWidth={2} fill="url(#preview-acum)" isAnimationActive={false} />

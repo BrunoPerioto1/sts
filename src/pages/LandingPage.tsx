@@ -252,7 +252,7 @@ function Numbers() {
     <section className="border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="numeros-title">
       <Container>
         <SectionHeading id="numeros-title" title="Seus números, do jeito que eles são.">
-          Lucro, ROI, unidades, taxa de acerto e odd média contam só o que já foi liquidado, comparados com o período anterior. Você escolhe quais números
+          Lucro, ROI, unidades, taxa de acerto e odd média contam só o que já foi liquidado. Você escolhe quais números
           aparecem e em que ordem.
         </SectionHeading>
         <div ref={ref} className="mt-12">
@@ -424,7 +424,7 @@ function Footer() {
             <span className="rounded border border-zinc-600 px-1.5 text-[12px] font-semibold">18+</span>
             Proibido para menores de 18 anos.
           </p>
-          <p className="max-w-[90ch]">
+          <p className="max-w-[65ch]">
             Apostas envolvem risco de perda e podem causar dependência. Aposte com responsabilidade e só o que pode perder. O SportsBet Manager é uma
             ferramenta de controle: não é casa de apostas, não recebe apostas e não movimenta dinheiro.
           </p>

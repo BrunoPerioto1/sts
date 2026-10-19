@@ -58,7 +58,6 @@ interface DashboardDesktopViewProps {
   filters: { startDate: string; endDate: string; houseIds: number[]; sportIds: number[] };
   preset: DatePreset;
   metrics: DashboardMetrics;
-  previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
   onPresetChange: (preset: DatePreset) => void;
 }
@@ -73,7 +72,6 @@ export function DashboardDesktopView({
   filters,
   preset,
   metrics,
-  previousMetrics,
   dailyData,
   onPresetChange,
 }: DashboardDesktopViewProps) {
@@ -169,7 +167,7 @@ export function DashboardDesktopView({
         </div>
 
         <div className="border-t border-foreground/[0.05]">
-          <DashboardKpiGrid metrics={metrics} previous={previousMetrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
+          <DashboardKpiGrid metrics={metrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
         </div>
 
         <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-foreground/[0.05]">

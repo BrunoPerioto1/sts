@@ -2,16 +2,11 @@ import { useMemo } from "react";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { DASHBOARD_KPI_REGISTRY, kpiColumnSpan, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { kpiValues } from "@/lib/dashboard-kpi-values";
-import { kpiDelta } from "@/lib/dashboard-kpi-delta";
 import { StatCard } from "@/components/ui/stat-card";
 import { resolveKpiIcon } from "./dashboard-icons";
 
-// Delta com cor só onde "subir" é bom sem ambiguidade; volume e odd subindo
-// não é mérito nem culpa, então ficam neutros.
-const DELTA_WITH_COLOR = new Set(["roi", "units", "hitRate", "profit"]);
-
-export function DashboardKpiGrid({ metrics, previous, stake, preferences, desktop = false }: {
-  metrics: DashboardMetrics; previous?: DashboardMetrics; stake: number; preferences: DashboardPreferences; desktop?: boolean;
+export function DashboardKpiGrid({ metrics, stake, preferences, desktop = false }: {
+  metrics: DashboardMetrics; stake: number; preferences: DashboardPreferences; desktop?: boolean;
 }) {
   // Preferências não participam deste memo.
   const values = useMemo(() => kpiValues(metrics, stake), [metrics, stake]);
@@ -26,25 +21,10 @@ export function DashboardKpiGrid({ metrics, previous, stake, preferences, deskto
         const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
         const data = values[kpi.id];
         const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, preferences.performanceColors) : undefined;
-        const delta = previous ? kpiDelta(kpi.id, metrics, previous, stake) : null;
         // Mais de 6 numa linha espreme: quebra em linhas de 4, com divisória entre elas.
         return <div key={kpi.id} className={`flex-1 min-w-fit px-5 py-4 border-l border-foreground/[0.05] first:border-l-0 ${visible.length > 6 ? "basis-1/4 [&:nth-child(4n+1)]:border-l-0 [&:nth-child(n+5)]:border-t" : ""}`}>
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5 whitespace-nowrap">{meta.label}</p>
           <p className="text-2xl leading-tight font-semibold tabular-nums whitespace-nowrap" style={{ color }}>{data.value}</p>
-          {previous && (
-            <p className="mt-1 text-[11px] tabular-nums whitespace-nowrap text-zinc-500" title="Comparado ao período anterior de mesma duração">
-              {delta ? (
-                <>
-                  <span style={DELTA_WITH_COLOR.has(kpi.id) ? { color: performanceColor(delta.signed, preferences.performanceColors) } : undefined}>
-                    {delta.text}
-                  </span>{" "}
-                  vs. anterior
-                </>
-              ) : (
-                "—"
-              )}
-            </p>
-          )}
         </div>;
       })}
     </div>;

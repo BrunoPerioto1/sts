@@ -204,7 +204,7 @@ function Field({ label, value, delay, ai = true, className }: { label: string; v
       <span className="flex items-center gap-1.5 text-[12px] text-zinc-400">
         {label}
         {ai && (
-          <span className="ws-in rounded bg-accent/15 px-1 text-[10px] font-semibold text-accent-text" style={at(delay)}>
+          <span className="ws-in rounded bg-accent/15 px-1 text-[11px] font-semibold text-accent-text" style={at(delay)}>
             IA
           </span>
         )}
@@ -218,9 +218,14 @@ function Field({ label, value, delay, ai = true, className }: { label: string; v
   );
 }
 
+/**
+ * A tela do app dentro da cena. Sem caixa própria: a moldura já é o card, e
+ * card dentro de card só soma borda. Uma linha separa da peça ao lado (em
+ * cima no celular, à esquerda a partir de 640px).
+ */
 function Panel({ title, right, children, className }: { title: string; right?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("rounded-xl border border-foreground/10 bg-background/40 p-4", className)}>
+    <div className={cn("border-t border-foreground/[0.07] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0", className)}>
       <div className="mb-3.5 flex items-center justify-between gap-3">
         <p className="text-[14px] font-semibold">{title}</p>
         {right}
@@ -230,10 +235,13 @@ function Panel({ title, right, children, className }: { title: string; right?: R
   );
 }
 
+/** Linhas de lista separadas por divisória, sem caixa em volta de cada uma. */
+const LIST = "divide-y divide-foreground/[0.07] [&>*]:py-3 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0";
+
 /** Linha secundária, apagada: o que já estava na tela antes da cena. */
 function QuietRow({ title, detail, right, status, tone = "success" }: { title: string; detail: string; right: string; status: string; tone?: "success" | "danger" }) {
   return (
-    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-foreground/[0.06] p-3 opacity-60">
+    <div className="flex items-center justify-between gap-3 opacity-60">
       <div className="min-w-0">
         <p className="truncate text-[13px] font-medium">{title}</p>
         <p className="truncate text-[12px] text-zinc-400">{detail}</p>
@@ -249,8 +257,9 @@ function QuietRow({ title, detail, right, status, tone = "success" }: { title: s
 function PrintScene() {
   return (
     <div className="grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-5">
-      {/* O print: um bilhete genérico, sem imitar a tela de nenhuma casa. */}
-      <div className="ws-in relative overflow-hidden rounded-xl border border-foreground/10 bg-zinc-900 p-4 text-[12px]">
+      {/* O print: um bilhete genérico, sem imitar a tela de nenhuma casa. Só um
+          tom acima da moldura, sem borda: a peça não é um card dentro do card. */}
+      <div className="ws-in relative overflow-hidden rounded-xl bg-[rgb(var(--rgb-surface-2))] p-4 text-[12px]">
         <div className="flex items-center justify-between text-zinc-400">
           <span>Bilhete</span>
           <span>Betano</span>
@@ -312,7 +321,7 @@ function PrintScene() {
 function TipScene() {
   return (
     <div className="grid gap-4 sm:grid-cols-[220px_minmax(0,1fr)] sm:gap-5">
-      <div className="ws-in self-start rounded-xl border border-foreground/10 bg-zinc-900 p-3.5 text-[13px]" style={at(150)}>
+      <div className="ws-in self-start rounded-xl bg-[rgb(var(--rgb-surface-2))] p-3.5 text-[13px]" style={at(150)}>
         <div className="mb-2.5 flex items-center gap-2 text-zinc-400">
           <TelegramLogo size={16} className="text-accent-text" weight="fill" />
           Canal de tips
@@ -326,35 +335,37 @@ function TipScene() {
       </div>
 
       <Panel title="Tips" right={<span className="text-[12px] text-zinc-400">pendentes</span>}>
-        <div className="ws-in rounded-lg border border-foreground/[0.08] p-3" style={at(1400)}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium">Corinthians x São Paulo</p>
-              <p className="truncate text-[12px] text-zinc-400">Mais de 2.5 gols</p>
+        <div className={LIST}>
+          <div className="ws-in" style={at(1400)}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-medium">Corinthians x São Paulo</p>
+                <p className="truncate text-[12px] text-zinc-400">Mais de 2.5 gols</p>
+              </div>
+              <span className="text-[14px] font-semibold tabular-nums">1,85</span>
             </div>
-            <span className="text-[14px] font-semibold tabular-nums">1,85</span>
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-3 text-[12px]">
-            <span className="ws-in whitespace-nowrap tabular-nums text-zinc-300" style={at(2200)}>
-              R$ 50,00 <span className="text-zinc-400">1% da banca</span>
-            </span>
-            <span className="relative inline-flex h-6 items-center">
-              <span className="ws-out rounded-md bg-pending/15 px-2 py-0.5 font-medium text-pending" style={at(3400)}>
-                Pendente
+            <div className="mt-3 flex items-center justify-between gap-3 text-[12px]">
+              <span className="ws-in whitespace-nowrap tabular-nums text-zinc-300" style={at(2200)}>
+                R$ 50,00 <span className="text-zinc-400">1% da banca</span>
               </span>
-              <span className="ws-in absolute right-0 whitespace-nowrap rounded-md bg-success/15 px-2 py-0.5 font-medium text-success" style={at(3500)}>
-                Planilhada
+              <span className="relative inline-flex h-6 items-center">
+                <span className="ws-out rounded-md bg-pending/15 px-2 py-0.5 font-medium text-pending" style={at(3400)}>
+                  Pendente
+                </span>
+                <span className="ws-in absolute right-0 whitespace-nowrap rounded-md bg-success/15 px-2 py-0.5 font-medium text-success" style={at(3500)}>
+                  Planilhada
+                </span>
               </span>
-            </span>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <span className="ws-press inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-[13px] font-medium text-white" style={at(3000)}>
+                Planilhar
+              </span>
+            </div>
           </div>
+          {/* Uma tip de antes, já resolvida: a fila não começa vazia. */}
+          <QuietRow title="Bahia x Grêmio" detail="Bahia vence" right="1,72" status="Planilhada" />
         </div>
-        <div className="mt-4 flex justify-end">
-          <span className="ws-press inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-[13px] font-medium text-white" style={at(3000)}>
-            Planilhar
-          </span>
-        </div>
-        {/* Uma tip de antes, já resolvida: a fila não começa vazia. */}
-        <QuietRow title="Bahia x Grêmio" detail="Bahia vence" right="1,72" status="Planilhada" />
       </Panel>
     </div>
   );
@@ -363,7 +374,7 @@ function TipScene() {
 function ResultScene() {
   return (
     <div className="grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-5">
-      <div className="ws-in self-start rounded-xl border border-foreground/10 bg-zinc-900 p-4" style={at(150)}>
+      <div className="ws-in self-start rounded-xl bg-[rgb(var(--rgb-surface-2))] p-4" style={at(150)}>
         <div className="flex items-center justify-between text-[12px] text-zinc-400">
           <span>Brasileirão</span>
           <span className="rounded bg-foreground/[0.07] px-1.5 py-0.5">Encerrado</span>
@@ -378,9 +389,9 @@ function ResultScene() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <Panel title="Conferência" right={<span className="text-[12px] text-zinc-400">2 propostas</span>}>
-          <div className="rounded-lg border border-foreground/[0.08] p-3">
+      <Panel title="Conferência" right={<span className="text-[12px] text-zinc-400">2 propostas</span>}>
+        <div className={LIST}>
+          <div>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-medium">Flamengo x Palmeiras</p>
@@ -398,15 +409,16 @@ function ResultScene() {
             </div>
           </div>
           <QuietRow title="Corinthians x São Paulo" detail="Mais de 2.5 gols, Bet365" right="R$ 50,00 a 1,85" status="Perdida" tone="danger" />
-        </Panel>
-        <div className="ws-in flex items-center justify-between rounded-xl border border-foreground/10 bg-background/40 px-4 py-3" style={at(3300)}>
-          <span className="text-[13px] text-zinc-300">Saldo da Betano</span>
-          <span className="flex items-baseline gap-2 tabular-nums">
-            <span className="text-[12px] text-zinc-400 line-through">R$ 480,00</span>
-            <span className="text-[15px] font-semibold">R$ 535,00</span>
-          </span>
+          {/* O efeito da confirmação: o saldo da casa muda na hora. */}
+          <div className="ws-in flex items-center justify-between" style={at(3300)}>
+            <span className="text-[13px] text-zinc-300">Saldo da Betano</span>
+            <span className="flex items-baseline gap-2 tabular-nums">
+              <span className="text-[12px] text-zinc-400 line-through">R$ 480,00</span>
+              <span className="text-[15px] font-semibold">R$ 535,00</span>
+            </span>
+          </div>
         </div>
-      </div>
+      </Panel>
     </div>
   );
 }

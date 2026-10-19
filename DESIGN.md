@@ -9,7 +9,7 @@ colors:
   superficie-2: "#1c1c20"
   texto: "#f2f2f4"
   texto-secundario: "#a1a1aa"
-  texto-apagado: "#71717a"
+  texto-apagado: "#85858d"
   divisoria: "rgba(255, 255, 255, 0.1)"
   ganho: "#4ade9e"
   perda: "#f0797e"
@@ -175,7 +175,7 @@ Paleta noturna monocromática com um único acento azul e um quarteto semântico
 - **Superfície Elevada** (#1c1c20): segunda camada (pílula do seletor, linhas em destaque).
 - **Texto** (#f2f2f4): texto principal.
 - **Texto Secundário** (#a1a1aa): legendas, rótulos de gráfico, descrições.
-- **Texto Apagado** (#71717a): rótulos de seção em caixa alta, status neutro (cancelada, zero).
+- **Texto Apagado** (#85858d; no tema claro, #686871): rótulos de seção em caixa alta, status neutro (cancelada, zero), legendas de KPI.
 - **Divisória** (rgba(255, 255, 255, 0.1)): bordas finas de card, campo e lista.
 
 A escala zinc inteira vive em variáveis e inverte no tema claro, então `text-zinc-400` continua legível nos dois temas sem trocar classe.
@@ -187,6 +187,8 @@ A escala zinc inteira vive em variáveis e inverte no tema claro, então `text-z
 - **Cashout** (#8b5cf6): o único status fora do quarteto ganho/perda/pendente/neutro, em violeta para não se confundir com nenhum deles.
 
 ### Named Rules
+**A Regra do Cinza Legível.** Nenhum texto fica abaixo de 4,5:1, nem o apagado: o cinza mais claro do texto é #85858d no escuro (5,4:1 no fundo, 4,6:1 na superfície elevada) e #686871 no claro. Apagar texto com opacidade baixa (45% ou menos) dá o mesmo contraste reprovado do cinza antigo.
+
 **A Regra do Azul Único.** O app tem um azul. Pendente usa o mesmo azul em tom de texto; não existe segundo acento de marca. Ícone, favicon e logo também são azuis.
 
 **A Regra do Azul Legível.** Azul de superfície (#2563eb) nunca vira texto sobre o fundo escuro (dá 3.29:1); texto e ícone azuis usam o tom de texto (#3b82f6, 5.41:1).

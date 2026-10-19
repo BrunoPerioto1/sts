@@ -58,6 +58,8 @@ export function useDashboardData(filters: Params) {
   const scope = houseIds.length || sportIds.length ? `${houseIds.join(",")}|${sportIds.join(",")}` : null;
   const key = [scope, startDate, endDate] as const;
 
+  // Os KPIs não mostram mais o "vs. anterior", mas é este endpoint que devolve
+  // as métricas do período (`current`); o `previous` que vem junto fica sem uso.
   const comparison = useQuery({
     queryKey: ["dashboard", "metrics-comparison", ...key],
     queryFn: () => {
@@ -85,7 +87,6 @@ export function useDashboardData(filters: Params) {
     // Mesmo fallback do comportamento anterior, que engolia o erro da
     // comparação e caía em métricas zeradas em vez de quebrar a tela.
     metrics: comparison.data?.current ?? emptyMetrics,
-    previousMetrics: comparison.data?.previous ?? emptyMetrics,
     dailyData: daily.data ?? [],
     loading: comparison.isPending || daily.isPending,
     error: comparison.isError || daily.isError,

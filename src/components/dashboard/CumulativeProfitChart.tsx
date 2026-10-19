@@ -56,7 +56,7 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
               tickCount={3}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 10 }}
+              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
               tickFormatter={(v: number) => v.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 2 })}
             />
             <XAxis
@@ -64,7 +64,7 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
               ticks={ticks}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 10 }}
+              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
               tickFormatter={(v) => format(parseISO(v), "d MMM", { locale: ptBR })}
             />
             <ReferenceLine x={atual.date} stroke="var(--color-text)" strokeOpacity={0.35} strokeDasharray="3 3" />

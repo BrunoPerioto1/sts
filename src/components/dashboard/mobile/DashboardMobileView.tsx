@@ -34,7 +34,6 @@ interface DashboardMobileViewProps {
   preset: DatePreset;
   firstBetDate: string | null;
   metrics: DashboardMetrics;
-  previousMetrics: DashboardMetrics;
   dailyData: DailySummaryPoint[];
   houses: { id: number; name: string }[];
   sports: { id: number; name: string }[];
