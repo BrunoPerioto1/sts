@@ -60,7 +60,7 @@ const PROOF: { value: string; label: string; short: string }[] = [
  * Página de entrada pra quem ainda não tem conta. Sempre no escuro (a classe
  * `dark` redefine os tokens aqui dentro): é a cara do produto e a dos prints.
  * Tudo que é número aqui é exemplo, e a página não promete lucro — vende
- * controle.
+ * controle. O "quanto está lucrando" do título é escolha do dono.
  */
 export default function LandingPage() {
   // A classe `dark` daqui não chega no <html>: pra quem usa o tema claro no
@@ -164,12 +164,15 @@ function Hero() {
         className="pointer-events-none absolute inset-x-0 top-0 h-[760px] [background-image:radial-gradient(rgb(var(--rgb-text)/0.09)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent)]"
       />
       <div className="relative mx-auto max-w-[1100px] text-center">
-        <h1 id="hero-title" className="landing-display mx-auto max-w-[18ch] text-balance text-[44px] sm:text-[64px] lg:text-[80px]">
-          Chega de digitar aposta em planilha.
+        {/* Título escolhido pelo dono (2026-10-19). Uma frase por bloco: a segunda nunca começa no fim da primeira linha. */}
+        {/* 32px no celular: com a Archivo larga, "exatamente" não cabe maior sem o título ir a seis linhas. */}
+        <h1 id="hero-title" className="landing-display mx-auto text-balance text-[32px] sm:text-[56px] lg:text-[68px]">
+          Registre suas apostas. <span className="block">Saiba exatamente quanto está lucrando.</span>
         </h1>
+        {/* "Preenche" e "propõe", não "registra": quem confirma a aposta e o resultado é a pessoa (PRODUCT.md, princípio 1). */}
         <p className="mx-auto mt-6 max-w-[56ch] text-balance text-[17px] leading-relaxed text-zinc-300 sm:text-[18px]">
-          Registre do seu jeito e o SportsBet acompanha o resto: propõe o resultado pelo placar, fecha o saldo de cada casa e mostra seu
-          lucro e ROI de verdade, sem conta de cabeça.
+          Mande um print, um áudio ou digite. O SportsBet preenche a aposta, propõe o resultado pelo placar e mostra seu lucro, ROI e saldo
+          por casa.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
@@ -316,13 +319,14 @@ function Groups() {
         </Reveal>
         <p className="mt-3 text-[13px] text-zinc-400">Demonstração com dados de exemplo.</p>
 
-        <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16">
+        {/* "Seus grupos" com 320px e respiro de 48px: a partir do lg sobram ~550px pros três passos numa linha só (precisam de ~515px). */}
+        <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>
             <Reveal>
-              <ol className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3" aria-label="Como começar">
+              <ol className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-x-3" aria-label="Como começar">
                 {GROUP_STEPS.map((step, i) => (
-                  <li key={step} className="flex items-center gap-2.5 text-[15px] font-medium">
-                    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-accent/[0.15] text-[13px] font-semibold tabular-nums text-accent-text">
+                  <li key={step} className="flex items-center gap-2.5 whitespace-nowrap text-[15px] font-medium">
+                    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-accent/[0.15] text-[12px] font-semibold tabular-nums text-accent-text">
                       {i + 1}
                     </span>
                     {step}
@@ -582,13 +586,14 @@ function Pricing() {
   return (
     <section id="preco" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="preco-title">
       <Container>
-        <Reveal className="mx-auto max-w-[640px] text-center">
-          {/* "se está lucrando", não "quanto lucra": a página vende controle, não promete lucro (PRODUCT.md). */}
+        {/* 760px: "Automatize quando quiser." pede ~725px a 52px e precisa caber numa linha. */}
+        <Reveal className="mx-auto max-w-[760px] text-center">
+          {/* Fala dos dois planos ("começar" é o Grátis, "automatizar" é o Pro) e não repete o título do topo. */}
           <h2 id="preco-title" className="landing-display text-balance text-[36px] sm:text-[52px]">
-            {/* No desktop, uma frase por linha: o "Saiba" não fica no fim da primeira. */}
-            Controle suas apostas. <span className="sm:block">Saiba se está lucrando.</span>
+            {/* No desktop, uma frase por linha: o "Automatize" não fica no fim da primeira. */}
+            Comece grátis. <span className="sm:block">Automatize quando quiser.</span>
           </h2>
-          <p className="mt-4 text-balance text-[16px] leading-relaxed text-zinc-400">Comece grátis. Sem cartão de crédito.</p>
+          <p className="mt-4 text-balance text-[16px] leading-relaxed text-zinc-400">Sem cartão de crédito.</p>
         </Reveal>
 
         <div className="mx-auto mt-12 grid max-w-[880px] gap-4 md:grid-cols-2 md:gap-5">

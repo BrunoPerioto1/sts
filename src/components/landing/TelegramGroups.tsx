@@ -80,8 +80,12 @@ const STATUS = {
   lost: "bg-danger/15 text-danger",
 };
 
-// Coluna de stake só a partir do sm: no celular a linha fica com jogo, odd e status.
-const SHEET_GRID = "grid grid-cols-[minmax(0,1fr)_36px_70px] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_36px_64px_70px]";
+// Coluna de stake no sm/md (etapas empilhadas, largura de sobra) e do xl pra
+// cima. No celular e no lg, em que cada etapa é estreita, ela sai pra o nome do
+// jogo caber inteiro; a stake continua no card do bot, ao lado.
+const SHEET_GRID =
+  "grid grid-cols-[minmax(0,1fr)_32px_66px] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_36px_64px_70px] lg:grid-cols-[minmax(0,1fr)_36px_70px] xl:grid-cols-[minmax(0,1fr)_36px_64px_70px]";
+const STAKE_CELL = "hidden text-right tabular-nums sm:block lg:hidden xl:block";
 
 function SheetRow({ game, detail, odd, stake, status, label }: { game: string; detail: string; odd: string; stake: string; status: keyof typeof STATUS; label: string }) {
   return (
@@ -91,7 +95,7 @@ function SheetRow({ game, detail, odd, stake, status, label }: { game: string; d
         <span className="block truncate text-[11px] text-zinc-400">{detail}</span>
       </span>
       <span className="text-right tabular-nums">{odd}</span>
-      <span className="hidden text-right tabular-nums sm:block">{stake}</span>
+      <span className={STAKE_CELL}>{stake}</span>
       <span className={cn("justify-self-end rounded-md px-1.5 py-0.5 text-[11px] font-medium", STATUS[status])}>{label}</span>
     </>
   );
@@ -123,7 +127,8 @@ export function GroupsDemo() {
         onAnimationEnd={() => setCycle((c) => c + 1)}
       />
       {/* key: a volta remonta e as entradas com atraso recomeçam do zero. */}
-      <div key={cycle} className="grid lg:grid-cols-3">
+      {/* A planilha leva uma fatia maior: é a etapa com mais colunas. */}
+      <div key={cycle} className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
         <Pane step={1} title="No grupo">
           <div className="rounded-xl bg-[rgb(var(--rgb-surface-2))] p-3.5">
             <div className="flex items-center gap-2.5">
@@ -226,7 +231,7 @@ export function GroupsDemo() {
             <div className={cn(SHEET_GRID, "border-b border-foreground/[0.07] pb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-400")}>
               <span>Jogo</span>
               <span className="text-right">Odd</span>
-              <span className="hidden text-right sm:block">Stake</span>
+              <span className={STAKE_CELL}>Stake</span>
               <span className="text-right">Status</span>
             </div>
             <div className="divide-y divide-foreground/[0.07]">
