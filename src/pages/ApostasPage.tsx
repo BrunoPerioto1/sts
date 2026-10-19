@@ -21,6 +21,7 @@ import { useHouses } from "@/hooks/queries/use-houses";
 import { paramsFrom, useBetMonths } from "@/hooks/apostas/use-bets-query";
 import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
+import { useProGate } from "@/hooks/queries/use-plan";
 import { Button } from "@/components/ui/button";
 import { MagnifyingGlass, Plus, SlidersHorizontal } from "@phosphor-icons/react";
 import { actionToast } from "@/lib/action-toast";
@@ -35,6 +36,7 @@ export default function ApostasPage() {
   const houses = useHouses();
   const filters = useApostasFilters();
   const selection = useBulkSelection();
+  const proGate = useProGate();
 
   const [editAposta, setEditAposta] = useState<BetItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -146,10 +148,12 @@ export default function ApostasPage() {
     onDateRangeChange: filters.setDateRange,
     onClearFilters: filters.clearFilters,
     // A tela só tem as linhas dos meses abertos: o CSV busca o filtro inteiro.
-    onExportCsv: () =>
+    onExportCsv: () => {
+      if (!proGate("csvExport", "Exportar CSV")) return;
       exportBetsListCsv(paramsFrom(filters.queryFilters)).catch(() =>
         actionToast.error({ description: "Não deu pra exportar agora. Tente de novo." })
-      ),
+      );
+    },
     isLoading: loading,
   };
 

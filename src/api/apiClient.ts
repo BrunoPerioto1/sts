@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig } from 'axios';
-import { clearToken, getToken, saveAccessBlock } from '@/lib/auth-session';
+import { clearToken, getToken } from '@/lib/auth-session';
 
 /**
  * Uma instância só do axios, com os interceptors registrados uma vez. Antes
@@ -19,8 +19,8 @@ http.interceptors.request.use((config) => {
 // Token recusado pelo backend (secret trocado, vencido no meio da sessão):
 // volta pro login. Só o 401 do Passport ("Unauthorized"/"TokenExpiredError")
 // — "Senha atual incorreta" também é 401 e não pode derrubar a sessão.
-// 402 = acesso vencido ou conta nova sem ativar: leva pra tela do PIX, levando
-// junto o corpo da resposta (é nele que vem o payToken da conta).
+// Vencer o Pro não tranca mais a conta (cai no Grátis): o 403 de recurso do
+// Pro (code PRO_REQUIRED / AI_DAILY_LIMIT) fica com quem chamou.
 http.interceptors.response.use(undefined, (error) => {
   const status = error?.response?.status;
   const message = error?.response?.data?.message;
@@ -31,9 +31,6 @@ http.interceptors.response.use(undefined, (error) => {
   ) {
     clearToken();
     window.location.href = '/login';
-  } else if (status === 402) {
-    saveAccessBlock(error.response.data ?? null);
-    if (window.location.pathname !== '/renovar') window.location.href = '/renovar';
   }
   return Promise.reject(error);
 });

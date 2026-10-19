@@ -14,6 +14,7 @@ import { metricsFromBalances } from "@/lib/house-metrics";
 import { idleDays, staleDaysFrom } from "@/lib/house-activity";
 import { groupHouses, houseMoney } from "@/lib/house-groups";
 import { useMe } from "@/hooks/queries/use-me";
+import { useProGate } from "@/hooks/queries/use-plan";
 import { NovaTransacaoModal } from "./NovaTransacaoModal";
 import { MovimentacaoModal } from "./MovimentacaoModal";
 import { SaqueLoteModal } from "./SaqueLoteModal";
@@ -27,6 +28,7 @@ export function CasasApostaView() {
   const metricsQuery = useHouseMetrics();
   const invalidate = useInvalidateBetData();
   const { me } = useMe();
+  const proGate = useProGate();
   const staleDays = staleDaysFrom(me?.staleHouseDays);
 
   const houses = balancesQuery.data ?? EMPTY_HOUSES;
@@ -122,7 +124,7 @@ export function CasasApostaView() {
         onOnlyWithBalanceChange={setOnlyWithBalance}
         sort={sort}
         onSortChange={setSort}
-        onExportCsv={() => exportHousesCsv(filteredHouses)}
+        onExportCsv={() => proGate("csvExport", "Exportar CSV") && exportHousesCsv(filteredHouses)}
         onWithdraw={() => setIsSaqueLoteOpen(true)}
         isLoading={loading}
       />

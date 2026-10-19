@@ -147,7 +147,7 @@ function Hero() {
                 <a href="#como-funciona">Ver funcionando</a>
               </Button>
             </div>
-            <p className="mt-4 text-[14px] text-zinc-400">3 dias de teste gratuito. Depois, {PRICE}/mês via PIX, sem fidelidade.</p>
+            <p className="mt-4 text-[14px] text-zinc-400">3 dias de Pro grátis, sem cartão. Depois, siga no Grátis ou assine por {PRICE}/mês.</p>
             {/* Número em cima e rótulo embaixo, em duas colunas: lado a lado o
                 rótulo quebrava em três linhas. */}
             <div className="mt-8 grid grid-cols-2 gap-6 border-t border-foreground/[0.07] pt-6">
@@ -270,19 +270,40 @@ function Numbers() {
   );
 }
 
-// O grupo de tips é vendido à parte (PRODUCT.md): não entra nesta lista, e o
-// aviso logo abaixo dela diz isso com todas as letras.
-const INCLUDED = [
-  "Leitura do print do bilhete por IA",
-  "Conferência de resultado pelo placar",
-  "Saldo por casa e comparador de casas",
-  "Dashboard personalizável e exportação em CSV",
+// O grupo de tips é vendido à parte (PRODUCT.md): não entra nas listas, e o
+// aviso logo abaixo delas diz isso com todas as letras. As regras dos planos
+// moram no backend (src/users/plan.ts); aqui é só a vitrine delas.
+const PLANS = [
+  {
+    name: "Grátis",
+    price: "R$ 0",
+    note: "pra sempre",
+    items: [
+      "Registro digitado sem limite, no site e no bot",
+      "5 leituras de print ou áudio por IA por dia",
+      "Saldo por casa, comparador e dashboard",
+    ],
+  },
+  {
+    name: "Pro",
+    price: PRICE,
+    note: "por mês",
+    items: [
+      "Leitura de print e áudio por IA sem limite",
+      "Conferência de resultado pelo placar",
+      "Exportação em CSV",
+      "Planilhar as tips do grupo no app e no bot",
+    ],
+  },
 ];
 
 const STEPS = [
   { title: "Crie sua conta", text: "Informe nome, e-mail e senha. O cadastro leva menos de um minuto." },
-  { title: "Teste por 3 dias", text: "Use todos os recursos sem custo, com as suas próprias apostas." },
-  { title: `Assine por ${PRICE}/mês`, text: "Ao fim do teste, o pagamento é feito via PIX, por QR Code ou código copia e cola. Em seguida, basta tocar em “Já paguei”." },
+  { title: "Teste o Pro por 3 dias", text: "Use tudo sem custo, com as suas próprias apostas. Não pede cartão." },
+  {
+    title: "Assine ou siga no Grátis",
+    text: `Assine o Pro por ${PRICE}/mês no cartão, Pix ou boleto, pelo Mercado Pago. Sem assinar, a conta continua no Grátis, sem perder nada do que você registrou.`,
+  },
 ];
 
 function Pricing() {
@@ -291,24 +312,37 @@ function Pricing() {
       <Container className="grid gap-14 lg:grid-cols-2 lg:gap-20">
         <div>
           <h2 id="preco-title" className="landing-display text-balance text-[32px] sm:text-[42px]">
-            Plano único, acesso completo.
+            Comece de graça. Assine quando fizer falta.
           </h2>
-          <p className="mt-8 flex items-baseline gap-3">
-            <span className="landing-display text-[72px] tabular-nums">{PRICE}</span>
-            <span className="text-[16px] text-zinc-400">por mês</span>
-          </p>
-          <p className="mt-2 text-[15px] text-zinc-400">
-            Teste gratuito de 3 dias. Após esse período, a assinatura é paga via PIX, sem cobrança automática e sem fidelidade.
-          </p>
-          <ul className="mt-8 space-y-3 text-[15px]">
-            {INCLUDED.map((item) => (
-              <li key={item} className="flex gap-3">
-                <span className="mt-[9px] h-1.5 w-1.5 flex-none rounded-full bg-accent-text" aria-hidden />
-                {item}
-              </li>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className={cn(
+                  "rounded-2xl border p-5",
+                  plan.name === "Pro" ? "border-accent/40 bg-accent/[0.06]" : "border-foreground/[0.08]",
+                )}
+              >
+                <p className="text-[15px] font-semibold">{plan.name}</p>
+                <p className="mt-3 flex items-baseline gap-2">
+                  <span className="landing-display text-[44px] tabular-nums">{plan.price}</span>
+                  <span className="text-[14px] text-zinc-400">{plan.note}</span>
+                </p>
+                <ul className="mt-5 space-y-2.5 text-[14px]">
+                  {plan.items.map((item) => (
+                    <li key={item} className="flex gap-2.5">
+                      <span className="mt-[8px] h-1.5 w-1.5 flex-none rounded-full bg-accent-text" aria-hidden />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
-          <p className="mt-6 text-[15px] text-zinc-400">O grupo de tips do Telegram é comercializado separadamente e não está incluído no plano.</p>
+          </div>
+          <p className="mt-6 text-[15px] text-zinc-400">
+            No cartão, a mensalidade do Pro é cobrada sozinha; no Pix ou boleto, o Mercado Pago avisa todo mês. Sem fidelidade.
+            O grupo de tips do Telegram é vendido à parte e não está incluído em nenhum dos planos.
+          </p>
           <Button asChild size="lg" className="mt-10">
             <Link to={SIGNUP}>{START}</Link>
           </Button>
@@ -353,12 +387,16 @@ const QUESTIONS: { q: string; a: string }[] = [
     a: "Não. Funciona no navegador do computador e do celular. Se quiser, adicione à tela inicial do celular pra abrir como um app.",
   },
   {
+    q: "O que tem no plano Grátis?",
+    a: "Registro digitado sem limite, no site e no bot, 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard. Conferência pelo placar, exportação em CSV e planilhar as tips do grupo são do Pro.",
+  },
+  {
     q: "Como funciona o pagamento?",
-    a: `Toda conta nova tem 3 dias de teste gratuito. Após esse período, a assinatura custa ${PRICE} por mês, paga via PIX por QR Code ou código copia e cola. Confirmado o pagamento, o acesso é liberado por 30 dias. Não há cobrança automática.`,
+    a: `Toda conta nova ganha 3 dias de Pro, sem cartão. Depois disso, a conta segue no Grátis, ou você assina o Pro por ${PRICE} por mês pelo Mercado Pago. No cartão de crédito, a mensalidade é cobrada sozinha; no Pix ou boleto, o Mercado Pago avisa todo mês e você paga por lá. Sem fidelidade: cancele quando quiser.`,
   },
   {
     q: "As tips estão incluídas no plano?",
-    a: `Não. A assinatura de ${PRICE} dá acesso ao app de controle. O grupo de tips do Telegram é comercializado separadamente, e seus assinantes recebem as tips diretamente na fila do app.`,
+    a: "Não. O grupo de tips do Telegram é vendido à parte, e quem está nele recebe as tips direto na fila do app. Pra planilhar as tips no app ou no bot, a conta precisa estar no Pro.",
   },
   {
     q: "Preciso usar o Telegram?",

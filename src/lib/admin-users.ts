@@ -1,6 +1,7 @@
 // Leitura única do estado de um usuário na tela de admin. Lista, filtros, aba
-// Problemas, faixa de alerta e detalhe precisam concordar sobre quem está
-// vencido ou sobrando no grupo — por isso a régua mora aqui, e não no JSX.
+// Problemas, faixa de alerta e detalhe precisam concordar sobre quem está no
+// Grátis ou sobrando no grupo — por isso a régua mora aqui, e não no JSX.
+// Vencido = fora do Pro: a conta segue usando o app no Grátis, não é problema.
 
 import type { AdminUser } from "@/api/routes/get-admin";
 import { formatSaoPaulo, isLocked } from "@/lib/admin-health";
@@ -10,11 +11,12 @@ import { formatInt } from "@/lib/format";
 export type UserState = {
   active: boolean;
   locked: boolean;
+  /** Fora do Pro (vencido): está no Grátis. */
   expired: boolean;
-  /** Vence nos próximos 7 dias e ainda está em dia: quem cobrar esta semana. */
+  /** Pro acaba nos próximos 7 dias, sem assinatura renovando. */
   expiring: boolean;
-  /** Apertou "Já paguei": conferir o extrato pelo identificador STS<id>. */
-  claimed: boolean;
+  /** Assinatura do Mercado Pago rodando: a mensalidade renova sozinha. */
+  subscribed: boolean;
   /** No grupo Tips até onde o bot sabe: vinculado e não tirado pelo painel. */
   inGroup: boolean;
   /** Inativo e ainda no grupo: continua lendo as tips. */
@@ -27,8 +29,8 @@ export function userState(user: AdminUser): UserState {
   const active = user.isActive !== false;
   const locked = isLocked(user.lockedUntil);
   const expired = isExpired(user.accessUntil);
-  const expiring = !!user.accessUntil && !expired && daysUntilAccess(user.accessUntil) <= 7;
-  const claimed = !!user.paymentClaimedAt;
+  const subscribed = user.subscriptionStatus === "authorized";
+  const expiring = !!user.accessUntil && !expired && !subscribed && daysUntilAccess(user.accessUntil) <= 7;
   const inGroup = user.hasTelegram && !user.tipsGroupRemovedAt;
   const strayInGroup = inGroup && !active;
   return {
@@ -36,11 +38,11 @@ export function userState(user: AdminUser): UserState {
     locked,
     expired,
     expiring,
-    claimed,
+    subscribed,
     inGroup,
     strayInGroup,
     groupAction: tipsGroupAction(user),
-    problem: expired || locked || claimed || strayInGroup,
+    problem: locked || strayInGroup,
   };
 }
 
@@ -67,9 +69,9 @@ export const TONE_TEXT: Record<Tone, string> = {
   muted: "text-zinc-400",
 };
 
-/** Coluna Acesso da lista: "Vencido", "Até 27/10" ou "Sem prazo". */
+/** Coluna Acesso da lista: "Grátis", "Até 27/10" ou "Sem prazo". */
 export function accessLabel(user: AdminUser, state: UserState): { label: string; tone: Tone } {
-  if (state.expired) return { label: "Vencido", tone: "bad" };
+  if (state.expired) return { label: "Grátis", tone: "muted" };
   if (user.accessUntil) return { label: `Até ${formatAccessDate(user.accessUntil).slice(0, 5)}`, tone: state.expiring ? "warn" : "default" };
   return { label: "Sem prazo", tone: "muted" };
 }
@@ -94,11 +96,13 @@ export function accessDetail(user: AdminUser, state: UserState, isMe: boolean): 
   const days = daysUntilAccess(user.accessUntil);
   const day = formatAccessDate(user.accessUntil).slice(0, 5);
   if (state.expired) {
-    return { title: `Vencido desde ${day}`, note: days === 0 ? "venceu hoje" : `há ${-days} ${plural(-days, "dia", "dias")}`, tone: "bad" };
+    return { title: `Grátis desde ${day}`, note: days === 0 ? "o Pro acabou hoje" : `o Pro acabou há ${-days} ${plural(-days, "dia", "dias")}`, tone: "muted" };
   }
   return {
     title: `Até ${formatAccessFull(user.accessUntil)}`,
-    note: days === 0 ? "vence hoje" : `${plural(days, "falta", "faltam")} ${days} ${plural(days, "dia", "dias")}`,
+    note: state.subscribed
+      ? "assinatura ativa, renova sozinha"
+      : days === 0 ? "vence hoje" : `${plural(days, "falta", "faltam")} ${days} ${plural(days, "dia", "dias")}`,
     tone: state.expiring ? "warn" : "default",
   };
 }
@@ -140,7 +144,7 @@ export function inTab(state: UserState, tab: UserTab): boolean {
 export type UserFilters = {
   role: "all" | "admin" | "user";
   account: "all" | "active" | "inactive" | "locked";
-  access: "all" | "expired" | "expiring" | "none" | "claimed";
+  access: "all" | "expired" | "expiring" | "none" | "subscribed";
   telegram: "all" | "yes" | "no";
   group: "all" | "in" | "out";
 };
@@ -168,10 +172,10 @@ export const FILTER_GROUPS = [
     title: "Acesso",
     options: [
       { value: "all", label: "Todos" },
-      { value: "expired", label: "Vencido" },
-      { value: "expiring", label: "Vence em 7 dias" },
+      { value: "expired", label: "Grátis" },
+      { value: "expiring", label: "Pro acaba em 7 dias" },
       { value: "none", label: "Sem prazo" },
-      { value: "claimed", label: "Avisou pagamento" },
+      { value: "subscribed", label: "Assinante" },
     ],
   }),
   group({ key: "telegram", title: "Telegram", options: [{ value: "all", label: "Todos" }, { value: "yes", label: "Vinculado" }, { value: "no", label: "Não vinculado" }] }),
@@ -191,7 +195,7 @@ export function matchesFilters(user: AdminUser, state: UserState, f: UserFilters
         ? state.expiring
         : f.access === "none"
           ? !user.accessUntil
-          : state.claimed);
+          : state.subscribed);
   const telegram = f.telegram === "all" || (f.telegram === "yes") === user.hasTelegram;
   const inGroup = f.group === "all" || (f.group === "in") === state.inGroup;
   return role && account && access && telegram && inGroup;
@@ -204,18 +208,14 @@ export function matchesSearch(user: AdminUser, term: string): boolean {
   return [user.username, user.email, user.fullName ?? ""].some((v) => v.toLowerCase().includes(term));
 }
 
-/** Faixa de alerta: "2 acessos vencidos · 1 inativo no grupo Tips". */
+/** Faixa de alerta: "1 inativo no grupo Tips · 2 bloqueados". */
 export function problemSummary(states: UserState[]): string {
   const count = (test: (s: UserState) => boolean) => states.filter(test).length;
-  const expired = count((s) => s.expired);
   const stray = count((s) => s.strayInGroup);
   const locked = count((s) => s.locked);
-  const claimed = count((s) => s.claimed);
   return [
-    expired && `${expired} ${plural(expired, "acesso vencido", "acessos vencidos")}`,
     stray && `${stray} ${plural(stray, "inativo", "inativos")} no grupo Tips`,
     locked && `${locked} ${plural(locked, "bloqueado", "bloqueados")}`,
-    claimed && `${claimed} ${plural(claimed, "avisou", "avisaram")} pagamento`,
   ]
     .filter(Boolean)
     .join(" · ");

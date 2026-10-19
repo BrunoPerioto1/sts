@@ -31,13 +31,15 @@ Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números
 - Tips chegam de um canal do Telegram por um bot e caem numa fila (pendentes, planilhadas, caíram), com valor sugerido e % da banca.
 - Conferência periódica dos resultados propostos pelo placar.
 - Exportação em CSV com separador ponto-e-vírgula (o que o Excel em português espera), usada para planilha e declaração de imposto.
-- Pagamento por PIX copia-e-cola. Acesso vencido leva à tela de renovação; faltando poucos dias, um aviso no topo oferece o mesmo PIX.
+- Assinatura do Pro pelo Mercado Pago (página Plano): cartão de crédito cobra sozinho todo mês; Pix e boleto ficam pendentes e o Mercado Pago avisa o cliente. Faltando poucos dias pro fim do Pro sem assinatura, um aviso no topo leva à página Plano.
 - Recuperação de senha com código enviado pelo bot do Telegram.
 
 ## Capabilities and Constraints
 
-- Preço: plano único de R$ 40 por mês, pago no PIX, sem fidelidade.
-- Conta nova tem 3 dias de teste grátis.
+- Dois planos (regras em `meu-bot-telegram/src/users/plan.ts`):
+  - Grátis: registro digitado sem limite (site e bot), 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard.
+  - Pro, R$ 40 por mês, sem fidelidade: tudo do Grátis, leitura por IA sem limite, conferência pelo placar, exportação em CSV e planilhar as tips do grupo.
+- Conta nova tem 3 dias de Pro grátis, sem cartão. Acabou o Pro, a conta cai no Grátis: nada é bloqueado nem apagado.
 - O grupo de tips do Telegram é vendido à parte e não está incluído nos R$ 40. A fila de Tips do app espelha esse grupo; não vender o acesso ao grupo como parte do plano.
 - Aberto ao público geral (não é só para quem segue tips).
 - Não é casa de apostas: não recebe, não paga e não intermedia apostas. Público 18+.

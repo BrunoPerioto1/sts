@@ -39,7 +39,7 @@ export function UserBadges({ state, isMe, admin }: { state: UserState; isMe: boo
       {isMe && <Badge>você</Badge>}
       {!state.active && <Badge>inativo</Badge>}
       {state.locked && <Badge>bloqueado</Badge>}
-      {state.claimed && <Badge tone="warn">avisou pagamento</Badge>}
+      {state.subscribed && <Badge>assinante</Badge>}
     </>
   );
 }

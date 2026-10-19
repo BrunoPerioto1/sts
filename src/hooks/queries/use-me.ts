@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe, type MeResponse } from "@/api/routes/get-me";
 
-const ME_KEY = ["me"] as const;
+export const ME_KEY = ["me"] as const;
 
 // O usuario logado e pedido pela sidebar e por TODAS as telas de Perfil. Antes
 // cada uma chamava getMe() na montagem — trocar de aba refazia o GET. Com uma
@@ -14,8 +14,10 @@ export function useMe() {
   return {
     me: data ?? null,
     // patchMe / desvincular telegram devolvem o usuario ja atualizado: escreve
-    // direto no cache em vez de gastar outro GET.
-    setMe: (me: MeResponse) => qc.setQueryData(ME_KEY, me),
+    // direto no cache em vez de gastar outro GET. O plano só vem no GET: sem
+    // ele na resposta, fica o que já estava.
+    setMe: (me: MeResponse) =>
+      qc.setQueryData<MeResponse>(ME_KEY, (prev) => ({ ...me, plan: me.plan ?? prev?.plan })),
     reloadMe: () => void refetch(),
   };
 }

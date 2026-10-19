@@ -13,6 +13,7 @@ import {
   GitFork,
   Scan,
   GearSix,
+  Sparkle,
   CaretUpDown,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
@@ -84,7 +85,10 @@ const sections: NavSection[] = [
   },
   {
     title: "Conta",
-    items: [{ label: "Configurações", icon: GearSix, href: "/profile" }],
+    items: [
+      { label: "Plano", icon: Sparkle, href: "/plano" },
+      { label: "Configurações", icon: GearSix, href: "/profile" },
+    ],
   },
 ];
 

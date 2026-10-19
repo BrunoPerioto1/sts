@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeSelect } from "./ThemeSelect";
-import { Bank, IdentificationCard, Palette, Pulse, Scan, ShieldCheck, SignOut, SlidersHorizontal, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
+import { Bank, IdentificationCard, Palette, Pulse, Scan, ShieldCheck, SignOut, SlidersHorizontal, Sparkle, SquaresFour, TelegramLogo, Users, type Icon } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ListGroup, ListIcon, ListRow } from "@/components/ui/list-group";
@@ -139,6 +139,12 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
   ];
 
   const contaRows: Row[] = [
+    {
+      to: "/plano",
+      icon: Sparkle,
+      label: "Plano",
+      value: me.plan ? (me.plan.plan === "pro" ? "Pro" : "Grátis · assine o Pro") : "Grátis e Pro",
+    },
     { to: "/profile/account", icon: IdentificationCard, label: "Dados da conta", value: "Nome, e-mail e senha" },
     { to: "/profile/preferences", icon: SlidersHorizontal, label: "Preferências de aposta", value: preferencesSummary(me) },
     isLinked

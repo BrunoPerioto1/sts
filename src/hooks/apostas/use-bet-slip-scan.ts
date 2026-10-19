@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { parseBetImage, type ParsedBetSlip } from "@/api/routes/post-parse-image";
 import { compressImage } from "@/lib/compress-image";
+import { useRefreshPlan } from "@/hooks/queries/use-plan";
 
 export type ScanStatus = "idle" | "reading" | "done" | "error";
 
@@ -35,6 +36,8 @@ export function useBetSlipScan() {
   const runId = useRef(0);
   // Partes do bilhete atual, na ordem — "adicionar parte" relê todas juntas.
   const parts = useRef<Blob[]>([]);
+  // Cada leitura conta na cota do Grátis: o "3 de 5 hoje" anda junto.
+  const refreshPlan = useRefreshPlan();
 
   const revoke = useRef<string | null>(null);
   useEffect(
@@ -66,17 +69,20 @@ export function useBetSlipScan() {
     try {
       const compressed = await Promise.all(files.map(compressImage));
       const parsed = await parseBetImage(compressed, houseHint);
+      refreshPlan();
       if (run !== runId.current) return null;
       setResult(parsed);
       setStatus("done");
       return parsed;
     } catch (e) {
+      // Cota do dia acabou (ou o bot gastou a última): o contador da tela acerta.
+      refreshPlan();
       if (run !== runId.current) return null;
       setError(e instanceof Error ? e.message : "Falha ao ler o print");
       setStatus("error");
       return null;
     }
-  }, []);
+  }, [refreshPlan]);
 
   /**
    * Começa um lote: cada arquivo é um bilhete diferente. O primeiro é lido

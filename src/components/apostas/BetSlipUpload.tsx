@@ -13,8 +13,10 @@ import {
   Trash,
   UploadSimple,
 } from "@phosphor-icons/react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { pickImages, type ScanPreview, type ScanStatus } from "@/hooks/apostas/use-bet-slip-scan";
+import { usePlan } from "@/hooks/queries/use-plan";
 
 interface BetSlipUploadProps {
   status: ScanStatus;
@@ -53,6 +55,26 @@ const chip =
 // Loader do Aceternity) e a última espera a resposta, sem voltar pro começo.
 const READING_STEPS = ["Preparando a imagem", "Lendo o bilhete", "Identificando evento e mercado", "Conferindo odd e valor"];
 const STEP_MS = [700, 2000, 2200];
+
+/**
+ * Leituras por IA do dia no Grátis (print e áudio, site e bot somados). No
+ * Pro não aparece. Acabou a cota: o registro digitado continua liberado.
+ */
+function AiQuotaLine({ used, limit }: { used: number; limit: number }) {
+  if (used >= limit)
+    return (
+      <p className="text-[11px] leading-snug text-warning">
+        Você usou as {limit} leituras por IA de hoje. Registre digitando abaixo ou{" "}
+        <Link to="/plano" className="underline underline-offset-2">assine o Pro</Link> pra ler sem limite.
+      </p>
+    );
+  return (
+    <p className="text-[11px] text-zinc-500">
+      {used} de {limit} leituras por IA hoje ·{" "}
+      <Link to="/plano" className="underline underline-offset-2 hover:text-foreground">Pro lê sem limite</Link>
+    </p>
+  );
+}
 
 /** Monta a cada leitura (o corpo troca de ramo), então sempre começa do passo 1. */
 function ReadingSteps() {
@@ -109,6 +131,9 @@ export function BetSlipUpload({
   const partInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [zoom, setZoom] = useState(false);
+  const { plan } = usePlan();
+  const quota = plan?.aiDaily ?? null;
+  const quotaLine = quota && <AiQuotaLine used={quota.used} limit={quota.limit} />;
   // dragenter/dragleave disparam para cada filho; o contador evita a borda
   // piscando enquanto o cursor atravessa o conteúdo da área.
   const dragDepth = useRef(0);
@@ -383,6 +408,7 @@ export function BetSlipUpload({
           <p className="text-center text-[11px] text-zinc-500">
             a IA lê o bilhete e preenche — dá pra escolher vários de uma vez
           </p>
+          {quotaLine && <div className="text-center">{quotaLine}</div>}
         </div>
       );
 
@@ -407,6 +433,7 @@ export function BetSlipUpload({
               ? "PNG, JPG ou WebP — uma aposta por imagem"
               : "informe a casa ao lado (opcional) — a IA preenche o resto"}
           </p>
+          {!dragging && quotaLine}
         </div>
         {captionInput}
         <button

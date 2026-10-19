@@ -5,13 +5,16 @@ import { actionToast } from "@/lib/action-toast";
 import { getErrorMessage } from "@/lib/api-error";
 import { exportAllBetsCsv, exportMonthlyCsv, exportTransactionsCsv } from "@/lib/bet-exports";
 import { formatInt } from "@/lib/format";
+import { useProGate } from "@/hooks/queries/use-plan";
 
 export function ExportDataCard({ totalBets }: { totalBets: number }) {
   const [running, setRunning] = useState<string | null>(null);
+  const proGate = useProGate();
 
   // Sem isso a falha (rede, 400) virava promise rejeitada solta: o botão não
   // fazia nada e ninguém ficava sabendo.
   const download = async (label: string, run: () => Promise<void>) => {
+    if (!proGate("csvExport", "Exportar CSV")) return;
     setRunning(label);
     try {
       await run();

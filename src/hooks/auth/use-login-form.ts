@@ -78,8 +78,6 @@ export function useLoginForm() {
         setLockedUntil(new Date(body.lockedUntil));
         setNow(Date.now());
         setError(null);
-      } else if (status === 402) {
-        // Senha certa, acesso vencido: o interceptor já leva pra /renovar.
       } else if (status === 401) {
         setError("E-mail ou senha incorretos. Depois de 5 erros seguidos o login trava por 15 minutos.");
       } else {

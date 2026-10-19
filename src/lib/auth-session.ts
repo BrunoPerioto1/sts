@@ -2,7 +2,6 @@
 // axios, App, login, cadastro, excluir conta).
 const TOKEN_KEY = "token";
 const REMEMBERED_EMAIL_KEY = "remembered_email";
-const ACCESS_BLOCK_KEY = "access_block";
 
 // Storage pode estar bloqueado (aba anônima, dado do site apagado): a sessão
 // só não persiste, a tela não quebra.
@@ -52,7 +51,6 @@ export function getToken(): string | null {
 export function saveToken(token: string, remember = true) {
   write(remember ? localStorage : sessionStorage, TOKEN_KEY, token);
   write(remember ? sessionStorage : localStorage, TOKEN_KEY, null);
-  saveAccessBlock(null);
 }
 
 /**
@@ -76,27 +74,4 @@ export function getRememberedEmail(): string | null {
 // `null` esquece o e-mail — é o "Manter conectado" desmarcado.
 export function setRememberedEmail(email: string | null) {
   write(localStorage, REMEMBERED_EMAIL_KEY, email);
-}
-
-/**
- * Corpo da resposta 402 (acesso vencido ou conta nova). A tela de renovação
- * não tem sessão válida: é com o `payToken` daqui que ela pede o PIX desta
- * conta e avisa "Já paguei".
- */
-export interface AccessBlock {
-  status?: "new" | "expired";
-  payToken?: string;
-  accessUntil?: string;
-}
-
-export function saveAccessBlock(block: AccessBlock | null) {
-  write(sessionStorage, ACCESS_BLOCK_KEY, block ? JSON.stringify(block) : null);
-}
-
-export function getAccessBlock(): AccessBlock | null {
-  try {
-    return JSON.parse(read(sessionStorage, ACCESS_BLOCK_KEY) ?? "null") as AccessBlock | null;
-  } catch {
-    return null;
-  }
 }

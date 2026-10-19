@@ -23,12 +23,16 @@ const AdminTipsPage = lazy(() => import("./pages/AdminTipsPage"));
 const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminScannerPage = lazy(() => import("./pages/AdminScannerPage"));
-const RenovarPage = lazy(() => import("./pages/RenovarPage"));
+const PlanoPage = lazy(() => import("./pages/PlanoPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
 import { useMe } from '@/hooks/queries/use-me';
+import { usePlan } from '@/hooks/queries/use-plan';
+import type { ProFeature } from '@/api/routes/get-me';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { ProUpsell } from '@/components/plano/ProUpsell';
 import { ADMIN_ROLE_ID } from '@/lib/admin-health';
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
@@ -75,10 +79,11 @@ const App = () => (
           <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
           <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><BetsRoute /></RequireAuth>} />
-          <Route path="/settlement" element={<RequireAuth><ConferirPage /></RequireAuth>} />
-          <Route path="/settlement/review" element={<RequireAuth><ConferirPendentesPage /></RequireAuth>} />
+          <Route path="/settlement" element={<RequireAuth><RequirePro feature="settlement" title="Conferência"><ConferirPage /></RequirePro></RequireAuth>} />
+          <Route path="/settlement/review" element={<RequireAuth><RequirePro feature="settlement" title="Conferência"><ConferirPendentesPage /></RequirePro></RequireAuth>} />
           <Route path="/houses" element={<RequireAuth><CasasPage /></RequireAuth>} />
           <Route path="/tips" element={<RequireAuth><TipsPage /></RequireAuth>} />
+          <Route path="/plano" element={<RequireAuth><PlanoPage /></RequireAuth>} />
           <Route path="/admin" element={<Navigate to="/admin/pipeline" replace />} />
           <Route path="/admin/pipeline" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
           <Route path="/admin/houses" element={<RequireAdmin><AdminHousesPage /></RequireAdmin>} />
@@ -88,7 +93,8 @@ const App = () => (
         </Route>
         {}
         <Route path="/logout" element={<LogoutRoute />} />
-        <Route path="/renovar" element={<Suspense fallback={<RouteFallback />}><RenovarPage /></Suspense>} />
+        {/* Link antigo (PIX manual, mensagens velhas do bot): a renovação virou a página Plano. */}
+        <Route path="/renovar" element={<Navigate to="/plano" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
@@ -144,6 +150,27 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   if (me.roleId !== ADMIN_ROLE_ID) return <Navigate to="/dashboard" replace />;
 
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+}
+
+/**
+ * Tela do Pro. No Grátis mostra o convite no lugar da tela, que nem chega a
+ * montar: as consultas dela dariam 403. Quem barra de verdade é o ProGuard do
+ * backend.
+ */
+function RequirePro({ feature, title, children }: { feature: ProFeature; title: string; children: React.ReactNode }) {
+  const { loaded, can } = usePlan();
+  if (!loaded) return <RouteFallback />;
+  if (!can(feature)) {
+    return (
+      <MainLayout title={title}>
+        <ProUpsell
+          title="Conferência pelo placar é do Pro"
+          description="O placar chega sozinho e as apostas encerradas ficam prontas pra você só confirmar. No Grátis, marque o resultado direto na lista de apostas."
+        />
+      </MainLayout>
+    );
+  }
+  return <>{children}</>;
 }
 
 function LogoutRoute() {

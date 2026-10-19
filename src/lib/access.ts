@@ -1,4 +1,4 @@
-// Vencimento do acesso (cobrança por PIX). O servidor guarda um instante; aqui
+// Fim do Pro (accessUntil; vencido = Grátis). O servidor guarda um instante; aqui
 // tudo que é mostrado ou digitado é hora de Brasília, independente do fuso de
 // quem abre a tela. Brasil sem horário de verão desde 2019: -03:00 fixo.
 const TZ = "America/Sao_Paulo";
@@ -44,15 +44,16 @@ type TipsGroupFields = {
 };
 
 /**
- * Botão do grupo Tips na linha do usuário. O Telegram não esconde mensagem de
- * membro: quem não pagou só deixa de ler saindo do grupo. Sem vínculo o bot não
- * sabe quem é a pessoa lá dentro, então não há o que oferecer.
- * "invite" é a sobra de um convite automático (do +30d) que não saiu.
+ * Botão do grupo Tips na linha do usuário. Cair no Grátis não tira ninguém do
+ * grupo (só deixa de planilhar tip): o painel só oferece tirar conta
+ * desativada. Sem vínculo o bot não sabe quem é a pessoa lá dentro, então não
+ * há o que oferecer. "invite" é a sobra de um convite automático (do +30d) que
+ * não saiu.
  */
 export function tipsGroupAction(user: TipsGroupFields): "remove" | "invite" | null {
   if (!user.hasTelegram) return null;
-  const noAccess = user.isActive === false || isExpired(user.accessUntil);
-  if (noAccess && !user.tipsGroupRemovedAt) return "remove";
-  if (!noAccess && user.tipsGroupRemovedAt) return "invite";
+  const inactive = user.isActive === false;
+  if (inactive && !user.tipsGroupRemovedAt) return "remove";
+  if (!inactive && !isExpired(user.accessUntil) && user.tipsGroupRemovedAt) return "invite";
   return null;
 }

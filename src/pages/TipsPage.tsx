@@ -29,6 +29,7 @@ import { useTips } from "@/hooks/queries/use-tips";
 import { useDebouncedValue, useTipPageActions, useTipSelection } from "@/hooks/tips/use-tips-page";
 import { useHouses } from "@/hooks/queries/use-houses";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProGate } from "@/hooks/queries/use-plan";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import type { PlanilharTipDto, TipItem, TipStatus } from "@/api/routes/get-tips";
 
@@ -64,6 +65,13 @@ export default function TipsPage() {
   const [planilhando, setPlanilhando] = useState<TipItem | null>(null);
   // Stake/odd do "Odd mudou?", que o sheet de planilhar abre usando.
   const [planilharInitial, setPlanilharInitial] = useState<TipPlanilharInitial | undefined>();
+  // Planilhar tip é do Pro: no Grátis o sheet nem abre (o backend barraria).
+  const proGate = useProGate();
+  const openPlanilhar = (tip: TipItem, initial?: TipPlanilharInitial) => {
+    if (!proGate("tipsPlanilhar", "Planilhar tips")) return;
+    setPlanilharInitial(initial);
+    setPlanilhando(tip);
+  };
 
   // Filtro de casas: mesma multi-seleção de Apostas. A casa da tip vem como
   // texto do canal, então quem casa nome com casa cadastrada é o backend —
@@ -411,10 +419,7 @@ export default function TipsPage() {
               <TipDetailPanel
                 key={selecionada.id}
                 tip={selecionada}
-                onPlanilhar={(initial) => {
-                  setPlanilharInitial(initial);
-                  setPlanilhando(selecionada);
-                }}
+                onPlanilhar={(initial) => openPlanilhar(selecionada, initial)}
                 onDismiss={() => run(dismiss, selecionada.id, "Tip marcada como caiu")}
                 onUndismiss={() => run(undismiss, selecionada.id, "Tip devolvida para a fila")}
                 hasSelection={checkedTips.length > 0}
@@ -441,10 +446,7 @@ export default function TipsPage() {
                   selectionMode={selectionMode}
                   checked={checkedIds.has(tip.id)}
                   onToggle={() => toggleChecked(tip.id)}
-                  onPlanilhar={(initial) => {
-                    setPlanilharInitial(initial);
-                    setPlanilhando(tip);
-                  }}
+                  onPlanilhar={(initial) => openPlanilhar(tip, initial)}
                   onDismiss={() => run(dismiss, tip.id, "Tip marcada como caiu")}
                   onUndismiss={() => run(undismiss, tip.id, "Tip devolvida para a fila")}
                 />
@@ -464,7 +466,7 @@ export default function TipsPage() {
         stakeTotal={checkedTips.reduce((sum, tip) => sum + (tip.recommendedStake ?? 0), 0)}
         loading={false}
         variant={tab === "pending" ? "pending" : "caiu"}
-        onPlanilhar={() => setBatchReview([...checkedTips])}
+        onPlanilhar={() => proGate("tipsPlanilhar", "Planilhar tips") && setBatchReview([...checkedTips])}
         onDismiss={() => runBatch("dismiss")}
         onUndismiss={() => runBatch("undismiss")}
         onCancel={clearSelection}

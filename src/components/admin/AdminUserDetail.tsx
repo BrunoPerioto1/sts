@@ -193,9 +193,10 @@ export function AdminUserDetail({
         <div className="flex flex-col gap-[3px]">
           <span className={cn("text-lg font-semibold tracking-tight tabular-nums", TONE_TEXT[access.tone])}>{access.title}</span>
           <span className="text-[12.5px] text-muted">{access.note}</span>
-          {user.paymentClaimedAt && (
-            <span className="text-[12.5px] text-warning">
-              Avisou que pagou em {formatSaoPaulo(user.paymentClaimedAt)} · PIX STS{user.id}
+          {user.subscriptionStatus && user.subscriptionStatus !== "authorized" && (
+            <span className="text-[12.5px] text-muted">
+              Assinatura no Mercado Pago:{" "}
+              {user.subscriptionStatus === "pending" ? "link criado, sem pagamento" : user.subscriptionStatus === "paused" ? "pausada" : "cancelada"}
             </span>
           )}
         </div>
