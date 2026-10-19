@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T00:00:00Z",
+  "title": "Design System: SportsBet Manager",
+  "extensions": {
+    "colorMeta": {
+      "azul-conferido": { "role": "primary", "displayName": "Azul Conferido", "canonical": "rgb(37 99 235)", "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"] },
+      "azul-conferido-texto": { "role": "primary", "displayName": "Azul Conferido, tom de texto", "canonical": "rgb(59 130 246)", "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"] },
+      "fundo-noturno": { "role": "neutral", "displayName": "Fundo Noturno", "canonical": "rgb(9 9 11)", "tonalRamp": ["#09090b", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#e4e4e7"] },
+      "superficie": { "role": "neutral", "displayName": "Superfície", "canonical": "rgb(19 19 22)", "tonalRamp": ["#09090b", "#131316", "#1c1c20", "#27272a", "#3f3f46", "#71717a", "#a1a1aa", "#e4e4e7"] },
+      "superficie-2": { "role": "neutral", "displayName": "Superfície Elevada", "canonical": "rgb(28 28 32)", "tonalRamp": ["#09090b", "#131316", "#1c1c20", "#27272a", "#3f3f46", "#71717a", "#a1a1aa", "#e4e4e7"] },
+      "texto": { "role": "neutral", "displayName": "Texto", "canonical": "rgb(242 242 244)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
+      "texto-secundario": { "role": "neutral", "displayName": "Texto Secundário", "canonical": "rgb(161 161 170)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
+      "texto-apagado": { "role": "neutral", "displayName": "Texto Apagado", "canonical": "rgb(113 113 122)", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f2f2f4"] },
+      "divisoria": { "role": "neutral", "displayName": "Divisória", "canonical": "rgba(255, 255, 255, 0.1)", "tonalRamp": ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0.08)", "rgba(255,255,255,0.1)", "rgba(255,255,255,0.12)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.24)"] },
+      "ganho": { "role": "tertiary", "displayName": "Ganho", "canonical": "#4ade9e", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#4ade9e", "#6ee7b7", "#a7f3d0"] },
+      "perda": { "role": "tertiary", "displayName": "Perda", "canonical": "#f0797e", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#c0272e", "#dc2626", "#f0797e", "#fca5a5", "#fecaca"] },
+      "ganho-solido": { "role": "tertiary", "displayName": "Ganho Sólido", "canonical": "rgb(18 160 92)", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#12a05c", "#10b981", "#4ade9e", "#6ee7b7", "#a7f3d0"] },
+      "perda-solida": { "role": "tertiary", "displayName": "Perda Sólida", "canonical": "rgb(192 39 46)", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#c0272e", "#dc2626", "#f0797e", "#fca5a5", "#fecaca"] },
+      "atencao": { "role": "tertiary", "displayName": "Atenção", "canonical": "rgb(251 191 36)", "tonalRamp": ["#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fcd34d", "#fde68a"] },
+      "cashout": { "role": "tertiary", "displayName": "Cashout", "canonical": "rgb(139 92 246)", "tonalRamp": ["#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Só na landing: título de abertura (44/64/76px) e números grandes. Archivo larga, carregada no chunk da landing." },
+      "headline": { "displayName": "Headline", "purpose": "Título de tela (PageHeader)." },
+      "title": { "displayName": "Title", "purpose": "Título de subtela com voltar e valor de KPI." },
+      "numeric": { "displayName": "Numeric", "purpose": "Todo valor de dinheiro, odd, ROI e contagem, sempre com algarismos tabulares." },
+      "body": { "displayName": "Body", "purpose": "Texto corrente, botões (500) e itens de menu. Campos usam 16px no celular." },
+      "label": { "displayName": "Label", "purpose": "Rótulo de seção e de KPI em caixa alta pequena e apagada; a única caixa alta do app." }
+    },
+    "shadows": [
+      { "name": "ring", "value": "0 0 0 1px rgba(255, 255, 255, 0.08)", "purpose": "Borda desenhada por sombra; o `shadow` padrão." },
+      { "name": "float-md", "value": "0 0 0 1px rgba(255, 255, 255, 0.12), 0 6px 18px rgba(0, 0, 0, 0.65)", "purpose": "Menus e popovers." },
+      { "name": "float-lg", "value": "0 0 0 1px rgba(255, 255, 255, 0.18), 0 16px 40px rgba(0, 0, 0, 0.75)", "purpose": "Diálogos e FAB." },
+      { "name": "cta", "value": "0 4px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.04)", "purpose": "Ação principal da tela; no hover sobe 1px e a sombra cresce para 0 6px 18px rgba(0, 0, 0, 0.35)." },
+      { "name": "shadow-card", "value": "0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.3)", "purpose": "Relevo leve em cards de primeiro nível (classe shadow-card); card aninhado fica plano. No claro: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06)." }
+    ],
+    "motion": [
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "A curva do app: desacelera rápido no fim, para o toque parecer resposta." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.34, 1.35, 0.64, 1)", "purpose": "Pop-in de ícone ativo e elementos que entram com um leve passo além." },
+      { "name": "dur-fast", "value": "130ms", "purpose": "Resposta ao toque (press) e troca de cor." },
+      { "name": "dur-route", "value": "140ms", "purpose": "Entrada de rota, só fade." },
+      { "name": "dur-base", "value": "240ms", "purpose": "Entradas, tela empilhada da direita, valor que muda." },
+      { "name": "dur-slow", "value": "420ms", "purpose": "Subida (rise) de blocos ao montar." },
+      { "name": "stagger", "value": "40ms", "purpose": "Degrau da cascata, com teto de 12 itens." },
+      { "name": "press-scale", "value": "scale(0.97)", "purpose": "Toque que afunda; 0.985 em blocos grandes." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação principal da tela: Salvar, Nova aposta, FAB.",
+      "html": "<button class=\"ds-btn-primary\">Registrar aposta</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; border: 1px solid transparent; border-radius: 8px; background: var(--color-accent, #2563eb); color: #fff; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1), background-color 130ms linear; } .ds-btn-primary:hover { background: rgba(37, 99, 235, 0.9); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #09090b, 0 0 0 4px var(--color-accent, #2563eb); }"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação ao lado da principal: Editar, Tentar de novo, Limpar filtros.",
+      "html": "<button class=\"ds-btn-secondary\">Editar</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 8px 16px; border: 1px solid var(--color-divider, rgba(255,255,255,0.1)); border-radius: 8px; background: transparent; color: var(--color-text, #f2f2f4); font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1), background-color 130ms linear; } .ds-btn-secondary:hover { background: rgba(242, 242, 244, 0.07); } .ds-btn-secondary:active { transform: scale(0.97); background: rgba(242, 242, 244, 0.14); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px #09090b, 0 0 0 4px var(--color-accent, #2563eb); }"
+    },
+    {
+      "name": "Botão ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação terciária, só texto azul.",
+      "html": "<button class=\"ds-btn-ghost\">Ver todas</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; height: 40px; padding: 8px 16px; border: 0; border-radius: 8px; background: transparent; color: var(--color-accent-text, #3b82f6); font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1), background-color 130ms linear; } .ds-btn-ghost:hover { background: rgba(37, 99, 235, 0.1); } .ds-btn-ghost:active { transform: scale(0.97); background: rgba(37, 99, 235, 0.18); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--color-accent, #2563eb); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto e número; 44px no celular, texto de 16px.",
+      "html": "<input class=\"ds-input\" placeholder=\"Odd\" value=\"2,10\" />",
+      "css": ".ds-input { width: 220px; min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-divider, rgba(255,255,255,0.1)); border-radius: 8px; background: var(--color-surface, #131316); color: var(--color-text, #f2f2f4); font-family: Inter, system-ui, sans-serif; font-size: 16px; font-variant-numeric: tabular-nums; transition: border-color 130ms linear; } .ds-input::placeholder { color: #52525b; } .ds-input:hover { border-color: rgba(242, 242, 244, 0.45); } .ds-input:focus-visible { outline: none; border-color: var(--color-accent, #2563eb); }"
+    },
+    {
+      "name": "Chips de filtro",
+      "kind": "chip",
+      "refersTo": "chip-filter",
+      "description": "Filtro em pílula: ativo em azul cheio, inativo neutro, com contagem.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-on\">Pendentes <span class=\"ds-chip-count\">40</span></button><button class=\"ds-chip\">Ganhas</button><button class=\"ds-chip\">Perdidas</button></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid rgba(242, 242, 244, 0.1); border-radius: 9999px; background: rgba(242, 242, 244, 0.04); color: #d4d4d8; font-family: Inter, system-ui, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1), color 130ms linear; } .ds-chip:hover { color: #f2f2f4; } .ds-chip:active { transform: scale(0.97); } .ds-chip:focus-visible { outline: 2px solid var(--color-accent, #2563eb); outline-offset: 2px; } .ds-chip-on { border-color: transparent; background: var(--color-accent, #2563eb); color: #fff; } .ds-chip-count { padding: 1px 6px; border-radius: 9999px; background: rgba(255, 255, 255, 0.2); font-size: 11px; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Selos de status",
+      "kind": "chip",
+      "refersTo": "badge-ganha",
+      "description": "Status da aposta: fundo do tom a 16%, texto no tom.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge-won\">Ganha</span><span class=\"ds-badge ds-badge-lost\">Perdida</span><span class=\"ds-badge ds-badge-pending\">Pendente</span><span class=\"ds-badge ds-badge-cashout\">Cashout</span></div>",
+      "css": ".ds-badges { display: flex; gap: 8px; } .ds-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-family: Inter, system-ui, sans-serif; font-size: 12px; letter-spacing: 0.025em; } .ds-badge-won { background: rgba(74, 222, 158, 0.16); color: #4ade9e; } .ds-badge-lost { background: rgba(240, 121, 126, 0.16); color: #f0797e; } .ds-badge-pending { background: rgba(59, 130, 246, 0.16); color: #3b82f6; } .ds-badge-cashout { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }"
+    },
+    {
+      "name": "Card de KPI",
+      "kind": "card",
+      "refersTo": "card-kpi",
+      "description": "Número com rótulo, o mesmo bloco no Dashboard, no Perfil e em Casas.",
+      "html": "<div class=\"ds-kpi\"><svg class=\"ds-kpi-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"16\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"224 208 32 208 32 48\"/><polyline points=\"224 96 160 152 96 104 32 160\"/></svg><div><p class=\"ds-kpi-label\">Lucro líquido</p><p class=\"ds-kpi-value\">+R$ 120,80</p><p class=\"ds-kpi-hint\">48 resolvidas</p></div></div>",
+      "css": ".ds-kpi { display: flex; align-items: flex-start; gap: 10px; width: 200px; padding: 12px 14px; border: 1px solid rgba(242, 242, 244, 0.07); border-radius: 12px; background: rgba(242, 242, 244, 0.015); font-family: Inter, system-ui, sans-serif; } .ds-kpi-icon { flex-shrink: 0; margin-top: 1px; color: #a1a1aa; } .ds-kpi p { margin: 0; } .ds-kpi-label { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #71717a; } .ds-kpi-value { margin-top: 2px; font-size: 18px; font-weight: 600; line-height: 1.25; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #4ade9e; white-space: nowrap; } .ds-kpi-hint { margin-top: 2px; font-size: 11px; color: #71717a; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Navegação lateral",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Itens da sidebar: ativo em azul a 16%, hover em cinza sutil, contador em mini pílula.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-on\" href=\"#\">Dashboard</a><a class=\"ds-nav-item\" href=\"#\">Apostas</a><a class=\"ds-nav-item\" href=\"#\">Conferência <span class=\"ds-nav-badge\">2</span></a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 220px; padding: 8px; background: var(--color-surface, #131316); font-family: Inter, system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 14px; color: rgba(242, 242, 244, 0.65); font-size: 14px; font-weight: 500; text-decoration: none; transition: background-color 130ms linear, color 130ms linear; } .ds-nav-item:hover { background: rgba(242, 242, 244, 0.06); color: #f2f2f4; } .ds-nav-item:focus-visible { outline: 2px solid var(--color-accent, #2563eb); outline-offset: 2px; } .ds-nav-on, .ds-nav-on:hover { background: rgba(37, 99, 235, 0.16); color: var(--color-accent-text, #3b82f6); } .ds-nav-badge { margin-left: auto; padding: 2px 6px; border-radius: 6px; background: rgba(37, 99, 235, 0.22); color: var(--color-accent-text, #3b82f6); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Seletor segmentado",
+      "kind": "custom",
+      "refersTo": "segmented",
+      "description": "Opções lado a lado; a pílula desliza até a ativa em 300ms.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg-opt ds-seg-on\">Escuro</button><button class=\"ds-seg-opt\">Claro</button><button class=\"ds-seg-opt\">Sistema</button></div>",
+      "css": ".ds-seg { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--color-divider, rgba(255,255,255,0.1)); border-radius: 14px; font-family: Inter, system-ui, sans-serif; } .ds-seg-opt { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #a1a1aa; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 300ms cubic-bezier(0.22, 1, 0.36, 1), color 130ms linear; } .ds-seg-opt:hover { color: #f2f2f4; } .ds-seg-opt:focus-visible { outline: 2px solid var(--color-accent, #2563eb); outline-offset: 2px; } .ds-seg-on { background: #27272a; color: #f2f2f4; }"
+    },
+    {
+      "name": "Item de menu",
+      "kind": "custom",
+      "refersTo": "menu-item-hover",
+      "description": "Dropdown com hover cinza sutil, nunca azul chapado.",
+      "html": "<div class=\"ds-menu\"><button class=\"ds-menu-item\">Editar aposta</button><button class=\"ds-menu-item\">Duplicar</button><button class=\"ds-menu-item ds-menu-danger\">Excluir</button></div>",
+      "css": ".ds-menu { display: flex; flex-direction: column; width: 200px; padding: 4px; border-radius: 8px; background: var(--color-surface, #131316); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 6px 18px rgba(0, 0, 0, 0.65); font-family: Inter, system-ui, sans-serif; } .ds-menu-item { padding: 8px 10px; border: 0; border-radius: 4px; background: transparent; color: #f2f2f4; font-size: 14px; text-align: left; cursor: pointer; } .ds-menu-item:hover, .ds-menu-item:focus-visible { outline: none; background: rgba(242, 242, 244, 0.07); } .ds-menu-danger { color: #f0797e; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Nocturne",
+    "overview": "Um app noturno de controle: fundo quase preto, texto quase branco e um azul só, o Azul Conferido, que aparece onde há ação, seleção ou leitura pendente. Todo o resto é tom sobre tom. A cor que sobra na tela é a do resultado (ganho em verde, perda em vermelho), e ela pertence ao usuário, que pode trocá-la em Preferências. O clima é confiável, ágil e sério: uma ferramenta de controle de dinheiro, não um cassino. Nada brilha para chamar aposta.\n\nA densidade é de ferramenta. Listas agrupadas por mês, números com algarismos tabulares, rótulos pequenos e apagados que organizam sem competir. O celular manda: quase tudo é registrado em pé, com uma mão, então cada alvo tem 44px, todo toque afunda o elemento (escala 0.97) e diálogos viram bottom sheets. O desktop é para conferir e analisar, com sidebar e mais colunas.\n\nO movimento é curto e de uma curva só (desaceleração rápida no fim), usado para responder ao toque e mostrar o que mudou: o valor que pula quando a aposta é liquidada, a pílula que desliza no seletor, a tela empilhada que entra da direita. Tudo tem alternativa para quem reduz movimento. Rejeições confirmadas: hover azul chapado em menus (trocado por cinza sutil), roxo na marca (revertido para azul) e brilho neon nos botões (a sombra é escura).",
+    "keyCharacteristics": [
+      "Escuro por padrão, com tema claro de mesmos papéis e valores invertidos.",
+      "Um azul só, em dois tons: superfície (#2563eb) e texto (#3b82f6).",
+      "Cor de resultado escolhida pelo usuário; o resto é neutro.",
+      "Tátil e rápido: 44px de alvo, toque que afunda, resposta em 130ms.",
+      "Números tabulares em todo valor de dinheiro, odd e contagem."
+    ],
+    "rules": [
+      { "name": "A Regra do Azul Único", "body": "O app tem um azul. Pendente usa o mesmo azul em tom de texto; não existe segundo acento de marca. Ícone, favicon e logo também são azuis.", "section": "colors" },
+      { "name": "A Regra do Azul Legível", "body": "Azul de superfície (#2563eb) nunca vira texto sobre o fundo escuro (dá 3.29:1); texto e ícone azuis usam o tom de texto (#3b82f6, 5.41:1).", "section": "colors" },
+      { "name": "A Regra da Cor do Usuário", "body": "Verde e vermelho são leitura de resultado e de operação concluída ou com erro (\"Lido pela IA\", \"Registrada\"), e pertencem à preferência do usuário. Botão cheio usa as versões sólidas, que não mudam.", "section": "colors" },
+      { "name": "A Regra do Dinheiro Alinhado", "body": "Todo número que se compara com outro usa algarismos tabulares. Coluna de valores que dança é bug.", "section": "typography" },
+      { "name": "A Regra da Fonte da Landing", "body": "Archivo fica só na landing e chega no chunk dela; telas do app continuam 100% Inter.", "section": "typography" },
+      { "name": "A Regra do Polegar", "body": "Todo alvo de toque tem pelo menos 44px, mesmo quando o visual é menor (chip de 36px estende a área de toque até 44px com um pseudo-elemento).", "section": "layout" },
+      { "name": "A Regra da Sombra Escura", "body": "Profundidade vem de sombra escura, nunca de brilho azul. Neon é estética de cassino.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar os tokens de papel (`bg-accent`, `text-accent-text`, `text-success`, `bg-success-solid`) em vez de hex no componente.",
+      "Do dar 44px de alvo a todo toque e a classe `press` a todo elemento tocável.",
+      "Do usar algarismos tabulares em todo valor de dinheiro, odd e contagem.",
+      "Do usar a curva `--ease-out-soft` (cubic-bezier(0.22, 1, 0.36, 1)) com 130ms para resposta, 240ms para entrada e 420ms para subida; a cascata é de 40ms por item, com teto de 12 itens.",
+      "Do dar a toda animação um bloco de `prefers-reduced-motion` que a desliga.",
+      "Do marcar o que a IA preencheu e deixar em âmbar o que ela leu com baixa confiança.",
+      "Do testar cada tela nos dois temas: o claro tem os mesmos papéis com valores invertidos."
+    ],
+    "donts": [
+      "Don't usar hover azul chapado em menu, lista ou dropdown; o hover é cinza sutil (7% do texto).",
+      "Don't usar #2563eb como texto sobre fundo escuro; texto azul é #3b82f6.",
+      "Don't usar os tons de leitura de ganho e perda como fundo de botão com rótulo branco; use as versões sólidas.",
+      "Don't introduzir um segundo acento de marca. O roxo foi testado e revertido: tudo é azul.",
+      "Don't usar brilho, glow azul ou dourado de cassino em botão ou número; profundidade é sombra escura.",
+      "Don't carregar Archivo nem as animações da landing nas telas do app.",
+      "Don't colocar caixa alta fora dos rótulos de seção e de KPI."
+    ]
+  }
+}
