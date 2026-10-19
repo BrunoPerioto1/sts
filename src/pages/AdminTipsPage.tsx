@@ -83,7 +83,7 @@ export default function AdminTipsPage() {
               <div
                 key={tip.id}
                 className={cn(
-                  "rounded-lg border bg-card p-3.5",
+                  "rounded-lg border bg-card shadow-card p-3.5",
                   tip.expectedDelivery ? "border-[var(--dashboard-orange)]/35" : "border-border",
                 )}
               >

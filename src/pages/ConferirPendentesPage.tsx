@@ -102,7 +102,7 @@ export default function ConferirPendentesPage() {
             ))}
           </div>
         ) : n === 0 ? (
-          <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card px-5 py-6 md:px-7">
+          <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card shadow-card px-5 py-6 md:px-7">
             <p className="text-[17px] font-semibold text-foreground">Tudo liquidado</p>
             <p className="text-[13px] text-zinc-500">Nenhuma aposta esperando você.</p>
           </div>
@@ -122,7 +122,7 @@ export default function ConferirPendentesPage() {
               </label>
             )}
 
-            <ul className="overflow-hidden rounded-2xl border border-foreground/10 bg-card">
+            <ul className="overflow-hidden rounded-2xl border border-foreground/10 bg-card shadow-card">
               {selecting && (
                 <li className={cn("hidden h-11 items-center gap-5 border-b border-foreground/[0.07] px-5 text-[11px] font-medium tracking-wider text-zinc-500 md:grid", DESKTOP_COLS_SEL)}>
                   <button

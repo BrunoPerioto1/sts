@@ -36,7 +36,7 @@ export function StatCard({ label, value, hint, icon: IconComponent, signed, colo
         // Card: ícone pequeno na linha do rótulo e valor sem quebra. Ícone de
         // 36px em caixa deixava ~98px pro valor em 390; "+R$ 5.315,99" quebrava
         // e, com auto-rows-fr, esticava todas as linhas da grade.
-        card && "flex items-start gap-2.5 rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] px-3.5 py-3",
+        card && "flex items-start gap-2.5 rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] shadow-card px-3.5 py-3",
         wide && "col-span-2",
         className,
       )}

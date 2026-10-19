@@ -144,7 +144,7 @@ function SemProposta({ enabled }: { enabled: boolean }) {
   return (
     <Link
       to="/settlement/review"
-      className="flex items-center gap-3.5 rounded-2xl border border-foreground/10 bg-card p-3.5 transition-colors hover:bg-foreground/[0.04] md:px-4 md:py-4"
+      className="flex items-center gap-3.5 rounded-2xl border border-foreground/10 bg-card shadow-card p-3.5 transition-colors hover:bg-foreground/[0.04] md:px-4 md:py-4"
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-foreground/[0.06] text-zinc-300">
         <HandPointing size={19} />
@@ -186,7 +186,7 @@ function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
 
 function Vazio({ buscando }: { buscando: boolean }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card px-5 py-6 md:px-7" aria-live="polite">
+    <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card shadow-card px-5 py-6 md:px-7" aria-live="polite">
       <p className="flex items-center gap-2 text-[17px] font-semibold text-foreground">
         {buscando && <CircleNotch size={17} className="animate-spin text-zinc-500" />}
         {buscando ? "Buscando resultados…" : "Nada pra confirmar"}
@@ -309,7 +309,7 @@ export default function ConferirPage() {
               </label>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-foreground/10 bg-card">
+            <div className="overflow-hidden rounded-2xl border border-foreground/10 bg-card shadow-card">
               <div
                 className={cn(
                   "hidden h-11 items-center border-b border-foreground/[0.07] px-5 text-[11px] font-medium tracking-wider text-zinc-500 md:grid",

@@ -52,7 +52,7 @@ export function TipCardMobileItem({
     <>
       <div
         className={cn(
-          "relative rounded-2xl border border-border bg-card transition-colors",
+          "relative rounded-2xl border border-border bg-card shadow-card transition-colors",
           // Accent, não verde: verde na tela já quer dizer lucro.
           checked && "border-accent bg-accent/[0.08]",
           selectionMode && "press-sm cursor-pointer select-none",

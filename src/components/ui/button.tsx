@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { CircleNotch } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -61,11 +62,17 @@ export interface ButtonProps
   asChild?: boolean
   /** Só na variante `icon`: contador no canto (ex.: filtros ativos). 0 esconde. */
   badge?: number
+  /**
+   * Salvando: spinner na frente do rótulo e botão travado (sem clique duplo nem
+   * Enter reenviando o form). O texto ("Salvando…") fica com quem usa. Não
+   * apaga como o desabilitado: o spinner já diz que está trabalhando.
+   */
+  loading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, badge, children, ...props }, ref) => {
-    const classes = cn(buttonVariants({ variant, size, className }))
+  ({ className, variant, size, asChild = false, badge, loading, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size, className: cn(loading && "disabled:opacity-100", className) }))
     // Slot exige um filho só: com asChild o badge não entra.
     if (asChild) {
       return (
@@ -75,7 +82,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       )
     }
     return (
-      <button className={classes} ref={ref} {...props}>
+      <button className={classes} ref={ref} {...props} disabled={props.disabled || loading} aria-busy={loading || undefined}>
+        {/* animate-in e animate-spin usam a mesma propriedade `animation`:
+            a entrada fica no span, o giro no ícone. */}
+        {loading && (
+          <span className="inline-flex animate-in fade-in-0 zoom-in-50 duration-200">
+            <CircleNotch weight="bold" className="animate-spin" />
+          </span>
+        )}
         {children}
         {!!badge && (
           <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-[3px] rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center tabular-nums">

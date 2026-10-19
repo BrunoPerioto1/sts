@@ -50,7 +50,7 @@ export function DashboardChecklist() {
   const doneCount = steps.filter((s) => s.done).length;
 
   return (
-    <section className="mx-auto max-w-lg rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] p-5 animate-fade-in">
+    <section className="mx-auto max-w-lg rounded-xl border border-foreground/[0.07] bg-foreground/[0.015] shadow-card p-5 animate-fade-in">
       <SectionLabel as="p" className="px-0">{`Primeiros passos · ${doneCount} de ${steps.length}`}</SectionLabel>
       <h3 className="mt-1 text-lg font-semibold">Seu dashboard aparece com a primeira aposta</h3>
       <ol className="mt-4 space-y-1">

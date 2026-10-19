@@ -168,7 +168,7 @@ export function PerfilMobileView({ me, summary, metricsLoading, metricsError, me
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
+      <div className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3.5">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Lucro acumulado</p>

@@ -45,7 +45,7 @@ export function DashboardPreview({ preferences, stake }: { preferences: Dashboar
     : points.map((p) => p.date);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card shadow-card p-5">
       <div className="flex items-baseline justify-between mb-4">
         <h3 className="text-base font-semibold">Dashboard</h3>
         <span className="text-xs text-zinc-400">Últimos 30 dias</span>

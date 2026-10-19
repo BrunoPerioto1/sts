@@ -220,7 +220,7 @@ export function ApostaForm({
               Cancelar
             </Button>
           )}
-          <Button type="submit" disabled={submitting} className="gap-1.5">
+          <Button type="submit" loading={submitting} className="gap-1.5">
             {!submitting && <Check weight="bold" className="h-4 w-4" />}
             {submitting
               ? "Salvando…"

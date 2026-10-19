@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
 import { AuthHeading } from "./AuthHeading";
-import { CircleNotch } from "@phosphor-icons/react";
 import { MIN_PASSWORD, useRegisterForm } from "@/hooks/auth/use-register-form";
 import { cn } from "@/lib/utils";
 
@@ -84,15 +83,9 @@ export function RegisterForm() {
       <Button
         type="submit"
         className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2"
-        disabled={submitting}
+        loading={submitting}
       >
-        {submitting ? (
-          <>
-            <CircleNotch size={18} className="animate-spin" /> Criando conta…
-          </>
-        ) : (
-          "Criar conta"
-        )}
+        {submitting ? "Criando conta…" : "Criar conta"}
       </Button>
 
       <p className="-mt-1.5 lg:-mt-1 text-[12.5px] lg:text-xs leading-normal text-zinc-500 text-pretty">

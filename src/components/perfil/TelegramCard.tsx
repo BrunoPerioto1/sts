@@ -47,7 +47,7 @@ export function TelegramCard({ me, onUnlinked }: { me: MeResponse; onUnlinked: (
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="telegram-title">
+    <section className="rounded-xl border border-border bg-card shadow-card p-4" aria-labelledby="telegram-title">
       <div className="flex items-center gap-2.5 mb-3">
         <span className="h-8 w-8 rounded-lg bg-foreground/[0.06] flex items-center justify-center text-zinc-300" aria-hidden="true">
           <TelegramLogo size={16} />

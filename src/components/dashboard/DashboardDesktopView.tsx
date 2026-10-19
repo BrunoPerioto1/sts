@@ -10,6 +10,7 @@ import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { stagger } from "@/lib/motion";
 import { formatDayMonth, formatMoney } from "@/lib/format";
 import { SectionLabel } from "@/components/ui/section-label";
+import { GlowingBorder } from "@/components/ui/glowing-border";
 import { normalizeDashboardPreferences, performanceColor } from "@/lib/dashboard-preferences";
 import { DashboardKpiGrid } from "./DashboardKpiGrid";
 import { DashboardProfitHero, daysSummary } from "./DashboardProfitHero";
@@ -94,107 +95,108 @@ export function DashboardDesktopView({
   const hasData = dailyData.length > 0;
 
   return (
-    <div
-      className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] overflow-hidden animate-rise stagger"
-      style={stagger(0)}
-    >
-      <div className="grid lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
-        <div className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r">
-          <DashboardProfitHero
-            size="desktop"
-            profit={profit}
-            color={performanceColor(profit, preferences.performanceColors)}
-            summary={daysSummary(dailyData)}
-            resetKey={`${filters.startDate}-${filters.endDate}`}
-          />
-          <div className="mt-6">
-            <StatRow
-              label="Melhor dia"
-              value={
-                bestDay
-                  ? `${formatMoney(bestDay.profitDay, { signed: true })} · ${formatDayMonth(bestDay.date)}`
-                  : "—"
-              }
-              color={bestDay && bestDay.profitDay > 0 ? "var(--color-success)" : undefined}
+    // O brilho fica fora do painel: o overflow-hidden dele cortaria a borda.
+    <div className="relative rounded-xl animate-rise stagger" style={stagger(0)}>
+      <GlowingBorder />
+      <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] shadow-card overflow-hidden">
+        <div className="grid lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+          <div className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r">
+            <DashboardProfitHero
+              size="desktop"
+              profit={profit}
+              color={performanceColor(profit, preferences.performanceColors)}
+              summary={daysSummary(dailyData)}
+              resetKey={`${filters.startDate}-${filters.endDate}`}
             />
-            {/* "Volume apostado" saiu daqui: repetia o KPI "Total apostado" logo abaixo. */}
-            <StatRow
-              label="Pior dia"
-              value={
-                worstDay && worstDay.profitDay < 0
-                  ? `${formatMoney(worstDay.profitDay, { signed: true })} · ${formatDayMonth(worstDay.date)}`
-                  : "—"
-              }
-              color={worstDay && worstDay.profitDay < 0 ? "var(--color-danger)" : undefined}
-            />
+            <div className="mt-6">
+              <StatRow
+                label="Melhor dia"
+                value={
+                  bestDay
+                    ? `${formatMoney(bestDay.profitDay, { signed: true })} · ${formatDayMonth(bestDay.date)}`
+                    : "—"
+                }
+                color={bestDay && bestDay.profitDay > 0 ? "var(--color-success)" : undefined}
+              />
+              {/* "Volume apostado" saiu daqui: repetia o KPI "Total apostado" logo abaixo. */}
+              <StatRow
+                label="Pior dia"
+                value={
+                  worstDay && worstDay.profitDay < 0
+                    ? `${formatMoney(worstDay.profitDay, { signed: true })} · ${formatDayMonth(worstDay.date)}`
+                    : "—"
+                }
+                color={worstDay && worstDay.profitDay < 0 ? "var(--color-danger)" : undefined}
+              />
+            </div>
           </div>
+
+          <Panel
+            label={dailyData.length <= 31 ? "Resultado por dia" : "Resultado por semana"}
+            className="p-6"
+            right={
+              hasData ? (
+                <div className="flex items-center gap-4 text-[11px] text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-sm bg-success" /> Ganho
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-sm bg-danger" /> Perda
+                  </span>
+                </div>
+              ) : undefined
+            }
+          >
+            {hasData ? (
+              <ProfitBarChart data={chartData} height={300} semanal={dailyData.length > 31} />
+            ) : (
+              <div className="h-[300px] flex flex-col items-start justify-center gap-2">
+                <p className="text-[13px] text-zinc-400">
+                  Nenhuma aposta liquidada no período. Experimente ampliar as datas.
+                </p>
+                {preset !== "60d" && preset !== "allTime" && (
+                  <button
+                    type="button"
+                    onClick={() => onPresetChange("60d")}
+                    className="press text-[13px] text-accent font-medium"
+                  >
+                    Ampliar para 60 dias
+                  </button>
+                )}
+              </div>
+            )}
+          </Panel>
         </div>
 
-        <Panel
-          label={dailyData.length <= 31 ? "Resultado por dia" : "Resultado por semana"}
-          className="p-6"
-          right={
-            hasData ? (
-              <div className="flex items-center gap-4 text-[11px] text-zinc-400">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-success" /> Ganho
+        <div className="border-t border-foreground/[0.05]">
+          <DashboardKpiGrid metrics={metrics} previous={previousMetrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-foreground/[0.05]">
+          <Panel
+            // Banca é o patrimônio somado das casas: não tem como recortar por
+            // esporte, então com filtro ativo o rótulo avisa que é o total.
+            label={filters.houseIds.length || filters.sportIds.length ? "Banca acumulada · todas as casas" : "Banca acumulada"}
+            className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r"
+            right={
+              bankroll.length > 0 ? (
+                <span className="text-[13px] text-zinc-300 tabular-nums">
+                  {formatMoney(bankroll[0].balance)} → {formatMoney(bankroll[bankroll.length - 1].balance)}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-danger" /> Perda
-                </span>
-              </div>
-            ) : undefined
-          }
-        >
-          {hasData ? (
-            <ProfitBarChart data={chartData} height={300} semanal={dailyData.length > 31} />
-          ) : (
-            <div className="h-[300px] flex flex-col items-start justify-center gap-2">
-              <p className="text-[13px] text-zinc-400">
-                Nenhuma aposta liquidada no período. Experimente ampliar as datas.
-              </p>
-              {preset !== "60d" && preset !== "allTime" && (
-                <button
-                  type="button"
-                  onClick={() => onPresetChange("60d")}
-                  className="press text-[13px] text-accent font-medium"
-                >
-                  Ampliar para 60 dias
-                </button>
-              )}
-            </div>
-          )}
-        </Panel>
-      </div>
+              ) : undefined
+            }
+          >
+            {bankroll.length > 0 ? (
+              <BankrollChart data={bankroll} height={240} />
+            ) : (
+              <p className="text-[13px] text-zinc-400 h-[240px] flex items-center">Sem movimentação no período.</p>
+            )}
+          </Panel>
 
-      <div className="border-t border-foreground/[0.05]">
-        <DashboardKpiGrid metrics={metrics} previous={previousMetrics} stake={Number(me?.stake ?? 0)} preferences={preferences} desktop />
-      </div>
-
-      <div className="grid lg:grid-cols-[1fr_minmax(340px,440px)] border-t border-foreground/[0.05]">
-        <Panel
-          // Banca é o patrimônio somado das casas: não tem como recortar por
-          // esporte, então com filtro ativo o rótulo avisa que é o total.
-          label={filters.houseIds.length || filters.sportIds.length ? "Banca acumulada · todas as casas" : "Banca acumulada"}
-          className="p-6 border-b border-foreground/[0.05] lg:border-b-0 lg:border-r"
-          right={
-            bankroll.length > 0 ? (
-              <span className="text-[13px] text-zinc-300 tabular-nums">
-                {formatMoney(bankroll[0].balance)} → {formatMoney(bankroll[bankroll.length - 1].balance)}
-              </span>
-            ) : undefined
-          }
-        >
-          {bankroll.length > 0 ? (
-            <BankrollChart data={bankroll} height={240} />
-          ) : (
-            <p className="text-[13px] text-zinc-400 h-[240px] flex items-center">Sem movimentação no período.</p>
-          )}
-        </Panel>
-
-        <Panel label="Por casa" className="p-6" right={<span className="text-[11px] text-zinc-400">no período</span>}>
-          <HouseProfitBars rows={byHouse.slice(0, 5)} />
-        </Panel>
+          <Panel label="Por casa" className="p-6" right={<span className="text-[11px] text-zinc-400">no período</span>}>
+            <HouseProfitBars rows={byHouse.slice(0, 5)} />
+          </Panel>
+        </div>
       </div>
     </div>
   );

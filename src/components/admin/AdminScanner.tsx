@@ -975,8 +975,8 @@ function NewTournamentForm({
             ))}
           </SelectContent>
         </Select>
-        <Button type="submit" disabled={form.pending || !form.ready}>
-          Cadastrar
+        <Button type="submit" disabled={!form.ready} loading={form.pending}>
+          {form.pending ? "Cadastrando…" : "Cadastrar"}
         </Button>
         <Button
           type="button"
@@ -1028,8 +1028,10 @@ function NewTournamentSheet({
         <Button
           size="lg"
           // Desabilitado fica neutro, não azul apagado: o texto diz o que falta.
-          className="w-full disabled:opacity-100 disabled:bg-foreground/[0.06] disabled:text-zinc-500"
-          disabled={!form.ready || form.pending}
+          // Salvando continua azul, com o spinner.
+          className={cn("w-full", !form.pending && "disabled:opacity-100 disabled:bg-foreground/[0.06] disabled:text-zinc-500")}
+          disabled={!form.ready}
+          loading={form.pending}
           onClick={form.submit}
         >
           {form.submitLabel}

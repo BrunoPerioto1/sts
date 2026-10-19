@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { AuthField } from "./AuthField";
 import { AuthHeading } from "./AuthHeading";
 import { formatCountdown } from "@/lib/format";
-import { CircleNotch } from "@phosphor-icons/react";
 import { useLoginForm } from "@/hooks/auth/use-login-form";
 
 interface LoginFormProps {
@@ -75,12 +74,11 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
       <Button
         type="submit"
         className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2"
-        disabled={submitting || locked}
+        disabled={locked}
+        loading={submitting}
       >
         {submitting ? (
-          <>
-            <CircleNotch size={18} className="animate-spin" /> Verificando…
-          </>
+          "Verificando…"
         ) : locked ? (
           `Bloqueado por ${formatCountdown(lockRemainingMs)}`
         ) : (

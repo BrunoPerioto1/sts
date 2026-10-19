@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardDesktopSkeleton() {
   return (
     <div
-      className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] overflow-hidden animate-fade-in"
+      className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.012] shadow-card overflow-hidden animate-fade-in"
       aria-busy="true"
       aria-label="Carregando dashboard"
     >

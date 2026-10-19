@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/* A Inter vem por <link> no index.html, com preconnect. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -126,6 +125,10 @@
     --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.08);
     --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 6px 18px rgba(0, 0, 0, 0.65);
     --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 16px 40px rgba(0, 0, 0, 0.75);
+    /* Relevo leve dos cards no escuro (DESIGN.md): sombra escura e curta, que
+       soma com a borda fina pra descolar o card do fundo. So em card de
+       primeiro nivel; card dentro de card continua plano. */
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.3);
 
     /* Aliases shadcn/tailwind já esperam (bg-background, text-foreground, etc.) */
     --background: var(--color-bg);
@@ -224,6 +227,7 @@
     --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 16px 40px rgba(0, 0, 0, 0.12);
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06);
 
     color-scheme: light;
   }
@@ -573,4 +577,32 @@
   background:
     radial-gradient(circle closest-side, var(--range-dot) calc(100% - 0.5px), transparent 100%),
     linear-gradient(to left, transparent 50%, var(--range-band) 50%);
+}
+
+/* Brilho na borda que segue o ponteiro (GlowingBorder). Registrada com
+   @property pra transição animar o ângulo; sem isso ele pula de uma vez. */
+@property --glow-start {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+.glowing-border {
+  /* O padding é a espessura: a máscara recorta o miolo e sobra só o anel. */
+  padding: 1px;
+  background: conic-gradient(
+    from calc((var(--glow-start) - var(--glow-spread)) * 1deg),
+    transparent 0deg,
+    rgb(var(--rgb-accent-text)) calc(var(--glow-spread) * 1deg),
+    transparent calc(var(--glow-spread) * 2deg)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+  transition:
+    --glow-start 1s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 300ms ease;
+}
+.glowing-border[data-active] {
+  opacity: 1;
 }

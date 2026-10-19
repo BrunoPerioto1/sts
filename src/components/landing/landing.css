@@ -1,0 +1,122 @@
+/* Só a landing carrega este arquivo (vem junto do chunk dela): o app não paga
+   a fonte de título nem as animações daqui. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,600..800&display=swap");
+
+/* Archivo larga nos títulos: lembra placar e grafismo de transmissão, e não é
+   a Inter do app inteiro. Corpo continua Inter. */
+.landing-display {
+  font-family: "Archivo", "Inter", system-ui, sans-serif;
+  font-stretch: 115%;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+
+/* Faixa das casas: o conteúdo vem duplicado e anda metade da largura, então o
+   fim encosta no começo sem emenda. Para no hover pra dar pra ler. */
+.landing-marquee {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.landing-marquee-track {
+  animation: landing-marquee 48s linear infinite;
+}
+.landing-marquee:hover .landing-marquee-track,
+.landing-marquee[data-paused] .landing-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes landing-marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Área de trabalho: cada cena remonta ao trocar, então as entradas com atraso
+   (--d) recomeçam sozinhas. Pausado, tudo congela no lugar. */
+.ws-in {
+  animation: ws-in 420ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ws-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+}
+.ws-fill {
+  animation: ws-fill 360ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ws-fill {
+  from { opacity: 0; filter: blur(3px); }
+}
+/* Linha da leitura passando pelo print. */
+.ws-scan {
+  animation: ws-scan 1400ms ease-in-out 2 alternate both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ws-scan {
+  from { top: 8%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  to { top: 88%; opacity: 0; }
+}
+/* Clique simulado num botão: afunda e acende o anel de foco. */
+.ws-press {
+  animation: ws-press 420ms ease-out both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ws-press {
+  0% { transform: none; box-shadow: 0 0 0 0 rgb(var(--rgb-accent-text) / 0); }
+  35% { transform: scale(0.94); box-shadow: 0 0 0 4px rgb(var(--rgb-accent-text) / 0.35); }
+  100% { transform: none; box-shadow: 0 0 0 0 rgb(var(--rgb-accent-text) / 0); }
+}
+/* O que sai de cena (o "Pendente" que vira "Planilhada"). */
+.ws-out {
+  animation: ws-out 240ms ease-in forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ws-out {
+  to { opacity: 0; transform: translate3d(0, -4px, 0); }
+}
+/* Barra de progresso da cena: o fim dela (animationend) é que troca de cena,
+   então pausar a barra pausa a troca junto. */
+.ws-progress {
+  animation: ws-progress var(--dur) linear forwards;
+}
+@keyframes ws-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+[data-paused] .ws-in,
+[data-paused] .ws-fill,
+[data-paused] .ws-scan,
+[data-paused] .ws-press,
+[data-paused] .ws-out,
+[data-paused] .ws-progress {
+  animation-play-state: paused;
+}
+
+/* Sem movimento: cada cena aparece já no estado final, e a faixa de casas
+   vira uma lista parada quebrada em linhas (parada e cortada, metade das casas
+   ficava escondida). Seletores com duas classes pra vencer `w-max` e `px-5`. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .landing-marquee .landing-marquee-track {
+    animation: none;
+    display: block;
+    width: auto;
+  }
+  .landing-marquee .landing-marquee-track > ul {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .landing-marquee .landing-marquee-track > ul[aria-hidden] {
+    display: none;
+  }
+  .landing-marquee .landing-marquee-track > ul > li {
+    padding-left: 0;
+    padding-right: 1.25rem;
+  }
+  .ws-in, .ws-fill, .ws-press { animation: none; }
+  .ws-out { animation: none; visibility: hidden; }
+  .ws-scan { display: none; }
+}

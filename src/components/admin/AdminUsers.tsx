@@ -367,7 +367,7 @@ export function AdminUsers() {
 
       {view.problems && view.tab !== "problems" && <ProblemsBanner text={view.problems} onOpen={() => view.setTab("problems")} />}
 
-      <section className="rounded-xl border border-border bg-card overflow-x-auto">{body}</section>
+      <section className="rounded-xl border border-border bg-card shadow-card overflow-x-auto">{body}</section>
 
       <UserSidePanel row={view.selected} actions={actions} onClose={panel.close} />
       <PromoteDialog view={view} />

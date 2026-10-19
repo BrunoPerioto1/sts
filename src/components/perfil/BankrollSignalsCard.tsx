@@ -33,7 +33,7 @@ export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
   const inputClass = "h-10 rounded-lg tabular-nums";
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="bankroll-title">
+    <section className="rounded-xl border border-border bg-card shadow-card p-5" aria-labelledby="bankroll-title">
       <h2 id="bankroll-title" className="text-base font-semibold">Banca e sinais</h2>
       <p className="text-[13px] text-zinc-400 mt-1 mb-4">O bot do Telegram e a lista de casas usam estes valores.</p>
       <div className="grid grid-cols-3 gap-3">

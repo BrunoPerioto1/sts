@@ -112,7 +112,7 @@ export function AdminUsersMobile({ view }: { view: AdminUsersView }) {
           }
         />
       ) : (
-        <div className="rounded-[14px] border border-border bg-card overflow-hidden divide-y divide-border">
+        <div className="rounded-[14px] border border-border bg-card shadow-card overflow-hidden divide-y divide-border">
           {visible.map((row) => (
             <UserListRow key={row.user.id} row={row} isMe={row.user.id === actions.meId} onOpen={() => panel.open(row.user.id)} />
           ))}

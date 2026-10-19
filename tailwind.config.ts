@@ -127,7 +127,9 @@ export default {
                 sm: 'var(--shadow-sm)',
                 DEFAULT: 'var(--shadow-sm)',
                 md: 'var(--shadow-md)',
-                lg: 'var(--shadow-lg)'
+                lg: 'var(--shadow-lg)',
+                // Card de primeiro nível (ver --shadow-card no index.css).
+                card: 'var(--shadow-card)'
             },
             keyframes: {
                 'accordion-down': {

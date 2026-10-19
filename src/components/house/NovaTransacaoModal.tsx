@@ -131,7 +131,7 @@ export function NovaTransacaoModal({ isOpen, onClose, house, initialType }: Nova
           <Button type="button" variant="ghost" className="text-zinc-400 hover:text-foreground" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!valid || loading}>
+          <Button type="submit" disabled={!valid} loading={loading}>
             {loading ? "Enviando…" : "Adicionar"}
           </Button>
         </div>

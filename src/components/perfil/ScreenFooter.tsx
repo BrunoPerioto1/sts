@@ -23,7 +23,8 @@ export function ScreenFooter({ onSave, onDiscard, saving, disabled, saveLabel = 
         size="lg"
         className="flex-1"
         onClick={onSave}
-        disabled={disabled || saving}
+        disabled={disabled}
+        loading={saving}
       >
         {saving ? "Salvando…" : saveLabel}
       </Button>

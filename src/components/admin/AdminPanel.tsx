@@ -20,7 +20,7 @@ export function AdminPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
+    <section className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
       {/* Compacto: a tabela é o conteúdo, o topo só orienta. */}
       <div className="px-4 py-3.5 sm:px-6 sm:py-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

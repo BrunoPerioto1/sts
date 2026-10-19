@@ -189,7 +189,8 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
           footer={
             <Button
               className="min-h-[44px] w-full bg-accent font-bold text-white hover:opacity-90 active:opacity-90"
-              disabled={!valid || busy}
+              disabled={!valid}
+              loading={busy}
               onClick={save}
             >
               {salvarLabel}
@@ -227,7 +228,7 @@ export function TransactionActions({ tx, onChanged }: { tx: TransactionDto; onCh
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={!valid || busy}>
+              <Button type="submit" disabled={!valid} loading={busy}>
                 {salvarLabel}
               </Button>
             </div>

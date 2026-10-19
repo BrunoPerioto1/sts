@@ -24,7 +24,7 @@ export function ListGroup({
   className?: string;
 }) {
   const card = (
-    <div className={cn("rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border", !title && className)}>
+    <div className={cn("rounded-2xl border border-border bg-card shadow-card overflow-hidden divide-y divide-border", !title && className)}>
       {children}
     </div>
   );

@@ -123,7 +123,7 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
           >
             <span className="flex-1 text-sm text-zinc-300">Alterações não salvas</span>
             <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={saving}>Descartar</Button>
-            <Button size="sm" onClick={handleSave} disabled={!canSave}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+            <Button size="sm" onClick={handleSave} disabled={!canSave} loading={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
           </div>
         )}
       </div>

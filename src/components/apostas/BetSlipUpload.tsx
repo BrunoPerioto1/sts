@@ -3,6 +3,8 @@ import {
   ArrowCounterClockwise,
   ArrowsClockwise,
   Camera,
+  CheckCircle,
+  Circle,
   CircleNotch,
   Image as ImageIcon,
   MagnifyingGlassPlus,
@@ -46,6 +48,45 @@ const kb = (bytes: number) =>
 
 const chip =
   "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-colors";
+
+// A API não informa progresso: as etapas andam pelo relógio (como o Multi Step
+// Loader do Aceternity) e a última espera a resposta, sem voltar pro começo.
+const READING_STEPS = ["Preparando a imagem", "Lendo o bilhete", "Identificando evento e mercado", "Conferindo odd e valor"];
+const STEP_MS = [700, 2000, 2200];
+
+/** Monta a cada leitura (o corpo troca de ramo), então sempre começa do passo 1. */
+function ReadingSteps() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (step >= READING_STEPS.length - 1) return;
+    const id = setTimeout(() => setStep((s) => s + 1), STEP_MS[step]);
+    return () => clearTimeout(id);
+  }, [step]);
+
+  return (
+    <ol className="space-y-1" aria-label="Lendo bilhete">
+      {READING_STEPS.map((text, i) => (
+        <li
+          key={text}
+          className={cn(
+            "flex items-center gap-1.5 text-[11px] transition-colors duration-300",
+            i < step ? "text-zinc-500" : i === step ? "font-medium text-accent-text" : "text-zinc-600",
+          )}
+        >
+          {i < step ? (
+            <CheckCircle weight="fill" className="h-3 w-3 text-success animate-in zoom-in-50 duration-200" />
+          ) : i === step ? (
+            <CircleNotch className="h-3 w-3 animate-spin" />
+          ) : (
+            <Circle className="h-3 w-3" />
+          )}
+          {i === step ? `${text}…` : text}
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 export function BetSlipUpload({
   status,
@@ -223,13 +264,10 @@ export function BetSlipUpload({
   const body = () => {
     if (status === "reading")
       return (
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           {thumb}
-          <div className="min-w-0 flex-1 space-y-1">
-            <span className={cn(chip, "bg-accent/15 text-accent-text")}>
-              <CircleNotch className="h-3 w-3 animate-spin" />
-              Lendo bilhete…
-            </span>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <ReadingSteps />
             {fileLine}
           </div>
         </div>

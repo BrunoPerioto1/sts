@@ -146,7 +146,7 @@ export function countAlerts(groups: Group[]): number {
 
 function HealthCard({ card }: { card: Card }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card shadow-card p-4">
       <div className="flex items-center gap-2">
         <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", DOT[card.level])} />
         <span className="text-[11px] font-medium uppercase tracking-wider text-muted truncate">{card.label}</span>
@@ -289,7 +289,7 @@ function MobileTimeline({ groups }: { groups: Group[] }) {
                     </div>
                   ))}
                   {metrics.length > 0 && (
-                    <div className="rounded-[11px] border border-border bg-card divide-y divide-border">
+                    <div className="rounded-[11px] border border-border bg-card shadow-card divide-y divide-border">
                       {metrics.map((card) => (
                         <div key={card.label} className="px-3 py-2.5 flex items-center gap-2.5">
                           <div className="flex-1 min-w-0">

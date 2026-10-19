@@ -73,8 +73,8 @@ function HouseRow({ house }: { house: AdminHouse }) {
           className="sm:col-start-1 sm:col-span-2"
         />
         <div className="flex gap-2 sm:col-span-2 sm:justify-end">
-          <Button size="sm" disabled={pending} onClick={saveEdit}>
-            Salvar
+          <Button size="sm" loading={pending} onClick={saveEdit}>
+            {pending ? "Salvando…" : "Salvar"}
           </Button>
           <Button variant="secondary" size="sm" onClick={cancelEdit}>
             Cancelar
@@ -212,8 +212,8 @@ function NewHouseForm({ onDone }: { onDone: () => void }) {
         className="sm:col-start-1 sm:col-span-2"
       />
       <div className="flex gap-2 sm:col-span-2 sm:justify-end">
-        <Button type="submit" size="sm" disabled={create.isPending || !name.trim()}>
-          Cadastrar
+        <Button type="submit" size="sm" disabled={!name.trim()} loading={create.isPending}>
+          {create.isPending ? "Cadastrando…" : "Cadastrar"}
         </Button>
         <Button type="button" variant="secondary" size="sm" onClick={onDone} aria-label="Cancelar">
           <X size={14} />

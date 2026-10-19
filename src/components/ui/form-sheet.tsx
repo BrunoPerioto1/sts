@@ -57,7 +57,8 @@ export function FormSheet({
             form={formId}
             size="lg"
             className="w-full"
-            disabled={submitting || submitDisabled}
+            disabled={submitDisabled}
+            loading={submitting}
             onClick={formId ? undefined : onSubmit}
           >
             {submitting ? submittingLabel : submitLabel}

@@ -24,6 +24,7 @@ const AdminHousesPage = lazy(() => import("./pages/AdminHousesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminScannerPage = lazy(() => import("./pages/AdminScannerPage"));
 const RenovarPage = lazy(() => import("./pages/RenovarPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
@@ -60,7 +61,7 @@ const App = () => (
     <Sonner />
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AuthPage />} />
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/login" element={<AuthPage />} />
         {/* Layout route sem path: a casca (sidebar/bottom nav) monta uma vez
             e as telas trocam dentro do <Outlet />. Antes cada pagina montava a
@@ -105,6 +106,16 @@ function RouteFallback() {
       <Skeleton className="h-4 w-64" delay={60} />
       <Skeleton className="h-48 w-full rounded-lg" delay={120} />
     </div>
+  );
+}
+
+/** A landing é pra quem chega de fora: logado, `/` vai direto pro dashboard. */
+function LandingRoute() {
+  if (getToken()) return <Navigate to="/dashboard" replace />;
+  return (
+    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+      <LandingPage />
+    </Suspense>
   );
 }
 

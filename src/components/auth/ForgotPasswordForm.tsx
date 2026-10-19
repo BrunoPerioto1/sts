@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, CircleNotch, TelegramLogo } from "@phosphor-icons/react";
+import { ArrowLeft, TelegramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
 import { AuthHeading } from "./AuthHeading";
@@ -117,9 +117,9 @@ export function ForgotPasswordForm({ initialEmail = "", onBack }: ForgotPassword
         </>
       )}
 
-      <Button type="submit" className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2" disabled={busy}>
+      <Button type="submit" className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2" loading={busy}>
         {busy ? (
-          <CircleNotch size={18} className="animate-spin" />
+          step === "email" ? "Enviando código…" : "Trocando senha…"
         ) : step === "email" ? (
           <>
             <TelegramLogo size={18} /> Mandar código no Telegram
