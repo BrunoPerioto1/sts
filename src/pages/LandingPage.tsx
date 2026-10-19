@@ -3,16 +3,19 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   ArrowsClockwise,
-  Buildings,
+  ArrowsLeftRight,
   ChartLineUp,
   Check,
-  ClipboardText,
+  CursorClick,
   DeviceMobile,
   FileCsv,
-  Keyboard,
-  PaperPlaneTilt,
-  Sparkle,
+  HourglassMedium,
+  ListChecks,
+  Shield,
+  Sliders,
   TelegramLogo,
+  UsersThree,
+  Vault,
   X,
   type Icon,
 } from "@phosphor-icons/react";
@@ -27,22 +30,30 @@ import { useInView } from "@/components/landing/use-in-view";
 import { cn } from "@/lib/utils";
 import "@/components/landing/landing.css";
 
-// Recharts e os componentes do Dashboard só baixam quando a seção chega perto
-// da tela (ver Numbers): quem sai antes não paga o download dos gráficos.
+// As demos do meio da página só baixam quando a seção chega perto da tela (ver
+// NearScreen): quem sai antes não paga o download, e o topo abre tão rápido
+// quanto antes. Recharts e os componentes do Dashboard vêm no NumbersPreview.
 const NumbersPreview = lazy(() => import("@/components/landing/NumbersPreview"));
+const GroupsDemo = lazy(() => import("@/components/landing/TelegramGroups").then((m) => ({ default: m.GroupsDemo })));
+const GroupPicker = lazy(() => import("@/components/landing/TelegramGroups").then((m) => ({ default: m.GroupPicker })));
+const HousesPreview = lazy(() => import("@/components/landing/HousesPreview").then((m) => ({ default: m.HousesPreview })));
 
-const PRICE = "R$ 40";
+const PRICE = "R$ 39,99";
 const SIGNUP = "/login?cadastro=1";
-// Rótulo único dos CTAs: o mesmo botão em toda a página, sem variar o nome.
+// Rótulo dos CTAs da página. Só os planos têm rótulo próprio (PLANS.cta), pra
+// deixar claro o que cada botão faz.
 const START = "Começar grátis";
+// CTA do que é do Pro: toda conta nova testa o Pro por 3 dias.
+const TRY_PRO = "Testar o Pro por 3 dias";
 // Vai colado no CTA: é o que tira o medo de clicar.
 const TRIAL = "3 dias de Pro grátis, sem cartão.";
 
 // Números do produto na abertura. Só entra número confirmado (PRODUCT.md,
 // "Evidence on Hand"), arredondado pra baixo: 11.979 apostas viram "+11 mil".
-const PROOF: { value: string; label: string }[] = [
-  { value: "+200", label: "usuários organizando suas apostas" },
-  { value: "+11 mil", label: "apostas registradas no app" },
+// `short` é o rótulo da prova social embaixo dos planos.
+const PROOF: { value: string; label: string; short: string }[] = [
+  { value: "+200", label: "usuários organizando suas apostas", short: "apostadores já usam o SportsBet" },
+  { value: "+11 mil", label: "apostas registradas no app", short: "apostas registradas" },
 ];
 
 /**
@@ -76,7 +87,9 @@ export default function LandingPage() {
           <Proof />
           <Demo />
           <Steps />
+          <Groups />
           <Features />
+          <Houses />
           <Numbers />
           <Pricing />
           <Faq />
@@ -107,19 +120,22 @@ function Brand() {
 }
 
 function Header() {
-  const links = [
-    ["Como funciona", "#como-funciona"],
-    ["Recursos", "#recursos"],
-    ["Preço", "#preco"],
-    ["Dúvidas", "#duvidas"],
+  // `wide`: só a partir do lg. No md os seis links não cabem ao lado da marca e dos botões.
+  const links: { label: string; href: string; wide?: boolean }[] = [
+    { label: "Como funciona", href: "#como-funciona" },
+    { label: "Grupos", href: "#grupos", wide: true },
+    { label: "Recursos", href: "#recursos" },
+    { label: "Casas", href: "#casas", wide: true },
+    { label: "Preço", href: "#preco" },
+    { label: "Dúvidas", href: "#duvidas" },
   ];
   return (
     <header className="sticky top-0 z-40 rounded-t-[22px] border-b border-foreground/[0.06] bg-background/80 backdrop-blur-md sm:rounded-t-[28px]">
       <Container className="flex h-16 items-center justify-between gap-6">
         <Brand />
         <nav className="hidden items-center gap-7 text-[14px] text-zinc-400 md:flex" aria-label="Seções">
-          {links.map(([label, href]) => (
-            <a key={href} href={href} className="transition-colors hover:text-foreground">
+          {links.map(({ label, href, wide }) => (
+            <a key={href} href={href} className={cn("transition-colors hover:text-foreground", wide && "hidden lg:inline")}>
               {label}
             </a>
           ))}
@@ -248,6 +264,95 @@ function Steps() {
   );
 }
 
+const GROUP_STEPS = ["Conecte o Telegram", "Escolha os grupos", "Planilhe"];
+
+const GROUP_BENEFITS: Benefit[] = [
+  {
+    icon: UsersThree,
+    title: "Acompanhe seus grupos de tips num lugar só",
+    text: "As tips de todos os grupos que você escolheu chegam no mesmo bot.",
+  },
+  { icon: ListChecks, title: "Receba as apostas já organizadas", text: "Esporte, jogo, mercado, odd e stake separados, no seu privado." },
+  { icon: CursorClick, title: "Planilhe com um clique", text: "Um toque em Planilhar e a aposta entra na planilha." },
+  {
+    icon: Sliders,
+    title: "Configure como cada grupo escreve as apostas",
+    text: "Mostre onde ficam a odd, a stake e o esporte nas mensagens de cada grupo.",
+  },
+];
+
+/**
+ * Grupos do Telegram (Pro): os grupos de tips que a pessoa já segue chegam
+ * organizados no privado e viram planilha num clique. Demo larga em cima; o
+ * caminho, os benefícios e a escolha dos grupos embaixo.
+ */
+function Groups() {
+  return (
+    <section id="grupos" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="grupos-title">
+      <Container className="max-w-[1280px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] lg:items-end lg:gap-16">
+          <Reveal>
+            <p className="flex items-center gap-2 text-[14px] font-medium text-accent-text">
+              <TelegramLogo size={18} weight="fill" />
+              Grupos do Telegram
+              <span className="rounded-md bg-accent/[0.18] px-2 py-0.5 text-[12px] font-semibold">Pro</span>
+            </p>
+            <h2 id="grupos-title" className="landing-display mt-4 max-w-[17ch] text-balance text-[34px] sm:text-[46px]">
+              Os grupos que você já segue viram planilha.
+            </h2>
+          </Reveal>
+          <Reveal delay={100} className="lg:pb-2">
+            <p className="max-w-[46ch] text-[16px] leading-relaxed text-zinc-400">
+              Pare de copiar aposta na mão. Conecte seu Telegram, escolha os grupos de tips que você acompanha e cada aposta nova chega no seu
+              privado pelo nosso bot, já organizada. Um clique em Planilhar e ela está na planilha.
+            </p>
+          </Reveal>
+        </div>
+
+        <Reveal delay={120} className="mt-12">
+          <NearScreen size="h-[932px] sm:h-[956px] lg:h-[349px]">
+            <GroupsDemo />
+          </NearScreen>
+        </Reveal>
+        <p className="mt-3 text-[13px] text-zinc-400">Demonstração com dados de exemplo.</p>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16">
+          <div>
+            <Reveal>
+              <ol className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3" aria-label="Como começar">
+                {GROUP_STEPS.map((step, i) => (
+                  <li key={step} className="flex items-center gap-2.5 text-[15px] font-medium">
+                    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-accent/[0.15] text-[13px] font-semibold tabular-nums text-accent-text">
+                      {i + 1}
+                    </span>
+                    {step}
+                    {i < GROUP_STEPS.length - 1 && <ArrowRight size={15} aria-hidden className="ml-1 hidden text-zinc-400 sm:block" />}
+                  </li>
+                ))}
+              </ol>
+            </Reveal>
+            <Benefits items={GROUP_BENEFITS} className="mt-10" />
+            <Reveal className="mt-10">
+              <Button asChild size="lg">
+                <Link to={SIGNUP}>{TRY_PRO}</Link>
+              </Button>
+              <p className="mt-4 flex max-w-[52ch] gap-2.5 text-[14px] leading-relaxed text-zinc-400">
+                <Shield size={18} className="mt-0.5 flex-none text-accent-text" />
+                O SportsBet só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.
+              </p>
+            </Reveal>
+          </div>
+          <Reveal delay={100}>
+            <NearScreen size="h-[383px]">
+              <GroupPicker />
+            </NearScreen>
+          </Reveal>
+        </div>
+      </Container>
+    </section>
+  );
+}
+
 // O motivo de trocar a planilha, linha a linha: o mesmo trabalho, de um lado
 // feito à mão e do outro já resolvido. Só o que o app faz de verdade.
 const VERSUS: { sheet: string; app: string }[] = [
@@ -267,6 +372,25 @@ const FEATURES: { icon: Icon; title: string; text: string }[] = [
   { icon: DeviceMobile, title: "Feito pro celular", text: "Fica na tela inicial e, no Android, recebe o print direto do app da casa." },
   { icon: FileCsv, title: "Exporta pro Excel", text: "Apostas, movimentações e resumo mensal em CSV, no formato do Excel." },
 ];
+
+type Benefit = { icon: Icon; title: string; text: string };
+
+/** Ícone, título e uma linha: a mesma grade nos recursos, nos grupos e nas casas. */
+function Benefits({ items, className }: { items: Benefit[]; className?: string }) {
+  return (
+    <dl className={cn("grid gap-x-10 gap-y-9 sm:grid-cols-2", className)}>
+      {items.map(({ icon: IconComponent, title, text }, i) => (
+        <Reveal key={title} delay={i * 80}>
+          <dt className="flex items-start gap-2.5 text-pretty text-[16px] font-semibold leading-snug">
+            <IconComponent size={20} className="mt-px flex-none text-accent-text" />
+            {title}
+          </dt>
+          <dd className="mt-2 text-[15px] leading-relaxed text-zinc-400">{text}</dd>
+        </Reveal>
+      ))}
+    </dl>
+  );
+}
 
 function SectionHeading({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
   return (
@@ -311,26 +435,70 @@ function Features() {
           </ul>
         </div>
 
-        <dl className="mt-14 grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: IconComponent, title, text }, i) => (
-            <Reveal key={title} delay={i * 80}>
-              <dt className="flex items-center gap-2.5 text-[16px] font-semibold">
-                <IconComponent size={20} className="text-accent-text" />
-                {title}
-              </dt>
-              <dd className="mt-2 text-[15px] leading-relaxed text-zinc-400">{text}</dd>
-            </Reveal>
-          ))}
-        </dl>
+        <Benefits items={FEATURES} className="mt-14 lg:grid-cols-4" />
       </Container>
     </section>
   );
 }
 
-function Numbers() {
-  // Começa a baixar uma tela e pouco antes de aparecer, então chega pronto.
+const HOUSE_BENEFITS: Benefit[] = [
+  {
+    icon: Vault,
+    title: "Saldo de todas as casas numa tela só",
+    text: "Saldo total, quanto está preso em aposta aberta e quanto já foi movimentado.",
+  },
+  { icon: ChartLineUp, title: "Lucro ou prejuízo por casa", text: "Verde onde você está ganhando, vermelho onde está perdendo." },
+  {
+    icon: ArrowsLeftRight,
+    title: "Depósitos, saques e ajustes com histórico",
+    text: "Lance o depósito, o saque ou o saldo que o site da casa mostra.",
+  },
+  {
+    icon: HourglassMedium,
+    title: "Aviso das casas paradas",
+    text: "Casa sem aposta há mais tempo que o seu limite ganha o aviso de sacar.",
+  },
+];
+
+/** A tela Casas do app, que a landing não mostrava: saldo, lucro e paradas de cada casa. */
+function Houses() {
+  return (
+    <section id="casas" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="casas-title">
+      <Container>
+        <SectionHeading id="casas-title" title="Saiba quanto você tem em cada casa.">
+          E onde está ganhando ou perdendo. Depósitos, saques e resultados fecham o saldo de cada casa, e as que ficaram paradas aparecem
+          separadas.
+        </SectionHeading>
+        <Reveal delay={120} className="mt-12">
+          <NearScreen size="h-[682px] md:h-[639px] lg:h-[629px]">
+            <HousesPreview />
+          </NearScreen>
+        </Reveal>
+        <p className="mt-3 text-[13px] text-zinc-400">Tela Casas de apostas do app, com dados de exemplo.</p>
+        <Benefits items={HOUSE_BENEFITS} className="mt-14 lg:grid-cols-4" />
+        <Reveal className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Button asChild size="lg">
+            <Link to={SIGNUP}>{START}</Link>
+          </Button>
+          <p className="text-[14px] text-zinc-400">O saldo por casa já vem no plano Grátis.</p>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
+/**
+ * Monta a peça só quando ela chega perto da tela. Começa a baixar uma tela e
+ * pouco antes de aparecer, então chega pronta; até lá, uma caixa da mesma
+ * altura (`size`) segura o lugar pra página não pular.
+ */
+function NearScreen({ size, children }: { size: string; children: ReactNode }) {
   const [ref, near] = useInView<HTMLDivElement>({ rootMargin: "800px 0px", once: true });
-  const placeholder = <div className="h-[560px] rounded-2xl border border-foreground/10" aria-hidden />;
+  const placeholder = <div className={cn("rounded-2xl border border-foreground/10", size)} aria-hidden />;
+  return <div ref={ref}>{near ? <Suspense fallback={placeholder}>{children}</Suspense> : placeholder}</div>;
+}
+
+function Numbers() {
   return (
     <section className="border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="numeros-title">
       <Container>
@@ -338,14 +506,10 @@ function Numbers() {
           Lucro, ROI, unidades, taxa de acerto e odd média contam só o que já foi liquidado. Você escolhe quais números
           aparecem e em que ordem.
         </SectionHeading>
-        <div ref={ref} className="mt-12">
-          {near ? (
-            <Suspense fallback={placeholder}>
-              <NumbersPreview />
-            </Suspense>
-          ) : (
-            placeholder
-          )}
+        <div className="mt-12">
+          <NearScreen size="h-[560px]">
+            <NumbersPreview />
+          </NearScreen>
           <p className="mt-3 text-[13px] text-zinc-400">Dashboard real do app, com um mês de dados de exemplo.</p>
         </div>
       </Container>
@@ -353,9 +517,10 @@ function Numbers() {
   );
 }
 
-// Vitrine dos dois planos; as regras moram no backend (src/users/plan.ts). Meio
-// de pagamento fica de fora de propósito (pedido do dono): aqui se fala do que
-// cada plano faz, não de como se paga.
+// Vitrine dos dois planos; as regras moram no backend (src/users/plan.ts). Ficam
+// de fora de propósito (pedido do dono): o meio de pagamento, porque aqui se fala
+// do que cada plano faz e não de como se paga; e o grupo VIP de tips, vendido à
+// parte. Os Grupos do Telegram do Pro são os grupos que a própria pessoa segue.
 const PLANS: {
   name: string;
   description: string;
@@ -364,95 +529,136 @@ const PLANS: {
   badge?: string;
   lead: string;
   highlight?: boolean;
-  items: { icon: Icon; text: string }[];
+  /**
+   * `strong` abre o item em negrito: é o que muda de um plano pro outro.
+   * `hint` explica embaixo, menor, o que o item faz na prática.
+   */
+  items: { strong?: string; text?: string; hint?: string }[];
+  cta: string;
+  // Colada no botão: é o que tira o medo de clicar. Uma linha só, sem repetir o topo.
+  fine?: string;
 }[] = [
   {
     name: "Grátis",
-    description: "Pra registrar suas apostas e acompanhar seus números sem pagar nada.",
+    description: "Pra começar a controlar suas apostas.",
     price: "R$ 0",
-    note: "pra sempre, sem cartão",
+    note: "pra sempre",
     lead: "Inclui:",
     items: [
-      { icon: Keyboard, text: "Registro digitado sem limite, no site e no bot" },
-      { icon: Sparkle, text: "5 leituras de print ou áudio por IA por dia" },
-      { icon: Buildings, text: "Saldo de cada casa e comparador" },
-      { icon: ChartLineUp, text: "Dashboard com lucro, ROI e acerto" },
+      { text: "Registro manual sem limite" },
+      { strong: "5 registros por IA", text: "por dia" },
+      { text: "Saldo de cada casa" },
+      { text: "Dashboard com lucro, ROI e acerto" },
     ],
+    cta: START,
   },
   {
     name: "Pro",
-    description: "Pra quem registra muita aposta e quer o resultado conferido sozinho.",
+    description: "Pra automatizar o registro e acompanhar seus resultados sem digitar nada.",
     price: PRICE,
-    note: "por mês, sem fidelidade",
-    badge: "3 dias grátis",
-    lead: "Tudo do Grátis, mais:",
+    note: "por mês · cancele quando quiser",
+    // "Mais escolhido" pediria um número que não existe (PRODUCT.md, Evidence on Hand).
+    badge: "Recomendado",
+    lead: "Tudo do Grátis +",
     highlight: true,
     items: [
-      { icon: Sparkle, text: "Leitura de print e áudio por IA sem limite" },
-      { icon: ClipboardText, text: "Conferência de resultado pelo placar" },
-      { icon: FileCsv, text: "Exportação em CSV pro Excel" },
-      { icon: PaperPlaneTilt, text: "Planilhar tips no app e no bot" },
+      { strong: "IA ilimitada", text: "pra registrar suas apostas", hint: "Mande um print ou áudio e a aposta vem preenchida." },
+      // "Automático" com o "você confirma" junto: nada é liquidado sem o clique (PRODUCT.md, princípio 1).
+      { strong: "Resultados automáticos", text: "pelo placar", hint: "Você só confere e confirma." },
+      { strong: "Exportação pro Excel" },
+      { strong: "Grupos do Telegram", hint: "As tips dos seus grupos, planilhadas num clique." },
     ],
+    cta: TRY_PRO,
+    fine: "Sem cartão. Cancele quando quiser.",
   },
 ];
 
 /**
- * Os planos lado a lado numa moldura só: em cima, o cartão do preço (um tom
- * abaixo da moldura, com a sombra escura de card); embaixo, o que entra. O Pro
- * se destaca pela borda azul, pelo selo do teste e pelo botão cheio.
+ * Cada plano é uma coluna só, do nome ao botão. O Pro se destaca pela borda
+ * azul cheia, pelo fundo um tom acima, pela sombra escura e pelo selo; o azul
+ * cheio fica só no botão dele (DESIGN.md, Regra do Azul Único).
  */
 function Pricing() {
   return (
     <section id="preco" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="preco-title">
       <Container>
-        <Reveal className="mx-auto max-w-[560px] text-center">
-          <h2 id="preco-title" className="landing-display text-[40px] sm:text-[56px]">
-            Planos
+        <Reveal className="mx-auto max-w-[640px] text-center">
+          {/* "se está lucrando", não "quanto lucra": a página vende controle, não promete lucro (PRODUCT.md). */}
+          <h2 id="preco-title" className="landing-display text-balance text-[36px] sm:text-[52px]">
+            {/* No desktop, uma frase por linha: o "Saiba" não fica no fim da primeira. */}
+            Controle suas apostas. <span className="sm:block">Saiba se está lucrando.</span>
           </h2>
-          <p className="mt-4 text-balance text-[16px] leading-relaxed text-zinc-400">
-            Comece no Grátis e assine o Pro quando fizer falta. Toda conta nova ganha 3 dias de Pro, sem cartão.
-          </p>
+          <p className="mt-4 text-balance text-[16px] leading-relaxed text-zinc-400">Comece grátis. Sem cartão de crédito.</p>
         </Reveal>
 
-        <Reveal delay={120} className="mx-auto mt-12 grid max-w-[880px] gap-2 rounded-[28px] border border-foreground/[0.06] bg-[rgb(var(--rgb-surface))] p-2 md:grid-cols-2">
-          {PLANS.map((plan) => (
-            <div key={plan.name} className="flex flex-col">
-              <div
-                className={cn(
-                  "rounded-[20px] border bg-background p-6 shadow-card",
-                  plan.highlight ? "border-accent/40" : "border-foreground/[0.07]",
+        <div className="mx-auto mt-12 grid max-w-[880px] gap-4 md:grid-cols-2 md:gap-5">
+          {PLANS.map((plan, i) => (
+            <Reveal
+              key={plan.name}
+              delay={120 + i * 80}
+              className={cn(
+                "flex flex-col rounded-[22px] border p-6 sm:p-7",
+                plan.highlight ? "border-accent bg-[rgb(var(--rgb-surface))] shadow-card" : "border-foreground/[0.09] bg-background",
+              )}
+            >
+              <div className="flex min-h-7 items-center justify-between gap-3">
+                <h3 className="text-[17px] font-semibold">{plan.name}</h3>
+                {plan.badge && (
+                  <span className="rounded-md bg-accent/[0.18] px-2.5 py-1 text-[13px] font-semibold text-accent-text">{plan.badge}</span>
                 )}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-[16px] font-semibold">{plan.name}</h3>
-                  {plan.badge && (
-                    <span className="rounded-md bg-accent/15 px-2 py-0.5 text-[12px] font-medium text-accent-text">{plan.badge}</span>
-                  )}
-                </div>
-                <p className="mt-1.5 min-h-[40px] text-[14px] leading-snug text-zinc-400">{plan.description}</p>
-                <p className="landing-display mt-6 text-[48px] tabular-nums">{plan.price}</p>
-                <p className="mt-1 text-[14px] text-zinc-400">{plan.note}</p>
               </div>
-              <div className="flex flex-1 flex-col px-5 pb-5 pt-6">
+              <p className="landing-display mt-6 text-[48px] tabular-nums">{plan.price}</p>
+              <p className="mt-1 text-[14px] text-zinc-400">{plan.note}</p>
+              <p className="mt-5 text-[15px] leading-snug text-zinc-200 md:min-h-[42px]">{plan.description}</p>
+
+              <div className="mt-6 border-t border-foreground/[0.08] pt-6">
                 <p className="text-[13px] text-zinc-400">{plan.lead}</p>
-                <ul className="mb-8 mt-3.5 space-y-3 text-[14px] text-zinc-200">
-                  {plan.items.map(({ icon: IconComponent, text }) => (
-                    <li key={text} className="flex gap-3">
-                      <IconComponent size={16} className="mt-0.5 flex-none text-zinc-400" />
-                      {text}
+                <ul className="mt-3.5 space-y-3 text-pretty text-[14px] leading-snug text-zinc-200">
+                  {plan.items.map(({ strong, text, hint }) => (
+                    <li key={`${strong ?? ""}${text ?? ""}`} className="flex gap-3">
+                      <Check
+                        size={16}
+                        weight="bold"
+                        className={cn("mt-px flex-none", plan.highlight ? "text-accent-text" : "text-zinc-300")}
+                        aria-hidden
+                      />
+                      <span>
+                        {strong && <strong className="font-semibold text-foreground">{strong}</strong>}
+                        {strong && text && " "}
+                        {text}
+                        {hint && <span className="mt-1 block text-[13px] text-zinc-400">{hint}</span>}
+                      </span>
                     </li>
                   ))}
                 </ul>
-                <Button asChild size="lg" variant={plan.highlight ? "primary" : "secondary"} className="mt-auto w-full">
-                  <Link to={SIGNUP}>{START}</Link>
-                </Button>
               </div>
-            </div>
+
+              <div className="mt-auto pt-8">
+                <Button asChild size="lg" variant={plan.highlight ? "primary" : "secondary"} className="group/cta w-full">
+                  <Link to={SIGNUP}>
+                    {plan.cta}
+                    {plan.highlight && (
+                      <ArrowRight weight="bold" aria-hidden className="transition-transform duration-200 group-hover/cta:translate-x-0.5" />
+                    )}
+                  </Link>
+                </Button>
+                {/* Sem recado no Grátis, a linha fica vazia lado a lado: os dois botões alinham. */}
+                <p className={cn("mt-3 text-balance text-center text-[13px] text-zinc-400", !plan.fine && "hidden md:block md:min-h-5")}>
+                  {plan.fine}
+                </p>
+              </div>
+            </Reveal>
           ))}
-        </Reveal>
-        <p className="mx-auto mt-5 max-w-[880px] text-center text-[13px] text-zinc-400">
-          O grupo de tips do Telegram é vendido à parte e não está incluído nos planos.
-        </p>
+        </div>
+
+        <div className="mx-auto mt-14 flex max-w-[880px] justify-center gap-10 text-center sm:gap-20">
+          {PROOF.map(({ value, short }) => (
+            <p key={short} className="flex flex-col items-center gap-1.5">
+              <span className="landing-display text-[34px] tabular-nums sm:text-[44px]">{value}</span>
+              <span className="max-w-[18ch] text-balance text-[14px] leading-snug text-zinc-400 sm:max-w-none">{short}</span>
+            </p>
+          ))}
+        </div>
       </Container>
     </section>
   );
@@ -477,19 +683,23 @@ const QUESTIONS: { q: string; a: string }[] = [
   },
   {
     q: "O que tem no plano Grátis?",
-    a: "Registro digitado sem limite, no site e no bot, 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard. Conferência pelo placar, exportação em CSV e planilhar as tips do grupo são do Pro.",
+    a: "Registro digitado sem limite, no site e no bot, 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard. Leitura por IA sem limite, conferência pelo placar, exportação em CSV e os Grupos do Telegram são do Pro.",
   },
   {
-    q: "Como funciona a assinatura?",
-    a: `Toda conta nova ganha 3 dias de Pro, sem cartão. Depois disso, a conta segue no Grátis, sem perder nada do que você registrou, ou você assina o Pro por ${PRICE} por mês. Sem fidelidade: cancele quando quiser.`,
+    q: "O que acontece depois dos 3 dias de Pro?",
+    a: `A conta volta pro Grátis sozinha: nada é cobrado, porque o teste não pede cartão, e nada do que você registrou se perde. Se quiser seguir no Pro, assine por ${PRICE} por mês, sem fidelidade.`,
   },
   {
-    q: "As tips estão incluídas no plano?",
-    a: "Não. O grupo de tips do Telegram é vendido à parte, e quem está nele recebe as tips direto na fila do app. Pra planilhar as tips no app ou no bot, a conta precisa estar no Pro.",
+    q: "Como cancelo o Pro?",
+    a: "Na página Plano, dentro do app, em Cancelar assinatura. A cobrança para na hora, o Pro já pago continua até o fim do período e depois a conta vira Grátis, com tudo o que você registrou.",
   },
   {
     q: "Preciso usar o Telegram?",
-    a: "Não. O Telegram serve para recuperar a senha e, para assinantes do grupo de tips, para receber as tips na fila. É possível usar o app apenas com os prints e o registro manual.",
+    a: "Não. O Telegram serve para recuperar a senha, mandar apostas pelo bot e, no Pro, receber as tips dos grupos que você escolher. É possível usar o app apenas com os prints e o registro manual.",
+  },
+  {
+    q: "O SportsBet lê minhas conversas do Telegram?",
+    a: "Não. Ele só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.",
   },
 ];
 

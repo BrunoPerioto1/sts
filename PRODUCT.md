@@ -38,9 +38,9 @@ Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números
 
 - Dois planos (regras em `meu-bot-telegram/src/users/plan.ts`):
   - Grátis: registro digitado sem limite (site e bot), 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard.
-  - Pro, R$ 40 por mês, sem fidelidade: tudo do Grátis, leitura por IA sem limite, conferência pelo placar, exportação em CSV e planilhar as tips do grupo.
+  - Pro, R$ 39,99 por mês, sem fidelidade: tudo do Grátis, leitura por IA sem limite, conferência pelo placar, exportação em CSV e planilhar as tips do grupo.
 - Conta nova tem 3 dias de Pro grátis, sem cartão. Acabou o Pro, a conta cai no Grátis: nada é bloqueado nem apagado.
-- O grupo de tips do Telegram é vendido à parte e não está incluído nos R$ 40. A fila de Tips do app espelha esse grupo; não vender o acesso ao grupo como parte do plano.
+- O grupo de tips do Telegram é vendido à parte e não está incluído nos R$ 39,99. A fila de Tips do app espelha esse grupo; não vender o acesso ao grupo como parte do plano.
 - Aberto ao público geral (não é só para quem segue tips).
 - Não é casa de apostas: não recebe, não paga e não intermedia apostas. Público 18+.
 - A instância de produção guarda movimentação financeira real do operador. Não existe demo pública; superfícies de marketing usam dados de exemplo, rotulados como exemplo.

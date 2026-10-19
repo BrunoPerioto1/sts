@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { GlowingBorder } from "@/components/ui/glowing-border";
 import { cn } from "@/lib/utils";
+import { at, reducedMotion } from "./motion";
 import { useInView } from "./use-in-view";
 
 /**
@@ -64,13 +65,6 @@ const LOG: Record<SceneId, { at: number; text: string }[]> = {
     { at: 3400, text: "Saldo da Betano: R$ 535,00" },
   ],
 };
-
-/** Atraso de entrada de cada peça, em ms (lido pelas classes .ws-* do landing.css). */
-const at = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
-
-function reducedMotion() {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 export function LandingWorkspace() {
   const [index, setIndex] = useState(0);

@@ -218,6 +218,134 @@
   .flow-pulse, .flow-drop::after { display: none; }
 }
 
+/* Grupos do Telegram e Casas: as demos reaproveitam as peças da área de
+   trabalho (.ws-in, .ws-out, .ws-press, .ws-fill) e somam as daqui. Cada loop
+   tem um relógio invisível (.lp-clock): quando a animação dele acaba, a cena
+   remonta e recomeça. Fora da tela tudo pausa pelo [data-paused]. Peça que
+   some no fim (digitando, cursor, modal) tem opacidade 0 fora da animação:
+   sem movimento, o que fica é o estado final. */
+.lp-clock {
+  animation: lp-clock var(--dur) linear;
+}
+@keyframes lp-clock {
+  from { opacity: 0; }
+  to { opacity: 0; }
+}
+/* "digitando…": aparece, segura e some antes da mensagem entrar. */
+.lp-typing {
+  opacity: 0;
+  animation: lp-typing var(--len, 900ms) linear;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-typing {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.lp-dot {
+  animation: lp-dot 900ms ease-in-out infinite;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-dot {
+  0%, 60%, 100% { transform: none; opacity: 0.45; }
+  30% { transform: translate3d(0, -3px, 0); opacity: 1; }
+}
+/* Trecho que o sistema leu na mensagem: fundo azul fraco e um filete embaixo. */
+.lp-mark {
+  border-radius: 4px;
+  background: rgb(var(--rgb-accent) / 0.18);
+  box-shadow: inset 0 -1.5px 0 rgb(var(--rgb-accent-text) / 0.8);
+  animation: lp-mark 360ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-mark {
+  from { background: transparent; box-shadow: inset 0 -1.5px 0 transparent; }
+}
+/* Linha nova na planilha: acende e apaga. Vai numa camada própria porque a
+   linha já usa o .ws-in. */
+.lp-flash {
+  animation: lp-flash 1600ms ease-out backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-flash {
+  from { background-color: rgb(var(--rgb-accent) / 0.24); }
+  to { background-color: rgb(var(--rgb-accent) / 0); }
+}
+/* Cursor: chega de baixo, para no botão, clica e some. */
+.lp-cursor {
+  opacity: 0;
+  animation: lp-cursor 1500ms var(--ease-out-soft);
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-cursor {
+  0% { opacity: 0; transform: translate3d(56px, 44px, 0); }
+  15% { opacity: 1; }
+  55% { opacity: 1; transform: none; }
+  65% { transform: scale(0.82); }
+  75% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: none; }
+}
+/* Caixa marcada: o check entra com um pulo curto. */
+.lp-check {
+  animation: lp-check 280ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-check {
+  from { opacity: 0; transform: scale(0.4); }
+}
+/* Modal e o escurecido atrás dele: entram, seguram e saem numa animação só. */
+.lp-modal,
+.lp-scrim {
+  opacity: 0;
+  pointer-events: none;
+  animation-duration: var(--len);
+  animation-delay: var(--d, 0ms);
+  animation-timing-function: var(--ease-out-soft);
+}
+.lp-modal { animation-name: lp-modal; }
+.lp-scrim { animation-name: lp-scrim; }
+@keyframes lp-modal {
+  0% { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.97); }
+  8% { opacity: 1; transform: none; }
+  92% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: scale(0.98); }
+}
+@keyframes lp-scrim {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+/* Valor sendo digitado: cada etapa só aparece na janela dela. */
+.lp-blip {
+  opacity: 0;
+  animation: lp-blip var(--len, 200ms) linear;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-blip {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+[data-paused] .lp-clock,
+[data-paused] .lp-typing,
+[data-paused] .lp-dot,
+[data-paused] .lp-mark,
+[data-paused] .lp-flash,
+[data-paused] .lp-cursor,
+[data-paused] .lp-check,
+[data-paused] .lp-modal,
+[data-paused] .lp-scrim,
+[data-paused] .lp-blip {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-clock, .lp-typing, .lp-dot, .lp-mark, .lp-flash, .lp-cursor,
+  .lp-check, .lp-modal, .lp-scrim, .lp-blip {
+    animation: none;
+  }
+}
+
 /* Perguntas frequentes: a resposta abre deslizando onde o navegador já anima
    <details> (::details-content + interpolate-size). Nos outros abre na hora,
    como sempre abriu. */
