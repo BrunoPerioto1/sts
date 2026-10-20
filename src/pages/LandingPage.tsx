@@ -58,22 +58,28 @@ const TRY_PRO = "Testar o Pro por 3 dias";
 export default function LandingPage() {
   // A classe `dark` daqui não chega no <html>: pra quem usa o tema claro no
   // app, o fundo além da página (rolagem elástica) e a barra de rolagem
-  // ficavam claros. Escurece os dois enquanto a landing está montada.
+  // ficavam claros. Escurece os dois enquanto a landing está montada. O <body>
+  // também: o Safari do iPhone pinta a barra de status e a sobra abaixo do
+  // rodapé com a cor dele, que no tema claro vinha cinza.
   useEffect(() => {
     const root = document.documentElement.style;
-    const previous = [root.backgroundColor, root.colorScheme];
+    const body = document.body.style;
+    const previous = [root.backgroundColor, root.colorScheme, body.backgroundColor];
     root.backgroundColor = "#050506";
     root.colorScheme = "dark";
+    body.backgroundColor = "#050506";
     return () => {
-      [root.backgroundColor, root.colorScheme] = previous;
+      [root.backgroundColor, root.colorScheme, body.backgroundColor] = previous;
     };
   }, []);
 
   return (
-    // A página inteira num quadro arredondado, rente às bordas da tela: um tom
-    // mais escuro em volta, o quadro no fundo noturno do app.
-    <div className="dark min-h-dvh bg-[#050506] p-2 text-foreground sm:p-3">
-      <div className="rounded-[22px] border border-foreground/[0.08] bg-background sm:rounded-[28px]">
+    // Do sm pra cima, a página inteira num quadro arredondado, rente às bordas
+    // da tela: um tom mais escuro em volta, o quadro no fundo noturno do app.
+    // No celular sem quadro: os 8px de cada lado só roubavam largura, e o
+    // cabeçalho fixo deixava as linhas do quadro aparecendo em volta dele.
+    <div className="dark min-h-dvh bg-[#050506] text-foreground sm:p-3">
+      <div className="border-foreground/[0.08] bg-background sm:rounded-[28px] sm:border">
         <Header />
         <main>
           <Hero />
@@ -123,7 +129,7 @@ function Header() {
     { label: "Dúvidas", href: "#duvidas" },
   ];
   return (
-    <header className="sticky top-0 z-40 rounded-t-[22px] border-b border-foreground/[0.06] bg-background/80 backdrop-blur-md sm:rounded-t-[28px]">
+    <header className="sticky top-0 z-40 border-b border-foreground/[0.06] bg-background/80 backdrop-blur-md sm:rounded-t-[28px]">
       <Container className="flex h-16 items-center justify-between gap-6">
         <Brand />
         <nav className="hidden items-center gap-7 text-[14px] text-zinc-400 md:flex" aria-label="Seções">
