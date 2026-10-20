@@ -9,7 +9,8 @@ import {
   SlidersHorizontal,
   X,
 } from "@phosphor-icons/react";
-import { formatMoney, houseColor, houseInitials, signColor } from "@/lib/format";
+import { HouseAvatar } from "@/components/ui/house-avatar";
+import { formatMoney, signColor } from "@/lib/format";
 import { DEFAULT_STALE_BET_DAYS, formatIdleDays } from "@/lib/house-activity";
 import { cn } from "@/lib/utils";
 import { at, reducedMotion } from "./motion";
@@ -36,13 +37,14 @@ type House = {
   idle: number;
 };
 
-// Casas escolhidas pra que iniciais e cores (houseInitials/houseColor) não se
-// repitam: Betano, Bet365 e Betfair viravam três "BE".
+// O logo de cada casa vem do banco pela API, como na tela real (HouseAvatar,
+// rota pública). Sem logo ou offline, ficam iniciais e cor (Betano e Bet365
+// dariam dois "BE" na mesma cor; com o logo, não aparece).
 const IN_USE: House[] = [
   { name: "Betano", available: 1245.8, open: 50, profit: 612.3, bets: 48, stake: 2380, idle: 0 },
   { name: "Sportingbet", available: 980, profit: 341.7, bets: 35, stake: 1750, idle: 1 },
   { name: "Superbet", available: 610.5, open: 100, profit: -128.4, bets: 22, stake: 1020, idle: 3 },
-  { name: "Multibet", available: 0, shortfall: -42.1, profit: 56.2, bets: 9, stake: 310, idle: 6 },
+  { name: "Bet365", available: 0, shortfall: -42.1, profit: 56.2, bets: 9, stake: 310, idle: 6 },
 ];
 // Parada além do limite padrão do app (DEFAULT_STALE_BET_DAYS) e com saldo: ganha o selo de sacar.
 const STOPPED: House[] = [{ name: "Novibet", available: 646.1, profit: 402.7, bets: 17, stake: 900, idle: 32 }];
@@ -167,13 +169,7 @@ export function HousesPreview() {
           <span key={applied} aria-hidden className="lp-flash absolute -inset-x-2 inset-y-0 rounded-md" />
         )}
         <div className={cn(ROW_GRID, "relative border-b border-foreground/[0.07] py-2.5")}>
-          <span
-            aria-hidden
-            className="flex h-7 w-7 items-center justify-center rounded-[7px] text-[11px] font-semibold tracking-tight text-white"
-            style={{ background: houseColor(house.name) }}
-          >
-            {houseInitials(house.name)}
-          </span>
+          <HouseAvatar name={house.name} className="h-7 w-7 rounded-[7px] text-[11px]" />
           <span className="min-w-0">
             <span className="flex min-w-0 items-center gap-1.5">
               <span className="truncate text-[14px] font-medium">{house.name}</span>

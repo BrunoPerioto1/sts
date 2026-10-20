@@ -710,8 +710,7 @@ const QUESTIONS: { q: string; a: string }[] = [
 
 /**
  * Título à esquerda, que acompanha a rolagem no desktop, e as perguntas à
- * direita em linhas altas. No fim, uma linha de destaque pra quem ainda ficou
- * em dúvida: o teste do Pro, que é a resposta mais curta pra quase tudo.
+ * direita em linhas altas. O convite pro cadastro fica só embaixo do título.
  */
 function Faq() {
   return (
@@ -749,17 +748,6 @@ function Faq() {
               </details>
             ))}
           </div>
-          <Link
-            to={SIGNUP}
-            className="group/cta mt-4 flex min-h-14 items-center justify-between gap-4 rounded-xl bg-foreground/[0.04] px-5 py-4 transition-colors hover:bg-foreground/[0.07]"
-          >
-            <span className="text-[16px] font-medium">Ainda com dúvida?</span>
-            <span className="flex items-center gap-2 text-[14px] text-zinc-400">
-              <span className="hidden sm:inline">Teste 3 dias de Pro grátis</span>
-              <span className="sm:hidden">Teste grátis</span>
-              <ArrowRight size={15} className="transition-transform duration-200 group-hover/cta:translate-x-0.5" />
-            </span>
-          </Link>
         </Reveal>
       </Container>
     </section>
