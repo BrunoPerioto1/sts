@@ -107,11 +107,11 @@ function Container({ children, className }: { children: ReactNode; className?: s
 function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent bg-accent/[0.12]">
-        <ChartLineUp size={18} className="text-accent-text" />
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent bg-accent/[0.12] sm:h-10 sm:w-10 sm:rounded-xl">
+        <ChartLineUp size={18} className="text-accent-text sm:h-[22px] sm:w-[22px]" />
       </span>
       {/* No celular o nome inteiro empurrava "Entrar" e quebrava em duas linhas. */}
-      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight">
+      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight sm:text-[17px]">
         SportsBet<span className="hidden sm:inline"> Manager</span>
       </span>
     </Link>
@@ -119,33 +119,33 @@ function Brand() {
 }
 
 function Header() {
-  // `wide`: só a partir do lg. No md os seis links não cabem ao lado da marca e dos botões.
+  // `wide`: só a partir do lg. No md só cabem três links ao lado da marca e dos botões.
   const links: { label: string; href: string; wide?: boolean }[] = [
     { label: "Como funciona", href: "#como-funciona" },
     { label: "Grupos", href: "#grupos", wide: true },
-    { label: "Recursos", href: "#recursos" },
+    { label: "Recursos", href: "#recursos", wide: true },
     { label: "Casas", href: "#casas", wide: true },
     { label: "Preço", href: "#preco" },
     { label: "Dúvidas", href: "#duvidas" },
   ];
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/[0.06] bg-background/80 backdrop-blur-md sm:rounded-t-[28px]">
-      <Container className="flex h-16 items-center justify-between gap-6">
+      <Container className="flex h-16 items-center justify-between gap-6 sm:h-20">
         <Brand />
-        <nav className="hidden items-center gap-7 text-[14px] text-zinc-400 md:flex" aria-label="Seções">
+        <nav className="hidden items-center gap-6 text-[15px] text-zinc-400 md:flex lg:gap-7" aria-label="Seções">
           {links.map(({ label, href, wide }) => (
             <a key={href} href={href} className={cn("transition-colors hover:text-foreground", wide && "hidden lg:inline")}>
               {label}
             </a>
           ))}
         </nav>
-        {/* Botões de 32px no celular: o pseudo-elemento leva o toque a 44px ou mais
+        {/* Botões de 32px no celular (40px do sm pra cima): o pseudo-elemento leva o toque a 44px ou mais
             (8px pra cada lado, porque ele conta de dentro da borda de 1px). */}
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="relative text-zinc-300 after:absolute after:inset-x-0 after:-inset-y-2 hover:bg-foreground/[0.07] hover:text-foreground">
+          <Button asChild variant="ghost" size="sm" className="relative text-zinc-300 after:absolute after:inset-x-0 after:-inset-y-2 hover:bg-foreground/[0.07] hover:text-foreground sm:h-10 sm:px-4 sm:text-[15px]">
             <Link to="/login">Entrar</Link>
           </Button>
-          <Button asChild size="sm" className="relative after:absolute after:inset-x-0 after:-inset-y-2">
+          <Button asChild size="sm" className="relative after:absolute after:inset-x-0 after:-inset-y-2 sm:h-10 sm:px-4 sm:text-[15px]">
             <Link to={SIGNUP}>{START}</Link>
           </Button>
         </div>
