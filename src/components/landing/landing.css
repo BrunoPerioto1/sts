@@ -12,21 +12,46 @@
   line-height: 1.02;
 }
 
-/* Faixa das casas: o conteúdo vem duplicado e anda metade da largura, então o
-   fim encosta no começo sem emenda. Para no hover pra dar pra ler. */
-.landing-marquee {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+/* Topo: grade de linhas de 1px (texto a 4%) que some nas bordas pela máscara
+   radial, centrada do lado do mockup. Só CSS, sem imagem; antes do fim do topo
+   ela já sumiu, então a seção seguinte entra sem corte. */
+.hero-grid {
+  background-image:
+    linear-gradient(rgb(var(--rgb-text) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--rgb-text) / 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 70% 62% at 62% 40%, #000 15%, transparent 72%);
+  mask-image: radial-gradient(ellipse 70% 62% at 62% 40%, #000 15%, transparent 72%);
 }
-.landing-marquee-track {
-  animation: landing-marquee 48s linear infinite;
+/* Pontinhos que somem nas bordas (a grade do login e do topo antigo), mais
+   fortes do lado do título, e um brilho azul fraco atrás dele. Usado nas
+   perguntas frequentes. */
+.dot-grid {
+  background-image: radial-gradient(rgb(var(--rgb-text) / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 65% 60% at 28% 30%, #000 10%, transparent 75%);
+  mask-image: radial-gradient(ellipse 65% 60% at 28% 30%, #000 10%, transparent 75%);
 }
-.landing-marquee:hover .landing-marquee-track,
-.landing-marquee[data-paused] .landing-marquee-track {
-  animation-play-state: paused;
+.faq-glow {
+  background: radial-gradient(ellipse 40% 45% at 24% 26%, rgb(var(--rgb-accent) / 0.14), transparent 70%);
 }
-@keyframes landing-marquee {
-  to { transform: translateX(-50%); }
+/* Card que inclina com o mouse (HoverTilt): a transição segue o cursor e,
+   ao sair, devolve o card pro lugar. Mesma curva de desaceleração da página. */
+.hover-tilt {
+  transition: transform 450ms var(--ease-out-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hover-tilt { transition: none; transform: none !important; }
+}
+/* Entrada do topo ao carregar: sobe 12px e aparece, em cascata pelo --d. O
+   título começa sem atraso, pra não segurar a primeira pintura dele. */
+.hero-in {
+  animation: hero-in 520ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes hero-in {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
 }
 
 /* Área de trabalho: cada cena remonta ao trocar, então as entradas com atraso
@@ -92,31 +117,9 @@
   animation-play-state: paused;
 }
 
-/* Sem movimento: cada cena aparece já no estado final, e a faixa de casas
-   vira uma lista parada quebrada em linhas (parada e cortada, metade das casas
-   ficava escondida). Seletores com duas classes pra vencer `w-max` e `px-5`. */
+/* Sem movimento: cada cena aparece já no estado final, e o topo nasce no lugar. */
 @media (prefers-reduced-motion: reduce) {
-  .landing-marquee {
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-  .landing-marquee .landing-marquee-track {
-    animation: none;
-    display: block;
-    width: auto;
-  }
-  .landing-marquee .landing-marquee-track > ul {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-  .landing-marquee .landing-marquee-track > ul[aria-hidden] {
-    display: none;
-  }
-  .landing-marquee .landing-marquee-track > ul > li {
-    padding-left: 0;
-    padding-right: 1.25rem;
-  }
-  .ws-in, .ws-fill, .ws-press { animation: none; }
+  .hero-in, .ws-in, .ws-fill, .ws-press { animation: none; }
   .ws-out { animation: none; visibility: hidden; }
   .ws-scan { display: none; }
 }
@@ -137,44 +140,6 @@
   opacity: 1;
   transform: none;
   filter: none;
-}
-
-/* Diagrama do topo: trilho fixo e um pulso azul que corre por ele. Com
-   pathLength=100 o traço de 10 sai do começo e some no fim, sem dar a volta. */
-.flow-track {
-  stroke: rgb(var(--rgb-text) / 0.14);
-}
-.flow-pulse {
-  stroke: rgb(var(--rgb-accent-text));
-  stroke-linecap: round;
-  stroke-dasharray: 10 100;
-  stroke-dashoffset: 10;
-  animation: flow-pulse var(--dur, 2800ms) linear infinite;
-  animation-delay: var(--d, 0ms);
-}
-@keyframes flow-pulse {
-  from { stroke-dashoffset: 10; }
-  to { stroke-dashoffset: -100; }
-}
-/* No celular o trilho é vertical: um risco azul desce por ele. */
-.flow-drop::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 14px;
-  background: rgb(var(--rgb-accent-text));
-  animation: flow-drop 1800ms var(--ease-out-soft) infinite;
-  animation-delay: var(--d, 0ms);
-  transform: translateY(-100%);
-}
-@keyframes flow-drop {
-  to { transform: translateY(420%); }
-}
-[data-paused] .flow-pulse,
-[data-paused] .flow-drop::after {
-  animation-play-state: paused;
 }
 
 /* Fundo dos cards dos passos: noite em azul (um azul só, sem brilho de
@@ -215,7 +180,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; filter: none; transition: none; }
-  .flow-pulse, .flow-drop::after { display: none; }
 }
 
 /* Grupos do Telegram e Casas: as demos reaproveitam as peças da área de
@@ -230,6 +194,14 @@
 @keyframes lp-clock {
   from { opacity: 0; }
   to { opacity: 0; }
+}
+/* Bolha de quem mandou (o print): entra deslizando da direita. */
+.lp-slide {
+  animation: lp-slide 420ms var(--ease-out-soft) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes lp-slide {
+  from { opacity: 0; transform: translate3d(18px, 0, 0); }
 }
 /* "digitando…": aparece, segura e some antes da mensagem entrar. */
 .lp-typing {
@@ -328,6 +300,7 @@
   to { opacity: 1; }
 }
 [data-paused] .lp-clock,
+[data-paused] .lp-slide,
 [data-paused] .lp-typing,
 [data-paused] .lp-dot,
 [data-paused] .lp-mark,
@@ -340,7 +313,7 @@
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
-  .lp-clock, .lp-typing, .lp-dot, .lp-mark, .lp-flash, .lp-cursor,
+  .lp-clock, .lp-slide, .lp-typing, .lp-dot, .lp-mark, .lp-flash, .lp-cursor,
   .lp-check, .lp-modal, .lp-scrim, .lp-blip {
     animation: none;
   }

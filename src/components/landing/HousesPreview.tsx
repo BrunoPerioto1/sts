@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from "react";
+import { useEffect, useState, type AnimationEvent, type CSSProperties } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -15,6 +15,7 @@ import { DEFAULT_STALE_BET_DAYS, formatIdleDays } from "@/lib/house-activity";
 import { cn } from "@/lib/utils";
 import { at, reducedMotion } from "./motion";
 import { useInView } from "./use-in-view";
+import { useTween } from "./use-tween";
 
 /**
  * A tela Casas de apostas do app, recriada com dados de exemplo: os quatro
@@ -70,34 +71,6 @@ const T = {
   add: 4100,
 };
 const TYPED = ["0,02", "0,20", "2,00", "20,00", "200,00"];
-
-/** Vai até o alvo em ~0,9 s (desacelerando no fim). Com movimento reduzido, pula direto. */
-function useTween(target: number, instant: boolean, ms = 900) {
-  const [value, setValue] = useState(target);
-  const current = useRef(target);
-
-  useEffect(() => {
-    if (instant || current.current === target) {
-      current.current = target;
-      setValue(target);
-      return;
-    }
-    const origin = current.current;
-    const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / ms);
-      const v = origin + (target - origin) * (1 - (1 - t) ** 3);
-      current.current = v;
-      setValue(v);
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, instant, ms]);
-
-  return value;
-}
 
 const cents = (v: number) => Math.round(v * 100) / 100;
 

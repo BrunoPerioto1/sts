@@ -20,9 +20,12 @@ import {
   type Icon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { HouseTicker } from "@/components/landing/HouseTicker";
+import { HeroMockup } from "@/components/landing/HeroMockup";
+import { HoverTilt } from "@/components/landing/HoverTilt";
+import { LandingStats } from "@/components/landing/LandingStats";
 import { LandingWorkspace } from "@/components/landing/LandingWorkspace";
-import { EntryDiagram } from "@/components/landing/EntryDiagram";
+import { LANDING_STATS } from "@/components/landing/landing-stats";
+import { at } from "@/components/landing/motion";
 import { Reveal } from "@/components/landing/Reveal";
 import { StepCards } from "@/components/landing/StepCards";
 import { ClosingArt } from "@/components/landing/ClosingArt";
@@ -45,16 +48,6 @@ const SIGNUP = "/login?cadastro=1";
 const START = "Começar grátis";
 // CTA do que é do Pro: toda conta nova testa o Pro por 3 dias.
 const TRY_PRO = "Testar o Pro por 3 dias";
-// Vai colado no CTA: é o que tira o medo de clicar.
-const TRIAL = "3 dias de Pro grátis, sem cartão.";
-
-// Números do produto na abertura. Só entra número confirmado (PRODUCT.md,
-// "Evidence on Hand"), arredondado pra baixo: 11.979 apostas viram "+11 mil".
-// `short` é o rótulo da prova social embaixo dos planos.
-const PROOF: { value: string; label: string; short: string }[] = [
-  { value: "+200", label: "usuários organizando suas apostas", short: "apostadores já usam o SportsBet" },
-  { value: "+11 mil", label: "apostas registradas no app", short: "apostas registradas" },
-];
 
 /**
  * Página de entrada pra quem ainda não tem conta. Sempre no escuro (a classe
@@ -84,7 +77,7 @@ export default function LandingPage() {
         <Header />
         <main>
           <Hero />
-          <Proof />
+          <Stats />
           <Demo />
           <Steps />
           <Groups />
@@ -155,63 +148,58 @@ function Header() {
   );
 }
 
+/**
+ * Topo em duas colunas: o recado à esquerda e, à direita, o bot do Telegram em
+ * cascata (HeroMockup). Fundo: a base escura de sempre, a grade fina que some
+ * nas bordas (.hero-grid) e o brilho azul atrás do mockup. No celular, texto em
+ * cima e os cards empilhados embaixo.
+ */
 function Hero() {
   return (
-    <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 sm:pb-24 sm:pt-24" aria-labelledby="hero-title">
-      {/* Grade de pontos que some nas bordas, a mesma do login. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[760px] [background-image:radial-gradient(rgb(var(--rgb-text)/0.09)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent)]"
-      />
-      <div className="relative mx-auto max-w-[1100px] text-center">
-        {/* Título escolhido pelo dono (2026-10-19). Uma frase por bloco: a segunda nunca começa no fim da primeira linha. */}
-        {/* 32px no celular: com a Archivo larga, "exatamente" não cabe maior sem o título ir a seis linhas. */}
-        <h1 id="hero-title" className="landing-display mx-auto text-balance text-[32px] sm:text-[56px] lg:text-[68px]">
-          Registre suas apostas. <span className="block">Saiba exatamente quanto está lucrando.</span>
-        </h1>
-        {/* "Preenche" e "propõe", não "registra": quem confirma a aposta e o resultado é a pessoa (PRODUCT.md, princípio 1). */}
-        <p className="mx-auto mt-6 max-w-[56ch] text-balance text-[17px] leading-relaxed text-zinc-300 sm:text-[18px]">
-          Mande um print, um áudio ou digite. O SportsBet preenche a aposta, propõe o resultado pelo placar e mostra seu lucro, ROI e saldo
-          por casa.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to={SIGNUP}>{START}</Link>
-          </Button>
-          <Button asChild size="lg" variant="secondary">
-            <a href="#demonstracao">Ver funcionando</a>
-          </Button>
+    // Do lg pra cima o topo ocupa a altura da tela (menos o cabeçalho): os números ficam pra depois da dobra.
+    <section
+      className="relative overflow-hidden px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:flex lg:min-h-[calc(100svh-5rem)] lg:items-center lg:px-8 lg:pb-24 lg:pt-20"
+      aria-labelledby="hero-title"
+    >
+      <div aria-hidden className="hero-grid pointer-events-none absolute inset-0" />
+      <div className="relative mx-auto grid w-full max-w-[1136px] items-center gap-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-8">
+        <div>
+          {/* "Mande o print." sempre na primeira linha; a segunda frase quebra equilibrada ao lado do
+              mockup ("A gente faz / a planilha."), pra nenhuma palavra sobrar sozinha. */}
+          <h1 id="hero-title" className="hero-in landing-display text-balance text-[40px] sm:text-[56px] lg:text-[50px] xl:text-[60px]" style={at(0)}>
+            Mande o print. <span className="sm:block">A gente faz a planilha.</span>
+          </h1>
+          <p className="hero-in mt-5 max-w-[46ch] text-[17px] leading-relaxed text-zinc-300 sm:text-[18px]" style={at(80)}>
+            Registre apostas pelo Telegram em segundos. O resultado vem pelo placar e você vê lucro, ROI e saldo de cada casa.
+          </p>
+          <div className="hero-in mt-8 flex flex-wrap gap-3" style={at(160)}>
+            <Button asChild size="lg">
+              <Link to={SIGNUP}>{START}</Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <a href="#demonstracao">Ver funcionando</a>
+            </Button>
+          </div>
+          <p className="hero-in mt-4 text-balance text-[13px] text-zinc-400" style={at(240)}>
+            3 dias de Pro grátis, sem cartão · depois {PRICE}/mês ou plano Grátis
+          </p>
         </div>
-        <p className="mt-4 text-[14px] text-zinc-400">
-          <span className="font-medium text-zinc-200">{TRIAL}</span> Depois, siga no Grátis ou assine por {PRICE}/mês.
-        </p>
-      </div>
-
-      <div className="relative mx-auto mt-16 max-w-[1100px] sm:mt-24">
-        <EntryDiagram />
+        {/* Mockup 15% maior do xl pra cima (zoom refaz o layout, sem borrar o texto). No lg não:
+            a coluna do título ficaria estreita demais pra "Mande o print." numa linha. */}
+        <div className="hero-in xl:[zoom:1.15]" style={at(200)}>
+          <HeroMockup />
+        </div>
       </div>
     </section>
   );
 }
 
-/** Números e casas numa faixa só, logo depois do topo. */
-function Proof() {
+/** Três números com contexto e as casas, logo depois do topo. Sem linha de corte entre os dois. */
+function Stats() {
   return (
-    <section className="border-t border-foreground/[0.06]" aria-label="Números do SportsBet">
-      <Container className="grid gap-8 py-10 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center lg:gap-14">
-        {/* Número em cima e rótulo embaixo: lado a lado o rótulo quebrava em três linhas. */}
-        <div className="grid grid-cols-2 gap-8 sm:flex sm:gap-12">
-          {PROOF.map(({ value, label }) => (
-            <p key={label} className="flex flex-col gap-1.5">
-              <span className="landing-display text-[32px] tabular-nums sm:text-[36px]">{value}</span>
-              <span className="max-w-[24ch] text-balance text-[14px] leading-snug text-zinc-400">{label}</span>
-            </p>
-          ))}
-        </div>
-        <div className="flex min-w-0 flex-col gap-3 border-t border-foreground/[0.07] pt-6 lg:border-l lg:border-t-0 lg:pl-14 lg:pt-0">
-          <p className="text-[14px] text-zinc-400">Compatível com as principais casas do Brasil</p>
-          <HouseTicker />
-        </div>
+    <section className="pb-20 sm:pb-24 lg:pt-12" aria-label="O SportsBet em números">
+      <Container>
+        <LandingStats />
       </Container>
     </section>
   );
@@ -511,9 +499,11 @@ function Numbers() {
           aparecem e em que ordem.
         </SectionHeading>
         <div className="mt-12">
-          <NearScreen size="h-[560px]">
-            <NumbersPreview />
-          </NearScreen>
+          <HoverTilt>
+            <NearScreen size="h-[560px]">
+              <NumbersPreview />
+            </NearScreen>
+          </HoverTilt>
           <p className="mt-3 text-[13px] text-zinc-400">Dashboard real do app, com um mês de dados de exemplo.</p>
         </div>
       </Container>
@@ -655,15 +645,6 @@ function Pricing() {
             </Reveal>
           ))}
         </div>
-
-        <div className="mx-auto mt-14 flex max-w-[880px] justify-center gap-10 text-center sm:gap-20">
-          {PROOF.map(({ value, short }) => (
-            <p key={short} className="flex flex-col items-center gap-1.5">
-              <span className="landing-display text-[34px] tabular-nums sm:text-[44px]">{value}</span>
-              <span className="max-w-[18ch] text-balance text-[14px] leading-snug text-zinc-400 sm:max-w-none">{short}</span>
-            </p>
-          ))}
-        </div>
       </Container>
     </section>
   );
@@ -680,7 +661,7 @@ const QUESTIONS: { q: string; a: string }[] = [
   },
   {
     q: "Funciona com a casa que eu uso?",
-    a: "Mais de 80 casas já estão cadastradas, das maiores às menores, e a lista continua crescendo.",
+    a: `Mais de ${LANDING_STATS.houses} casas já estão cadastradas, das maiores às menores, e a lista continua crescendo.`,
   },
   {
     q: "Preciso instalar alguma coisa?",
@@ -714,8 +695,11 @@ const QUESTIONS: { q: string; a: string }[] = [
  */
 function Faq() {
   return (
-    <section id="duvidas" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="duvidas-title">
-      <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:gap-24">
+    // Sem overflow-hidden na seção: ele quebraria o título sticky. As camadas do fundo ficam dentro dela (inset-0).
+    <section id="duvidas" className="relative scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="duvidas-title">
+      <div aria-hidden className="dot-grid pointer-events-none absolute inset-0" />
+      <div aria-hidden className="faq-glow pointer-events-none absolute inset-0" />
+      <Container className="relative grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:gap-24">
         <Reveal className="lg:sticky lg:top-28 lg:self-start">
           <h2 id="duvidas-title" className="landing-display max-w-[12ch] text-[40px] sm:text-[52px]">
             Perguntas frequentes.
