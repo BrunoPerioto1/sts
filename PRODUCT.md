@@ -14,7 +14,7 @@ Outra audiência confirmada: o admin que opera o serviço (saúde do pipeline, u
 
 ## Product Purpose
 
-SportsBet Manager é o controle pessoal de apostas esportivas. A aposta entra pelo print do bilhete (lido por IA), pelo Telegram ou digitada na mão. O resultado é proposto a partir do placar do jogo, o saldo de cada casa é conciliado com depósitos, saques e resultados, e o dashboard mostra lucro, ROI e taxa de acerto reais.
+Trackton é o controle pessoal de apostas esportivas. A aposta entra pelo print do bilhete (lido por IA), pelo Telegram ou digitada na mão. O resultado é proposto a partir do placar do jogo, o saldo de cada casa é conciliado com depósitos, saques e resultados, e o dashboard mostra lucro, ROI e taxa de acerto reais.
 
 Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números, porque nada é salvo nem liquidado sem a confirmação dele.
 
@@ -27,7 +27,7 @@ Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números
 
 ## Operating Context
 
-- Fluxo típico: aposta feita no app da casa, print do bilhete, compartilhar para o SportsBet (ou Ctrl+V, arrastar, câmera), conferir os campos e registrar.
+- Fluxo típico: aposta feita no app da casa, print do bilhete, compartilhar para o Trackton (ou Ctrl+V, arrastar, câmera), conferir os campos e registrar.
 - Tips chegam de um canal do Telegram por um bot e caem numa fila (pendentes, planilhadas, caíram), com valor sugerido e % da banca.
 - Conferência periódica dos resultados propostos pelo placar.
 - Exportação em CSV com separador ponto-e-vírgula (o que o Excel em português espera), usada para planilha e declaração de imposto.
@@ -48,7 +48,7 @@ Sucesso: o apostador registra tudo o que aposta sem atrito e confia nos números
 
 ## Brand Commitments
 
-- Nome: SportsBet Manager, provisório ("primeiramente", nas palavras do dono). Em espaço curto, "SportsBet".
+- Nome: Trackton, provisório ("primeiramente", nas palavras do dono). Em espaço curto, "Trackton".
 - Cor da marca: azul em tudo (logo, favicon e ícones do app), porque o tema de destaque do software é azul. Decisão explícita do dono.
 - Língua: português do Brasil. Voz direta e simples, do ponto de vista do apostador; vende controle, nunca lucro.
 

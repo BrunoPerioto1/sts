@@ -1,5 +1,5 @@
 ---
-name: SportsBet Manager
+name: Trackton
 description: Controle pessoal de apostas esportivas, noturno, com um azul só.
 colors:
   azul-conferido: "#2563eb"
@@ -142,7 +142,7 @@ components:
     backgroundColor: "rgba(242, 242, 244, 0.07)"
 ---
 
-# Design System: SportsBet Manager
+# Design System: Trackton
 
 ## Overview
 

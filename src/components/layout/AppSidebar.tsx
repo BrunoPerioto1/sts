@@ -165,7 +165,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
           </div>
           {!collapsed && (
             <span className="text-[15px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-              SportsBet Manager
+              Trackton
             </span>
           )}
         </div>

@@ -118,7 +118,7 @@ export function HeroMockup() {
           <span className="flex h-7 w-7 items-center justify-center rounded-full border border-accent bg-accent/[0.12]">
             <ChartLineUp size={14} className="text-accent-text" />
           </span>
-          <span className="text-[13px] font-semibold">SportsBet Bot</span>
+          <span className="text-[13px] font-semibold">Trackton Bot</span>
           <span className="ml-auto rounded bg-foreground/[0.08] px-1.5 text-[11px] text-zinc-400">bot</span>
         </div>
 

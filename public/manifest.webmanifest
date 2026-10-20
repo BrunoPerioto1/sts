@@ -1,6 +1,6 @@
 {
-  "name": "SportsBet Manager",
-  "short_name": "SportsBet",
+  "name": "Trackton",
+  "short_name": "Trackton",
   "description": "Gestão e tracking pessoal de apostas esportivas.",
   "lang": "pt-BR",
   "start_url": "/dashboard",

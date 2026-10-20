@@ -64,7 +64,7 @@ export default function ApostasPage() {
   }, [createModalOpen, editModalOpen]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Print compartilhado pelo Android ("Compartilhar → SportsBet"): o service
+  // Print compartilhado pelo Android ("Compartilhar → Trackton"): o service
   // worker guardou a imagem e mandou pra cá com ?compartilhado=1. Abre a Nova
   // aposta já lendo o print, igual ao Ctrl+V, e tira o parâmetro da URL pra um
   // recarregar não repetir.

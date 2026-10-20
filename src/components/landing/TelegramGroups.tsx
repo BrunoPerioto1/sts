@@ -191,7 +191,7 @@ export function GroupsDemo() {
               <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-accent bg-accent/[0.12]">
                 <ChartLineUp size={15} className="text-accent-text" />
               </span>
-              <span className="text-[13px] font-semibold">SportsBet</span>
+              <span className="text-[13px] font-semibold">Trackton</span>
               <span className="rounded bg-foreground/[0.08] px-1.5 text-[11px] text-zinc-400">bot</span>
             </div>
             <div className="mt-3 rounded-2xl rounded-tl-sm bg-foreground/[0.06] px-3 py-2.5 text-[13px] leading-relaxed">

@@ -145,7 +145,7 @@ function Sidebar({ active }: { active: string }) {
         <span className="flex h-6 w-6 items-center justify-center rounded-md border border-accent bg-accent/[0.12]">
           <ChartLineUp size={13} className="text-accent-text" />
         </span>
-        <span className="text-[13px] font-semibold">SportsBet</span>
+        <span className="text-[13px] font-semibold">Trackton</span>
       </div>
       <ul className="space-y-0.5">
         {NAV.map(({ label, icon: IconComponent, badge }) => (

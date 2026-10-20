@@ -110,10 +110,7 @@ function Brand() {
       <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent bg-accent/[0.12] sm:h-10 sm:w-10 sm:rounded-xl">
         <ChartLineUp size={18} className="text-accent-text sm:h-[22px] sm:w-[22px]" />
       </span>
-      {/* No celular o nome inteiro empurrava "Entrar" e quebrava em duas linhas. */}
-      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight sm:text-[17px]">
-        SportsBet<span className="hidden sm:inline"> Manager</span>
-      </span>
+      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight sm:text-[17px]">Trackton</span>
     </Link>
   );
 }
@@ -203,7 +200,7 @@ function Hero() {
 /** Três números com contexto e as casas, logo depois do topo. Sem linha de corte entre os dois. */
 function Stats() {
   return (
-    <section className="pb-20 sm:pb-24 lg:pt-12" aria-label="O SportsBet em números">
+    <section className="pb-20 sm:pb-24 lg:pt-12" aria-label="O Trackton em números">
       <Container>
         <LandingStats />
       </Container>
@@ -245,7 +242,7 @@ function Steps() {
           </Reveal>
           <Reveal delay={100} className="lg:pb-2">
             <p className="max-w-[46ch] text-[16px] leading-relaxed text-zinc-400">
-              Nada entra na sua conta sem o seu clique. E o SportsBet não é casa de apostas: não aposta por você, não recebe apostas e não mexe
+              Nada entra na sua conta sem o seu clique. E o Trackton não é casa de apostas: não aposta por você, não recebe apostas e não mexe
               no seu dinheiro.
             </p>
             <Button asChild variant="secondary" className="mt-5">
@@ -336,7 +333,7 @@ function Groups() {
               </Button>
               <p className="mt-4 flex max-w-[52ch] gap-2.5 text-[14px] leading-relaxed text-zinc-400">
                 <Shield size={18} className="mt-0.5 flex-none text-accent-text" />
-                O SportsBet só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.
+                O Trackton só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.
               </p>
             </Reveal>
           </div>
@@ -406,14 +403,14 @@ function Features() {
     <section id="recursos" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="recursos-title">
       <Container>
         {/* Espaço inquebrável: o "O" não fica sozinho no fim da linha. */}
-        <SectionHeading id="recursos-title" title={"A planilha anota. O SportsBet acompanha."}>
+        <SectionHeading id="recursos-title" title={"A planilha anota. O Trackton acompanha."}>
           Depois que a aposta entra, o app cuida do que costuma ficar atrasado na planilha.
         </SectionHeading>
 
         <div className="mt-12">
           <div className="hidden grid-cols-2 gap-12 pb-3 text-[13px] text-zinc-400 sm:grid" aria-hidden>
             <span>Na planilha</span>
-            <span>No SportsBet</span>
+            <span>No Trackton</span>
           </div>
           <ul className="divide-y divide-foreground/[0.08] border-y border-foreground/[0.08]">
             {VERSUS.map(({ sheet, app }, i) => (
@@ -424,7 +421,7 @@ function Features() {
                     {sheet}
                   </p>
                   <p className="flex gap-3 text-[15px] leading-relaxed">
-                    <Check size={16} weight="bold" className="mt-[5px] flex-none text-accent-text" aria-label="No SportsBet:" />
+                    <Check size={16} weight="bold" className="mt-[5px] flex-none text-accent-text" aria-label="No Trackton:" />
                     {app}
                   </p>
                 </Reveal>
@@ -658,7 +655,7 @@ function Pricing() {
 
 const QUESTIONS: { q: string; a: string }[] = [
   {
-    q: "O SportsBet faz apostas por mim?",
+    q: "O Trackton faz apostas por mim?",
     a: "Não. Ele não é casa de apostas: não recebe apostas, não movimenta seu dinheiro e não acessa sua conta nas casas. É onde você registra e acompanha as apostas que fez.",
   },
   {
@@ -690,7 +687,7 @@ const QUESTIONS: { q: string; a: string }[] = [
     a: "Não. O Telegram serve para recuperar a senha, mandar apostas pelo bot e, no Pro, receber as tips dos grupos que você escolher. É possível usar o app apenas com os prints e o registro manual.",
   },
   {
-    q: "O SportsBet lê minhas conversas do Telegram?",
+    q: "O Trackton lê minhas conversas do Telegram?",
     a: "Não. Ele só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.",
   },
 ];
@@ -801,10 +798,10 @@ function Footer() {
             Proibido para menores de 18 anos.
           </p>
           <p className="max-w-[65ch]">
-            Apostas envolvem risco de perda e podem causar dependência. Aposte com responsabilidade e só o que pode perder. O SportsBet Manager é uma
+            Apostas envolvem risco de perda e podem causar dependência. Aposte com responsabilidade e só o que pode perder. O Trackton é uma
             ferramenta de controle: não é casa de apostas, não recebe apostas e não movimenta dinheiro.
           </p>
-          <p>© {new Date().getFullYear()} SportsBet Manager</p>
+          <p>© {new Date().getFullYear()} Trackton</p>
         </div>
       </Container>
     </footer>

@@ -59,7 +59,7 @@ export function useRegisterForm() {
       const loginRes = await postLogin({ email: data.email, password: data.password });
       saveToken(loginRes.access_token);
 
-      actionToast.success({ title: "Conta criada!", description: "Bem-vindo ao SportsBet Manager!" });
+      actionToast.success({ title: "Conta criada!", description: "Bem-vindo ao Trackton!" });
       navigate("/dashboard");
     } catch (err) {
       // class-validator devolve `message` como array quando mais de uma regra

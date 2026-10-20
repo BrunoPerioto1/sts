@@ -1,4 +1,4 @@
-# SportsBet Manager — Dashboard
+# Trackton — Dashboard
 
 Dashboard em React pra controlar apostas esportivas. Você registra colando o print do bilhete, deixa o bot do Telegram registrar sozinho, ou digita na mão quando quiser — e depois concilia saldo por casa e olha ROI e taxa de acerto de verdade.
 
@@ -15,7 +15,7 @@ graph LR
 
 Aposta que entra pelo Telegram e aposta digitada aqui caem no mesmo lugar. O dashboard só lê e edita o que a API tem — ele não é dono de nada.
 
-![Dashboard do SportsBet Manager](docs/screenshots/02-dashboard.png)
+![Dashboard do Trackton](docs/screenshots/02-dashboard.png)
 
 
 ---

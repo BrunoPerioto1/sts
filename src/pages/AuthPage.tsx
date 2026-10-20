@@ -30,7 +30,7 @@ const AuthPage = () => {
           <span className="w-8 h-8 lg:w-[30px] lg:h-[30px] rounded-[8px] bg-accent text-white flex items-center justify-center">
             <ChartLineUp size={16} weight="bold" />
           </span>
-          <span className="text-[15px] lg:text-[14.5px] font-semibold tracking-[-0.01em] pb-1.5 lg:pb-0">SportsBet</span>
+          <span className="text-[15px] lg:text-[14.5px] font-semibold tracking-[-0.01em] pb-1.5 lg:pb-0">Trackton</span>
         </Link>
 
         {view === "login" ? (

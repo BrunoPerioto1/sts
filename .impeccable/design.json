@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-18T00:00:00Z",
-  "title": "Design System: SportsBet Manager",
+  "title": "Design System: Trackton",
   "extensions": {
     "colorMeta": {
       "azul-conferido": { "role": "primary", "displayName": "Azul Conferido", "canonical": "rgb(37 99 235)", "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"] },
