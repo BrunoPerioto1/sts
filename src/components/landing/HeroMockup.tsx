@@ -19,7 +19,8 @@ import { useTween } from "./use-tween";
 const LOOP_MS = 6000;
 const T = { typing: 650, reply: 1650, lines: 1800, press: 3000, saved: 3250 };
 
-const BET = { house: "Betano", game: "Flamengo x Palmeiras", market: "Ambas marcam", odd: "1.85", stake: 50 };
+const BET = { house: "Betano", home: "Flamengo", away: "Palmeiras", pick: "Sim", market: "Ambas marcam", odd: 1.85, stake: 50 };
+const GAME = `${BET.home} x ${BET.away}`;
 
 // Lucro no mês misturado (ganho e perda) e em tamanho normal: o resumo não vende número grande.
 const HOUSES = [
@@ -31,22 +32,42 @@ const HOUSES = [
 // O mês de agora, pra o card nunca ficar com cara de antigo ("OUTUBRO").
 const MONTH = new Date().toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" }).toUpperCase();
 
-/** O bilhete desenhado, dentro da bolha de quem mandou. Genérico: não imita a tela de nenhuma casa. */
+/**
+ * O bilhete desenhado, dentro da bolha de quem mandou. Segue a ordem de um
+ * bilhete de verdade (tipo e odd, times um embaixo do outro, seleção em negrito
+ * com o mercado embaixo, aposta e ganhos potenciais), mas com o visual do app:
+ * não imita a tela de nenhuma casa.
+ */
 function Ticket() {
   return (
     <div className="rounded-xl bg-background/80 p-2.5 text-[11px] leading-tight">
-      <div className="flex items-center justify-between text-zinc-400">
-        <span>Bilhete</span>
-        <span className="font-semibold text-zinc-200">{BET.house}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          <span className="font-semibold text-zinc-200">Simples</span> <span className="text-zinc-400">· {BET.house}</span>
+        </span>
+        <span className="font-semibold tabular-nums">{BET.odd.toFixed(2)}</span>
       </div>
-      <p className="mt-1.5 text-[12px] font-semibold">{BET.game}</p>
-      <div className="mt-1.5 flex items-center justify-between rounded-md bg-foreground/[0.06] px-2 py-1">
-        <span className="text-zinc-300">{BET.market}</span>
-        <span className="font-semibold tabular-nums">{BET.odd}</span>
+      <p className="mt-1.5 text-[12px] font-semibold leading-snug">
+        {BET.home}
+        <br />
+        {BET.away}
+      </p>
+      <div className="mt-1.5 flex gap-1.5">
+        <span aria-hidden className="mt-[3px] h-2 w-2 flex-none rounded-full border-[1.5px] border-accent-text" />
+        <span>
+          <span className="block text-[12px] font-semibold">{BET.pick}</span>
+          <span className="block text-zinc-400">{BET.market}</span>
+        </span>
       </div>
-      <div className="mt-1.5 flex justify-between tabular-nums">
-        <span className="text-zinc-400">Valor</span>
-        <span>{formatMoney(BET.stake)}</span>
+      <div className="mt-2 space-y-1 border-t border-foreground/[0.08] pt-1.5 tabular-nums">
+        <div className="flex justify-between">
+          <span className="text-zinc-400">Aposta</span>
+          <span>{formatMoney(BET.stake)}</span>
+        </div>
+        <div className="flex justify-between font-semibold">
+          <span>Ganhos potenciais</span>
+          <span>{formatMoney(BET.stake * BET.odd)}</span>
+        </div>
       </div>
     </div>
   );
@@ -72,7 +93,7 @@ export function HeroMockup() {
       data-paused={!inView || undefined}
       role="img"
       aria-label="Exemplo: um print de bilhete mandado pro bot do Telegram vira aposta planilhada, e o saldo da casa atualiza."
-      className="relative isolate mx-auto w-full max-w-[360px] sm:w-[488px] sm:max-w-none sm:pb-[120px]"
+      className="relative isolate mx-auto w-full max-w-[360px] sm:w-[488px] sm:max-w-none sm:pb-[90px]"
     >
       {/* Brilho azul bem difuso atrás dos cards: só profundidade, sem neon (DESIGN.md). */}
       <div
@@ -126,8 +147,8 @@ export function HeroMockup() {
                 <div className="mt-1 text-zinc-300">
                   {[
                     `🏠 ${BET.house}`,
-                    `🆚 ${BET.game}`,
-                    `📌 ${BET.market} · 🏷 ${BET.odd}`,
+                    `🆚 ${GAME}`,
+                    `📌 ${BET.market}: ${BET.pick} · 🏷 ${BET.odd.toFixed(2)}`,
                     `💰 Stake: ${formatMoney(BET.stake)}`,
                   ].map((line, i) => (
                     <p key={line} className="ws-fill truncate" style={at(T.lines + 120 * i)}>
