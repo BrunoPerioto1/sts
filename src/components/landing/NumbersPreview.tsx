@@ -3,7 +3,7 @@ import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
 import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
 import { HouseProfitBars } from "@/components/dashboard/HouseProfitBars";
 import { ProfitBarChart } from "@/components/dashboard/ProfitBarChart";
-import { normalizeDashboardPreferences } from "@/lib/dashboard-preferences";
+import { DASHBOARD_KPI_REGISTRY, normalizeDashboardPreferences, type DashboardPreferences, type KpiId } from "@/lib/dashboard-preferences";
 import { formatMoney } from "@/lib/format";
 
 /**
@@ -48,7 +48,13 @@ const HOUSES = [
   { house: "Sportingbet", profit: -25 },
 ];
 
-const PREFERENCES = normalizeDashboardPreferences(null);
+// A régua da landing segue com os 8 indicadores de antes: o dashboard mostra
+// no máximo 4, mas aqui a vitrine é de tudo o que dá pra medir.
+const LANDING_KPIS: KpiId[] = ["roi", "units", "bets", "pending", "totalStaked", "averageStake", "averageOdd", "hitRate"];
+const PREFERENCES: DashboardPreferences = {
+  ...normalizeDashboardPreferences(null),
+  kpis: LANDING_KPIS.map((id) => ({ id, visible: true, icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
+};
 
 export default function NumbersPreview() {
   return (
@@ -72,7 +78,7 @@ export default function NumbersPreview() {
       </div>
       <div className="border-t border-foreground/[0.06]">
         {/* `stake` aqui é a banca: a unidade é 1% dela, R$ 50 como nas cenas de cima. */}
-        <DashboardKpiGrid metrics={METRICS} stake={5000} preferences={PREFERENCES} desktop />
+        <DashboardKpiGrid metrics={METRICS} stake={5000} preferences={PREFERENCES} />
       </div>
     </div>
   );

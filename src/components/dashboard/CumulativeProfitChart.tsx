@@ -1,15 +1,41 @@
-import { useEffect, useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { useEffect, useId, useMemo, useState } from "react";
+import { Area, AreaChart, CartesianGrid, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDayMonth, formatMoney } from "@/lib/format";
+import { AXIS_TICK, GRID_PROPS, compactAxis } from "@/lib/chart-style";
+import { ChartTooltipBox } from "./ChartTooltipBox";
 
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
 const POS = "var(--color-success)";
 const NEG = "var(--color-danger)";
 
-/** Lucro acumulado dia a dia: a leitura mostra o dia tocado e o total até ele. */
-export function CumulativeProfitChart({ data, height = 200 }: { data: { date: string; profitDay: number }[]; height?: number }) {
+type Ponto = { date: string; dia: number; acum: number };
+
+function Leitura({ ponto }: { ponto: Ponto }) {
+  return (
+    <ChartTooltipBox
+      label={`${formatDayMonth(ponto.date)} · dia ${formatMoney(ponto.dia, { signed: true })}`}
+      value={`${formatMoney(ponto.acum, { signed: true })} no período`}
+    />
+  );
+}
+
+/**
+ * Lucro acumulado dia a dia, em curva suave com preenchimento até o zero. No
+ * desktop a leitura é um tooltip que segue o ponteiro; no celular (`compact`)
+ * fica numa linha embaixo do gráfico, que o toque atualiza.
+ */
+export function CumulativeProfitChart({
+  data,
+  height = 200,
+  compact = false,
+}: {
+  data: { date: string; profitDay: number }[];
+  height?: number;
+  compact?: boolean;
+}) {
+  const fillId = useId();
   const pontos = useMemo(() => {
     let acc = 0;
     return data.map((d) => ({ date: d.date, dia: d.profitDay, acum: (acc += d.profitDay) }));
@@ -20,59 +46,79 @@ export function CumulativeProfitChart({ data, height = 200 }: { data: { date: st
   if (!pontos.length) return null;
   const atual = pontos[Math.min(sel, pontos.length - 1)];
   const linha = pontos[pontos.length - 1].acum >= 0 ? POS : NEG;
-  const ticks = pontos.length > 2
-    ? [pontos[0].date, pontos[Math.floor(pontos.length / 2)].date, pontos[pontos.length - 1].date]
-    : pontos.map((p) => p.date);
+  const n = pontos.length;
+  // Cinco marcas no desktop, três no celular, sempre com a primeira e a última.
+  const marks = compact ? 3 : 5;
+  const ticks = n > marks ? Array.from({ length: marks }, (_, i) => pontos[Math.round((i * (n - 1)) / (marks - 1))].date) : pontos.map((p) => p.date);
   const mover = (e: { activeTooltipIndex?: number } | null) =>
     e?.activeTooltipIndex != null && setSel(e.activeTooltipIndex);
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between rounded-xl bg-foreground/[0.04] px-3 py-2.5 text-sm">
-        <span className="flex items-center gap-2.5">
-          <span className="text-zinc-400">{formatDayMonth(atual.date)}</span>
-          <span className="h-4 w-px bg-foreground/10" />
-          <span className="text-zinc-400">
-            Acum. <span className="font-medium tabular-nums text-zinc-100">{formatMoney(atual.acum)}</span>
-          </span>
-        </span>
-        <span className="tabular-nums" style={{ color: atual.dia >= 0 ? POS : NEG }}>
-          {formatMoney(atual.dia, { signed: true })}
-        </span>
-      </div>
-
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={pontos} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} onMouseMove={mover} onClick={mover}>
+          <AreaChart
+            data={pontos}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            onMouseMove={mover}
+            onClick={mover}
+            onMouseLeave={() => setSel(n - 1)}
+          >
             <defs>
-              <linearGradient id="acum-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={linha} stopOpacity={0.22} />
+              <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={linha} stopOpacity={0.28} />
                 <stop offset="100%" stopColor={linha} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeOpacity={0.18} />
-            <YAxis
-              width={40}
-              tickCount={3}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
-              tickFormatter={(v: number) => v.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 2 })}
-            />
+            <CartesianGrid {...GRID_PROPS} />
+            <YAxis width={40} tickCount={5} axisLine={false} tickLine={false} tick={AXIS_TICK} tickFormatter={compactAxis} />
             <XAxis
               dataKey="date"
               ticks={ticks}
+              interval={0}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "var(--color-text)", opacity: 0.5, fontSize: 11 }}
+              tick={AXIS_TICK}
+              tickMargin={8}
               tickFormatter={(v) => format(parseISO(v), "d MMM", { locale: ptBR })}
             />
-            <ReferenceLine x={atual.date} stroke="var(--color-text)" strokeOpacity={0.35} strokeDasharray="3 3" />
-            <Area type="monotone" dataKey="acum" stroke={linha} strokeWidth={2} fill="url(#acum-fill)" animationDuration={650} />
-            <ReferenceDot x={atual.date} y={atual.acum} r={5} fill="var(--color-bg, #0a0a0a)" stroke={linha} strokeWidth={2} />
+            <ReferenceLine y={0} stroke="var(--color-text)" strokeOpacity={0.18} />
+            {!compact && (
+              <Tooltip
+                cursor={false}
+                isAnimationActive={false}
+                content={({ active, payload }) =>
+                  active && payload?.length ? <Leitura ponto={payload[0].payload as Ponto} /> : null
+                }
+              />
+            )}
+            <ReferenceLine x={atual.date} stroke="var(--color-text)" strokeOpacity={0.22} />
+            <Area
+              type="monotone"
+              dataKey="acum"
+              stroke={linha}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              fill={`url(#${fillId})`}
+              baseValue={0}
+              activeDot={false}
+              animationDuration={650}
+            />
+            {/* Halo + ponto: o dia lido fica marcado mesmo sem o tooltip. */}
+            <ReferenceDot x={atual.date} y={atual.acum} r={9} fill={linha} fillOpacity={0.22} stroke="none" />
+            <ReferenceDot x={atual.date} y={atual.acum} r={4.5} fill={linha} stroke="rgb(var(--rgb-panel))" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
+      {compact && (
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-dashed border-foreground/10 pt-2.5 text-[13px]">
+          <span className="truncate text-zinc-400">
+            {formatDayMonth(atual.date)} · dia {formatMoney(atual.dia, { signed: true })}
+          </span>
+          <span className="shrink-0 font-medium tabular-nums text-foreground">{formatMoney(atual.acum, { signed: true })}</span>
+        </div>
+      )}
     </div>
   );
 }

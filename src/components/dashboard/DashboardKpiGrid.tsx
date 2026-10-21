@@ -1,43 +1,30 @@
 import { useMemo } from "react";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import { DASHBOARD_KPI_REGISTRY, kpiColumnSpan, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
+import { DASHBOARD_KPI_REGISTRY, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { kpiValues } from "@/lib/dashboard-kpi-values";
-import { StatCard } from "@/components/ui/stat-card";
-import { resolveKpiIcon } from "./dashboard-icons";
 
-export function DashboardKpiGrid({ metrics, stake, preferences, desktop = false }: {
-  metrics: DashboardMetrics; stake: number; preferences: DashboardPreferences; desktop?: boolean;
+/**
+ * Régua horizontal de KPIs da prévia da landing (o dashboard usa os cards do
+ * DashboardKpiCards). Sem ícone e sem sublegenda — cada célula ocupa ao menos
+ * a largura do próprio texto (`min-w-fit`) e divide a sobra.
+ */
+export function DashboardKpiGrid({ metrics, stake, preferences }: {
+  metrics: DashboardMetrics; stake: number; preferences: DashboardPreferences;
 }) {
   // Preferências não participam deste memo.
-  const values = useMemo(() => kpiValues(metrics, stake), [metrics, stake]);
+  const values = useMemo(() => kpiValues({ metrics, stake }), [metrics, stake]);
   const visible = preferences.kpis.filter((kpi) => kpi.visible);
 
-  // Desktop: régua horizontal, sem ícone e sem sublegenda — cada célula ocupa
-  // ao menos a largura do próprio texto (`min-w-fit`) e divide a sobra, então
-  // rótulos longos deixam de ficar espremidos.
-  if (desktop) {
-    return <div className="flex flex-wrap">
-      {visible.map((kpi) => {
-        const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
-        const data = values[kpi.id];
-        const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, preferences.performanceColors) : undefined;
-        // Mais de 6 numa linha espreme: quebra em linhas de 4, com divisória entre elas.
-        return <div key={kpi.id} className={`flex-1 min-w-fit px-5 py-4 border-l border-foreground/[0.05] first:border-l-0 ${visible.length > 6 ? "basis-1/4 [&:nth-child(4n+1)]:border-l-0 [&:nth-child(n+5)]:border-t" : ""}`}>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5 whitespace-nowrap">{meta.label}</p>
-          <p className="text-2xl leading-tight font-semibold tabular-nums whitespace-nowrap" style={{ color }}>{data.value}</p>
-        </div>;
-      })}
-    </div>;
-  }
-
-  return <div className={desktop ? "grid grid-cols-2 lg:grid-cols-4 gap-4" : "grid grid-cols-2 auto-rows-fr gap-2.5 mt-6"}>
-    {visible.map((kpi, index) => {
+  return <div className="flex flex-wrap">
+    {visible.map((kpi) => {
       const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
       const data = values[kpi.id];
       const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, preferences.performanceColors) : undefined;
-      const IconComponent = resolveKpiIcon(kpi.id, kpi.icon);
-      const columnSpan = kpiColumnSpan(index, visible.length);
-      return <StatCard key={kpi.id} variant="card" label={"shortLabel" in meta ? meta.shortLabel : meta.label} value={data.value} icon={IconComponent} color={color} wide={columnSpan === 2} />;
+      // Mais de 6 numa linha espreme: quebra em linhas de 4, com divisória entre elas.
+      return <div key={kpi.id} className={`flex-1 min-w-fit px-5 py-4 border-l border-foreground/[0.05] first:border-l-0 ${visible.length > 6 ? "basis-1/4 [&:nth-child(4n+1)]:border-l-0 [&:nth-child(n+5)]:border-t" : ""}`}>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted mb-1.5 whitespace-nowrap">{meta.label}</p>
+        <p className="text-2xl leading-tight font-semibold tabular-nums whitespace-nowrap" style={{ color }}>{data.value}</p>
+      </div>;
     })}
   </div>;
 }

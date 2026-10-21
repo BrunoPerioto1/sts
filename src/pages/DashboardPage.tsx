@@ -93,15 +93,17 @@ export function DashboardPage() {
     .join(" · ");
 
   // Filtros do topo só no desktop: o header do mobile é a própria tela
-  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet.
+  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet. Pílulas,
+  // como no desenho do dashboard: rótulo apagado, valor aceso.
+  const pill = "h-9 flex items-center px-3.5 rounded-full border border-foreground/10 bg-card hover:border-foreground/20 transition-colors";
   const headerActions = (
     <div className="flex items-center gap-2">
       {!hasNoBets && (
         <>
-          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+          <div className={pill}>
             <HouseMultiSelect houses={houses} selected={filters.houseIds} onChange={setHouseIds} label="Casas" />
           </div>
-          <div className="h-9 flex items-center px-3 rounded-lg border border-foreground/10">
+          <div className={pill}>
             <HouseMultiSelect
               houses={sports}
               selected={filters.sportIds}
@@ -120,6 +122,7 @@ export function DashboardPage() {
         to={filters.endDate}
         onSelect={setPreset}
         onCustomRange={setCustomRange}
+        className="rounded-full px-3.5 bg-card"
       />
     </div>
   );

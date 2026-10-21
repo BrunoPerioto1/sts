@@ -22,6 +22,15 @@
     --rgb-bg: var(--brand-background);
     --rgb-surface: 19 19 22;
     --rgb-surface-2: 28 28 32;
+    /* Card do dashboard: um degrau só acima do fundo, sem sombra (o desenho
+       do Claude Design). O surface do resto do app é mais claro. */
+    --rgb-panel: 15 15 17;
+    /* Esportes do card "Por esporte" (azul, laranja, violeta, magenta). Ordem
+       validada pra daltonismo nos dois temas; não reaproveitar como status. */
+    --sport-1: #3987e5;
+    --sport-2: #d95926;
+    --sport-3: #9085e9;
+    --sport-4: #d55181;
     --rgb-text: 242 242 244;
     /* Tokens semanticos de cor (Tailwind: accent/primary, pending, warning,
        muted). accent = acao e selecao; pending = aposta pendente (o azul de
@@ -181,6 +190,11 @@
     --rgb-bg: 244 244 245;
     --rgb-surface: 255 255 255;
     --rgb-surface-2: 236 236 239;
+    --rgb-panel: 255 255 255;
+    --sport-1: #2a78d6;
+    --sport-2: #eb6834;
+    --sport-3: #6250d6;
+    --sport-4: #e87ba4;
     --rgb-text: 24 24 27;
     --rgb-accent-text: 29 78 216;
     /* Ambar do escuro some no branco: no claro vai pro amber-700. */

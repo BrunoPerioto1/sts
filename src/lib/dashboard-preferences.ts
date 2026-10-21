@@ -1,33 +1,43 @@
-export const DASHBOARD_KPI_REGISTRY = {
-  roi: { label: "ROI", defaultIcon: "trending-up", semanticType: "performance" },
-  units: { label: "Unidades", defaultIcon: "coins", semanticType: "performance" },
-  bets: { label: "Apostas", defaultIcon: "database", semanticType: "neutral" },
-  pending: { label: "Pendentes", defaultIcon: "clock", semanticType: "neutral" },
-  totalStaked: { label: "Total apostado", defaultIcon: "credit-card", semanticType: "neutral" },
-  averageStake: { label: "Stake médio", defaultIcon: "chart-bar", semanticType: "neutral" },
-  averageOdd: { label: "Odd média", defaultIcon: "trending-up", semanticType: "neutral" },
-  hitRate: { label: "Taxa de acerto", defaultIcon: "target", semanticType: "neutral" },
-  // Os de baixo nascem ocultos: quem já tinha dashboard montado não ganha 4
-  // cards novos do nada; liga em Indicadores se quiser.
-  profit: { label: "Lucro", defaultIcon: "wallet", semanticType: "performance", defaultHidden: true },
-  totalReturn: { label: "Retorno", defaultIcon: "banknote", semanticType: "neutral", defaultHidden: true },
-  // shortLabel: card de 2 colunas do celular corta rótulo acima de ~16 letras.
-  wonLost: { label: "Vitórias / Derrotas", shortLabel: "Placar", defaultIcon: "trophy", semanticType: "neutral", defaultHidden: true },
-  canceled: { label: "Canceladas", defaultIcon: "ticket", semanticType: "neutral", defaultHidden: true },
-  streak: { label: "Sequência atual", defaultIcon: "activity", semanticType: "performance", defaultHidden: true },
-  biggestWin: { label: "Melhor aposta", defaultIcon: "chart-line", semanticType: "performance", defaultHidden: true },
-  biggestLoss: { label: "Pior aposta", defaultIcon: "crosshair", semanticType: "performance", defaultHidden: true },
-  maxDrawdown: { label: "Drawdown máx.", defaultIcon: "hourglass", semanticType: "performance", defaultHidden: true },
-} as const;
-
-// Na régua do desktop mais que isso espreme os números.
-export const MIN_VISIBLE_KPIS = 2;
-export const MAX_VISIBLE_KPIS = 8;
-
 export const ICON_IDS = ["trending-up", "coins", "database", "clock", "credit-card", "chart-bar", "target", "chart-line", "percent", "activity", "layers", "list", "ticket", "timer", "hourglass", "wallet", "banknote", "crosshair", "trophy", "check-circle"] as const;
 export type IconId = typeof ICON_IDS[number];
-export type KpiId = keyof typeof DASHBOARD_KPI_REGISTRY;
-export const KPI_IDS = Object.keys(DASHBOARD_KPI_REGISTRY) as KpiId[];
+
+// A ordem é a padrão do dashboard: os quatro primeiros aparecem, o resto nasce oculto.
+export const KPI_IDS = ["profit", "roi", "bankroll", "bets", "hitRate", "units", "pending", "totalStaked", "averageStake", "averageOdd", "totalReturn", "wonLost", "canceled", "streak", "biggestWin", "biggestLoss", "maxDrawdown"] as const;
+export type KpiId = typeof KPI_IDS[number];
+
+interface KpiMeta {
+  label: string;
+  /** Card de 2 colunas do celular corta rótulo acima de ~16 letras. */
+  shortLabel?: string;
+  defaultIcon: IconId;
+  /** performance: pintado pelo sinal (ganho/perda). */
+  semanticType: "performance" | "neutral";
+  defaultHidden?: boolean;
+}
+
+export const DASHBOARD_KPI_REGISTRY: Record<KpiId, KpiMeta> = {
+  profit: { label: "Lucro", defaultIcon: "trending-up", semanticType: "performance" },
+  roi: { label: "ROI", defaultIcon: "percent", semanticType: "performance" },
+  bankroll: { label: "Banca", defaultIcon: "wallet", semanticType: "neutral" },
+  bets: { label: "Apostas", defaultIcon: "ticket", semanticType: "neutral" },
+  hitRate: { label: "Taxa de acerto", defaultIcon: "target", semanticType: "neutral", defaultHidden: true },
+  units: { label: "Unidades", defaultIcon: "coins", semanticType: "performance", defaultHidden: true },
+  pending: { label: "Pendentes", defaultIcon: "clock", semanticType: "neutral", defaultHidden: true },
+  totalStaked: { label: "Total apostado", defaultIcon: "credit-card", semanticType: "neutral", defaultHidden: true },
+  averageStake: { label: "Stake médio", defaultIcon: "chart-bar", semanticType: "neutral", defaultHidden: true },
+  averageOdd: { label: "Odd média", defaultIcon: "chart-line", semanticType: "neutral", defaultHidden: true },
+  totalReturn: { label: "Retorno", defaultIcon: "banknote", semanticType: "neutral", defaultHidden: true },
+  wonLost: { label: "Vitórias / Derrotas", shortLabel: "Placar", defaultIcon: "trophy", semanticType: "neutral", defaultHidden: true },
+  canceled: { label: "Canceladas", defaultIcon: "layers", semanticType: "neutral", defaultHidden: true },
+  streak: { label: "Sequência atual", defaultIcon: "activity", semanticType: "performance", defaultHidden: true },
+  biggestWin: { label: "Melhor aposta", defaultIcon: "trophy", semanticType: "performance", defaultHidden: true },
+  biggestLoss: { label: "Pior aposta", defaultIcon: "crosshair", semanticType: "performance", defaultHidden: true },
+  maxDrawdown: { label: "Drawdown máx.", defaultIcon: "hourglass", semanticType: "performance", defaultHidden: true },
+};
+
+// Quatro cards por linha no desktop; mais que isso volta a espremer os números.
+export const MIN_VISIBLE_KPIS = 2;
+export const MAX_VISIBLE_KPIS = 4;
 
 export const POSITIVE_COLORS = {
   "default-positive": { label: "Verde padrão", token: "var(--dashboard-positive)" },
@@ -56,7 +66,7 @@ export interface DashboardPreferences {
 
 export function defaultDashboardPreferences(): DashboardPreferences {
   return {
-    kpis: KPI_IDS.map((id) => ({ id, visible: !("defaultHidden" in DASHBOARD_KPI_REGISTRY[id]), icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
+    kpis: KPI_IDS.map((id) => ({ id, visible: !DASHBOARD_KPI_REGISTRY[id].defaultHidden, icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
     performanceColors: { enabled: true, customEnabled: false, positive: "default-positive", negative: "default-negative" },
   };
 }
@@ -70,7 +80,12 @@ export function normalizeDashboardPreferences(value: unknown): DashboardPreferen
   const raw = record(value);
   const seen = new Set<KpiId>();
   const kpis: KpiPreference[] = [];
-  if (Array.isArray(raw.kpis)) {
+  // Preferência salva antes do dash de 4 KPIs (out/2026) não tem "bankroll",
+  // que nasceu com ele: volta inteira pro padrão novo (Lucro, ROI, Banca,
+  // Apostas). O bloco grande de Lucro saiu do dash, e quem tinha o Lucro oculto
+  // (o padrão antigo) deixaria de ver o lucro. As cores ficam.
+  const legacy = Array.isArray(raw.kpis) && !raw.kpis.some((item) => record(item).id === "bankroll");
+  if (Array.isArray(raw.kpis) && !legacy) {
     for (const item of raw.kpis) {
       const row = record(item);
       const id = row.id as KpiId;

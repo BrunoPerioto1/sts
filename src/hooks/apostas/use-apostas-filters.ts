@@ -22,14 +22,20 @@ export function useApostasFilters() {
     if (!fromUrl) return [];
     return fromUrl.split(",").map(Number).filter((n) => Number.isFinite(n));
   });
-  const [sportIds, setSportIds] = useState<number[]>([]);
+  // ?sportId=2,5 — vem junto do "Abrir em Apostas" do dia no dashboard.
+  const [sportIds, setSportIds] = useState<number[]>(() => {
+    const fromUrl = searchParams.get("sportId");
+    if (!fromUrl) return [];
+    return fromUrl.split(",").map(Number).filter((n) => Number.isFinite(n));
+  });
   const [origins, setOrigins] = useState<string[]>([]);
   // ?semJogo=1 — atalho pras apostas que a conferência automática não alcança.
   const [unmatched, setUnmatched] = useState(() => searchParams.get("semJogo") === "1");
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
-  const [startDate, setStartDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd"));
+  // ?de=2026-09-18&ate=2026-09-18 — o dia aberto no calendário do dashboard.
+  const [startDate, setStartDate] = useState(() => searchParams.get("de") ?? (searchParams.get("period") === "tudo" ? "" : format(startOfMonth(new Date()), "yyyy-MM-dd")));
   // Padrao: dia 1 ate hoje. O chip "Mes atual" continua indo ate o fim do mes.
-  const [endDate, setEndDate] = useState(() => searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(() => searchParams.get("ate") ?? (searchParams.get("period") === "tudo" ? "" : format(new Date(), "yyyy-MM-dd")));
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(() => searchParams.get("period") === "tudo" ? "tudo" : "custom");
 
   // Só o texto da busca é debounced — os outros filtros (chip, sheet, período)

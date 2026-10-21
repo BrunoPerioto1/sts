@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts";
 import { format, parseISO, subDays } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { kpiValues } from "@/lib/dashboard-kpi-values";
-import { resolveKpiIcon } from "@/components/dashboard/dashboard-icons";
+import { DashboardKpiCards } from "@/components/dashboard/DashboardKpiCards";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
-import { DASHBOARD_KPI_REGISTRY, performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
+import { useDashboardKpis } from "@/hooks/dashboard/use-dashboard-kpis";
+import { performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { formatMoney, formatUnits } from "@/lib/format";
 
 /**
@@ -19,7 +19,7 @@ export function DashboardPreview({ preferences, stake }: { preferences: Dashboar
     return { startDate: format(subDays(today, 29), "yyyy-MM-dd"), endDate: format(today, "yyyy-MM-dd") };
   }, []);
   const { metrics, dailyData, loading, error } = useDashboardData(filters);
-  const values = useMemo(() => kpiValues(metrics, stake), [metrics, stake]);
+  const { input } = useDashboardKpis(filters, metrics);
   const unit = stake > 0 ? stake / 100 : null;
   const fmt = (value: number) => (unit ? formatUnits(value) : formatMoney(value, { signed: true }));
   const colors = preferences.performanceColors;
@@ -55,26 +55,15 @@ export function DashboardPreview({ preferences, stake }: { preferences: Dashboar
         <p className="text-[13px] text-zinc-400 py-10 text-center">Não foi possível carregar a prévia.</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2.5">
-            {visible.map((kpi, i) => {
-              const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
-              const IconComponent = resolveKpiIcon(kpi.id, kpi.icon);
-              const data = values[kpi.id];
-              const color = meta.semanticType === "performance" ? performanceColor(data.signed ?? null, colors) : undefined;
-              return (
-                <div key={kpi.id} className="rounded-lg border border-border bg-foreground/[0.02] p-3 min-w-0">
-                  <p className="flex items-center gap-1.5 text-xs text-zinc-400 truncate">
-                    <IconComponent size={13} aria-hidden="true" /> {meta.label}
-                  </p>
-                  {loading ? (
-                    <Skeleton className="h-6 w-20 mt-2.5" delay={i * 60} />
-                  ) : (
-                    <p className="text-xl font-semibold tabular-nums mt-2 truncate" style={{ color }}>{data.value}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {/* Os mesmos cards do dashboard, no formato 2×2 do celular: a coluna
+              da prévia é estreita demais pra quatro lado a lado. */}
+          {loading ? (
+            <div className="grid grid-cols-2 gap-2.5">
+              {visible.map((kpi, i) => <Skeleton key={kpi.id} className="h-[78px] rounded-2xl" delay={i * 60} />)}
+            </div>
+          ) : (
+            <DashboardKpiCards compact input={input} preferences={preferences} />
+          )}
 
           <div className="rounded-lg border border-border bg-foreground/[0.02] p-4 mt-2.5">
             <div className="flex items-baseline justify-between gap-3 mb-2">

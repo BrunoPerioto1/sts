@@ -1,63 +1,71 @@
+import { useId } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatMoney } from "@/lib/format";
+import { formatDayMonth, formatMoney } from "@/lib/format";
+import { AXIS_TICK, GRID_PROPS, compactAxis } from "@/lib/chart-style";
+import { ChartTooltipBox } from "./ChartTooltipBox";
 
 export interface BankrollPoint {
   date: string;
   balance: number;
 }
 
-function BankrollTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
-  if (!active || !payload?.length || !label) return null;
-  return (
-    <div className="rounded-md border border-border bg-card p-[8px_10px] shadow-md text-xs">
-      <p className="opacity-70 mb-1">{format(parseISO(label), "dd 'de' MMMM", { locale: ptBR })}</p>
-      <span className="font-medium">{formatMoney(payload[0].value)}</span>
-    </div>
-  );
-}
+const LINE = "var(--color-accent-2)";
 
-/** Linha fina + preenchimento fraco: o protagonismo fica no dado, não no efeito. */
+/** Banca somada das casas dia a dia: curva suave no azul, preenchimento que some até a base. */
 export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; height?: number }) {
+  const fillId = useId();
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, left: 6, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="bankroll-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-accent-2)" stopOpacity={0.18} />
-              <stop offset="100%" stopColor="var(--color-accent-2)" stopOpacity={0.02} />
+            <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={LINE} stopOpacity={0.26} />
+              <stop offset="100%" stopColor={LINE} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid vertical={false} stroke="var(--color-divider)" strokeOpacity={0.5} strokeDasharray="3 4" />
+          <CartesianGrid {...GRID_PROPS} />
           <YAxis
-            width={58}
-            tickCount={3}
+            width={44}
+            tickCount={5}
             axisLine={false}
             tickLine={false}
             domain={["dataMin", "dataMax"]}
-            tick={{ fill: "var(--color-text)", opacity: 0.6, fontSize: 11 }}
-            tickFormatter={(value: number) => formatMoney(value, { cents: false })}
+            tick={AXIS_TICK}
+            tickFormatter={compactAxis}
           />
           <XAxis
             dataKey="date"
-            stroke="var(--color-text)"
-            opacity={0.6}
-            fontSize={11}
             minTickGap={40}
             tickLine={false}
             axisLine={false}
+            tick={AXIS_TICK}
+            tickMargin={8}
             tickFormatter={(value) => format(parseISO(value), "d MMM", { locale: ptBR })}
           />
-          <Tooltip content={<BankrollTooltip />} cursor={{ stroke: "var(--color-divider)" }} />
+          <Tooltip
+            isAnimationActive={false}
+            cursor={{ stroke: "var(--color-text)", strokeOpacity: 0.22 }}
+            content={({ active, payload }) =>
+              active && payload?.length ? (
+                <ChartTooltipBox
+                  label={formatDayMonth((payload[0].payload as BankrollPoint).date)}
+                  value={formatMoney((payload[0].payload as BankrollPoint).balance)}
+                />
+              ) : null
+            }
+          />
           <Area
             type="monotone"
             dataKey="balance"
-            stroke="var(--color-accent-2)"
-            strokeWidth={1.5}
-            fill="url(#bankroll-fill)"
+            stroke={LINE}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            fill={`url(#${fillId})`}
             baseValue="dataMin"
+            activeDot={{ r: 4.5, fill: LINE, stroke: "rgb(var(--rgb-panel))", strokeWidth: 2 }}
             animationDuration={650}
           />
         </AreaChart>

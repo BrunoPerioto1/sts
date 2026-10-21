@@ -40,7 +40,7 @@ function DashboardPreferencesMobile() {
   function reorder(from: number, to: number) {
     const next = moveKpi(preferences.kpis, from, to);
     if (next === preferences.kpis) return;
-    setAnnouncement(`${DASHBOARD_KPI_REGISTRY[next[to].id].label}: posição ${to + 1} de 8.`);
+    setAnnouncement(`${DASHBOARD_KPI_REGISTRY[next[to].id].label}: posição ${to + 1} de ${next.length}.`);
     void save({ ...preferences, kpis: next });
   }
   function startDrag(event: PointerEvent<HTMLButtonElement>, id: KpiId, from: number) {
@@ -54,7 +54,7 @@ function DashboardPreferencesMobile() {
     const current = gesture.current;
     if (!current) return;
     const distance = event.clientY - current.startY;
-    const to = Math.max(0, Math.min(7, current.from + Math.round(distance / current.height)));
+    const to = Math.max(0, Math.min(current.rows.length - 1, current.from + Math.round(distance / current.height)));
     const next = moveKpi(current.rows, current.from, to);
     setDrag({ id: current.id, rows: next, offset: distance - (to - current.from) * current.height });
   }
@@ -92,7 +92,7 @@ function DashboardPreferencesMobile() {
         <section aria-labelledby="indicators-title">
           <h2 id="indicators-title" className="text-base font-semibold">Indicadores</h2>
           <p className="text-sm text-zinc-400 mt-1">Escolha quais informações aparecem no Dashboard.</p>
-          <p id="reorder-help" className="text-xs text-zinc-400 mt-2">Arraste pela alça ou use as setas para ordenar. Selecione de 2 a 8 indicadores.</p>
+          <p id="reorder-help" className="text-xs text-zinc-400 mt-2">Arraste pela alça ou use as setas para ordenar. Selecione de {MIN_VISIBLE_KPIS} a {MAX_VISIBLE_KPIS} indicadores.</p>
           <ol className="mt-4 border-y border-border" aria-label="Ordem dos indicadores">
             {rows.map((kpi, index) => {
               const meta = DASHBOARD_KPI_REGISTRY[kpi.id];
