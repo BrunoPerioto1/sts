@@ -23,7 +23,9 @@ import { useApostasFilters } from "@/hooks/apostas/use-apostas-filters";
 import { useBetActions } from "@/hooks/apostas/use-bet-actions";
 import { useProGate } from "@/hooks/queries/use-plan";
 import { Button } from "@/components/ui/button";
-import { MagnifyingGlass, Plus, SlidersHorizontal } from "@phosphor-icons/react";
+import { DownloadSimple, MagnifyingGlass, Plus, SlidersHorizontal } from "@phosphor-icons/react";
+import { HEADER_BUTTON, HEADER_BUTTON_SECONDARY } from "@/components/ui/toolbar";
+import { cn } from "@/lib/utils";
 import { actionToast } from "@/lib/action-toast";
 import { tapHaptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -147,14 +149,15 @@ export default function ApostasPage() {
     onFilterUnmatched: filters.setUnmatched,
     onDateRangeChange: filters.setDateRange,
     onClearFilters: filters.clearFilters,
-    // A tela só tem as linhas dos meses abertos: o CSV busca o filtro inteiro.
-    onExportCsv: () => {
-      if (!proGate("csvExport", "Exportar CSV")) return;
-      exportBetsListCsv(paramsFrom(filters.queryFilters)).catch(() =>
-        actionToast.error({ description: "Não deu pra exportar agora. Tente de novo." })
-      );
-    },
     isLoading: loading,
+  };
+
+  // A tela só tem as linhas dos meses abertos: o CSV busca o filtro inteiro.
+  const exportCsv = () => {
+    if (!proGate("csvExport", "Exportar CSV")) return;
+    exportBetsListCsv(paramsFrom(filters.queryFilters)).catch(() =>
+      actionToast.error({ description: "Não deu pra exportar agora. Tente de novo." })
+    );
   };
 
   const listProps = {
@@ -172,6 +175,7 @@ export default function ApostasPage() {
     <MainLayout
       title="Apostas"
       subtitle={`${formatInt(total)} registros`}
+      inlineSubtitle
       hideBottomNav={selection.selectionMode}
       mobileHeader={
         <PageHeader
@@ -203,9 +207,15 @@ export default function ApostasPage() {
         />
       }
       actions={
-        <Button onClick={() => setCreateModalOpen(true)} className="btn-cta hidden md:flex gap-1.5 font-semibold [&_svg]:size-3.5">
-          <Plus weight="bold" /> Nova aposta
-        </Button>
+        <>
+          <Button variant="secondary" size="sm" disabled={loading} onClick={exportCsv} className={HEADER_BUTTON_SECONDARY}>
+            <DownloadSimple /> CSV
+          </Button>
+          {/* Abaixo de md quem cria é o FAB. */}
+          <Button size="sm" onClick={() => setCreateModalOpen(true)} className={cn(HEADER_BUTTON, "hidden md:inline-flex")}>
+            <Plus /> Nova aposta
+          </Button>
+        </>
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />

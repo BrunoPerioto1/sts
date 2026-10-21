@@ -1,4 +1,4 @@
-import { CaretDown } from "@phosphor-icons/react";
+import { CaretDown, type Icon } from "@phosphor-icons/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,8 @@ interface StatusMultiSelectProps {
    * origem, que não é origem). Com ele, as duas listas ganham rótulo de seção.
    */
   extra?: { section: string; label: string; checked: boolean; onToggle: () => void };
+  /** Ícone antes do rótulo (barra de Apostas). */
+  icon?: Icon;
 }
 
 const sectionLabel = "px-2 pb-1 pt-1 text-[11px] font-medium uppercase tracking-wider text-muted";
@@ -36,6 +38,7 @@ export function StatusMultiSelect({
   noun = ["status", "status"],
   allLabel = "Todos",
   extra,
+  icon: IconComponent,
 }: StatusMultiSelectProps) {
   const toggle = (value: string) =>
     onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
@@ -69,6 +72,7 @@ export function StatusMultiSelect({
             className
           )}
         >
+          {IconComponent && <IconComponent size={15} className="text-zinc-400 shrink-0" />}
           <span className="text-zinc-500 shrink-0">{label}</span>
           <span className={cn("truncate", summary ? "text-foreground" : "text-zinc-400")}>
             {summary ?? allLabel}

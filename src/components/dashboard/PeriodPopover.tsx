@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { CaretDown, Check } from "@phosphor-icons/react";
 import type { DateRange } from "react-day-picker";
@@ -16,10 +16,12 @@ interface PeriodPopoverProps {
   onSelect: (preset: DatePreset) => void;
   onCustomRange: (from: string, to: string) => void;
   /** Texto do gatilho; padrão é o nome do preset. */
-  label?: string;
+  label?: ReactNode;
   className?: string;
   align?: "start" | "center" | "end";
   disabled?: boolean;
+  /** Ícone antes do texto (barra de Apostas). */
+  icon?: ReactNode;
 }
 
 /**
@@ -37,6 +39,7 @@ export function PeriodPopover({
   className,
   align = "end",
   disabled,
+  icon,
 }: PeriodPopoverProps) {
   const [open, setOpen] = useState(false);
   const committed = (): DateRange | undefined =>
@@ -61,6 +64,7 @@ export function PeriodPopover({
             className
           )}
         >
+          {icon}
           {label ?? PRESET_LABEL[preset]} <CaretDown size={12} />
         </button>
       </PopoverTrigger>

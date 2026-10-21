@@ -6,9 +6,9 @@ import { PeriodPopover } from "@/components/dashboard/PeriodPopover";
 import { HouseMultiSelect } from "@/components/house/HouseMultiSelect";
 import { StatusMultiSelect } from "./StatusMultiSelect";
 import { useSports } from "@/hooks/queries/use-sports";
-import { STATUS_OPTIONS } from "@/lib/bet-status";
-import { ORIGIN_LABEL, ORIGIN_OPTIONS } from "@/lib/bet-origin";
-import { MagnifyingGlass, DownloadSimple, X } from "@phosphor-icons/react";
+import { ORIGIN_OPTIONS } from "@/lib/bet-origin";
+import { Buildings, CalendarBlank, CircleHalf, MagnifyingGlass, PaperPlaneTilt, SoccerBall, X } from "@phosphor-icons/react";
+import { TOOLBAR_BOX, TOOLBAR_BUTTON, TOOLBAR_BUTTON_ACTIVE } from "@/components/ui/toolbar";
 import { cn } from "@/lib/utils";
 import { PERIOD_OPTIONS, presetRange, type SheetPreset } from "@/lib/dashboard-periods";
 import type { DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
@@ -23,7 +23,6 @@ interface ApostasFilterProps {
   onFilterUnmatched?: (unmatched: boolean) => void;
   onDateRangeChange?: (startDate: string, endDate: string) => void;
   onClearFilters?: () => void;
-  onExportCsv?: () => void;
   className?: string;
   isLoading?: boolean;
   initialDateFrom?: string;
@@ -35,8 +34,6 @@ interface ApostasFilterProps {
   initialOrigins?: string[];
   initialUnmatched?: boolean;
 }
-
-const statusLabels: Record<string, string> = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
 
 // Na lista de apostas "Tudo" é sem recorte de data (inclui jogo futuro), não
 // "da primeira aposta até hoje" como no dashboard.
@@ -53,8 +50,18 @@ function presetFor(from: string, to: string): DatePreset {
   return match?.value ?? "custom";
 }
 
-const divider = <div className="h-5 w-px bg-foreground/10 shrink-0" />;
+// "01 – 21 out" no mesmo mês, "28 set – 05 out" entre meses.
+function rangeLabel(from: string, to: string): string {
+  const day = (d: string) => format(parseISO(d), "dd", { locale: ptBR });
+  const dayMonth = (d: string) => format(parseISO(d), "dd MMM", { locale: ptBR });
+  if (from && to) return from.slice(0, 7) === to.slice(0, 7) ? `${day(from)} – ${dayMonth(to)}` : `${dayMonth(from)} – ${dayMonth(to)}`;
+  return from ? `De ${dayMonth(from)}` : `Até ${dayMonth(to)}`;
+}
 
+// Desenho do Claude Design (Apostas Header v2): cada filtro na própria caixa,
+// "Rótulo Valor ▾", e o que estiver fora do padrão ganha o tom do accent. O
+// valor escolhido já aparece no gatilho, então não há mais a fileira de
+// "Filtros ativos" embaixo — "Limpar filtros" zera tudo de uma vez.
 export function ApostasFilter({
   houses,
   onSearch,
@@ -65,7 +72,6 @@ export function ApostasFilter({
   onFilterUnmatched,
   onDateRangeChange,
   onClearFilters,
-  onExportCsv,
   className,
   isLoading = false,
   initialDateFrom = "",
@@ -92,77 +98,11 @@ export function ApostasFilter({
     setDateTo(to);
     onDateRangeChange?.(from, to);
   };
-  const periodPreset = presetFor(dateFrom, dateTo);
-  const fromLabel = dateFrom ? format(parseISO(dateFrom), "dd MMM", { locale: ptBR }) : null;
-  const toLabel = dateTo ? format(parseISO(dateTo), "dd MMM", { locale: ptBR }) : null;
-  const rangeLabel = fromLabel && toLabel ? `${fromLabel} – ${toLabel}` : fromLabel ? `De ${fromLabel}` : `Até ${toLabel}`;
+  const hasRange = !!(dateFrom || dateTo);
+  const hasFilters =
+    !!searchTerm || hasRange || status.length > 0 || houseIds.length > 0 || sportIds.length > 0 || origins.length > 0 || unmatched;
 
-  const activeChips: { key: string; label: string; clear: () => void; solid?: boolean }[] = [];
-  if (searchTerm) activeChips.push({ key: "q", label: `Busca: "${searchTerm}"`, clear: () => { setSearchTerm(""); onSearch(""); } });
-  if (dateFrom || dateTo) {
-    activeChips.push({
-      key: "range",
-      label: rangeLabel,
-      clear: () => applyRange({ from: "", to: "" }),
-    });
-  }
-  // Chips de status vêm sólidas (é a seleção multi-select em si); as demais
-  // ficam com contorno — mesma distinção da referência de design.
-  for (const s of status) {
-    activeChips.push({
-      key: `status-${s}`,
-      label: statusLabels[s] ?? s,
-      solid: true,
-      clear: () => {
-        const next = status.filter((v) => v !== s);
-        setStatus(next);
-        onFilterStatus?.(next);
-      },
-    });
-  }
-  for (const id of houseIds) {
-    const houseName = houses.find((h) => h.id === id)?.name ?? String(id);
-    activeChips.push({
-      key: `house-${id}`,
-      label: houseName,
-      clear: () => {
-        const next = houseIds.filter((v) => v !== id);
-        setHouseIds(next);
-        onFilterHouses?.(next);
-      },
-    });
-  }
-
-  for (const id of sportIds) {
-    activeChips.push({
-      key: `sport-${id}`,
-      label: sports.find((s) => s.id === id)?.name ?? String(id),
-      clear: () => {
-        const next = sportIds.filter((v) => v !== id);
-        setSportIds(next);
-        onFilterSports?.(next);
-      },
-    });
-  }
-
-  for (const o of origins) {
-    activeChips.push({
-      key: `origin-${o}`,
-      label: ORIGIN_LABEL[o] ?? o,
-      clear: () => {
-        const next = origins.filter((v) => v !== o);
-        setOrigins(next);
-        onFilterOrigins?.(next);
-      },
-    });
-  }
-  if (unmatched) {
-    activeChips.push({
-      key: "unmatched",
-      label: "Sem jogo identificado",
-      clear: () => { setUnmatched(false); onFilterUnmatched?.(false); },
-    });
-  }
+  const trigger = (active: boolean) => cn(TOOLBAR_BUTTON, active && TOOLBAR_BUTTON_ACTIVE);
 
   const handleClear = () => {
     setSearchTerm("");
@@ -177,135 +117,102 @@ export function ApostasFilter({
   };
 
   return (
-    <div className={cn("w-full space-y-2", className)}>
-      <div className="h-11 rounded-xl border border-foreground/10 bg-foreground/[0.02] flex items-center overflow-x-auto">
-        <div className="flex items-center gap-2 px-3.5 flex-1 min-w-0">
-          <MagnifyingGlass className="h-4 w-4 text-zinc-500 shrink-0" />
-          <Input
-            placeholder="Buscar apostas..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
-            disabled={isLoading}
-            className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-base text-foreground placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
-          />
-        </div>
+    <div className={cn("flex w-full flex-wrap items-center gap-2", className)}>
+      <label className={cn(TOOLBAR_BOX, "flex w-[300px] max-w-full items-center gap-2 px-3 transition-colors focus-within:border-foreground/25")}>
+        <MagnifyingGlass size={15} className="shrink-0 text-zinc-500" />
+        <Input
+          placeholder="Buscar evento, mercado…"
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); onSearch(e.target.value); }}
+          disabled={isLoading}
+          className="flex-1 min-w-0 h-auto min-h-0 border-0 bg-transparent p-0 text-[13px] text-foreground placeholder:text-zinc-500 hover:border-0 focus-visible:border-0 focus-visible:outline-none"
+        />
+      </label>
 
-        {divider}
+      <PeriodPopover
+        preset={presetFor(dateFrom, dateTo)}
+        firstBetDate={null}
+        from={dateFrom}
+        to={dateTo}
+        onSelect={(preset) => {
+          if (preset !== "custom") applyRange(rangeFor(preset as SheetPreset));
+        }}
+        onCustomRange={(from, to) => applyRange({ from, to })}
+        // Com recorte mostra as datas ("01 – 21 out"); sem, o padrão "Período Tudo".
+        icon={<CalendarBlank size={15} className={hasRange ? "text-accent-text" : "text-zinc-400"} />}
+        label={
+          hasRange ? (
+            rangeLabel(dateFrom, dateTo)
+          ) : (
+            <>
+              <span className="text-zinc-500">Período</span>
+              <span>Tudo</span>
+            </>
+          )
+        }
+        align="start"
+        disabled={isLoading}
+        className={cn(trigger(hasRange), hasRange ? "text-foreground" : "text-zinc-300")}
+      />
 
-        <div className="px-3.5 shrink-0">
-          <PeriodPopover
-            preset={periodPreset}
-            firstBetDate={null}
-            from={dateFrom}
-            to={dateTo}
-            onSelect={(preset) => {
-              if (preset !== "custom") applyRange(rangeFor(preset as SheetPreset));
-            }}
-            onCustomRange={(from, to) => applyRange({ from, to })}
-            // Intervalo solto mostra as datas; "Personalizado" não diz nada.
-            label={periodPreset === "custom" ? rangeLabel : undefined}
-            align="start"
-            disabled={isLoading}
-            className="h-auto border-0 px-0 text-sm text-foreground hover:border-0"
-          />
-        </div>
+      <StatusMultiSelect
+        icon={CircleHalf}
+        selected={status}
+        onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
+        disabled={isLoading}
+        className={trigger(status.length > 0)}
+      />
 
-        {divider}
+      <HouseMultiSelect
+        icon={Buildings}
+        houses={houses}
+        selected={houseIds}
+        onChange={(next) => { setHouseIds(next); onFilterHouses?.(next); }}
+        disabled={isLoading}
+        label="Casas"
+        className={cn(trigger(houseIds.length > 0), "max-w-[240px]")}
+      />
 
-        <div className="px-3.5 shrink-0">
-          <StatusMultiSelect
-            selected={status}
-            onChange={(next) => { setStatus(next); onFilterStatus?.(next); }}
-            disabled={isLoading}
-            className="min-h-0 text-sm"
-          />
-        </div>
+      <HouseMultiSelect
+        icon={SoccerBall}
+        houses={sports}
+        selected={sportIds}
+        onChange={(next) => { setSportIds(next); onFilterSports?.(next); }}
+        disabled={isLoading}
+        label="Esporte"
+        noun={["esporte", "esportes"]}
+        allLabel="Todos"
+        className={cn(trigger(sportIds.length > 0), "max-w-[240px]")}
+      />
 
-        {divider}
+      <StatusMultiSelect
+        icon={PaperPlaneTilt}
+        label="Origem"
+        options={ORIGIN_OPTIONS}
+        selected={origins}
+        onChange={(next) => { setOrigins(next); onFilterOrigins?.(next); }}
+        disabled={isLoading}
+        className={trigger(origins.length > 0 || unmatched)}
+        noun={["origem", "origens"]}
+        allLabel="Todas"
+        // Aposta sem jogo casado não tem horário nem placar automático:
+        // é a que a conferência não resolve sozinha.
+        extra={{
+          section: "Jogo",
+          label: "Sem jogo identificado",
+          checked: unmatched,
+          onToggle: () => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); },
+        }}
+      />
 
-        <div className="px-3.5 shrink-0">
-          <HouseMultiSelect
-            houses={houses}
-            selected={houseIds}
-            onChange={(next) => { setHouseIds(next); onFilterHouses?.(next); }}
-            disabled={isLoading}
-            label="Casas"
-          />
-        </div>
-
-        {divider}
-
-        <div className="px-3.5 shrink-0">
-          <HouseMultiSelect
-            houses={sports}
-            selected={sportIds}
-            onChange={(next) => { setSportIds(next); onFilterSports?.(next); }}
-            disabled={isLoading}
-            label="Esportes"
-            noun={["esporte", "esportes"]}
-            allLabel="Todos"
-          />
-        </div>
-
-        {divider}
-
-        <div className="px-3.5 shrink-0">
-          <StatusMultiSelect
-            label="Origem"
-            options={ORIGIN_OPTIONS}
-            selected={origins}
-            onChange={(next) => { setOrigins(next); onFilterOrigins?.(next); }}
-            disabled={isLoading}
-            className="min-h-0 text-sm"
-            noun={["origem", "origens"]}
-            allLabel="Todas"
-            // Aposta sem jogo casado não tem horário nem placar automático:
-            // é a que a conferência não resolve sozinha.
-            extra={{
-              section: "Jogo",
-              label: "Sem jogo identificado",
-              checked: unmatched,
-              onToggle: () => { setUnmatched(!unmatched); onFilterUnmatched?.(!unmatched); },
-            }}
-          />
-        </div>
-
-        {onExportCsv && (
-          <>
-            {divider}
-            <button
-              type="button"
-              onClick={onExportCsv}
-              disabled={isLoading}
-              className="flex items-center gap-1.5 px-3.5 text-sm text-zinc-300 hover:text-foreground transition-colors shrink-0 disabled:opacity-45 disabled:pointer-events-none"
-            >
-              <DownloadSimple className="h-4 w-4" /> Exportar CSV
-            </button>
-          </>
-        )}
-      </div>
-
-      {activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted">Filtros ativos</span>
-          {activeChips.map((chip) => (
-            <span
-              key={chip.key}
-              className={cn(
-                "h-7 inline-flex items-center gap-1 rounded-full px-3 text-xs",
-                chip.solid ? "bg-accent text-white" : "border border-foreground/10 bg-foreground/[0.03] text-zinc-300"
-              )}
-            >
-              {chip.label}
-              <button onClick={chip.clear} aria-label="Remover filtro">
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-          <button onClick={handleClear} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-            Limpar tudo
-          </button>
-        </div>
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="press ml-auto flex h-9 items-center gap-1.5 px-2.5 text-[13px] font-medium text-zinc-400 transition-colors hover:text-foreground"
+        >
+          <X size={14} /> Limpar filtros
+        </button>
       )}
     </div>
   );
