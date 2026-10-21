@@ -135,28 +135,40 @@ function SuggestionRow({
   );
 }
 
-/** As que o bot não resolveu viram uma tela própria — aqui só a porta. */
+/**
+ * As que o bot não resolveu viram uma tela própria — aqui só a porta. Seção à
+ * parte, com título e contagem: é a única coisa da tela que pede ação, então
+ * não pode ter o mesmo peso do "nada pra confirmar" logo acima.
+ */
 function SemProposta({ enabled }: { enabled: boolean }) {
   const { data } = useSettlementReview(enabled);
   if (!enabled || !data?.length) return null;
   const n = data.length;
 
   return (
-    <Link
-      to="/settlement/review"
-      className="flex items-center gap-3.5 rounded-2xl border border-foreground/10 bg-card shadow-card p-3.5 transition-colors hover:bg-foreground/[0.04] md:px-4 md:py-4"
-    >
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-foreground/[0.06] text-zinc-300">
-        <HandPointing size={19} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[14.5px] font-semibold text-foreground">
-          {n} espera{n === 1 ? "" : "m"} você
+    <section className="space-y-2.5">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-[13px] font-semibold text-zinc-300">Aguardando sua ação</h2>
+        <span className="min-w-6 rounded-full bg-accent/15 px-2 py-0.5 text-center text-xs font-semibold tabular-nums text-accent">
+          {formatInt(n)}
         </span>
-        <span className="block text-[12.5px] text-zinc-500">O bot não resolveu · liquidar na mão</span>
-      </span>
-      <CaretRight size={14} className="shrink-0 text-zinc-500" />
-    </Link>
+      </div>
+      <Link
+        to="/settlement/review"
+        className="group flex items-center gap-3.5 rounded-2xl border border-accent/30 bg-accent/[0.06] p-4 transition-colors hover:bg-accent/[0.1] md:px-5"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent">
+          <HandPointing size={19} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14.5px] font-semibold text-foreground">
+            <span className="tabular-nums text-accent">{formatInt(n)}</span> {n === 1 ? "aposta espera" : "apostas esperam"} você
+          </span>
+          <span className="block text-[12.5px] text-zinc-400">O bot não conseguiu resolver · liquidar na mão</span>
+        </span>
+        <CaretRight size={15} className="shrink-0 text-accent transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </section>
   );
 }
 
@@ -184,16 +196,22 @@ function LendoPlacares({ fila }: { fila: SettlementQueue | undefined }) {
   );
 }
 
+// Estado, não ação: baixo e sem fundo de card, pra não competir com a seção
+// "Aguardando sua ação" quando ela aparece embaixo.
 function Vazio({ buscando }: { buscando: boolean }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-2xl border border-foreground/10 bg-card shadow-card px-5 py-6 md:px-7" aria-live="polite">
-      <p className="flex items-center gap-2 text-[17px] font-semibold text-foreground">
-        {buscando && <CircleNotch size={17} className="animate-spin text-zinc-500" />}
-        {buscando ? "Buscando resultados…" : "Nada pra confirmar"}
-      </p>
-      <p className="text-[13px] text-zinc-500">
-        {buscando ? "Lendo os placares dos jogos que já terminaram." : "O bot não tem mais propostas neste lote."}
-      </p>
+    <div className="flex items-center gap-3.5 rounded-2xl border border-foreground/[0.07] px-4 py-5 md:px-5" aria-live="polite">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground/[0.06] text-zinc-400">
+        {buscando ? <CircleNotch size={16} className="animate-spin" /> : <Check size={16} weight="bold" />}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[14.5px] font-semibold text-foreground">
+          {buscando ? "Buscando resultados…" : "Nada pra confirmar"}
+        </span>
+        <span className="block text-[12.5px] text-zinc-500">
+          {buscando ? "Lendo os placares dos jogos que já terminaram." : "O bot não tem propostas automáticas neste lote."}
+        </span>
+      </span>
     </div>
   );
 }
@@ -286,13 +304,16 @@ export default function ConferirPage() {
         onReject={() => aberta && recusar([aberta.betId], `${aberta.game} · proposta recusada`)}
       />
 
-      <div className={cn("space-y-3.5", selecting ? "pb-44 md:pb-28" : "pb-6")}>
+      {/* space-y-6 separa blocos de natureza diferente (propostas/vazio x
+          "Aguardando sua ação"); dentro de cada bloco o respiro é menor. O pt
+          do celular leva o título → conteúdo pros mesmos ~36px do desktop. */}
+      <div className={cn("space-y-6 pt-2 md:pt-0", selecting ? "pb-44 md:pb-28" : "pb-6")}>
         {isLoading ? (
           <LendoPlacares fila={fila} />
         ) : lista.length === 0 ? (
           <Vazio buscando={compute.isPending} />
         ) : (
-          <>
+          <div className="space-y-3.5">
             {/* Mobile: "selecionar todas" fica acima da lista; no desktop ele
                 mora no cabeçalho da tabela. */}
             {selecting && (
@@ -344,7 +365,7 @@ export default function ConferirPage() {
                 ))}
               </ul>
             </div>
-          </>
+          </div>
         )}
 
         {!isLoading && !selecting && <SemProposta enabled={!!fila?.undecided} />}
