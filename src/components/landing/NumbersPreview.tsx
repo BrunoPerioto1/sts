@@ -1,23 +1,36 @@
-import { format, subDays } from "date-fns";
+import { addDays, endOfMonth, format, getDaysInMonth, startOfMonth, subMonths } from "date-fns";
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
-import { HouseProfitBars } from "@/components/dashboard/HouseProfitBars";
-import { ProfitBarChart } from "@/components/dashboard/ProfitBarChart";
-import { DASHBOARD_KPI_REGISTRY, normalizeDashboardPreferences, type DashboardPreferences, type KpiId } from "@/lib/dashboard-preferences";
-import { formatMoney } from "@/lib/format";
+import type { SportBreakdown } from "@/api/routes/get-dashboard-by-sport";
+import { DashboardKpiCards } from "@/components/dashboard/DashboardKpiCards";
+import { DashboardMainChart } from "@/components/dashboard/DashboardMainChart";
+import { HitRateCard } from "@/components/dashboard/HitRateCard";
+import { ResultsCalendar } from "@/components/dashboard/ResultsCalendar";
+import { SportsCard } from "@/components/dashboard/SportsCard";
+import { normalizeDashboardPreferences } from "@/lib/dashboard-preferences";
 
 /**
- * Os componentes de verdade do Dashboard, alimentados com um mês inventado.
- * Fica num chunk à parte (o Recharts só baixa quando a landing chega aqui).
- * Os números são modestos de propósito: a página vende controle, não lucro.
+ * Os componentes de verdade do Dashboard, alimentados com um mês inventado: o
+ * mês passado inteiro, pra o calendário fechar. Fica num chunk à parte (o
+ * Recharts só baixa quando a landing chega aqui). Os números são modestos de
+ * propósito: a página vende controle, não lucro. Lucro, apostas, acerto e os
+ * esportes batem entre si.
  */
 
+// Resultado de cada dia do mês; zero = dia sem aposta.
 const PROFITS = [12.5, -50, 0, 41, -20, 0, 63.5, -50, 18, 0, -30, 55, 0, -10, 24, 47.5, -50, 0, 0, 36, -20, 15, 0, -40, 52, 0, 21.3, -25, 30, 0];
-const today = new Date();
-const DAILY = PROFITS.map((profitDay, i) => ({ date: format(subDays(today, PROFITS.length - 1 - i), "yyyy-MM-dd"), profitDay }));
-const PROFIT = PROFITS.reduce((sum, v) => sum + v, 0);
-const UP_DAYS = PROFITS.filter((v) => v > 0).length;
-const DOWN_DAYS = PROFITS.filter((v) => v < 0).length;
+const MONTH = startOfMonth(subMonths(new Date(), 1));
+const START = format(MONTH, "yyyy-MM-dd");
+const END = format(endOfMonth(MONTH), "yyyy-MM-dd");
+const DAYS = PROFITS.slice(0, getDaysInMonth(MONTH));
+
+const DAILY = DAYS.flatMap((profitDay, i) =>
+  profitDay === 0 ? [] : [{ date: format(addDays(MONTH, i), "yyyy-MM-dd"), totalBets: 1 + (i % 3), profitDay }],
+);
+const PROFIT = DAYS.reduce((sum, v) => sum + v, 0);
+
+// Banca de R$ 5.000 no começo do mês, andando com o resultado de cada dia.
+let saldo = 5000;
+const BANKROLL = DAYS.map((profit, i) => ({ date: format(addDays(MONTH, i), "yyyy-MM-dd"), balance: (saldo += profit) }));
 
 const METRICS: DashboardMetrics = {
   totalBets: 55,
@@ -27,11 +40,11 @@ const METRICS: DashboardMetrics = {
   pendingBets: 5,
   canceledBets: 2,
   totalStaked: 2650,
-  settledStake: 2400,
+  settledStake: 2300,
   averageStake: 50,
   averageOdd: 2.08,
   totalProfit: PROFIT,
-  roi: PROFIT / 2400,
+  roi: PROFIT / 2300,
   hitRate: 25 / 46,
   biggestWin: 63.5,
   biggestLoss: -50,
@@ -39,46 +52,43 @@ const METRICS: DashboardMetrics = {
   maxDrawdown: 67.5,
 };
 
-
-const HOUSES = [
-  { house: "Betano", profit: 88.4 },
-  { house: "Bet365", profit: 52.1 },
-  { house: "Superbet", profit: 17.3 },
-  { house: "KTO", profit: -12 },
-  { house: "Sportingbet", profit: -25 },
+// Somam as 55 apostas, as 25 ganhas e as 21 perdidas acima. O vôlei só tem
+// pendentes, pra mostrar o "pendente" no lugar de R$ 0.
+const SPORTS: SportBreakdown[] = [
+  { sport: "Futebol", bets: 33, pendingBets: 2, wonBets: 16, lostBets: 12, settledStake: 1400, profit: 100.3 },
+  { sport: "Basquete", bets: 10, pendingBets: 1, wonBets: 6, lostBets: 3, settledStake: 450, profit: 32.5 },
+  // O que sobra do lucro do mês: um esporte no vermelho, pequeno.
+  { sport: "Tênis", bets: 10, pendingBets: 0, wonBets: 3, lostBets: 6, settledStake: 450, profit: PROFIT - 132.8 },
+  { sport: "Vôlei", bets: 2, pendingBets: 2, wonBets: 0, lostBets: 0, settledStake: 0, profit: 0 },
 ];
 
-// A régua da landing segue com os 8 indicadores de antes: o dashboard mostra
-// no máximo 4, mas aqui a vitrine é de tudo o que dá pra medir.
-const LANDING_KPIS: KpiId[] = ["roi", "units", "bets", "pending", "totalStaked", "averageStake", "averageOdd", "hitRate"];
-const PREFERENCES: DashboardPreferences = {
-  ...normalizeDashboardPreferences(null),
-  kpis: LANDING_KPIS.map((id) => ({ id, visible: true, icon: DASHBOARD_KPI_REGISTRY[id].defaultIcon })),
-};
+// Padrão do dashboard: Lucro, ROI, Banca e Apostas. `stake` é a banca do
+// perfil (a unidade é 1% dela).
+const PREFERENCES = normalizeDashboardPreferences(null);
+const COLORS = PREFERENCES.performanceColors;
+const INPUT = { metrics: METRICS, stake: 5000, bankroll: BANKROLL[BANKROLL.length - 1].balance };
+const noop = () => {};
 
 export default function NumbersPreview() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.012] shadow-card">
-      <div className="grid lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]">
-        <div className="border-b border-foreground/[0.06] p-6 lg:border-b-0 lg:border-r">
-          <p className="text-[13px] text-zinc-400">Lucro líquido nos últimos 30 dias</p>
-          <p className="landing-display mt-2 text-[40px] tabular-nums text-success">{formatMoney(PROFIT, { signed: true })}</p>
-          <p className="mt-2 text-[13px] text-zinc-400">
-            {UP_DAYS} dias positivos e {DOWN_DAYS} negativos
-          </p>
-          <div className="mt-6 border-t border-foreground/[0.06] pt-5">
-            <p className="mb-4 text-[13px] text-zinc-400">Por casa</p>
-            <HouseProfitBars rows={HOUSES} />
-          </div>
-        </div>
-        <div className="p-6">
-          <p className="mb-3 text-[13px] text-zinc-400">Resultado por dia (toque numa barra)</p>
-          <ProfitBarChart data={DAILY} height={260} />
-        </div>
-      </div>
-      <div className="border-t border-foreground/[0.06]">
-        {/* `stake` aqui é a banca: a unidade é 1% dela, R$ 50 como nas cenas de cima. */}
-        <DashboardKpiGrid metrics={METRICS} stake={5000} preferences={PREFERENCES} />
+    <div className="space-y-3 rounded-2xl border border-foreground/10 bg-background p-3 shadow-card sm:p-4">
+      <DashboardKpiCards compact className="sm:hidden" input={INPUT} preferences={PREFERENCES} />
+      <DashboardKpiCards className="hidden sm:grid" input={INPUT} preferences={PREFERENCES} />
+
+      <DashboardMainChart dailyData={DAILY} bankroll={BANKROLL} filtered={false} preset="lastMonth" onPresetChange={noop} height={240} />
+
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <ResultsCalendar compact className="sm:hidden" dailyData={DAILY} startDate={START} endDate={END} colors={COLORS} />
+        <ResultsCalendar
+          fluid
+          className="hidden sm:flex md:col-span-2 lg:col-span-1"
+          dailyData={DAILY}
+          startDate={START}
+          endDate={END}
+          colors={COLORS}
+        />
+        <HitRateCard metrics={METRICS} />
+        <SportsCard sample={SPORTS} colors={COLORS} className="md:self-start" />
       </div>
     </div>
   );

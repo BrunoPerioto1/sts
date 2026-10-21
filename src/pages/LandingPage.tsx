@@ -579,8 +579,8 @@ function Numbers() {
         </SectionHeading>
         <div className="mt-12">
           <HoverTilt>
-            {/* Alturas medidas da peça montada: com 560px fixos, o clique em "Preço" parava 440px acima no tablet quando ela carregava. */}
-            <NearScreen size="h-[1180px] sm:h-[1040px] md:h-[999px] lg:h-[607px]">
+            {/* Alturas medidas da peça montada (390, 700, 900 e 1280px de tela): com 560px fixos, o clique em "Preço" parava 440px acima no tablet quando ela carregava. */}
+            <NearScreen size="h-[1597px] sm:h-[1688px] md:h-[1380px] lg:h-[884px]">
               <NumbersPreview />
             </NearScreen>
           </HoverTilt>
