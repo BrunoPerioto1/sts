@@ -79,6 +79,11 @@ export function ResultsCalendar({
   const byDay = useMemo(() => new Map(dailyData.map((d) => [d.date, d])), [dailyData]);
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const lead = (getDay(days[0]) + 6) % 7; // semana começa na segunda
+  const weeks = Math.ceil((lead + days.length) / 7);
+  // Desktop: o card estica até a altura dos vizinhos da linha (acerto, esportes)
+  // e as semanas dividem essa altura — com célula fixa de 44px sobrava um vão
+  // morto embaixo. 44px continua sendo o mínimo.
+  const stretch = !compact && !fluid;
   const inMonth = days.map((d) => byDay.get(iso(d))).filter((d): d is DailySummaryPoint => !!d);
   const max = Math.max(1, ...inMonth.map((d) => Math.abs(d.profitDay)));
   const ups = inMonth.filter((d) => d.profitDay > 0).length;
@@ -146,7 +151,10 @@ export function ResultsCalendar({
     >
       {/* A partir do xl a célula tem largura fixa (80px, a do desenho) e o
           card encolhe até a grade; esticada na largura, virava retângulo comprido. */}
-      <div className={cn("grid grid-cols-7", compact ? "gap-1" : "gap-[5px]", !compact && !fluid && "xl:grid-cols-[repeat(7,80px)]")}>
+      <div
+        className={cn("grid grid-cols-7", compact ? "gap-1" : "gap-[5px]", stretch && "flex-1 xl:grid-cols-[repeat(7,80px)]")}
+        style={stretch ? { gridTemplateRows: `auto repeat(${weeks}, minmax(44px, 1fr))` } : undefined}
+      >
         {WEEKDAYS.map((w) => (
           <div key={w} className={cn("pb-0.5 text-zinc-600", compact ? "text-center text-[10px]" : "px-0.5 text-xs")}>
             {w}
@@ -173,7 +181,7 @@ export function ResultsCalendar({
               aria-pressed={clickable ? selected === day : undefined}
               className={cn(
                 "group relative flex min-w-0 flex-col justify-between rounded-lg border text-left",
-                compact ? "h-[38px] rounded-md px-[5px] py-1" : "h-11 px-2 py-[5px]",
+                compact ? "h-[38px] rounded-md px-[5px] py-1" : cn("px-2 py-[5px]", !stretch && "h-11"),
                 !inPeriod
                   ? "border-transparent opacity-30"
                   : point

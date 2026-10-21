@@ -24,7 +24,8 @@ interface DashboardDesktopViewProps {
  * banca, volume); o lucro acumulado na largura toda, que é o elemento
  * principal; e embaixo o calendário (clicar num dia abre o detalhe) ao lado
  * de dois cards pequenos, taxa de acerto e lucro por esporte. O calendário tem
- * a largura da própria grade (células de 80×44, as do desenho).
+ * a largura da própria grade (células de 80px, as do desenho) e a altura da
+ * linha: as semanas esticam pra não sobrar vão embaixo (mínimo 44px).
  */
 export function DashboardDesktopView({
   filters,
