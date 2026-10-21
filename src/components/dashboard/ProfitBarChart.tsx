@@ -39,6 +39,17 @@ function DataEndBar(props: { x?: number; y?: number; width?: number; height?: nu
   return <path d={d} fill={fill} fillOpacity={fillOpacity} />;
 }
 
+/**
+ * Faixa sombreada atrás da barra apontada. O cursor padrão cobre a categoria
+ * inteira: com poucos dias no período virava um bloco largo. Aqui fica no
+ * máximo 40px, centrada na barra.
+ */
+function BarCursor(props: { x?: number; y?: number; width?: number; height?: number }) {
+  const { x = 0, y = 0, width = 0, height = 0 } = props;
+  const w = Math.min(width, 40);
+  return <rect x={x + (width - w) / 2} y={y} width={w} height={height} rx={6} fill="var(--color-text)" fillOpacity={0.05} />;
+}
+
 // Variavel do tema: no claro o verde/vermelho escurecem pra ler no branco.
 const POS = "var(--color-success)";
 const NEG = "var(--color-danger)";
@@ -164,12 +175,17 @@ export function ProfitBarChart({ data, height = 180, semanal = false, tooltip = 
             {!tooltip && <ReferenceLine x={atual.date} stroke="var(--color-text)" strokeOpacity={0.35} />}
             {tooltip && (
               <Tooltip
-                cursor={{ fill: "var(--color-text)", fillOpacity: 0.04 }}
+                cursor={<BarCursor />}
                 isAnimationActive={false}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload as { date: string; profitDay: number };
-                  return <ChartTooltipBox label={`${semanal ? "semana de " : ""}${formatDayMonth(p.date)}`} value={formatMoney(p.profitDay, { signed: true })} />;
+                  return (
+                    <ChartTooltipBox
+                      title={`${semanal ? "Semana de " : ""}${formatDayMonth(p.date)}`}
+                      rows={[{ label: semanal ? "Lucro da semana" : "Lucro do dia", value: formatMoney(p.profitDay, { signed: true }), color: p.profitDay ? cor(p.profitDay) : undefined }]}
+                    />
+                  );
                 }}
               />
             )}

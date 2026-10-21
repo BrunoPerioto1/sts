@@ -24,17 +24,14 @@ function groupByWeek(data: DailySummaryPoint[]) {
     .map(([date, profitDay]) => ({ date, profitDay }));
 }
 
-function Empty({ children, height }: { children: React.ReactNode; height: number }) {
-  return (
-    <div className="flex flex-col items-start justify-center gap-2" style={{ height }}>
-      {children}
-    </div>
-  );
+// Vazio compacto e centrado: sem dados, o card não guarda a altura do gráfico.
+function Empty({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">{children}</div>;
 }
 
 /**
- * O gráfico largo do dashboard. Abas em vez de três cards: lucro acumulado
- * (abre nele), a banca somada das casas e o resultado de cada dia. No desktop a
+ * O gráfico largo do dashboard. Abas em vez de três cards: o resultado de cada
+ * dia (abre nele), o lucro acumulado e a banca somada das casas. No desktop a
  * leitura é tooltip; no celular, uma faixa junto do gráfico (toque).
  */
 export function DashboardMainChart({
@@ -43,7 +40,7 @@ export function DashboardMainChart({
   filtered,
   preset,
   onPresetChange,
-  height = 300,
+  height = 250,
   compact = false,
   className,
   style,
@@ -59,32 +56,31 @@ export function DashboardMainChart({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const [tab, setTab] = useState<Tab>("acumulado");
+  // Abre nas barras (o resultado de cada dia); acumulado e banca vêm depois.
+  const [tab, setTab] = useState<Tab>("dia");
   const weekly = dailyData.length > 31;
   const bars = useMemo(() => groupByWeek(dailyData), [dailyData]);
   const options = [
+    { value: "dia", label: weekly ? "Por semana" : "Por dia" },
     { value: "acumulado", label: compact ? "Acumulado" : "Lucro acumulado" },
     { value: "banca", label: "Banca" },
-    { value: "dia", label: weekly ? "Por semana" : "Por dia" },
   ] as const;
 
   const first = bankroll[0];
   const last = bankroll[bankroll.length - 1];
-  // Encaixe à direita das abas, um por aba (no celular as abas ocupam a linha).
-  const right = compact
-    ? undefined
-    : tab === "banca" && first
-      ? (
-          <span className="text-[13px] text-zinc-400 tabular-nums">
-            {filtered && "Todas as casas · "}
-            {formatMoney(first.balance, { cents: false })} <span className="text-zinc-600">→</span>{" "}
-            <span className="text-zinc-200">{formatMoney(last.balance, { cents: false })}</span>
-          </span>
-        )
-      : dailyData.length > 0 && <span className="text-[13px] text-zinc-500">passe o mouse no gráfico</span>;
+  // À direita das abas só a faixa da banca (de onde saiu, onde chegou); nas
+  // outras abas o tooltip já diz tudo. No celular as abas ocupam a linha.
+  const right =
+    !compact && tab === "banca" && first ? (
+      <span className="text-[13px] text-zinc-400 tabular-nums">
+        {filtered && "Todas as casas · "}
+        {formatMoney(first.balance, { cents: false })} <span className="text-zinc-600">→</span>{" "}
+        <span className="text-zinc-200">{formatMoney(last.balance, { cents: false })}</span>
+      </span>
+    ) : undefined;
 
   const noBets = (
-    <Empty height={height}>
+    <Empty>
       <p className="text-[13px] text-zinc-400">Nenhuma aposta liquidada no período. Experimente ampliar as datas.</p>
       {preset !== "60d" && preset !== "allTime" && (
         <button type="button" onClick={() => onPresetChange("60d")} className="press text-[13px] font-medium text-accent">
@@ -113,7 +109,7 @@ export function DashboardMainChart({
         bankroll.length > 0 ? (
           <BankrollChart data={bankroll} height={height} />
         ) : (
-          <Empty height={height}>
+          <Empty>
             <p className="text-[13px] text-zinc-400">Sem movimentação nas casas no período.</p>
           </Empty>
         )

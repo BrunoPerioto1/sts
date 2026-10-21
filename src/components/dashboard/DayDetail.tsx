@@ -221,7 +221,7 @@ export function DayDetail({ day, days, filters, colors, onChange }: DayDetailPro
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 animate-in fade-in-0 duration-200" />
         <DialogPrimitive.Content
           aria-describedby={undefined}
-          className="fixed bottom-2.5 right-2.5 top-2.5 z-50 flex w-[460px] max-w-[calc(100vw-20px)] flex-col overflow-hidden rounded-[14px] border border-foreground/10 bg-[rgb(var(--rgb-surface))] shadow-[0_24px_64px_rgba(0,0,0,0.6)] animate-in slide-in-from-right-8 fade-in-0 duration-200"
+          className="fixed bottom-2.5 right-2.5 top-2.5 z-50 flex w-[540px] max-w-[calc(100vw-20px)] flex-col overflow-hidden rounded-[14px] border border-foreground/10 bg-[rgb(var(--rgb-surface))] shadow-[0_24px_64px_rgba(0,0,0,0.6)] animate-in slide-in-from-right-8 fade-in-0 duration-200"
         >
           <div className="flex items-center gap-2 px-5 pb-3.5 pt-[18px]">
             <DayNav day={day} days={days} onChange={onChange} />

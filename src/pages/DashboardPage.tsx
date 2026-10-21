@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useDashboardFilters, type DatePreset } from "@/hooks/dashboard/use-dashboard-filters";
 import { useDashboardData } from "@/hooks/dashboard/use-dashboard-data";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatDayMonth, formatInt } from "@/lib/format";
+import { formatDayMonth } from "@/lib/format";
 
 interface DashboardPageContentProps {
   hasNoBets: boolean;
@@ -77,38 +77,35 @@ export function DashboardPage() {
     setSportIds(next.sportIds);
   };
 
-  const rangeLabel =
-    ready && filters.startDate && filters.endDate
-      ? `${formatDayMonth(filters.startDate)} – ${formatDayMonth(filters.endDate)}`
-      : undefined;
-
-  // "Visao geral ... - 21 ago - 3 set - 82 apostas liquidadas": o periodo e o
-  // volume ficam juntos, com contraste maior que o subtitulo padrao.
+  // "Visão geral da sua performance · 22 ago — 21 out": o intervalo exato do
+  // período escolhido, que a pílula só nomeia ("Mês passado").
   const subtitle = [
     "Visão geral da sua performance",
-    rangeLabel,
-    ready && !loading ? `${formatInt(metrics.settledBets)} apostas liquidadas` : null,
+    ready && filters.startDate && filters.endDate
+      ? `${formatDayMonth(filters.startDate)} — ${formatDayMonth(filters.endDate)}`
+      : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
   // Filtros do topo só no desktop: o header do mobile é a própria tela
-  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet. Pílulas,
-  // como no desenho do dashboard: rótulo apagado, valor aceso.
-  const pill = "h-9 flex items-center px-3.5 rounded-full border border-foreground/10 bg-card hover:border-foreground/20 transition-colors";
+  // (mobileFullBleed) e lá os filtros ficam no DashboardFiltersSheet. Pílulas
+  // baixas e discretas: rótulo apagado ("Casas:"), valor aceso.
+  const pill = "h-8 flex items-center px-3 rounded-full border border-foreground/[0.08] bg-[rgb(var(--rgb-panel))] hover:border-foreground/20 transition-colors";
   const headerActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       {!hasNoBets && (
         <>
           <div className={pill}>
-            <HouseMultiSelect houses={houses} selected={filters.houseIds} onChange={setHouseIds} label="Casas" />
+            <HouseMultiSelect className="text-[13px]" houses={houses} selected={filters.houseIds} onChange={setHouseIds} label="Casas:" />
           </div>
           <div className={pill}>
             <HouseMultiSelect
+              className="text-[13px]"
               houses={sports}
               selected={filters.sportIds}
               onChange={setSportIds}
-              label="Esportes"
+              label="Esportes:"
               noun={["esporte", "esportes"]}
               allLabel="Todos"
             />
@@ -122,7 +119,7 @@ export function DashboardPage() {
         to={filters.endDate}
         onSelect={setPreset}
         onCustomRange={setCustomRange}
-        className="rounded-full px-3.5 bg-card"
+        className="h-8 rounded-full px-3 border-foreground/[0.08] bg-[rgb(var(--rgb-panel))]"
       />
     </div>
   );
@@ -131,6 +128,9 @@ export function DashboardPage() {
     <MainLayout
       title="Dashboard"
       subtitle={subtitle}
+      // Largura toda da tela, com 32px de cada lado (a sidebar não fica
+      // longe do conteúdo).
+      wideGutter
       // No mobile a tela é edge-to-edge e o próprio conteúdo já se apresenta
       // ("Resultado" + chip de período), então não há header. Quem aplica isso
       // só abaixo de 640px é o CSS dentro do MainLayout, não este booleano.

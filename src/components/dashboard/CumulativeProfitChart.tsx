@@ -12,11 +12,16 @@ const NEG = "var(--color-danger)";
 
 type Ponto = { date: string; dia: number; acum: number };
 
+const sinal = (v: number) => (v > 0 ? POS : v < 0 ? NEG : undefined);
+
 function Leitura({ ponto }: { ponto: Ponto }) {
   return (
     <ChartTooltipBox
-      label={`${formatDayMonth(ponto.date)} · dia ${formatMoney(ponto.dia, { signed: true })}`}
-      value={`${formatMoney(ponto.acum, { signed: true })} no período`}
+      title={formatDayMonth(ponto.date)}
+      rows={[
+        { label: "Lucro do dia", value: formatMoney(ponto.dia, { signed: true }), color: sinal(ponto.dia) },
+        { label: "Lucro acumulado", value: formatMoney(ponto.acum, { signed: true }), color: sinal(ponto.acum) },
+      ]}
     />
   );
 }
@@ -66,12 +71,13 @@ export function CumulativeProfitChart({
           >
             <defs>
               <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={linha} stopOpacity={0.28} />
+                {/* Verde bem leve: a área só ancora a linha, não compete com ela. */}
+                <stop offset="0%" stopColor={linha} stopOpacity={0.14} />
                 <stop offset="100%" stopColor={linha} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid {...GRID_PROPS} />
-            <YAxis width={40} tickCount={5} axisLine={false} tickLine={false} tick={AXIS_TICK} tickFormatter={compactAxis} />
+            <YAxis width={40} tickCount={4} axisLine={false} tickLine={false} tick={AXIS_TICK} tickFormatter={compactAxis} />
             <XAxis
               dataKey="date"
               ticks={ticks}
@@ -97,7 +103,7 @@ export function CumulativeProfitChart({
               type="monotone"
               dataKey="acum"
               stroke={linha}
-              strokeWidth={2.5}
+              strokeWidth={2.25}
               strokeLinecap="round"
               fill={`url(#${fillId})`}
               baseValue={0}

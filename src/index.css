@@ -25,8 +25,8 @@
     /* Card do dashboard: um degrau só acima do fundo, sem sombra (o desenho
        do Claude Design). O surface do resto do app é mais claro. */
     --rgb-panel: 15 15 17;
-    /* Esportes do card "Por esporte" (azul, laranja, violeta, magenta). Ordem
-       validada pra daltonismo nos dois temas; não reaproveitar como status. */
+    /* Esportes do card "Lucro por esporte" (azul, laranja, violeta, magenta).
+       Ordem validada pra daltonismo nos dois temas; não reaproveitar como status. */
     --sport-1: #3987e5;
     --sport-2: #d95926;
     --sport-3: #9085e9;

@@ -22,14 +22,14 @@ export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; h
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={LINE} stopOpacity={0.26} />
+              <stop offset="0%" stopColor={LINE} stopOpacity={0.14} />
               <stop offset="100%" stopColor={LINE} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid {...GRID_PROPS} />
           <YAxis
             width={44}
-            tickCount={5}
+            tickCount={4}
             axisLine={false}
             tickLine={false}
             domain={["dataMin", "dataMax"]}
@@ -51,8 +51,8 @@ export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; h
             content={({ active, payload }) =>
               active && payload?.length ? (
                 <ChartTooltipBox
-                  label={formatDayMonth((payload[0].payload as BankrollPoint).date)}
-                  value={formatMoney((payload[0].payload as BankrollPoint).balance)}
+                  title={formatDayMonth((payload[0].payload as BankrollPoint).date)}
+                  rows={[{ label: "Banca", value: formatMoney((payload[0].payload as BankrollPoint).balance) }]}
                 />
               ) : null
             }
@@ -61,7 +61,7 @@ export function BankrollChart({ data, height = 260 }: { data: BankrollPoint[]; h
             type="monotone"
             dataKey="balance"
             stroke={LINE}
-            strokeWidth={2.5}
+            strokeWidth={2.25}
             strokeLinecap="round"
             fill={`url(#${fillId})`}
             baseValue="dataMin"

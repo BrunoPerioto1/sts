@@ -20,9 +20,11 @@ interface DashboardDesktopViewProps {
 }
 
 /**
- * Três faixas: os KPIs escolhidos (2 a 4) no topo; o gráfico com abas ao lado
- * da taxa de acerto contra o ponto de empate; o calendário do mês (clicar num
- * dia abre o detalhe dele) ao lado da divisão por esporte.
+ * Três faixas, na ordem das perguntas da tela: os KPIs (quanto ganhei, ROI,
+ * banca, volume); o lucro acumulado na largura toda, que é o elemento
+ * principal; e embaixo o calendário (clicar num dia abre o detalhe) ao lado
+ * de dois cards pequenos, taxa de acerto e lucro por esporte. O calendário tem
+ * a largura da própria grade (células de 80×44, as do desenho).
  */
 export function DashboardDesktopView({
   filters,
@@ -39,23 +41,22 @@ export function DashboardDesktopView({
     <div className="space-y-3">
       <DashboardKpiCards className="animate-rise stagger" input={input} preferences={preferences} />
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <DashboardMainChart
-          className="animate-rise stagger"
-          style={stagger(1)}
-          dailyData={dailyData}
-          bankroll={bankrollPoints}
-          filtered={filters.houseIds.length > 0 || filters.sportIds.length > 0}
-          preset={preset}
-          onPresetChange={onPresetChange}
-        />
-        <HitRateCard className="animate-rise stagger" style={stagger(2)} metrics={metrics} colors={colors} />
-      </div>
+      <DashboardMainChart
+        className="animate-rise stagger"
+        style={stagger(1)}
+        dailyData={dailyData}
+        bankroll={bankrollPoints}
+        filtered={filters.houseIds.length > 0 || filters.sportIds.length > 0}
+        preset={preset}
+        onPresetChange={onPresetChange}
+      />
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      {/* Tela larga (2xl): calendário + dois cards pequenos na mesma linha.
+          No xl não cabem os três: esportes desce pra linha de baixo. */}
+      <div className="grid gap-3 xl:grid-cols-[auto_minmax(0,1fr)] 2xl:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)]">
         <ResultsCalendar
           className="animate-rise stagger"
-          style={stagger(3)}
+          style={stagger(2)}
           dailyData={dailyData}
           startDate={filters.startDate}
           endDate={filters.endDate}
@@ -63,7 +64,10 @@ export function DashboardDesktopView({
           selected={day}
           onSelect={setDay}
         />
-        <SportsCard className="animate-rise stagger" style={stagger(4)} filters={filters} colors={colors} />
+        <HitRateCard className="animate-rise stagger" style={stagger(3)} metrics={metrics} />
+        {/* self-start: com menos esportes que a altura do vizinho, o card fica
+            baixo em vez de esticar e parecer vazio. */}
+        <SportsCard className="animate-rise stagger self-start xl:col-span-2 2xl:col-span-1" style={stagger(4)} filters={filters} colors={colors} />
       </div>
 
       <DayDetail

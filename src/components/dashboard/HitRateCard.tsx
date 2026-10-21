@@ -1,5 +1,4 @@
 import type { DashboardMetrics } from "@/api/routes/get-dashboard-metrics";
-import { performanceColor, type DashboardPreferences } from "@/lib/dashboard-preferences";
 import { formatInt, formatOdd, formatPercent } from "@/lib/format";
 import { DashboardCard } from "./DashboardCard";
 
@@ -9,14 +8,14 @@ const CY = 130;
 const ARC = "M 30 130 A 90 90 0 0 1 210 130";
 const TRACK = "color-mix(in srgb, var(--color-text) 10%, transparent)";
 
-function Row({ label, value, color, legend, title }: { label: string; value: string; color?: string; legend?: boolean; title?: string }) {
+function Row({ label, value, legend, title }: { label: string; value: string; legend?: boolean; title?: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-t border-dashed border-foreground/10 py-2.5 text-[13px]" title={title}>
       <span className="flex items-center gap-2 text-zinc-400">
         {legend && <span className="h-0.5 w-2.5 rounded-full bg-foreground" aria-hidden="true" />}
         {label}
       </span>
-      <span className="font-medium tabular-nums text-zinc-200" style={{ color }}>{value}</span>
+      <span className="font-medium tabular-nums text-zinc-200">{value}</span>
     </div>
   );
 }
@@ -28,12 +27,10 @@ function Row({ label, value, color, legend, title }: { label: string; value: str
  */
 export function HitRateCard({
   metrics,
-  colors,
   className,
   style,
 }: {
   metrics: DashboardMetrics;
-  colors: DashboardPreferences["performanceColors"];
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -43,21 +40,21 @@ export function HitRateCard({
   const odd = Number(metrics.averageOdd);
   // Odd média é simples (não ponderada pelo stake): boa aproximação do empate.
   const breakEven = odd > 1 ? 1 / odd : null;
-  const edge = breakEven != null ? hit - breakEven : null;
   const angle = breakEven != null ? Math.PI * (1 - breakEven) : 0;
   const tick = (r: number) => ({ x: CX + r * Math.cos(angle), y: CY - r * Math.sin(angle) });
-  const edgePoints = edge != null ? `${edge >= 0 ? "+" : "−"}${(Math.abs(edge) * 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.` : "—";
 
   return (
     <DashboardCard title="Taxa de acerto" className={className} style={style}>
       {decided === 0 ? (
-        <p className="flex flex-1 items-center text-[13px] text-zinc-400">Nenhuma aposta ganha ou perdida no período.</p>
+        <p className="flex flex-1 items-center justify-center py-8 text-center text-[13px] text-zinc-400">
+          Nenhuma aposta ganha ou perdida no período.
+        </p>
       ) : (
         <>
-          <div className="flex flex-1 items-center">
+          <div className="flex flex-1 items-center justify-center">
             <svg
               viewBox="0 0 240 150"
-              className="mx-auto block w-full max-w-[280px]"
+              className="block w-full max-w-[300px]"
               role="img"
               aria-label={`Acerto de ${formatPercent(hit)}${breakEven != null ? `; ponto de empate em ${formatPercent(breakEven)}` : ""}`}
             >
@@ -76,15 +73,15 @@ export function HitRateCard({
               {breakEven != null && (
                 <line x1={tick(78).x} y1={tick(78).y} x2={tick(102).x} y2={tick(102).y} stroke="var(--color-text)" strokeWidth={2.5} strokeLinecap="round" />
               )}
-              <text x={CX} y={108} fill="var(--color-text)" fontSize={30} fontWeight={600} textAnchor="middle" className="tabular-nums">
+              <text x={CX} y={112} fill="var(--color-text)" fontSize={30} fontWeight={600} textAnchor="middle" className="tabular-nums">
                 {formatPercent(hit)}
               </text>
-              <text x={CX} y={131} fill="var(--color-text)" opacity={0.5} fontSize={12} textAnchor="middle">
+              <text x={CX} y={134} fill="var(--color-text)" opacity={0.5} fontSize={12} textAnchor="middle">
                 {formatInt(won)} de {formatInt(decided)} acertos
               </text>
             </svg>
           </div>
-          <div className="pt-4">
+          <div className="pt-3">
             <Row
               label="Ponto de empate"
               legend
@@ -92,11 +89,6 @@ export function HitRateCard({
               title="Acerto mínimo pra não perder dinheiro na odd média: 1 ÷ odd média"
             />
             <Row label="Odd média" value={formatOdd(odd, { decimals: 2 })} />
-            <Row
-              label={edge != null && edge < 0 ? "Abaixo do empate" : "Acima do empate"}
-              value={edgePoints}
-              color={edge != null ? performanceColor(edge, colors) : undefined}
-            />
           </div>
         </>
       )}

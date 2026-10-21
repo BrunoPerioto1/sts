@@ -33,7 +33,7 @@ interface DashboardMobileViewProps {
   onApplyFilters: (next: DashboardFiltersDraft) => void;
 }
 
-/** A mesma ordem do desktop, empilhada: KPIs 2×2, gráfico, acerto, calendário, por esporte. */
+/** A mesma ordem do desktop, empilhada: KPIs 2×2, gráfico, acerto, calendário, esportes. */
 export function DashboardMobileView({
   filters,
   preset,
@@ -94,7 +94,7 @@ export function DashboardMobileView({
           onPresetChange={onPresetChange}
         />
 
-        <HitRateCard className="animate-rise stagger" style={stagger(3)} metrics={metrics} colors={colors} />
+        <HitRateCard className="animate-rise stagger" style={stagger(3)} metrics={metrics} />
 
         <ResultsCalendar
           compact

@@ -45,22 +45,23 @@ export function DashboardKpiCards({
             className={cn(
               "flex min-w-0 flex-col",
               DASHBOARD_PANEL,
-              // Menos fundo embaixo do número que em cima do rótulo: o número
-              // fecha o card, sem a sobra de ar que o fazia parecer solto.
-              compact ? "gap-2 px-4 pb-3 pt-3.5" : "gap-2.5 px-[22px] pb-4 pt-[18px]",
+              // Baixo e justo: o número fecha o card, sem sobra de ar embaixo.
+              compact ? "gap-2 px-4 pb-3 pt-3.5" : "gap-2 px-5 py-3.5",
               compact && kpiColumnSpan(index, visible.length) === 2 && "col-span-2",
             )}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className={cn("truncate text-zinc-400", compact ? "text-[13px]" : "text-sm")}>
+              <span className="truncate text-[13px] text-zinc-400">
                 {compact ? meta.shortLabel ?? meta.label : meta.label}
               </span>
-              <Icon size={compact ? 16 : 18} className="shrink-0 text-zinc-600" aria-hidden="true" />
+              <Icon size={16} className="shrink-0 text-zinc-600" aria-hidden="true" />
             </div>
             <p
               className={cn(
                 "whitespace-nowrap font-semibold leading-none tracking-[-0.02em] tabular-nums",
-                compact ? "text-[22px] max-[359px]:text-lg" : "text-[28px]",
+                // Lucro é a resposta da tela ("quanto eu ganhei?"): um degrau
+                // acima dos outros no desktop. O celular fica como estava.
+                compact ? "text-[22px] max-[359px]:text-lg" : kpi.id === "profit" ? "text-[30px]" : "text-[26px]",
               )}
               style={{ color }}
             >

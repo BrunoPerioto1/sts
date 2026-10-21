@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { eachDayOfInterval, eachMonthOfInterval, endOfMonth, format, getDay, parseISO, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
@@ -19,9 +19,10 @@ function shortMoney(value: number) {
   return `${value > 0 ? "+" : "−"}${text}`;
 }
 
-// Mais forte quanto maior o resultado do dia perto do maior do mês.
-function tint(token: string, strength: number) {
-  const pct = Math.round(12 + 33 * strength);
+// Mais forte quanto maior o resultado do dia perto do maior do mês. O vermelho
+// fica num teto bem mais baixo: dia ruim é pra ser visto, não pra gritar.
+function tint(token: string, strength: number, positive: boolean) {
+  const pct = Math.round(positive ? 12 + 30 * strength : 10 + 12 * strength);
   return {
     background: `color-mix(in srgb, ${token} ${pct}%, transparent)`,
     borderColor: `color-mix(in srgb, ${token} ${Math.min(100, pct + 15)}%, transparent)`,
@@ -41,6 +42,7 @@ export function ResultsCalendar({
   selected,
   onSelect,
   compact = false,
+  fluid = false,
   className,
   style,
 }: {
@@ -53,6 +55,8 @@ export function ResultsCalendar({
   onSelect?: (day: string) => void;
   /** Celular: célula mais baixa e texto menor. */
   compact?: boolean;
+  /** Células dividem a largura do card em qualquer tela (vitrine da landing, num card estreito). */
+  fluid?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -63,8 +67,13 @@ export function ResultsCalendar({
     () => eachMonthOfInterval({ start: parseISO(startDate), end: parseISO(lastDay) }),
     [startDate, lastDay],
   );
-  const [index, setIndex] = useState(months.length - 1);
-  useEffect(() => setIndex(months.length - 1), [months.length, startDate, endDate]);
+  // O mês escolhido nas setas vale só pro período em que foi escolhido: trocou
+  // o filtro, volta pro mês mais recente dele (em "Tudo", o mês atual) — sem
+  // um quadro intermediário no mês antigo.
+  const periodKey = `${startDate}|${endDate}`;
+  const [picked, setPicked] = useState<{ key: string; index: number } | null>(null);
+  const index = picked?.key === periodKey ? picked.index : months.length - 1;
+  const setIndex = (next: (i: number) => number) => setPicked({ key: periodKey, index: next(index) });
   const month = months[Math.min(Math.max(index, 0), months.length - 1)];
 
   const byDay = useMemo(() => new Map(dailyData.map((d) => [d.date, d])), [dailyData]);
@@ -109,6 +118,12 @@ export function ResultsCalendar({
               <button type="button" aria-label="Próximo mês" disabled={index >= months.length - 1} onClick={() => setIndex((i) => Math.min(months.length - 1, i + 1))} className={navButton}>
                 <CaretRight size={13} />
               </button>
+              {/* Deixa claro que é um mês dentro do período do filtro, não o período todo. */}
+              {!compact && (
+                <span className="ml-1 text-xs text-zinc-600 tabular-nums">
+                  mês {index + 1} de {months.length} do período
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -129,7 +144,9 @@ export function ResultsCalendar({
         ))
       }
     >
-      <div className={cn("grid grid-cols-7", compact ? "gap-1" : "gap-[5px]")}>
+      {/* A partir do xl a célula tem largura fixa (80px, a do desenho) e o
+          card encolhe até a grade; esticada na largura, virava retângulo comprido. */}
+      <div className={cn("grid grid-cols-7", compact ? "gap-1" : "gap-[5px]", !compact && !fluid && "xl:grid-cols-[repeat(7,80px)]")}>
         {WEEKDAYS.map((w) => (
           <div key={w} className={cn("pb-0.5 text-zinc-600", compact ? "text-center text-[10px]" : "px-0.5 text-xs")}>
             {w}
@@ -152,11 +169,10 @@ export function ResultsCalendar({
             <Cell
               key={day}
               {...(clickable ? { type: "button" as const, onClick: () => onSelect!(day) } : {})}
-              title={label}
               aria-label={label}
               aria-pressed={clickable ? selected === day : undefined}
               className={cn(
-                "flex min-w-0 flex-col justify-between rounded-lg border text-left",
+                "group relative flex min-w-0 flex-col justify-between rounded-lg border text-left",
                 compact ? "h-[38px] rounded-md px-[5px] py-1" : "h-11 px-2 py-[5px]",
                 !inPeriod
                   ? "border-transparent opacity-30"
@@ -168,8 +184,24 @@ export function ResultsCalendar({
                 clickable && "cursor-pointer transition-[filter] hover:brightness-125",
                 selected === day && "ring-2 ring-accent ring-offset-0",
               )}
-              style={point && token ? tint(token, Math.abs(value) / max) : undefined}
+              style={point && token ? tint(token, Math.abs(value) / max, value > 0) : undefined}
             >
+              {/* Dia, resultado e quantas apostas: o que não cabe na célula
+                  aparece no hover. No celular o toque já abre o detalhe. */}
+              {point && !compact && (
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-foreground/10 bg-[rgb(var(--rgb-surface-2))] px-3 py-2 text-left shadow-[0_8px_24px_rgba(0,0,0,0.35)] group-hover:block"
+                >
+                  <span className="block text-xs text-zinc-400">{format(date, "d 'de' MMMM", { locale: ptBR })}</span>
+                  <span className="block text-[13px] font-semibold tabular-nums" style={{ color: token ?? undefined }}>
+                    {formatMoney(value, { signed: true })}
+                  </span>
+                  <span className="block text-xs text-zinc-500">
+                    {formatInt(bets)} aposta{bets === 1 ? "" : "s"}
+                  </span>
+                </span>
+              )}
               <span
                 className={cn(
                   "tabular-nums leading-none",

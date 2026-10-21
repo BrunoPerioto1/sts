@@ -17,6 +17,9 @@ interface MainLayoutProps {
   // Mobile sem header e sem padding no corpo — a tela desenha de ponta a ponta
   // (Dashboard, onde o próprio conteúdo já é o "card" da tela toda).
   mobileFullBleed?: boolean;
+  // Margem lateral de 32px no desktop (em vez de 24), no header e no corpo,
+  // pra telas largas de cards (Dashboard).
+  wideGutter?: boolean;
 }
 
 /**
@@ -40,6 +43,7 @@ export function MainLayout({
   subtitleClassName = "text-sm text-zinc-500 truncate",
   mobileHeader,
   mobileFullBleed = false,
+  wideGutter = false,
 }: MainLayoutProps) {
   const { setBottomNavHidden } = useShell();
 
@@ -67,8 +71,11 @@ export function MainLayout({
         <div
           // Altura fixa: com e sem subtitulo o header ocupa o mesmo espaco.
           // Sem divisoria embaixo em nenhuma tela — o respiro separa.
-          className={cn("items-center justify-between gap-4 sm:min-h-[84px]", mobileHeader ? "hidden sm:flex" : "flex")}
-          style={{ padding: "16px 24px" }}
+          className={cn(
+            "items-center justify-between gap-4 px-6 py-4 sm:min-h-[84px]",
+            mobileHeader ? "hidden sm:flex" : "flex",
+            wideGutter && "md:px-8",
+          )}
         >
           <div className={titleWrapperClassName}>
             <h1 className={titleClassName}>{title}</h1>
@@ -81,7 +88,8 @@ export function MainLayout({
       <div
         className={cn(
           "min-w-0",
-          mobileFullBleed ? "pb-24 sm:p-4 sm:pb-24 md:p-6 md:pb-6" : "p-4 md:p-6 pb-24 md:pb-6"
+          mobileFullBleed ? "pb-24 sm:p-4 sm:pb-24 md:p-6 md:pb-6" : "p-4 md:p-6 pb-24 md:pb-6",
+          wideGutter && "md:px-8"
         )}
       >
         {children}
