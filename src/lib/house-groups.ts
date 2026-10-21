@@ -31,20 +31,22 @@ const LABELS: Record<HouseGroupId, { label: string; hint: string }> = {
   unused: { label: "Sem uso", hint: "nunca apostou e sem saldo" },
 };
 
+/** Em qual dos três blocos a casa cai (também conta o filtro "Paradas"). */
+export function houseGroupId(house: HouseLike, staleDays: number, now: number = Date.now()): HouseGroupId {
+  // Disponível, não o real: stake de aposta aberta não é saldo pra sacar.
+  const available = houseMoney(house).available;
+  const activity = houseActivity(house.lastBetAt, available, staleDays, now);
+  if (activity.kind === "never") return available > 0 ? "inUse" : "unused";
+  return activity.kind === "active" ? "inUse" : "stopped";
+}
+
 /**
  * Três blocos pra lista de casas. A ordem dentro de cada um é a da entrada
  * (quem chama já ordenou pelo critério escolhido).
  */
 export function groupHouses<T extends HouseLike>(houses: T[], staleDays: number, now: number = Date.now()) {
   const byId: Record<HouseGroupId, T[]> = { inUse: [], stopped: [], unused: [] };
-  for (const house of houses) {
-    // Disponível, não o real: stake de aposta aberta não é saldo pra sacar.
-    const available = houseMoney(house).available;
-    const activity = houseActivity(house.lastBetAt, available, staleDays, now);
-    if (activity.kind === "never") byId[available > 0 ? "inUse" : "unused"].push(house);
-    else if (activity.kind === "active") byId.inUse.push(house);
-    else byId.stopped.push(house);
-  }
+  for (const house of houses) byId[houseGroupId(house, staleDays, now)].push(house);
   return (Object.keys(byId) as HouseGroupId[])
     .filter((id) => byId[id].length > 0)
     .map((id) => ({ id, ...LABELS[id], houses: byId[id] }));

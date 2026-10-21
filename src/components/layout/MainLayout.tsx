@@ -20,6 +20,9 @@ interface MainLayoutProps {
   // Margem lateral de 32px no desktop (em vez de 24), no header e no corpo,
   // pra telas largas de cards (Dashboard).
   wideGutter?: boolean;
+  // Desktop: contagem ao lado do título, na linha de base ("Apostas 2.280
+  // registros"), como nos headers v2 do Claude Design.
+  inlineSubtitle?: boolean;
 }
 
 /**
@@ -38,13 +41,18 @@ export function MainLayout({
   hideBottomNav = false,
   // Subtítulo embaixo do título, não ao lado: a contagem mora no subtítulo
   // (padrão do PageHeader no celular) e não disputa linha com o título.
-  titleWrapperClassName = "flex flex-col gap-0.5 min-w-0",
+  titleWrapperClassName,
   titleClassName = "text-2xl font-semibold tracking-tight",
-  subtitleClassName = "text-sm text-zinc-500 truncate",
+  subtitleClassName,
   mobileHeader,
   mobileFullBleed = false,
   wideGutter = false,
+  inlineSubtitle = false,
 }: MainLayoutProps) {
+  const titleWrapperClass =
+    titleWrapperClassName ?? (inlineSubtitle ? "flex items-baseline gap-3 min-w-0" : "flex flex-col gap-0.5 min-w-0");
+  const subtitleClass =
+    subtitleClassName ?? (inlineSubtitle ? "text-[13px] text-zinc-500 tabular-nums truncate" : "text-sm text-zinc-500 truncate");
   const { setBottomNavHidden } = useShell();
 
   // useLayoutEffect, nao useEffect: roda antes da pintura, entao a nav nunca
@@ -77,9 +85,9 @@ export function MainLayout({
             wideGutter && "md:px-8",
           )}
         >
-          <div className={titleWrapperClassName}>
+          <div className={titleWrapperClass}>
             <h1 className={titleClassName}>{title}</h1>
-            {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
+            {subtitle && <span className={subtitleClass}>{subtitle}</span>}
           </div>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>

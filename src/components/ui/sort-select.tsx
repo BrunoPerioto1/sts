@@ -25,12 +25,15 @@ export function SortSelect<T extends string>({
   onChange,
   disabled,
   className,
+  label,
 }: {
   options: readonly SortOption<T>[];
   value: T;
   onChange: (value: T) => void;
   disabled?: boolean;
   className?: string;
+  /** Rótulo apagado antes do valor ("Ordenar Saldo"), pra versão em caixa. */
+  label?: string;
 }) {
   const current = options.find((o) => o.value === value) ?? options[0];
   const isMobile = useIsMobile();
@@ -42,7 +45,14 @@ export function SortSelect<T extends string>({
   const triggerContent = (
     <>
       <ArrowsDownUp size={14} />
-      {current.label}
+      {label ? (
+        <>
+          <span className="text-zinc-500">{label}</span>
+          <span className="text-zinc-300">{current.label}</span>
+        </>
+      ) : (
+        current.label
+      )}
       <CaretDown size={11} />
     </>
   );

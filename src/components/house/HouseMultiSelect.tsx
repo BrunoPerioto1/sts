@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CaretDown, MagnifyingGlass } from "@phosphor-icons/react";
+import { CaretDown, MagnifyingGlass, type Icon } from "@phosphor-icons/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,10 @@ interface HouseMultiSelectProps {
   // Singular/plural do resumo e da busca. Reaproveitado pelo filtro de esporte.
   noun?: [string, string];
   allLabel?: string;
+  /** Ícone antes do rótulo (barra de Casas). */
+  icon?: Icon;
+  /** `end` quando o gatilho fica na ponta direita da barra. */
+  align?: "start" | "end";
 }
 
 // Multi-seleção de casas das barras de filtro do desktop (Apostas, Tips,
@@ -30,6 +34,8 @@ export function HouseMultiSelect({
   label = "Casa",
   noun = ["casa", "casas"],
   allLabel = "Todas",
+  icon: IconComponent,
+  align = "start",
 }: HouseMultiSelectProps) {
   const [search, setSearch] = useState("");
 
@@ -62,6 +68,7 @@ export function HouseMultiSelect({
             className
           )}
         >
+          {IconComponent && <IconComponent size={15} className="text-zinc-400 shrink-0" />}
           <span className="text-zinc-500 shrink-0">{label}</span>
           <span className={cn("truncate", summary ? "text-foreground" : "text-zinc-400")}>
             {summary ?? allLabel}
@@ -70,7 +77,7 @@ export function HouseMultiSelect({
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-[260px] p-2">
+      <PopoverContent align={align} className="w-[260px] p-2">
         <div className="relative mb-2">
           <MagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
           <Input

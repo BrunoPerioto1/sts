@@ -15,13 +15,17 @@ export function CasasPage() {
   const withBalance = houses.filter((h) => houseMoney(h).available > 0).length;
   const subtitle = `${formatInt(houses.length)} casas · ${formatInt(withBalance)} com saldo`;
 
+  // O desktop monta o próprio cabeçalho: CSV e Saque em lote ficam nele e
+  // dependem do filtro da tela.
+  if (!isMobile) return <CasasApostaView />;
+
   return (
     <MainLayout
       title="Casas de apostas"
       subtitle={subtitle}
       mobileHeader={<PageHeader title="Casas" subtitle={subtitle} />}
     >
-      {isMobile ? <CasasMobileView /> : <CasasApostaView />}
+      <CasasMobileView />
     </MainLayout>
   );
 }
