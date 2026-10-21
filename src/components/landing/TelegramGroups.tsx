@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { ChartLineUp, Check, Cursor } from "@phosphor-icons/react";
+import { Check, Cursor } from "@phosphor-icons/react";
+import { LogoIcon } from "@/components/brand/LogoIcon";
 import { houseColor, houseInitials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { at } from "./motion";
@@ -188,9 +189,7 @@ export function GroupsDemo() {
         <Pane step={2} title="No seu privado">
           <div className="ws-in rounded-xl bg-[rgb(var(--rgb-surface-2))] p-3.5" style={at(T.bot)}>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-accent bg-accent/[0.12]">
-                <ChartLineUp size={15} className="text-accent-text" />
-              </span>
+              <LogoIcon shape="circle" className="h-8 w-8" />
               <span className="text-[13px] font-semibold">Trackton</span>
               <span className="rounded bg-foreground/[0.08] px-1.5 text-[11px] text-zinc-400">bot</span>
             </div>

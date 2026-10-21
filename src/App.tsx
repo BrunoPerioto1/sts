@@ -4,8 +4,10 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
-import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+// Lazy: o topo do login usa o <Logo /> da landing, que traz a fonte do wordmark.
+// Importado direto, a fonte entraria no CSS do app inteiro.
+const AuthPage = lazy(() => import("./pages/AuthPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const ApostasPage = lazy(() => import("./pages/ApostasPage"));
 const CasasPage = lazy(() => import("./pages/CasasPage").then((m) => ({ default: m.CasasPage })));
@@ -25,6 +27,8 @@ const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminScannerPage = lazy(() => import("./pages/AdminScannerPage"));
 const PlanoPage = lazy(() => import("./pages/PlanoPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+// Lazy como a landing: as duas trazem o <Logo />, e com ele a fonte dos títulos.
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { clearToken, getToken } from '@/lib/auth-session';
@@ -34,6 +38,7 @@ import type { ProFeature } from '@/api/routes/get-me';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProUpsell } from '@/components/plano/ProUpsell';
 import { ADMIN_ROLE_ID } from '@/lib/admin-health';
+import type { LegalDoc } from './pages/LegalPage';
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
 // so quando ele registra/edita uma aposta. Sem isso o padrao do react-query e
@@ -66,7 +71,16 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingRoute />} />
-        <Route path="/login" element={<AuthPage />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+              <AuthPage />
+            </Suspense>
+          }
+        />
+        <Route path="/termos" element={<LegalRoute doc="termos" />} />
+        <Route path="/privacidade" element={<LegalRoute doc="privacidade" />} />
         {/* Layout route sem path: a casca (sidebar/bottom nav) monta uma vez
             e as telas trocam dentro do <Outlet />. Antes cada pagina montava a
             propria casca, entao ela remontava a cada navegacao. */}
@@ -121,6 +135,15 @@ function LandingRoute() {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-background" />}>
       <LandingPage />
+    </Suspense>
+  );
+}
+
+/** Termos e privacidade: abertas pra todo mundo, logado ou não. */
+function LegalRoute({ doc }: { doc: LegalDoc }) {
+  return (
+    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+      <LegalPage doc={doc} />
     </Suspense>
   );
 }

@@ -13,6 +13,10 @@ import { useInView } from "./use-in-view";
 
 const at = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
+// A altura vem da tela do app, não de uma proporção: empilhado, a proporção
+// deixava um vão de degradê em cima e embaixo, e entre o md e o lg cortava a
+// tela. Lado a lado, a subgrade do StepCards iguala as três. A proporção fica
+// só do xl pra cima, onde ela é maior que o conteúdo.
 function Art({ variant, children }: { variant: 1 | 2 | 3; children: ReactNode }) {
   const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: "0px 0px -20% 0px", once: true });
   return (
@@ -20,7 +24,7 @@ function Art({ variant, children }: { variant: 1 | 2 | 3; children: ReactNode })
       ref={ref}
       data-paused={!inView || undefined}
       className={cn(
-        "step-art relative flex aspect-[37/40] items-center overflow-hidden rounded-[22px] border border-foreground/[0.07] p-5 transition-transform duration-300 motion-safe:group-hover:-translate-y-1 sm:p-6",
+        "step-art relative flex items-center overflow-hidden rounded-[22px] border border-foreground/[0.07] p-5 transition-transform duration-300 motion-safe:group-hover:-translate-y-1 sm:p-6 xl:aspect-[37/40]",
         `step-bg-${variant}`,
       )}
     >
@@ -206,17 +210,21 @@ const STEPS: { icon: Icon; label: string; title: string; text: string; art: Comp
 
 export function StepCards() {
   return (
-    <div className="grid gap-10 md:grid-cols-3 md:gap-6">
+    // Lado a lado, cada card é uma subgrade de duas linhas (arte, texto): as artes
+    // ficam da altura da mais alta e os "Passo N" na mesma linha.
+    <div className="grid gap-10 md:grid-cols-3 md:gap-x-6 md:gap-y-0">
       {STEPS.map(({ icon: IconComponent, label, title, text, art: ArtComponent }, i) => (
-        <Reveal key={title} delay={i * 120}>
-          <article className="group">
+        <Reveal key={title} delay={i * 60} className="md:row-span-2 md:grid md:grid-rows-subgrid">
+          <article className="group md:row-span-2 md:grid md:grid-rows-subgrid">
             <ArtComponent />
-            <p className="mt-5 flex items-center gap-2 text-[13px] text-zinc-400">
-              <IconComponent size={15} className="text-accent-text" />
-              {label}
-            </p>
-            <h3 className="mt-2 text-[18px] font-semibold tracking-tight">{title}</h3>
-            <p className="mt-2 max-w-[40ch] text-[15px] leading-relaxed text-zinc-400">{text}</p>
+            <div>
+              <p className="mt-5 flex items-center gap-2 text-[13px] text-zinc-400">
+                <IconComponent size={15} className="text-accent-text" />
+                {label}
+              </p>
+              <h3 className="mt-2 text-[18px] font-semibold tracking-tight">{title}</h3>
+              <p className="mt-2 max-w-[40ch] text-[15px] leading-relaxed text-zinc-400">{text}</p>
+            </div>
           </article>
         </Reveal>
       ))}

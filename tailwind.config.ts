@@ -28,6 +28,11 @@ export default {
                 border: 'var(--color-divider)',
                 input: 'var(--color-divider)',
                 ring: 'var(--color-accent)',
+                // Cores da marca (ver index.css). Não mudam com tema nem com
+                // Preferências: é o que a logo e as peças de divulgação usam.
+                brand: Object.fromEntries(
+                    ['primary', 'background', 'success', 'danger', 'muted'].map((n) => [n, `rgb(var(--brand-${n}) / <alpha-value>)`])
+                ),
                 // Canais RGB (ver index.css): e o que faz `bg-foreground/[0.07]`
                 // gerar CSS. Com 'var(--color-text)' a opacidade era ignorada.
                 background: 'rgb(var(--rgb-bg) / <alpha-value>)',
@@ -117,6 +122,9 @@ export default {
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
+                // Títulos da landing e wordmark. A fonte só baixa onde é usada
+                // (src/components/brand/display-font.css).
+                display: ['Archivo', 'Inter', 'system-ui', 'sans-serif'],
             },
             borderRadius: {
                 lg: 'var(--radius-lg)',

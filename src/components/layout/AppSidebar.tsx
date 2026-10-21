@@ -1,6 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
-  ChartLineUp,
   SidebarSimple,
   SquaresFour,
   Receipt,
@@ -17,6 +16,7 @@ import {
   CaretUpDown,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
+import { LogoIcon } from "@/components/brand/LogoIcon";
 import { useMe } from "@/hooks/queries/use-me";
 import { useSettlementQueue } from "@/hooks/apostas/use-settlement";
 import { useTipCounts } from "@/hooks/queries/use-tips";
@@ -158,11 +158,12 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         zIndex: isInDrawer ? "auto" : 50,
       }}
     >
-      <div className={cn("flex items-center mb-7 px-1.5", collapsed ? "justify-center" : "justify-between")}>
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg border border-accent bg-accent/[0.12] flex items-center justify-center shrink-0">
-            <ChartLineUp size={18} className="text-accent-text" />
-          </div>
+      {/* Aberta, ícone de 28px (32 pesava, 22 sumia) e o nome começando onde
+          começam os rótulos do menu (43px da borda do menu: 6 + 28 + 9).
+          Recolhida, o ícone fica sozinho e com 32px. */}
+      <div className={cn("flex min-h-8 items-center mb-7 px-1.5", collapsed ? "justify-center" : "justify-between")}>
+        <div className={cn("flex items-center overflow-hidden", !collapsed && "gap-[9px]")}>
+          <LogoIcon className={collapsed ? "w-8 h-8" : "w-7 h-7"} />
           {!collapsed && (
             <span className="text-[15px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
               Trackton

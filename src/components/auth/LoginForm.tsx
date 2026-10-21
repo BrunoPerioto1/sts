@@ -16,7 +16,7 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-[18px] lg:gap-4">
-      <AuthHeading title="Entrar" sub="Bem-vindo de volta." />
+      <AuthHeading title="Entrar" sub="Bem-vindo de volta!" />
 
       <AuthField
         id="email"

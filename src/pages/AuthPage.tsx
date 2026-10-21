@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChartLineUp } from "@phosphor-icons/react";
+import { Logo } from "@/components/brand/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
@@ -25,12 +25,10 @@ const AuthPage = () => {
         <div className="absolute inset-0 bg-[radial-gradient(520px_circle_at_50%_40%,rgb(var(--rgb-accent)/0.14),transparent_70%)]" />
       </div>
       <div className="flex flex-col lg:w-[400px] lg:rounded-[14px] lg:border lg:border-foreground/10 lg:bg-card lg:shadow-card lg:px-9 lg:pt-9 lg:pb-8">
-        {/* A marca volta pra landing. */}
-        <Link to="/" className="flex items-end gap-2.5 h-[88px] self-start rounded-md lg:h-auto lg:items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="w-8 h-8 lg:w-[30px] lg:h-[30px] rounded-[8px] bg-accent text-white flex items-center justify-center">
-            <ChartLineUp size={16} weight="bold" />
-          </span>
-          <span className="text-[15px] lg:text-[14.5px] font-semibold tracking-[-0.01em] pb-1.5 lg:pb-0">Trackton</span>
+        {/* A marca volta pra landing. Grande e no estilo do cabeçalho da landing:
+            é a identidade da tela, não um detalhe de navegação. */}
+        <Link to="/" className="flex items-end h-[88px] self-start rounded-md lg:h-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Logo size="lg" />
         </Link>
 
         {view === "login" ? (

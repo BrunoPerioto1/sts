@@ -1,7 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import {
   Buildings,
-  ChartLineUp,
   Check,
   ClipboardText,
   Pause,
@@ -13,6 +12,7 @@ import {
   TelegramLogo,
   type Icon,
 } from "@phosphor-icons/react";
+import { LogoIcon } from "@/components/brand/LogoIcon";
 import { GlowingBorder } from "@/components/ui/glowing-border";
 import { cn } from "@/lib/utils";
 import { at, reducedMotion } from "./motion";
@@ -142,9 +142,7 @@ function Sidebar({ active }: { active: string }) {
   return (
     <aside className="hidden border-r border-foreground/[0.07] p-3 lg:block" aria-hidden>
       <div className="mb-5 flex items-center gap-2 px-1.5 pt-1">
-        <span className="flex h-6 w-6 items-center justify-center rounded-md border border-accent bg-accent/[0.12]">
-          <ChartLineUp size={13} className="text-accent-text" />
-        </span>
+        <LogoIcon className="h-6 w-6" />
         <span className="text-[13px] font-semibold">Trackton</span>
       </div>
       <ul className="space-y-0.5">

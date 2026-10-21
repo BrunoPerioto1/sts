@@ -1,5 +1,5 @@
 import { useState, type AnimationEvent, type CSSProperties } from "react";
-import { ChartLineUp } from "@phosphor-icons/react";
+import { LogoIcon } from "@/components/brand/LogoIcon";
 import { formatMoney, signColor } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { at, reducedMotion } from "./motion";
@@ -115,9 +115,7 @@ export function HeroMockup() {
 
       <div className="rounded-2xl border border-foreground/10 bg-[rgb(var(--rgb-surface))] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.75)] sm:w-[320px]">
         <div className="flex items-center gap-2.5 border-b border-foreground/[0.07] px-3.5 py-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-accent bg-accent/[0.12]">
-            <ChartLineUp size={14} className="text-accent-text" />
-          </span>
+          <LogoIcon shape="circle" className="h-7 w-7" />
           <span className="text-[13px] font-semibold">Trackton Bot</span>
           <span className="ml-auto rounded bg-foreground/[0.08] px-1.5 text-[11px] text-zinc-400">bot</span>
         </div>

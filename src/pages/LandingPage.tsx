@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -6,8 +6,8 @@ import {
   ArrowsLeftRight,
   ChartLineUp,
   Check,
+  Checks,
   CursorClick,
-  DeviceMobile,
   FileCsv,
   HourglassMedium,
   ListChecks,
@@ -20,6 +20,7 @@ import {
   type Icon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/Logo";
 import { HeroMockup } from "@/components/landing/HeroMockup";
 import { HoverTilt } from "@/components/landing/HoverTilt";
 import { LandingStats } from "@/components/landing/LandingStats";
@@ -31,6 +32,7 @@ import { StepCards } from "@/components/landing/StepCards";
 import { ClosingArt } from "@/components/landing/ClosingArt";
 import { useInView } from "@/components/landing/use-in-view";
 import { cn } from "@/lib/utils";
+import "@/components/brand/display-font.css";
 import "@/components/landing/landing.css";
 
 // As demos do meio da página só baixam quando a seção chega perto da tela (ver
@@ -73,13 +75,27 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Todo CTA daqui leva pro login, que carrega sob demanda: baixa na folga do
+  // navegador, pra o clique não piscar uma tela vazia. (Safari não tem
+  // requestIdleCallback; lá vai depois de 2 s.)
+  useEffect(() => {
+    const prefetch = () => void import("@/pages/AuthPage");
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(prefetch, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(prefetch, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     // Do sm pra cima, a página inteira num quadro arredondado, rente às bordas
     // da tela: um tom mais escuro em volta, o quadro no fundo noturno do app.
     // No celular sem quadro: os 8px de cada lado só roubavam largura, e o
     // cabeçalho fixo deixava as linhas do quadro aparecendo em volta dele.
+    // `brand-colors`: lucro, prejuízo e cinza com as cores da marca (landing.css).
     <div className="dark min-h-dvh bg-[#050506] text-foreground sm:p-3">
-      <div className="border-foreground/[0.08] bg-background sm:rounded-[28px] sm:border">
+      <div className="brand-colors border-foreground/[0.08] bg-background sm:rounded-[28px] sm:border">
         <Header />
         <main>
           <Hero />
@@ -104,42 +120,102 @@ function Container({ children, className }: { children: ReactNode; className?: s
   return <div className={cn("mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8", className)}>{children}</div>;
 }
 
-function Brand() {
+function Brand({ size = "md" }: { size?: "md" | "xl" }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent bg-accent/[0.12] sm:h-10 sm:w-10 sm:rounded-xl">
-        <ChartLineUp size={18} className="text-accent-text sm:h-[22px] sm:w-[22px]" />
-      </span>
-      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight sm:text-[17px]">Trackton</span>
+    <Link to="/" className="flex justify-self-start rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Logo size={size} />
     </Link>
   );
 }
 
+// `wide`: só a partir do lg. No md só cabem três links ao lado da marca e dos botões.
+const NAV_LINKS: { label: string; href: string; wide?: boolean }[] = [
+  { label: "Como funciona", href: "#como-funciona" },
+  { label: "Grupos", href: "#grupos", wide: true },
+  { label: "Recursos", href: "#recursos", wide: true },
+  { label: "Casas", href: "#casas", wide: true },
+  { label: "Preço", href: "#preco" },
+  { label: "Dúvidas", href: "#duvidas" },
+];
+
+/** Se a página já saiu do topo: o cabeçalho só ganha fundo e linha depois disso. */
+function useScrolled() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  return scrolled;
+}
+
+/**
+ * A seção do menu que está no meio da tela (uma faixa fina a 45% da altura),
+ * pra acender o link dela. Fora das seções do menu (topo, números, demo), nenhum.
+ */
+function useActiveSection() {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const ids = NAV_LINKS.map(({ href }) => href.slice(1));
+    const inBand = new Map<string, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) inBand.set(entry.target.id, entry.isIntersecting);
+        setActive(ids.find((id) => inBand.get(id)) ?? null);
+      },
+      { rootMargin: "-45% 0px -54% 0px" },
+    );
+    for (const id of ids) {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    }
+    return () => observer.disconnect();
+  }, []);
+  return active;
+}
+
+/**
+ * Do md pra cima, grade de três colunas iguais nas pontas: o menu fica no
+ * centro da página, não no meio do que sobra entre a marca e os botões (que
+ * têm larguras diferentes). No topo da página o cabeçalho é transparente e
+ * sem linha, pra não cortar o hero; ao rolar, ganha o fundo desfocado.
+ */
 function Header() {
-  // `wide`: só a partir do lg. No md só cabem três links ao lado da marca e dos botões.
-  const links: { label: string; href: string; wide?: boolean }[] = [
-    { label: "Como funciona", href: "#como-funciona" },
-    { label: "Grupos", href: "#grupos", wide: true },
-    { label: "Recursos", href: "#recursos", wide: true },
-    { label: "Casas", href: "#casas", wide: true },
-    { label: "Preço", href: "#preco" },
-    { label: "Dúvidas", href: "#duvidas" },
-  ];
+  const scrolled = useScrolled();
+  const active = useActiveSection();
   return (
-    <header className="sticky top-0 z-40 border-b border-foreground/[0.06] bg-background/80 backdrop-blur-md sm:rounded-t-[28px]">
-      <Container className="flex h-16 items-center justify-between gap-6 sm:h-20">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b backdrop-blur-md transition-colors duration-300 sm:rounded-t-[28px]",
+        scrolled ? "border-foreground/[0.06] bg-background/80" : "border-transparent bg-background/0",
+      )}
+    >
+      {/* No celular o respiro mínimo é 12px: com o wordmark maior, 24px empurrava os botões pra fora num aparelho de 360px. */}
+      {/* Menu em 14px e respiros curtos até o xl: com a marca e os botões, os seis links só cabem cheios de 1280px pra cima. */}
+      <Container className="flex h-16 items-center justify-between gap-3 sm:h-20 sm:gap-6 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-3 lg:gap-4 xl:gap-6">
         <Brand />
-        <nav className="hidden items-center gap-6 text-[15px] text-zinc-400 md:flex lg:gap-7" aria-label="Seções">
-          {links.map(({ label, href, wide }) => (
-            <a key={href} href={href} className={cn("transition-colors hover:text-foreground", wide && "hidden lg:inline")}>
+        <nav className="hidden items-center gap-0.5 whitespace-nowrap text-[14px] text-zinc-400 md:flex xl:gap-1 xl:text-[15px]" aria-label="Seções">
+          {NAV_LINKS.map(({ label, href, wide }) => (
+            <a
+              key={href}
+              href={href}
+              aria-current={active === href.slice(1) ? "true" : undefined}
+              className={cn(
+                "rounded-full px-2 py-1.5 transition-colors hover:bg-foreground/[0.05] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-2.5 xl:px-3",
+                "aria-[current=true]:bg-foreground/[0.08] aria-[current=true]:text-foreground",
+                wide && "hidden lg:inline",
+              )}
+            >
               {label}
             </a>
           ))}
         </nav>
         {/* Botões de 32px no celular (40px do sm pra cima): o pseudo-elemento leva o toque a 44px ou mais
             (8px pra cada lado, porque ele conta de dentro da borda de 1px). */}
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="relative text-zinc-300 after:absolute after:inset-x-0 after:-inset-y-2 hover:bg-foreground/[0.07] hover:text-foreground sm:h-10 sm:px-4 sm:text-[15px]">
+        <div className="flex items-center gap-1.5 justify-self-end sm:gap-2">
+          <Button asChild variant="ghost" size="sm" className="relative px-2 text-zinc-300 after:absolute after:inset-x-0 after:-inset-y-2 hover:bg-foreground/[0.07] hover:text-foreground sm:h-10 sm:px-4 sm:text-[15px]">
             <Link to="/login">Entrar</Link>
           </Button>
           <Button asChild size="sm" className="relative after:absolute after:inset-x-0 after:-inset-y-2 sm:h-10 sm:px-4 sm:text-[15px]">
@@ -222,7 +298,7 @@ function Demo() {
         </h2>
         <p className="mt-4 text-[16px] leading-relaxed text-zinc-400">Três cenas do dia a dia, com dados de exemplo.</p>
       </Reveal>
-      <Reveal delay={120} className="mx-auto mt-12 max-w-[1280px]">
+      <Reveal delay={60} className="mx-auto mt-12 max-w-[1280px]">
         <LandingWorkspace />
       </Reveal>
     </section>
@@ -240,7 +316,7 @@ function Steps() {
               A IA preenche. Você confere. O app registra.
             </h2>
           </Reveal>
-          <Reveal delay={100} className="lg:pb-2">
+          <Reveal delay={60} className="lg:pb-2">
             <p className="max-w-[46ch] text-[16px] leading-relaxed text-zinc-400">
               Nada entra na sua conta sem o seu clique. E o Trackton não é casa de apostas: não aposta por você, não recebe apostas e não mexe
               no seu dinheiro.
@@ -295,7 +371,7 @@ function Groups() {
               Os grupos que você já segue viram planilha.
             </h2>
           </Reveal>
-          <Reveal delay={100} className="lg:pb-2">
+          <Reveal delay={60} className="lg:pb-2">
             <p className="max-w-[46ch] text-[16px] leading-relaxed text-zinc-400">
               Pare de copiar aposta na mão. Conecte seu Telegram, escolha os grupos de tips que você acompanha e cada aposta nova chega no seu
               privado pelo nosso bot, já organizada. Um clique em Planilhar e ela está na planilha.
@@ -303,7 +379,7 @@ function Groups() {
           </Reveal>
         </div>
 
-        <Reveal delay={120} className="mt-12">
+        <Reveal delay={60} className="mt-12">
           <NearScreen size="h-[932px] sm:h-[956px] lg:h-[349px]">
             <GroupsDemo />
           </NearScreen>
@@ -337,7 +413,7 @@ function Groups() {
               </p>
             </Reveal>
           </div>
-          <Reveal delay={100}>
+          <Reveal delay={60}>
             <NearScreen size="h-[383px]">
               <GroupPicker />
             </NearScreen>
@@ -364,7 +440,8 @@ const FEATURES: { icon: Icon; title: string; text: string }[] = [
     text: "Mande a aposta por mensagem ou áudio pro bot e confirme ali mesmo, sem abrir o app.",
   },
   { icon: ArrowsClockwise, title: "Vários bilhetes de uma vez", text: "Escolha vários prints e registre um atrás do outro." },
-  { icon: DeviceMobile, title: "Feito pro celular", text: "Fica na tela inicial e, no Android, recebe o print direto do app da casa." },
+  // A barra de seleção da lista de apostas (components/apostas/BulkActionBar.tsx): Ganha, Perdida ou Pendente em lote.
+  { icon: Checks, title: "Resultado em lote", text: "Marque várias apostas e dê Ganha ou Perdida pra todas de uma vez." },
   { icon: FileCsv, title: "Exporta pro Excel", text: "Apostas, movimentações e resumo mensal em CSV, no formato do Excel." },
 ];
 
@@ -375,7 +452,7 @@ function Benefits({ items, className }: { items: Benefit[]; className?: string }
   return (
     <dl className={cn("grid gap-x-10 gap-y-9 sm:grid-cols-2", className)}>
       {items.map(({ icon: IconComponent, title, text }, i) => (
-        <Reveal key={title} delay={i * 80}>
+        <Reveal key={title} delay={i * 50}>
           <dt className="flex items-start gap-2.5 text-pretty text-[16px] font-semibold leading-snug">
             <IconComponent size={20} className="mt-px flex-none text-accent-text" />
             {title}
@@ -415,7 +492,7 @@ function Features() {
           <ul className="divide-y divide-foreground/[0.08] border-y border-foreground/[0.08]">
             {VERSUS.map(({ sheet, app }, i) => (
               <li key={app}>
-                <Reveal delay={i * 80} className="grid gap-2.5 py-5 sm:grid-cols-2 sm:gap-12">
+                <Reveal delay={i * 50} className="grid gap-2.5 py-5 sm:grid-cols-2 sm:gap-12">
                   <p className="flex gap-3 text-[15px] leading-relaxed text-zinc-400">
                     <X size={16} className="mt-[5px] flex-none text-zinc-500" aria-label="Na planilha:" />
                     {sheet}
@@ -464,18 +541,17 @@ function Houses() {
           E onde está ganhando ou perdendo. Depósitos, saques e resultados fecham o saldo de cada casa, e as que ficaram paradas aparecem
           separadas.
         </SectionHeading>
-        <Reveal delay={120} className="mt-12">
-          <NearScreen size="h-[682px] md:h-[639px] lg:h-[629px]">
+        <Reveal delay={60} className="mt-12">
+          <NearScreen size="h-[682px] sm:h-[722px] md:h-[639px] lg:h-[629px]">
             <HousesPreview />
           </NearScreen>
         </Reveal>
         <p className="mt-3 text-[13px] text-zinc-400">Tela Casas de apostas do app, com dados de exemplo.</p>
         <Benefits items={HOUSE_BENEFITS} className="mt-14 lg:grid-cols-4" />
-        <Reveal className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <Reveal className="mt-12">
           <Button asChild size="lg">
             <Link to={SIGNUP}>{START}</Link>
           </Button>
-          <p className="text-[14px] text-zinc-400">O saldo por casa já vem no plano Grátis.</p>
         </Reveal>
       </Container>
     </section>
@@ -503,7 +579,8 @@ function Numbers() {
         </SectionHeading>
         <div className="mt-12">
           <HoverTilt>
-            <NearScreen size="h-[560px]">
+            {/* Alturas medidas da peça montada: com 560px fixos, o clique em "Preço" parava 440px acima no tablet quando ela carregava. */}
+            <NearScreen size="h-[1180px] sm:h-[1040px] md:h-[999px] lg:h-[607px]">
               <NumbersPreview />
             </NearScreen>
           </HoverTilt>
@@ -553,7 +630,8 @@ const PLANS: {
     name: "Pro",
     description: "Pra automatizar o registro e acompanhar seus resultados sem digitar nada.",
     price: PRICE,
-    note: "por mês · cancele quando quiser",
+    // O "cancele quando quiser" fica só no recado do botão (`fine`): aqui ele repetia a mesma coisa três linhas acima.
+    note: "por mês",
     // "Mais escolhido" pediria um número que não existe (PRODUCT.md, Evidence on Hand).
     badge: "Recomendado",
     lead: "Tudo do Grátis +",
@@ -586,14 +664,14 @@ function Pricing() {
             {/* No desktop, uma frase por linha: o "Automatize" não fica no fim da primeira. */}
             Comece grátis. <span className="sm:block">Automatize quando quiser.</span>
           </h2>
-          <p className="mt-4 text-balance text-[16px] leading-relaxed text-zinc-400">Sem cartão de crédito.</p>
+          {/* Sem o "Sem cartão de crédito." aqui: o recado já está no topo e embaixo do botão do Pro, onde a pessoa decide. */}
         </Reveal>
 
         <div className="mx-auto mt-12 grid max-w-[880px] gap-4 md:grid-cols-2 md:gap-5">
           {PLANS.map((plan, i) => (
             <Reveal
               key={plan.name}
-              delay={120 + i * 80}
+              delay={60 + i * 50}
               className={cn(
                 "flex flex-col rounded-[22px] border p-6 sm:p-7",
                 plan.highlight ? "border-accent bg-[rgb(var(--rgb-surface))] shadow-card" : "border-foreground/[0.09] bg-background",
@@ -653,34 +731,18 @@ function Pricing() {
   );
 }
 
+// Só as dúvidas que a página não responde em outro lugar, em três blocos: o que o
+// produto é, o Telegram e a cobrança. Saíram em 2026-10-21 (pedido do dono): "A
+// IA registra sozinha?" (é o título dos passos), "O que tem no Grátis?" (os
+// cards de preço logo acima) e "Preciso instalar?".
 const QUESTIONS: { q: string; a: string }[] = [
   {
     q: "O Trackton faz apostas por mim?",
     a: "Não. Ele não é casa de apostas: não recebe apostas, não movimenta seu dinheiro e não acessa sua conta nas casas. É onde você registra e acompanha as apostas que fez.",
   },
   {
-    q: "A IA registra a aposta sozinha?",
-    a: "Ela preenche os campos a partir do print e marca o que leu. Nada é salvo antes de você conferir e tocar em registrar. Se você corrigir um campo, vale o que você digitou.",
-  },
-  {
     q: "Funciona com a casa que eu uso?",
     a: `Mais de ${LANDING_STATS.houses} casas já estão cadastradas, das maiores às menores, e a lista continua crescendo.`,
-  },
-  {
-    q: "Preciso instalar alguma coisa?",
-    a: "Não. Funciona no navegador do computador e do celular. Se quiser, adicione à tela inicial do celular pra abrir como um app.",
-  },
-  {
-    q: "O que tem no plano Grátis?",
-    a: "Registro digitado sem limite, no site e no bot, 5 leituras de print ou áudio por IA por dia, saldo por casa e dashboard. Leitura por IA sem limite, conferência pelo placar, exportação em CSV e os Grupos do Telegram são do Pro.",
-  },
-  {
-    q: "O que acontece depois dos 3 dias de Pro?",
-    a: `A conta volta pro Grátis sozinha: nada é cobrado, porque o teste não pede cartão, e nada do que você registrou se perde. Se quiser seguir no Pro, assine por ${PRICE} por mês, sem fidelidade.`,
-  },
-  {
-    q: "Como cancelo o Pro?",
-    a: "Na página Plano, dentro do app, em Cancelar assinatura. A cobrança para na hora, o Pro já pago continua até o fim do período e depois a conta vira Grátis, com tudo o que você registrou.",
   },
   {
     q: "Preciso usar o Telegram?",
@@ -690,20 +752,27 @@ const QUESTIONS: { q: string; a: string }[] = [
     q: "O Trackton lê minhas conversas do Telegram?",
     a: "Não. Ele só lê os grupos que você escolher e nunca envia mensagens pela sua conta. Dá pra desconectar quando quiser.",
   },
+  {
+    q: "O que acontece depois dos 3 dias de Pro?",
+    a: `A conta volta pro Grátis sozinha: nada é cobrado, porque o teste não pede cartão, e nada do que você registrou se perde. Se quiser seguir no Pro, assine por ${PRICE} por mês, sem fidelidade.`,
+  },
+  {
+    q: "Como cancelo o Pro?",
+    a: "Na página Plano, dentro do app, em Cancelar assinatura. A cobrança para na hora, o Pro já pago continua até o fim do período e depois a conta vira Grátis, com tudo o que você registrou.",
+  },
 ];
 
 /**
- * Título à esquerda, que acompanha a rolagem no desktop, e as perguntas à
- * direita em linhas altas. O convite pro cadastro fica só embaixo do título.
+ * Título à esquerda, parado no topo da seção, e as perguntas à direita em
+ * linhas altas. O convite pro cadastro fica só embaixo do título.
  */
 function Faq() {
   return (
-    // Sem overflow-hidden na seção: ele quebraria o título sticky. As camadas do fundo ficam dentro dela (inset-0).
-    <section id="duvidas" className="relative scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="duvidas-title">
-      <div aria-hidden className="dot-grid pointer-events-none absolute inset-0" />
-      <div aria-hidden className="faq-glow pointer-events-none absolute inset-0" />
-      <Container className="relative grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:gap-24">
-        <Reveal className="lg:sticky lg:top-28 lg:self-start">
+    // Fundo preto como o resto do meio da página: o azul de fundo fica só no topo (landing.css, .hero-grid).
+    <section id="duvidas" className="scroll-mt-20 border-t border-foreground/[0.06] py-20 sm:py-28" aria-labelledby="duvidas-title">
+      <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:gap-24">
+        {/* Sem sticky (pedido do dono): o título não acompanha mais a rolagem, fica no topo da coluna. */}
+        <Reveal className="lg:self-start">
           <h2 id="duvidas-title" className="landing-display max-w-[12ch] text-[40px] sm:text-[52px]">
             Perguntas frequentes.
           </h2>
@@ -719,7 +788,7 @@ function Faq() {
           </Link>
         </Reveal>
 
-        <Reveal delay={100}>
+        <Reveal delay={60}>
           <div className="faq divide-y divide-foreground/[0.08] border-y border-foreground/[0.08]">
             {QUESTIONS.map(({ q, a }) => (
               // O respiro vertical fica no <summary>: a linha inteira é o alvo do toque, não só o texto.
@@ -768,7 +837,7 @@ function Closing() {
                 <ArrowRight size={15} className="transition-transform duration-200 group-hover/link:translate-x-0.5" />
               </a>
             </div>
-            <p className="mt-5 text-[13px] text-zinc-400">3 dias de Pro grátis · Sem cartão · Cancele quando quiser</p>
+            <p className="mt-5 text-[13px] text-zinc-400">3 dias de Pro grátis · Cancele quando quiser</p>
           </div>
           <ClosingArt />
         </div>
@@ -777,31 +846,84 @@ function Closing() {
   );
 }
 
+// `#` é âncora desta página (<a>); o resto é rota do app (<Link>).
+const FOOTER_GROUPS: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: "Produto",
+    links: [
+      { label: "Como funciona", href: "#como-funciona" },
+      { label: "Recursos", href: "#recursos" },
+      { label: "Preço", href: "#preco" },
+      { label: "Dúvidas", href: "#duvidas" },
+    ],
+  },
+  {
+    title: "Conta",
+    links: [
+      { label: "Entrar", href: "/login" },
+      { label: "Criar conta", href: SIGNUP },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Termos de uso", href: "/termos" },
+      { label: "Política de privacidade", href: "/privacidade" },
+    ],
+  },
+];
+
+const FOOTER_LINK =
+  "inline-flex min-h-8 items-center rounded-sm text-[14px] text-zinc-400 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/**
+ * Encerramento compacto: marca e slogan à esquerda, três grupos de links à
+ * direita e, depois de uma linha só, o aviso de 18+ e o ©. O aviso fica menor,
+ * mas inteiro: é produto de apostas.
+ */
 function Footer() {
   return (
-    <footer className="border-t border-foreground/[0.06] py-12">
-      <Container className="space-y-8">
-        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-          <Brand />
-          <nav className="flex gap-6 text-[14px] text-zinc-400" aria-label="Conta">
-            <Link to="/login" className="inline-flex min-h-11 items-center hover:text-foreground">
-              Entrar
-            </Link>
-            <Link to={SIGNUP} className="inline-flex min-h-11 items-center hover:text-foreground">
-              Criar conta
-            </Link>
+    <footer className="border-t border-foreground/[0.06] pb-10 pt-14">
+      <Container>
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
+          <div>
+            <Brand size="xl" />
+            <p className="mt-4 text-[14px] text-zinc-400">Sua aposta no controle.</p>
+          </div>
+          {/* No celular, duas colunas: Produto (a mais longa) ocupa a esquerda inteira e Conta e Legal empilham na direita. */}
+          <nav aria-label="Rodapé" className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 sm:gap-x-16">
+            {FOOTER_GROUPS.map(({ title, links }, i) => (
+              <div key={title} className={cn(i === 0 && "row-span-2 sm:row-span-1")}>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-zinc-300">{title}</p>
+                <ul className="mt-3" aria-label={title}>
+                  {links.map(({ label, href }) => (
+                    <li key={href}>
+                      {href.startsWith("#") ? (
+                        <a href={href} className={FOOTER_LINK}>
+                          {label}
+                        </a>
+                      ) : (
+                        <Link to={href} className={FOOTER_LINK}>
+                          {label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
         </div>
-        <div className="space-y-2 text-[13px] leading-relaxed text-zinc-400">
-          <p className="flex items-center gap-2 font-medium text-zinc-300">
-            <span className="rounded border border-zinc-600 px-1.5 text-[12px] font-semibold">18+</span>
-            Proibido para menores de 18 anos.
-          </p>
-          <p className="max-w-[65ch]">
+        <div className="mt-12 border-t border-foreground/[0.06] pt-6 text-[12.5px] leading-relaxed text-zinc-500">
+          <p className="max-w-[100ch]">
+            <span className="mr-1.5 inline-flex items-center gap-2 font-medium text-zinc-300">
+              <span className="rounded border border-zinc-600 px-1 text-[11px] font-semibold">18+</span>
+              Proibido para menores de 18 anos.
+            </span>
             Apostas envolvem risco de perda e podem causar dependência. Aposte com responsabilidade e só o que pode perder. O Trackton é uma
             ferramenta de controle: não é casa de apostas, não recebe apostas e não movimenta dinheiro.
           </p>
-          <p>© {new Date().getFullYear()} Trackton</p>
+          <p className="mt-4">© {new Date().getFullYear()} Trackton</p>
         </div>
       </Container>
     </footer>

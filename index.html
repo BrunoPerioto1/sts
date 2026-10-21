@@ -2,10 +2,17 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Sem maximum-scale/user-scalable: travar o zoom tira a lupa de quem precisa.
+         Os campos têm 16px no celular, então o iPhone não dá zoom ao focar. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- ?v=2: o navegador guarda o favicon por muito tempo; com o endereço novo,
+         quem já tinha o ícone antigo (gráfico de linha) busca o novo. -->
+    <link rel="icon" href="/favicon.ico?v=2" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <!-- Manifest próprio (share_target do Android, start_url no dashboard): o
+         site.webmanifest do pacote de ícones só tinha o bloco icons, que é o mesmo daqui. -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#09090b" />
     <!-- Conexão com as fontes aberta junto com o HTML: a Inter vinha de um
          @import no CSS e a Archivo da landing só depois do chunk dela. -->
@@ -15,15 +22,23 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Trackton" />
-    <title>Trackton</title>
+    <title>Trackton - Controle de apostas</title>
     <meta name="description" content="Gestão e tracking pessoal de apostas esportivas: registre entradas, concilie saldos por casa e leia ROI de verdade." />
     <meta name="author" content="Trackton" />
 
-    <meta property="og:title" content="Trackton" />
+    <!-- Endereços absolutos: quem lê o og:image (WhatsApp, Telegram, X) não resolve caminho relativo.
+         A imagem sai do scripts/og-image.mjs (npm run og:image). -->
+    <meta property="og:title" content="Trackton - Controle de apostas" />
     <meta property="og:description" content="Gestão e tracking pessoal de apostas esportivas: registre entradas, concilie saldos por casa e leia ROI de verdade." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trackton.vercel.app/" />
+    <meta property="og:site_name" content="Trackton" />
+    <meta property="og:image" content="https://trackton.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://trackton.vercel.app/og-image.png" />
   </head>
 
   <body>
