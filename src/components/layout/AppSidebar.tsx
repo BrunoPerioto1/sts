@@ -94,14 +94,15 @@ const sections: NavSection[] = [
 
 // Uma fonte só pra largura: o <main> do AppShell desloca pelo mesmo número.
 // Antes eram 256px aqui e 248px lá, e a sidebar cobria 8px do conteúdo.
-export const SIDEBAR_WIDTH = 256;
+// 272 desde que a marca e os itens cresceram (referência: Bet Analytix).
+export const SIDEBAR_WIDTH = 272;
 export const SIDEBAR_COLLAPSED_WIDTH = 72;
 
 type Me = ReturnType<typeof useMe>["me"];
 
 function Avatar({ user }: { user: Me }) {
   return (
-    <span className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold shrink-0">
+    <span className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-[13px] font-semibold shrink-0">
       {user ? initialsOf(displayName(user)) : "?"}
     </span>
   );
@@ -110,7 +111,7 @@ function Avatar({ user }: { user: Me }) {
 function UserLines({ user }: { user: Me }) {
   return (
     <span className="overflow-hidden flex-1 min-w-0">
-      <span className="block text-sm font-medium truncate">{user ? displayName(user) : "…"}</span>
+      <span className="block text-sm font-semibold truncate">{user ? displayName(user) : "…"}</span>
       <span className="block text-xs text-foreground/50 truncate">{user?.email ?? ""}</span>
     </span>
   );
@@ -154,18 +155,17 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         left: isInDrawer ? "auto" : 0,
         top: isInDrawer ? "auto" : 0,
         height: "100dvh",
-        padding: "20px 12px 14px",
+        padding: "22px 14px 16px",
         zIndex: isInDrawer ? "auto" : 50,
       }}
     >
-      {/* Aberta, ícone de 28px (32 pesava, 22 sumia) e o nome começando onde
-          começam os rótulos do menu (43px da borda do menu: 6 + 28 + 9).
-          Recolhida, o ícone fica sozinho e com 32px. */}
-      <div className={cn("flex min-h-8 items-center mb-7 px-1.5", collapsed ? "justify-center" : "justify-between")}>
-        <div className={cn("flex items-center overflow-hidden", !collapsed && "gap-[9px]")}>
-          <LogoIcon className={collapsed ? "w-8 h-8" : "w-7 h-7"} />
+      {/* Marca grande, como a do Bet Analytix: ícone de 36px e o nome em 21px,
+          o mesmo ícone de 36px quando recolhida. */}
+      <div className={cn("flex min-h-9 items-center mb-8 px-1", collapsed ? "justify-center" : "justify-between")}>
+        <div className={cn("flex items-center overflow-hidden", !collapsed && "gap-2.5")}>
+          <LogoIcon className="w-9 h-9 shrink-0" />
           {!collapsed && (
-            <span className="text-[15px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="text-[21px] font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
               Trackton
             </span>
           )}
@@ -194,13 +194,13 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
         </button>
       )}
 
-      <nav className="flex flex-col gap-5 flex-1 min-h-0 overflow-y-auto">
+      <nav className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto">
         {visible.map((section, i) => (
-          <div key={section.title} className="flex flex-col gap-0.5">
+          <div key={section.title} className="flex flex-col gap-1">
             {collapsed ? (
               i > 0 && <div className="mx-3 mb-1 border-t border-border" />
             ) : (
-              <div className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+              <div className="px-3 mb-1.5 text-xs font-bold uppercase tracking-[0.06em] text-foreground/50">
                 {section.title}
               </div>
             )}
@@ -219,7 +219,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                   onClick={onNavigate}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-3.5 rounded-[10px] py-2.5 text-[15px] font-medium transition-colors",
                     collapsed ? "justify-center px-0" : "px-3",
                     isActive
                       ? "bg-accent/[0.16] text-accent-text"
@@ -227,7 +227,7 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
                   )}
                 >
                   <div className="relative shrink-0">
-                    <Icon size={19} />
+                    <Icon size={21} />
                     {/* Colapsado não sobra largura pro número: vira só o ponto. */}
                     {collapsed && !!badge && item.badgeHighlight && (
                       <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
@@ -265,8 +265,8 @@ export function AppSidebar({ collapsed = false, setCollapsed = () => {}, onNavig
           <DropdownMenuTrigger
             aria-label="Opções da conta"
             className={cn(
-              "w-full flex items-center gap-2.5 rounded-xl border border-border bg-foreground/[0.03] text-left hover:bg-foreground/[0.06] transition-colors",
-              collapsed ? "justify-center p-1.5" : "p-2.5",
+              "w-full flex items-center gap-3 rounded-xl border border-border bg-foreground/[0.03] text-left hover:bg-foreground/[0.06] transition-colors",
+              collapsed ? "justify-center p-1.5" : "p-3",
             )}
           >
             <Avatar user={user} />
