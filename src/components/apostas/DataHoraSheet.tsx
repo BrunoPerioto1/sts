@@ -151,6 +151,8 @@ export function DataHoraSheet({ open, onOpenChange, value, onApply, nested = tru
           caption_label: "text-base font-semibold capitalize",
           nav_button:
             "h-9 w-9 flex items-center justify-center rounded-full opacity-55 hover:opacity-100 hover:bg-foreground/[0.08] transition-colors",
+          nav_button_previous: "absolute left-0",
+          nav_button_next: "absolute right-0",
           table: "w-full border-collapse",
           head_row: "flex justify-between",
           head_cell: "w-11 text-muted-foreground font-normal text-[11px] uppercase tracking-wide opacity-45 pb-1",
