@@ -43,7 +43,7 @@ const GroupsDemo = lazy(() => import("@/components/landing/TelegramGroups").then
 const GroupPicker = lazy(() => import("@/components/landing/TelegramGroups").then((m) => ({ default: m.GroupPicker })));
 const HousesPreview = lazy(() => import("@/components/landing/HousesPreview").then((m) => ({ default: m.HousesPreview })));
 
-const PRICE = "R$ 39,99";
+const PRICE = "R$ 40";
 const SIGNUP = "/login?cadastro=1";
 // Rótulo dos CTAs da página. Só os planos têm rótulo próprio (PLANS.cta), pra
 // deixar claro o que cada botão faz.
