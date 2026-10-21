@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar, SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_WIDTH } from "./AppSidebar";
@@ -65,6 +65,19 @@ export function AppShell() {
 
   const setBottomNavHiddenStable = useCallback((hidden: boolean) => {
     setBottomNavHidden(hidden);
+  }, []);
+
+  // Conferência é aberta pelo número do menu, de qualquer tela: com o código
+  // dela já baixado, o primeiro clique não passa pelo esqueleto de rota. Vai
+  // num momento ocioso, depois do que a tela atual precisa.
+  useEffect(() => {
+    const prefetch = () => void import("@/pages/ConferirPage");
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(prefetch, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(prefetch, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   const contextValue = useMemo<ShellContextValue>(

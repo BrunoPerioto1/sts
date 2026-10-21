@@ -140,10 +140,12 @@ function SuggestionRow({
  * parte, com título e contagem: é a única coisa da tela que pede ação, então
  * não pode ter o mesmo peso do "nada pra confirmar" logo acima.
  */
-function SemProposta({ enabled }: { enabled: boolean }) {
-  const { data } = useSettlementReview(enabled);
-  if (!enabled || !data?.length) return null;
-  const n = data.length;
+function SemProposta({ pendentes }: { pendentes: number }) {
+  const { data } = useSettlementReview(pendentes > 0);
+  // Enquanto a lista não chega, o número da fila (já em cache) segura o card
+  // no lugar: sem isso ele surgia meio segundo depois e empurrava a tela.
+  const n = data?.length ?? pendentes;
+  if (!pendentes || !n) return null;
 
   return (
     <section className="space-y-2.5">
@@ -220,6 +222,10 @@ export default function ConferirPage() {
   const { data: suggestions, isLoading } = useSettlementSuggestions();
   const { data: fila } = useSettlementQueue();
   const { compute, confirm, dismiss } = useSettlementActions();
+  // A fila (a mesma do número no menu) já está em cache quando se chega aqui.
+  // Se ela diz que não há proposta, não tem o que esperar: o vazio aparece
+  // direto, sem o "Lendo os placares" piscando meio segundo antes.
+  const carregando = isLoading && !(fila && fila.suggestions === 0);
   // Seleção só quando pedida: a lista abre limpa e tocar abre o detalhe.
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -308,7 +314,7 @@ export default function ConferirPage() {
           "Aguardando sua ação"); dentro de cada bloco o respiro é menor. O pt
           do celular leva o título → conteúdo pros mesmos ~36px do desktop. */}
       <div className={cn("space-y-6 pt-2 md:pt-0", selecting ? "pb-44 md:pb-28" : "pb-6")}>
-        {isLoading ? (
+        {carregando ? (
           <LendoPlacares fila={fila} />
         ) : lista.length === 0 ? (
           <Vazio buscando={compute.isPending} />
@@ -368,7 +374,7 @@ export default function ConferirPage() {
           </div>
         )}
 
-        {!isLoading && !selecting && <SemProposta enabled={!!fila?.undecided} />}
+        {!carregando && !selecting && <SemProposta pendentes={fila?.undecided ?? 0} />}
       </div>
 
       {selecting && (
