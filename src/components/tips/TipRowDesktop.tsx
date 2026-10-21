@@ -159,7 +159,7 @@ export function TipRowDesktop({
           <Checkbox checked={checked} onClick={(event) => onToggle(event.shiftKey)}
             onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
             aria-label={`Selecionar ${tip.game ?? "tip"} (${tip.id})`}
-            className="transition-colors duration-150 group-hover:border-foreground/45 data-[state=checked]:bg-[color-mix(in_srgb,var(--color-success)_62%,var(--color-bg))]" />
+            className="duration-150 group-hover:data-[state=unchecked]:border-foreground/45" />
         </div>
       )}
       <button

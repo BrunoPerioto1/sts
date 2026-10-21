@@ -126,12 +126,12 @@ function DashboardPreferencesMobile() {
         <section aria-labelledby="performance-title" className="space-y-4">
           <div><h2 id="performance-title" className="text-base font-semibold">Cores de desempenho</h2><p className="text-sm text-zinc-400 mt-1">Destaque resultados positivos e negativos.</p></div>
           <label className="flex gap-3 items-start cursor-pointer py-2">
-            <Checkbox className="mt-1 shrink-0" checked={colors.enabled} disabled={saving} onCheckedChange={(checked) => updateColors({ enabled: checked === true })} />
+            <Checkbox checked={colors.enabled} disabled={saving} onCheckedChange={(checked) => updateColors({ enabled: checked === true })} />
             <span><span className="block text-sm">Usar cores para resultados positivos e negativos</span><span className="block text-xs text-zinc-400 mt-1">Valores positivos usam a cor de sucesso e valores negativos usam a cor de perda.</span></span>
           </label>
           {colors.enabled && <>
             <label className="flex gap-3 items-start cursor-pointer py-2">
-              <Checkbox className="mt-1 shrink-0" checked={colors.customEnabled} disabled={saving} onCheckedChange={(checked) => updateColors({ customEnabled: checked === true })} />
+              <Checkbox checked={colors.customEnabled} disabled={saving} onCheckedChange={(checked) => updateColors({ customEnabled: checked === true })} />
               <span><span className="block text-sm">Usar cores personalizadas</span><span className="block text-xs text-zinc-400 mt-1">Escolha as cores usadas para resultados positivos e negativos.</span></span>
             </label>
             {colors.customEnabled && <div className="divide-y divide-border border-y border-border">

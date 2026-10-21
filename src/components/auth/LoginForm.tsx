@@ -64,7 +64,6 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
       <div className="flex items-center gap-2.5 h-8 -my-1 lg:h-6 lg:my-0">
         <Checkbox
           id="remember"
-          className="h-[18px] w-[18px] rounded-[4px]"
           checked={data.rememberMe}
           onCheckedChange={(checked) => setData((prev) => ({ ...prev, rememberMe: checked as boolean }))}
         />

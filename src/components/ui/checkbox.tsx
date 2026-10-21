@@ -1,9 +1,11 @@
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check, Minus } from "@phosphor-icons/react"
+import { Check } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
+// Mesmo desenho do SelectCheck (círculo no accent): toda seleção do app fala
+// a mesma língua. Verde aqui competia com o lucro das listas.
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
@@ -11,15 +13,13 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer h-4 w-4 shrink-0 rounded-sm border border-foreground/25 focus-visible:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45 data-[state=checked]:border-0 data-[state=checked]:bg-success data-[state=checked]:text-success-foreground data-[state=indeterminate]:border-success data-[state=indeterminate]:bg-success/15 data-[state=indeterminate]:text-success",
+      "peer flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground/25 text-white transition-colors focus-visible:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=indeterminate]:border-accent data-[state=indeterminate]:bg-accent",
       className
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator
-      className={cn("flex items-center justify-center text-current")}
-    >
-      {props.checked === "indeterminate" ? <Minus weight="bold" className="h-3 w-3" /> : <Check weight="bold" className="h-4 w-4" />}
+    <CheckboxPrimitive.Indicator className="flex items-center justify-center">
+      {props.checked === "indeterminate" ? <span className="h-0.5 w-2 rounded-full bg-white" /> : <Check size={12} weight="bold" />}
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ))
