@@ -21,12 +21,20 @@ export function DashboardChecklist() {
   const { me } = useMe();
   const { data: balances } = useHouseBalances();
 
+  // A aposta vem antes da banca e do depósito: primeiro a pessoa vê o print
+  // virar planilha (a promessa da landing), depois configura.
   const steps: Step[] = [
     {
       label: "Vincular o Telegram",
-      hint: "Tips chegam no privado e viram aposta com um toque.",
+      hint: "Mande o print da aposta pro bot e ela vira planilha.",
       href: "/profile/telegram",
       done: !!me?.telegramUserId,
+    },
+    {
+      label: "Mandar o primeiro print",
+      hint: "Pro bot ou aqui, em Nova aposta: a IA lê e preenche.",
+      href: "/bets",
+      done: false,
     },
     {
       label: "Definir a banca",
@@ -39,12 +47,6 @@ export function DashboardChecklist() {
       hint: "É o que faz o saldo e a banca acumulada baterem.",
       href: "/houses",
       done: (balances ?? []).some((h) => Number(h.totalDeposit) > 0),
-    },
-    {
-      label: "Planilhar a primeira aposta",
-      hint: "Por aqui, por print ou pelo botão Planilhar do bot.",
-      href: "/bets",
-      done: false,
     },
   ];
   const doneCount = steps.filter((s) => s.done).length;
