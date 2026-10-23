@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney, parsePtBrNumber } from "@/lib/format";
 import { toPtBr, type usePreferencesForm } from "@/hooks/use-preferences-form";
 import { DEFAULT_STALE_BET_DAYS } from "@/lib/house-activity";
+import { SETTINGS_CARD } from "./SettingsSection";
 
 type PreferencesFormState = ReturnType<typeof usePreferencesForm>;
 
@@ -25,7 +26,8 @@ function Field({ id, label, prefix, suffix, hint, error, children }: {
 }
 
 // Versão compacta (desktop) dos campos de PreferencesFields: os três lado a
-// lado, limite de sinal digitado em vez de slider.
+// lado, limite de sinal digitado em vez de slider. Título e explicação ficam
+// na SettingsSection em volta.
 export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
   const stakeNum = parsePtBrNumber(form.stakeInput);
   const bankroll = Number.isFinite(stakeNum) && stakeNum > 0 ? stakeNum : 0;
@@ -33,9 +35,7 @@ export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
   const inputClass = "h-10 rounded-lg tabular-nums";
 
   return (
-    <section className="rounded-xl border border-border bg-card shadow-card p-5" aria-labelledby="bankroll-title">
-      <h2 id="bankroll-title" className="text-base font-semibold">Banca e sinais</h2>
-      <p className="text-[13px] text-zinc-400 mt-1 mb-4">O bot do Telegram e a lista de casas usam estes valores.</p>
+    <div className={cn(SETTINGS_CARD, "p-5")}>
       <div className="grid grid-cols-3 gap-3">
         <Field
           id="pref-bankroll"
@@ -82,6 +82,6 @@ export function BankrollSignalsCard({ form }: { form: PreferencesFormState }) {
           />
         </Field>
       </div>
-    </section>
+    </div>
   );
 }

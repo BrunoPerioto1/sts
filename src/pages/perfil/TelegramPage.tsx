@@ -7,6 +7,7 @@ import { FormSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { UNLINK_TELEGRAM_WARNING } from "@/lib/telegram-unlink";
+import { BOT_HANDLE, BOT_URL } from "@/lib/telegram-bot";
 import { actionToast } from "@/lib/action-toast";
 import { useMe } from "@/hooks/queries/use-me";
 import { postTelegramLinkCode } from "@/api/routes/post-telegram-link";
@@ -15,8 +16,6 @@ import { getErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import { formatCountdown } from "@/lib/format";
 import { SectionLabel } from "@/components/ui/section-label";
-
-const BOT_HANDLE = "@betbpbot";
 
 const BENEFITS = [
   { icon: ChatCircleDots, title: "Lançar em uma frase", text: "O bot entende casa, valor, mercado e odd de uma mensagem só." },
@@ -190,7 +189,7 @@ export default function TelegramPage() {
           </p>
 
           <Button variant="secondary" className="w-full min-h-[48px] gap-2" asChild>
-            <a href={`https://t.me/${BOT_HANDLE.replace("@", "")}`} target="_blank" rel="noreferrer">
+            <a href={BOT_URL} target="_blank" rel="noreferrer">
               Abrir conversa
             </a>
           </Button>
