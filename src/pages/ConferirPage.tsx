@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Check, Checks, CircleNotch, ListChecks, Minus, X } from "@phosphor-icons/react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowRight, Check, Checks, CircleNotch, Info, ListChecks, Minus, X } from "@phosphor-icons/react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,9 @@ import {
 import { lucroSugerido, tally } from "@/lib/settlement-view";
 import { formatInt, formatMoney, formatOdd } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ProposalPanel, SuggestionDetail } from "@/components/conferir/SuggestionDetail";
-import { LiquidarNaMao } from "@/components/conferir/LiquidarNaMao";
+import { proposalFrame } from "@/components/conferir/SuggestionDetail";
+import { NaMaoLista, naMaoFrame, ordemNaMao } from "@/components/conferir/LiquidarNaMao";
+import { DetailOverlay, DetailPanel, type FrameProps } from "@/components/conferir/detail-frame";
 import { SelecionarTodas, SelectionBar, useSelecao } from "@/components/conferir/selection";
 import { SelectToggleButton } from "@/components/ui/select-toggle-button";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
@@ -266,10 +267,56 @@ function Vazio({ buscando, titulo, texto }: { buscando: boolean; titulo: string;
   );
 }
 
+/**
+ * Qual item da aba está aberto no detalhe. Com o painel ao lado sempre há um
+ * (o primeiro, se nenhum foi escolhido); sem ele, só o que foi tocado.
+ */
+function useAberta(ids: readonly number[], painel: boolean) {
+  const [id, setId] = useState<number | null>(null);
+  const idx = id == null ? -1 : ids.indexOf(id);
+  const posicao = idx >= 0 ? idx : painel && ids.length ? 0 : -1;
+  const atual = posicao >= 0 ? ids[posicao] : null;
+  return {
+    atual,
+    posicao,
+    abrir: setId,
+    fechar: () => setId(null),
+    prev: posicao > 0 ? () => setId(ids[posicao - 1]) : undefined,
+    next: posicao >= 0 && posicao < ids.length - 1 ? () => setId(ids[posicao + 1]) : undefined,
+    /** Depois de resolver a atual: a próxima, ou a anterior se era a última. */
+    avancar: () => setId(ids[posicao + 1] ?? ids[posicao - 1] ?? null),
+  };
+}
+
+/** Nada nas duas abas: a tela inteira vira o "tudo certo". */
+function TudoConferido() {
+  const color = usePerformanceColor();
+  return (
+    <div className="flex min-h-[60dvh] flex-col items-center justify-center px-6 text-center" aria-live="polite">
+      <span
+        className="grid size-14 place-items-center rounded-full"
+        style={{ color: color(1), background: `color-mix(in srgb, ${color(1)} 12%, transparent)` }}
+      >
+        <Checks size={26} weight="bold" />
+      </span>
+      <p className="mt-5 text-lg font-semibold text-foreground">Tudo conferido</p>
+      <p className="mt-2 max-w-[320px] text-sm leading-relaxed text-zinc-400">
+        Quando um jogo acabar, a proposta do bot aparece aqui. O que ele não conseguir resolver também.
+      </p>
+      <Link
+        to={`/bets?status=${ResultIdEnum.PENDING}&period=tudo`}
+        className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-accent-text hover:underline"
+      >
+        Ver apostas em aberto <ArrowRight size={14} />
+      </Link>
+    </div>
+  );
+}
+
 export default function ConferirPage() {
   const { data: suggestions, isLoading } = useSettlementSuggestions();
   const { data: fila } = useSettlementQueue();
-  const { data: review } = useSettlementReview(true);
+  const { data: review, isLoading: carregandoMao } = useSettlementReview(true);
   const { compute, confirm, dismiss, settleManual } = useSettlementActions();
   const color = usePerformanceColor();
   const painel = useMediaQuery(PAINEL_QUERY);
@@ -277,18 +324,19 @@ export default function ConferirPage() {
   const [params, setParams] = useSearchParams();
   const aba: Aba = params.get("aba") === "mao" ? "mao" : "bot";
   const [filtro, setFiltro] = useState<Filtro>("todas");
-  const [abertaId, setAbertaId] = useState<number | null>(null);
-  // Confirmadas que ainda não saíram da lista: somem na hora, sem esperar o
+  // Resolvidas que ainda não saíram da lista: somem na hora, sem esperar o
   // refetch, e voltam se a API recusar.
   const [saindo, setSaindo] = useState<Set<number>>(new Set());
+  // Resultado escolhido em "Como terminou?", preso à aposta em que foi escolhido.
+  const [escolha, setEscolha] = useState<{ betId: number; resultId: ResultIdEnum } | null>(null);
 
   // A fila (a mesma do número no menu) já está em cache quando se chega aqui.
   // Se ela diz que não há proposta, não tem o que esperar.
   const carregando = isLoading && !(fila && fila.suggestions === 0);
 
   const lista = useMemo(() => (suggestions ?? []).filter((s) => !saindo.has(s.betId)), [suggestions, saindo]);
-  const naMao = useMemo(() => review ?? [], [review]);
-  const nMao = review?.length ?? fila?.undecided ?? 0;
+  const naMao = useMemo(() => ordemNaMao((review ?? []).filter((b) => !saindo.has(b.betId))), [review, saindo]);
+  const nMao = review ? naMao.length : fila?.undecided ?? 0;
   const conta = tally(lista);
   const contaDe = { ganhou: conta.ganhas, perdeu: conta.perdidas, anulada: conta.anuladas };
   // Filtro que ficou vazio (confirmou a última anulada) volta pra "Todas".
@@ -296,25 +344,28 @@ export default function ConferirPage() {
   const filtrada = useMemo(() => lista.filter((s) => doFiltro(filtroAtivo, s)), [lista, filtroAtivo]);
   const totalLucro = lista.reduce((t, s) => t + lucroSugerido(s), 0);
   const ganhas = lista.filter((s) => s.suggestedResultId === ResultIdEnum.WON).map((s) => s.betId);
+  const vazioTotal = !carregando && !carregandoMao && !lista.length && !naMao.length && !compute.isPending;
 
-  // Some do `saindo` o que a API já tirou da lista.
+  // Some do `saindo` o que a API já tirou das listas.
   useEffect(() => {
-    const vivos = new Set((suggestions ?? []).map((s) => s.betId));
+    const vivos = new Set([...(suggestions ?? []), ...(review ?? [])].map((s) => s.betId));
     setSaindo((prev) => {
       const next = new Set([...prev].filter((id) => vivos.has(id)));
       return next.size === prev.size ? prev : next;
     });
-  }, [suggestions]);
+  }, [suggestions, review]);
 
-  const idsDaAba = aba === "bot" ? filtrada.map((s) => s.betId) : naMao.map((b) => b.betId);
-  const sel = useSelecao(idsDaAba);
+  const idsBot = useMemo(() => filtrada.map((s) => s.betId), [filtrada]);
+  const idsMao = useMemo(() => naMao.map((b) => b.betId), [naMao]);
+  const sel = useSelecao(aba === "bot" ? idsBot : idsMao);
   const n = sel.selected.size;
 
-  // Com o painel ao lado sempre há uma aberta (a primeira, se nenhuma foi
-  // escolhida); sem ele, só a que foi tocada.
-  const idx = filtrada.findIndex((s) => s.betId === abertaId);
-  const posicao = idx >= 0 ? idx : painel && filtrada.length ? 0 : -1;
-  const aberta = posicao >= 0 ? filtrada[posicao] : null;
+  const bot = useAberta(idsBot, painel);
+  const mao = useAberta(idsMao, painel);
+  const nav = aba === "bot" ? bot : mao;
+  const aberta = bot.atual == null ? null : filtrada[bot.posicao];
+  const abertaMao = mao.atual == null ? null : naMao[mao.posicao];
+  const escolhaMao = escolha && escolha.betId === abertaMao?.betId ? escolha.resultId : null;
 
   const trocarAba = (a: Aba) => {
     sel.sair();
@@ -324,72 +375,98 @@ export default function ConferirPage() {
   const ocupado = confirm.isPending || compute.isPending;
   const pull = usePullToRefresh(
     () => compute.mutateAsync().catch(() => undefined),
-    !aberta && !ocupado && !sel.selecting && aba === "bot",
+    !(!painel && nav.atual != null) && !ocupado && !sel.selecting,
   );
 
+  const esconder = (betIds: number[]) => setSaindo((prev) => new Set([...prev, ...betIds]));
+  const mostrar = (betIds: number[]) => setSaindo((prev) => new Set([...prev].filter((id) => !betIds.includes(id))));
   const confirmar = (betIds: number[]) => {
-    setSaindo((prev) => new Set([...prev, ...betIds]));
-    confirm.mutate(betIds, {
-      onError: () =>
-        setSaindo((prev) => new Set([...prev].filter((id) => !betIds.includes(id)))),
-    });
+    esconder(betIds);
+    confirm.mutate(betIds, { onError: () => mostrar(betIds) });
     sel.sair();
   };
   const recusar = (betIds: number[], title?: string) => {
     dismiss(betIds, title);
     sel.sair();
   };
-  // Resolver a aberta já abre a próxima ("Ao confirmar, abre a próxima proposta").
-  const resolverAberta = (acao: (s: SettlementSuggestion) => void) => {
-    if (!aberta) return;
-    const prox = filtrada[posicao + 1] ?? filtrada[posicao - 1] ?? null;
-    acao(aberta);
-    setAbertaId(prox?.betId ?? null);
-  };
-  const mover = (delta: number) => {
-    const alvo = filtrada[posicao + delta];
-    if (alvo) setAbertaId(alvo.betId);
+  const liquidar = (betIds: number[], resultId: ResultIdEnum) => {
+    esconder(betIds);
+    settleManual.mutate({ betIds, resultId }, { onError: () => mostrar(betIds) });
+    sel.sair();
   };
 
   // ↑ ↓ andam pela lista com o painel aberto ao lado.
   useEffect(() => {
-    if (!painel || aba !== "bot" || sel.selecting) return;
+    if (!painel || sel.selecting) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || (e.key !== "ArrowDown" && e.key !== "ArrowUp")) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const el = e.target as HTMLElement | null;
       if (el?.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
-      const alvo = filtrada[posicao + (e.key === "ArrowDown" ? 1 : -1)];
-      if (!alvo) return;
+      const ir = e.key === "ArrowDown" ? nav.next : e.key === "ArrowUp" ? nav.prev : undefined;
+      if (!ir) return;
       e.preventDefault();
-      setAbertaId(alvo.betId);
+      ir();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [painel, aba, sel.selecting, filtrada, posicao]);
+  }, [painel, sel.selecting, nav]);
 
   useEffect(() => {
-    if (!painel || !aberta) return;
-    document.querySelector(`[data-bet="${aberta.betId}"]`)?.scrollIntoView({ block: "nearest" });
-  }, [painel, aberta]);
+    if (!painel || nav.atual == null) return;
+    document.querySelector(`[data-bet="${nav.atual}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [painel, nav.atual]);
 
   const plural = lista.length === 1 ? "" : "s";
   const listaDaAba = aba === "bot" ? filtrada.length : naMao.length;
-  const selectButton = listaDaAba > 0 && (
-    <SelectToggleButton selecting={sel.selecting} onToggle={() => (sel.selecting ? sel.sair() : sel.ligar())} />
+  const alternarSelecao = () => (sel.selecting ? sel.sair() : sel.ligar());
+  const selectButton = listaDaAba > 0 && <SelectToggleButton selecting={sel.selecting} onToggle={alternarSelecao} />;
+  const selectButtonDesktop = (
+    <Button variant="secondary" size="sm" onClick={alternarSelecao}>
+      <ListChecks /> {sel.selecting ? "Cancelar" : "Selecionar"}
+    </Button>
   );
   const confirmarGanhasLabel = ganhas.length === 1 ? "Confirmar a ganha" : `Confirmar as ${formatInt(ganhas.length)} ganhas`;
   const mostrarGanhas = aba === "bot" && ganhas.length > 0 && !sel.selecting;
 
-  const detalhe = aberta && {
-    suggestion: aberta,
-    posicao: posicao + 1,
-    total: filtrada.length,
-    onPrev: posicao > 0 ? () => mover(-1) : undefined,
-    onNext: posicao < filtrada.length - 1 ? () => mover(1) : undefined,
-    busy: ocupado,
-    onConfirm: () => resolverAberta((s) => confirmar([s.betId])),
-    onReject: () => resolverAberta((s) => recusar([s.betId], `${s.game} · proposta recusada`)),
-  };
+  const detalhe: FrameProps | null =
+    aba === "bot"
+      ? aberta &&
+        proposalFrame({
+          suggestion: aberta,
+          posicao: bot.posicao + 1,
+          total: filtrada.length,
+          onPrev: bot.prev,
+          onNext: bot.next,
+          busy: ocupado,
+          // Resolver a aberta já abre a próxima.
+          onConfirm: () => (confirmar([aberta.betId]), bot.avancar()),
+          onReject: () => (recusar([aberta.betId], `${aberta.game} · proposta recusada`), bot.avancar()),
+        })
+      : abertaMao &&
+        naMaoFrame({
+          b: abertaMao,
+          posicao: mao.posicao + 1,
+          total: naMao.length,
+          onPrev: mao.prev,
+          onNext: mao.next,
+          escolha: escolhaMao,
+          onEscolha: (resultId) => setEscolha({ betId: abertaMao.betId, resultId }),
+          busy: settleManual.isPending,
+          onLiquidar: () => {
+            if (escolhaMao == null) return;
+            liquidar([abertaMao.betId], escolhaMao);
+            mao.avancar();
+          },
+        });
+
+  const comPainel = (lista: ReactNode) => (
+    <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start xl:gap-5">
+      {lista}
+      {painel && detalhe && (
+        <DetailPanel {...detalhe} className="sticky top-[100px] hidden max-h-[calc(100dvh-120px)] xl:flex" />
+      )}
+    </div>
+  );
 
   return (
     <MainLayout
@@ -397,7 +474,9 @@ export default function ConferirPage() {
       subtitle={
         lista.length
           ? `${formatInt(lista.length)} proposta${plural} do bot · nada vira saldo até você confirmar`
-          : "Nenhuma proposta neste lote"
+          : vazioTotal
+            ? "Nada esperando você"
+            : "Nenhuma proposta neste lote"
       }
       actions={
         aba === "bot" &&
@@ -415,80 +494,100 @@ export default function ConferirPage() {
       mobileHeader={
         <PageHeader
           title="Conferência"
-          subtitle={lista.length ? `${formatInt(lista.length)} proposta${plural} · nada vira saldo antes` : "Nenhuma proposta"}
+          subtitle={
+            lista.length
+              ? `${formatInt(lista.length)} proposta${plural} · nada vira saldo antes`
+              : vazioTotal
+                ? "Nada esperando você"
+                : "Nenhuma proposta"
+          }
           actions={selectButton}
         />
       }
     >
       <PullToRefreshIndicator distance={pull.distance} refreshing={pull.refreshing} />
-      {!painel && detalhe && <SuggestionDetail {...detalhe} onClose={() => setAbertaId(null)} />}
+      {!painel && detalhe && <DetailOverlay {...detalhe} onClose={nav.fechar} />}
 
-      <div className={cn("space-y-4 md:space-y-5", sel.selecting ? "pb-44 md:pb-28" : mostrarGanhas ? "pb-20 md:pb-6" : "pb-6")}>
-        <Abas aba={aba} onChange={trocarAba} bot={lista.length} mao={nMao} />
+      {vazioTotal ? (
+        <TudoConferido />
+      ) : (
+        <div className={cn("space-y-4 md:space-y-5", sel.selecting ? "pb-44 md:pb-28" : mostrarGanhas ? "pb-20 md:pb-6" : "pb-6")}>
+          <Abas aba={aba} onChange={trocarAba} bot={lista.length} mao={nMao} />
 
-        {aba === "bot" ? (
-          carregando ? (
-            <LendoPlacares fila={fila} />
-          ) : lista.length === 0 ? (
-            <Vazio buscando={compute.isPending} titulo="Nada pra confirmar" texto="O bot não tem propostas automáticas neste lote." />
+          {aba === "bot" ? (
+            carregando ? (
+              <LendoPlacares fila={fila} />
+            ) : lista.length === 0 ? (
+              <Vazio buscando={compute.isPending} titulo="Nada pra confirmar" texto="O bot não tem propostas automáticas neste lote." />
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="-mx-4 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
+                    <Chip active={filtroAtivo === "todas"} label="Todas" count={lista.length} onClick={() => setFiltro("todas")} />
+                    {FILTROS.filter((f) => contaDe[f.value]).map((f) => (
+                      <Chip
+                        key={f.value}
+                        active={filtroAtivo === f.value}
+                        label={f.label}
+                        count={contaDe[f.value]}
+                        dot={f.sign ? color(f.sign) : "rgb(113 113 122)"}
+                        onClick={() => setFiltro(f.value)}
+                      />
+                    ))}
+                  </div>
+                  <div className="hidden shrink-0 items-center gap-2 md:flex">
+                    {selectButtonDesktop}
+                    {mostrarGanhas && (
+                      <Button variant="secondary" size="sm" disabled={ocupado} onClick={() => confirmar(ganhas)}>
+                        <Checks style={{ color: color(1) }} /> {confirmarGanhasLabel}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {sel.selecting && <SelecionarTodas sel={sel} total={filtrada.length} />}
+
+                {comPainel(
+                  <ul className="-mx-4 border-y border-foreground/[0.07] md:mx-0 md:overflow-hidden md:rounded-2xl md:border md:border-foreground/10 md:bg-card md:shadow-card">
+                    {filtrada.map((s) => (
+                      <SuggestionRow
+                        key={s.betId}
+                        suggestion={s}
+                        selecting={sel.selecting}
+                        checked={sel.selected.has(s.betId)}
+                        ativa={painel && !sel.selecting && aberta?.betId === s.betId}
+                        onTap={() => (sel.selecting ? sel.toggle(s.betId) : bot.abrir(s.betId))}
+                      />
+                    ))}
+                  </ul>,
+                )}
+              </>
+            )
+          ) : carregandoMao ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" delay={i * 60} />
+              ))}
+            </div>
+          ) : naMao.length === 0 ? (
+            <Vazio buscando={false} titulo="Tudo liquidado" texto="Nenhuma aposta esperando você." />
           ) : (
             <>
-              <div className="flex items-center gap-3">
-                <div className="-mx-4 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-                  <Chip active={filtroAtivo === "todas"} label="Todas" count={lista.length} onClick={() => setFiltro("todas")} />
-                  {FILTROS.filter((f) => contaDe[f.value]).map((f) => (
-                    <Chip
-                      key={f.value}
-                      active={filtroAtivo === f.value}
-                      label={f.label}
-                      count={contaDe[f.value]}
-                      dot={f.sign ? color(f.sign) : "rgb(113 113 122)"}
-                      onClick={() => setFiltro(f.value)}
-                    />
-                  ))}
-                </div>
-                <div className="hidden shrink-0 items-center gap-2 md:flex">
-                  <Button variant="secondary" size="sm" onClick={() => (sel.selecting ? sel.sair() : sel.ligar())}>
-                    <ListChecks /> {sel.selecting ? "Cancelar" : "Selecionar"}
-                  </Button>
-                  {mostrarGanhas && (
-                    <Button variant="secondary" size="sm" disabled={ocupado} onClick={() => confirmar(ganhas)}>
-                      <Checks style={{ color: color(1) }} /> {confirmarGanhasLabel}
-                    </Button>
-                  )}
-                </div>
+              <div className="hidden items-center justify-between gap-3 md:flex">
+                <p className="flex items-center gap-2 text-[13px] text-zinc-400">
+                  <Info size={15} className="shrink-0 text-zinc-500" />
+                  O bot não conseguiu decidir sozinho. Diga como terminou e pronto.
+                </p>
+                {selectButtonDesktop}
               </div>
-
-              {sel.selecting && <SelecionarTodas sel={sel} total={filtrada.length} />}
-
-              <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start xl:gap-5">
-                <ul className="-mx-4 border-y border-foreground/[0.07] md:mx-0 md:overflow-hidden md:rounded-2xl md:border md:border-foreground/10 md:bg-card md:shadow-card">
-                  {filtrada.map((s) => (
-                    <SuggestionRow
-                      key={s.betId}
-                      suggestion={s}
-                      selecting={sel.selecting}
-                      checked={sel.selected.has(s.betId)}
-                      ativa={painel && !sel.selecting && aberta?.betId === s.betId}
-                      onTap={() => (sel.selecting ? sel.toggle(s.betId) : setAbertaId(s.betId))}
-                    />
-                  ))}
-                </ul>
-                {painel && detalhe && (
-                  <ProposalPanel {...detalhe} className="sticky top-[100px] hidden max-h-[calc(100dvh-120px)] xl:flex" />
-                )}
-              </div>
+              {sel.selecting && <SelecionarTodas sel={sel} total={naMao.length} />}
+              {comPainel(
+                <NaMaoLista lista={naMao} sel={sel} ativaId={painel ? (abertaMao?.betId ?? null) : null} onAbrir={mao.abrir} />,
+              )}
             </>
-          )
-        ) : naMao.length === 0 ? (
-          <Vazio buscando={false} titulo="Tudo liquidado" texto="Nenhuma aposta esperando você." />
-        ) : (
-          <>
-            {sel.selecting && <SelecionarTodas sel={sel} total={naMao.length} />}
-            <LiquidarNaMao lista={naMao} sel={sel} />
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Atalho do lote no celular: flutua acima da bottom nav. */}
       {mostrarGanhas && (
@@ -532,10 +631,7 @@ export default function ConferirPage() {
                 key={o.resultId}
                 variant="secondary"
                 disabled={!n || settleManual.isPending}
-                onClick={() => {
-                  settleManual.mutate({ betIds: sel.ids, resultId: o.resultId });
-                  sel.sair();
-                }}
+                onClick={() => liquidar(sel.ids, o.resultId)}
                 className={cn("h-12 rounded-xl font-semibold md:h-11 md:px-4", !o.sign && "bg-foreground/[0.05] text-zinc-200")}
                 style={o.sign ? tintStyle(color(o.sign)) : undefined}
               >

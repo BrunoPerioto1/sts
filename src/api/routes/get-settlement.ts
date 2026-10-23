@@ -103,8 +103,11 @@ export interface SettlementReviewItem {
   stake: number | string;
   odd: number | string;
   eventStartAt: string | null;
+  /** Código do motivo (settlement.types.ts da API): "DADO_INDISPONIVEL"... */
   reason: string | null;
   explanation: string;
+  homeScore: number | null;
+  awayScore: number | null;
 }
 
 export function getSettlementReview() {
