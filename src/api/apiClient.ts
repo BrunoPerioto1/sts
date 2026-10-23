@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig } from 'axios';
-import { clearToken, getToken } from '@/lib/auth-session';
+import { clearToken, getToken, saveToken } from '@/lib/auth-session';
 
 /**
  * Uma instância só do axios, com os interceptors registrados uma vez. Antes
@@ -7,6 +7,14 @@ import { clearToken, getToken } from '@/lib/auth-session';
  * `apiClient()` recriava as nove a cada chamada.
  */
 const http = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+
+// Modo mock (VITE_MOCK=true): sem API, com sessão de mentira. O import é
+// dinâmico pra o mock não entrar no bundle de produção.
+if (import.meta.env.VITE_MOCK === 'true') {
+  // JWT sem assinatura, com `exp` lá na frente: só o getToken() lê.
+  if (!getToken()) saveToken(`e30.${btoa(JSON.stringify({ exp: 4102444800 }))}.mock`);
+  http.defaults.adapter = async (config) => (await import('@/mocks/adapter')).mockAdapter(config);
+}
 
 http.interceptors.request.use((config) => {
   // No axios v1 `config.headers` num interceptor de request é sempre
