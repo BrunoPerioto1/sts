@@ -31,12 +31,14 @@ export function HousesMetrics({
   conferirActive = false,
   onConferir,
 }: HousesMetricsProps) {
-  const profit = Number(metrics.consolidatedProfit);
-  const negatives = Number(metrics.negativeHouses);
+  // Campo que não veio (conta nova, resposta parcial) conta como zero, não NaN.
+  const num = (v: unknown) => Number(v) || 0;
+  const profit = num(metrics.consolidatedProfit);
+  const negatives = num(metrics.negativeHouses);
   const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
   const blocks = [
-    { label: "Saldo total", value: formatMoney(metrics.totalBalance), hint: `em ${casas(withBalanceCount)}` },
+    { label: "Saldo total", value: formatMoney(num(metrics.totalBalance)), hint: `em ${casas(withBalanceCount)}` },
     { label: "Em aberto", value: formatMoney(openStake), hint: "apostas pendentes" },
     {
       label: "Lucro consolidado",
@@ -53,7 +55,7 @@ export function HousesMetrics({
       hint: conferirActive
         ? "mostrando só essas · clique pra voltar"
         : negatives > 0
-          ? `${formatMoney(metrics.negativeAmount)} sem lançamento`
+          ? `${formatMoney(num(metrics.negativeAmount))} sem lançamento`
           : "nenhuma casa no vermelho",
       // Vira botão só quando há o que conferir: é o atalho pra conciliação.
       onClick: negatives > 0 || conferirActive ? onConferir : undefined,

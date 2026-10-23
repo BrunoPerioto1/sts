@@ -27,7 +27,8 @@ export function SettingsSection({
       className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-x-10 gap-y-3 border-t border-border pt-6"
     >
       <div className="lg:pt-4">
-        <h2 id={id} className="flex items-center gap-2 text-[15px] font-semibold">
+        {/* scroll-mt: respiro no topo quando vem de um link com âncora (/profile#id). */}
+        <h2 id={id} className="scroll-mt-8 flex items-center gap-2 text-[15px] font-semibold">
           {title}
           {badge}
         </h2>

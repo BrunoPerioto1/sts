@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { SelectCheck } from "@/components/ui/select-check";
 import { cn } from "@/lib/utils";
 
 // Barra do lote da Conferência e do "Liquidar na mão". O botão que liga o modo
@@ -22,6 +23,69 @@ export function SelectionBar({ label, children }: { label: string; children: Rea
         {label}
       </span>
       {children}
+    </div>
+  );
+}
+
+/**
+ * Seleção sob demanda das duas abas: liga com "Selecionar", e o que sai da
+ * lista (confirmado, recusado, refetch) sai da seleção junto.
+ */
+export function useSelecao(ids: readonly number[]) {
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const chave = ids.join(",");
+
+  useEffect(() => {
+    const vivos = new Set(ids);
+    setSelected((prev) => {
+      const next = new Set([...prev].filter((id) => vivos.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    if (!ids.length) setSelecting(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `chave` resume `ids`
+  }, [chave]);
+
+  const sair = useCallback(() => {
+    setSelecting(false);
+    setSelected(new Set());
+  }, []);
+  const toggle = (id: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const todas = ids.length > 0 && selected.size === ids.length;
+  const toggleTodas = () => setSelected(todas ? new Set() : new Set(ids));
+
+  return {
+    selecting,
+    ligar: () => setSelecting(true),
+    sair,
+    selected,
+    ids: [...selected],
+    toggle,
+    todas,
+    toggleTodas,
+  };
+}
+
+/** "Selecionar todas" do celular, acima da lista (no desktop mora no cabeçalho da tabela). */
+export function SelecionarTodas({ sel, total }: { sel: ReturnType<typeof useSelecao>; total: number }) {
+  const n = sel.selected.size;
+  return (
+    <div className="flex items-center gap-3 px-1 text-[13.5px] tabular-nums">
+      <button
+        type="button"
+        onClick={sel.toggleTodas}
+        aria-label={sel.todas ? "Desmarcar todas" : "Selecionar todas"}
+        className="press rounded-full"
+      >
+        <SelectCheck checked={sel.todas} indeterminate={!sel.todas && n > 0} />
+      </button>
+      {n} de {total} selecionadas
     </div>
   );
 }
