@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Check, CheckCircle, MinusCircle, XCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { DetailOverlay, DetailPanel, type FrameProps } from "./detail-frame";
+import { Selecoes } from "./Selecoes";
 import type { SettlementSuggestion } from "@/api/routes/get-settlement";
 import { ResultIdEnum } from "@/api/routes/result-id";
 import { lucroSugerido } from "@/lib/settlement-view";
@@ -23,8 +24,8 @@ export interface DetailProps {
   onReject: () => void;
 }
 
-// Múltipla chega como "sel A / sel B" e a explicação como "parte 1; parte 2" —
-// quebrar em itens é o que a linha truncada não consegue mostrar.
+// A explicação chega como "parte 1; parte 2": quebrar em itens é o que a linha
+// truncada não consegue mostrar.
 const itens = (texto: string, sep: string) =>
   texto.split(sep).map((t) => t.trim()).filter(Boolean);
 
@@ -71,7 +72,6 @@ function Placar({ s }: { s: SettlementSuggestion }) {
 
 function Ficha({ s }: { s: SettlementSuggestion }) {
   const linhas: [string, ReactNode][] = [
-    ["Seleção", itens(s.market, " / ").map((m, i) => <span key={i} className="block">{m}</span>)],
     ["Stake", formatMoney(s.stake)],
     ["Odd", formatOdd(s.odd)],
   ];
@@ -124,6 +124,7 @@ function Corpo({ s }: { s: SettlementSuggestion }) {
   return (
     <div className="space-y-4">
       <Placar s={s} />
+      <Selecoes market={s.market} />
       <Ficha s={s} />
       <Veredito s={s} />
     </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, CalendarX, CaretRight, Check, Circle, HandPalm } from "@phosphor-icons/react";
+import { ArrowUpRight, CalendarX, CaretRight, Check, HandPalm } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { SelectCheck } from "@/components/ui/select-check";
 import { ResultIdEnum } from "@/api/routes/get-bets";
@@ -9,12 +9,12 @@ import {
   explicacaoLegivel,
   motivoCurto,
   quandoCurto,
-  selecoesDe,
 } from "@/lib/settlement-view";
 import { formatDate, formatInt, formatMoney, formatOdd, formatTime } from "@/lib/format";
 import { usePerformanceColor } from "@/hooks/use-performance-color";
 import { cn } from "@/lib/utils";
 import type { FrameProps } from "./detail-frame";
+import { Selecoes } from "./Selecoes";
 import type { useSelecao } from "./selection";
 
 const liquidarHref = (b: SettlementReviewItem) =>
@@ -173,7 +173,6 @@ function CorpoMao({
 }) {
   const color = usePerformanceColor();
   const esperando = aguardandoResultado(b);
-  const { rotulo, itens } = selecoesDe(b.market);
   const texto = explicacaoLegivel(b.explanation);
   return (
     <div className="space-y-5">
@@ -196,20 +195,7 @@ function CorpoMao({
         </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-          {itens.length > 1 ? "Seleções" : "Seleção"}
-          {rotulo && ` · ${rotulo}`}
-        </p>
-        <ul className="divide-y divide-foreground/[0.07] overflow-hidden rounded-xl border border-foreground/10 text-[13.5px]">
-          {itens.map((m, i) => (
-            <li key={i} className="flex items-center gap-3 px-4 py-2.5 text-foreground">
-              {itens.length > 1 && <Circle size={8} weight="fill" className="shrink-0 text-zinc-600" />}
-              {m}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <Selecoes market={b.market} />
 
       <div>
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">Como terminou?</p>

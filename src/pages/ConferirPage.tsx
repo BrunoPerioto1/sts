@@ -607,17 +607,25 @@ export default function ConferirPage() {
 
       {sel.selecting && aba === "bot" && (
         <SelectionBar label={`${n} de ${filtrada.length} selecionadas`}>
-          <div className="grid grid-cols-[0.8fr_1.4fr] gap-2 md:flex">
+          {/* Mesmo formato do lote do "Liquidar na mão": botões tingidos, sem ícone. */}
+          <div className="grid grid-cols-2 gap-2 md:flex">
             <Button
               variant="secondary"
-              disabled={!n}
+              disabled={!n || ocupado}
               onClick={() => recusar(sel.ids)}
-              className="h-12 gap-1.5 rounded-xl border-danger/40 text-danger hover:bg-danger/10 md:h-11 md:px-4"
+              className="h-12 rounded-xl font-semibold md:h-11 md:px-4"
+              style={tintStyle(color(-1))}
             >
-              <X size={15} weight="bold" /> Recusar
+              {n ? `Recusar ${n}` : "Recusar"}
             </Button>
-            <Button disabled={!n || ocupado} onClick={() => confirmar(sel.ids)} className="h-12 gap-2 rounded-xl text-[14.5px] font-semibold md:h-11 md:px-6">
-              <Check size={16} weight="bold" /> {n ? `Confirmar ${n}` : "Confirmar"}
+            <Button
+              variant="secondary"
+              disabled={!n || ocupado}
+              onClick={() => confirmar(sel.ids)}
+              className="h-12 rounded-xl font-semibold md:h-11 md:px-4"
+              style={tintStyle(color(1))}
+            >
+              {n ? `Confirmar ${n}` : "Confirmar"}
             </Button>
           </div>
         </SelectionBar>
