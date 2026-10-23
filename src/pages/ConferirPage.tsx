@@ -623,7 +623,8 @@ export default function ConferirPage() {
               disabled={!n || ocupado}
               onClick={() => confirmar(sel.ids)}
               className="h-12 rounded-xl font-semibold md:h-11 md:px-4"
-              style={tintStyle(color(1))}
+              // Azul do app, não o verde de ganho: o lote pode ter perdidas.
+              style={tintStyle("var(--color-accent-text)")}
             >
               {n ? `Confirmar ${n}` : "Confirmar"}
             </Button>
