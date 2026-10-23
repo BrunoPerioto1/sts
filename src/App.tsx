@@ -75,7 +75,17 @@ const App = () => (
           path="/login"
           element={
             <Suspense fallback={<div className="min-h-dvh bg-background" />}>
-              <AuthPage />
+              <AuthPage key="login" />
+            </Suspense>
+          }
+        />
+        {/* Link do "Esqueci a senha" (e-mail e bot). Key própria: sair daqui
+            pro /login remonta a tela, em vez de herdar a etapa de senha nova. */}
+        <Route
+          path="/redefinir-senha"
+          element={
+            <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+              <AuthPage key="reset" />
             </Suspense>
           }
         />

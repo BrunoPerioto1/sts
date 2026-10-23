@@ -16,11 +16,12 @@ export async function postLogin(data: LoginRequest): Promise<LoginResponse> {
   return res.data;
 }
 
-/** Pede o código pelo bot. Responde igual exista ou não a conta. */
+/** Pede o link de redefinir senha (e-mail e, se vinculado, bot). Responde igual exista ou não a conta. */
 export async function postForgotPassword(email: string): Promise<void> {
   await apiClient().auth.post("forgot-password", { email });
 }
 
-export async function postResetPassword(data: { email: string; code: string; newPassword: string }): Promise<void> {
+/** Troca a senha com o token do link. 400 = link inválido, vencido ou já usado. */
+export async function postResetPassword(data: { token: string; newPassword: string }): Promise<void> {
   await apiClient().auth.post("reset-password", data);
 }

@@ -55,7 +55,8 @@ export function PrivacyContent() {
         <Ul>
           <li>Prestar o serviço: registrar as suas apostas, calcular lucro, ROI e saldos e propor resultados pelo placar.</li>
           <li>Ler prints, áudios e mensagens por inteligência artificial e preencher a aposta.</li>
-          <li>Falar com você pelo bot: confirmações, avisos da conta, tips dos grupos que você escolheu e o código de recuperação de senha.</li>
+          <li>Falar com você pelo bot: confirmações, avisos da conta, tips dos grupos que você escolheu e o link de recuperação de senha.</li>
+          <li>Mandar e-mails da conta, como o link de recuperação de senha.</li>
           <li>Cobrar a assinatura e liberar o Pro.</li>
           <li>Proteger a sua conta e o serviço, com bloqueio após tentativas erradas e limites de uso.</li>
           <li>Responder pedidos de suporte e cumprir obrigações legais.</li>
@@ -104,6 +105,9 @@ export function PrivacyContent() {
           </li>
           <li>
             <B>Mercado Pago:</B> cobrança da assinatura.
+          </li>
+          <li>
+            <B>Resend:</B> envio de e-mails, como o link de recuperação de senha.
           </li>
           <li>
             <B>Google Fonts:</B> o navegador baixa as fontes do site dos servidores do Google, que recebem o seu endereço IP nesse pedido.

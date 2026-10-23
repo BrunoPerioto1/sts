@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, TelegramLogo } from "@phosphor-icons/react";
+import { ArrowLeft, EnvelopeSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { AuthField } from "./AuthField";
 import { AuthHeading } from "./AuthHeading";
-import { postForgotPassword, postResetPassword } from "@/api/routes/post-login";
-import { actionToast } from "@/lib/action-toast";
+import { postForgotPassword } from "@/api/routes/post-login";
 import { getErrorMessage } from "@/lib/api-error";
-import { MIN_PASSWORD } from "@/hooks/auth/use-register-form";
 
 interface ForgotPasswordFormProps {
   initialEmail?: string;
@@ -14,137 +12,91 @@ interface ForgotPasswordFormProps {
 }
 
 /**
- * Recuperar senha pelo bot do Telegram: o app não manda e-mail, mas o bot
- * conhece quem vinculou a conta. Dois passos — pedir o código, depois código +
- * senha nova. A resposta do primeiro passo é a mesma exista ou não a conta.
+ * Recuperar senha por link: o backend manda por e-mail e, pra quem vinculou o
+ * Telegram, também no bot. A resposta é a mesma exista ou não a conta, então
+ * a tela de "enviado" não afirma que o e-mail está cadastrado.
  */
 export function ForgotPasswordForm({ initialEmail = "", onBack }: ForgotPasswordFormProps) {
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"email" | "sent">("email");
   const [email, setEmail] = useState(initialEmail);
-  const [code, setCode] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const requestCode = async (e: React.FormEvent) => {
+  const requestLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return setError("Informe o e-mail da conta.");
     setBusy(true);
     setError(null);
     try {
       await postForgotPassword(email.trim());
-      setStep("code");
+      setStep("sent");
     } catch (err) {
-      setError(getErrorMessage(err, "Não deu pra pedir o código agora. Tente de novo."));
+      setError(getErrorMessage(err, "Não deu pra pedir o link agora. Tente de novo."));
     } finally {
       setBusy(false);
     }
   };
 
-  const reset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!/^\d{6}$/.test(code.trim())) return setError("O código tem 6 dígitos.");
-    if (password.length < MIN_PASSWORD) return setError(`Use ${MIN_PASSWORD} caracteres ou mais.`);
-    setBusy(true);
-    setError(null);
-    try {
-      await postResetPassword({ email: email.trim(), code: code.trim(), newPassword: password });
-      actionToast.success({ title: "Senha trocada", description: "Entre com a senha nova." });
-      onBack();
-    } catch (err) {
-      setError(getErrorMessage(err, "Código inválido ou vencido. Peça um novo."));
-    } finally {
-      setBusy(false);
-    }
-  };
+  if (step === "sent") {
+    return (
+      <div className="flex flex-col gap-[18px] lg:gap-4">
+        <AuthHeading
+          title="Confira seu e-mail"
+          sub="Se o e-mail estiver cadastrado, você vai receber um link pra redefinir a senha. Ele vale 30 minutos."
+        />
+        <p className="text-sm text-zinc-400">
+          Quem tem o Telegram vinculado recebe o mesmo link no bot. Não achou? Olhe também a caixa de spam.
+        </p>
+        <Button
+          type="button"
+          onClick={onBack}
+          className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold"
+        >
+          Voltar pro login
+        </Button>
+        <p className="text-center text-sm text-zinc-500">
+          Não chegou?{" "}
+          <button type="button" onClick={() => setStep("email")} className="text-accent underline underline-offset-4 hover:no-underline">
+            Pedir de novo
+          </button>
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={step === "email" ? requestCode : reset} className="flex flex-col gap-[18px] lg:gap-4">
-      <AuthHeading
-        title="Esqueci a senha"
-        sub={
-          step === "email"
-            ? "O código chega no bot do Telegram vinculado à sua conta."
-            : "Se o e-mail tiver Telegram vinculado, o código já chegou no bot. Vale 15 minutos."
-        }
-      />
+    <form onSubmit={requestLink} className="flex flex-col gap-[18px] lg:gap-4">
+      <AuthHeading title="Esqueci a senha" sub="Mandamos um link pro seu e-mail pra você escolher uma senha nova." />
 
-      {step === "email" ? (
-        <AuthField
-          id="forgot-email"
-          label="E-mail"
-          type="email"
-          autoComplete="email"
-          placeholder="seu@email.com"
-          value={email}
-          onChange={(e) => {
-            setError(null);
-            setEmail(e.target.value);
-          }}
-          error={error}
-          required
-        />
-      ) : (
-        <>
-          <AuthField
-            id="reset-code"
-            label="Código do bot"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="000000"
-            maxLength={6}
-            value={code}
-            onChange={(e) => {
-              setError(null);
-              setCode(e.target.value.replace(/\D/g, ""));
-            }}
-            required
-          />
-          <AuthField
-            id="reset-password"
-            label="Senha nova"
-            type="password"
-            autoComplete="new-password"
-            placeholder={`${MIN_PASSWORD} caracteres ou mais`}
-            value={password}
-            onChange={(e) => {
-              setError(null);
-              setPassword(e.target.value);
-            }}
-            error={error}
-            required
-          />
-        </>
-      )}
+      <AuthField
+        id="forgot-email"
+        label="E-mail"
+        type="email"
+        autoComplete="email"
+        placeholder="seu@email.com"
+        value={email}
+        onChange={(e) => {
+          setError(null);
+          setEmail(e.target.value);
+        }}
+        error={error}
+        required
+      />
 
       <Button type="submit" className="w-full h-12 lg:h-10 mt-1.5 lg:mt-1 rounded-[10px] lg:rounded-[8px] text-[15px] lg:text-sm font-semibold gap-2" loading={busy}>
         {busy ? (
-          step === "email" ? "Enviando código…" : "Trocando senha…"
-        ) : step === "email" ? (
-          <>
-            <TelegramLogo size={18} /> Mandar código no Telegram
-          </>
+          "Enviando link…"
         ) : (
-          "Trocar senha"
+          <>
+            <EnvelopeSimple size={18} /> Mandar link
+          </>
         )}
       </Button>
 
       <p className="text-center text-sm text-zinc-500">
-        {step === "code" && (
-          <>
-            Não chegou?{" "}
-            <button type="button" onClick={() => setStep("email")} className="text-accent underline underline-offset-4 hover:no-underline">
-              Pedir de novo
-            </button>
-            {" · "}
-          </>
-        )}
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:no-underline">
           <ArrowLeft size={14} /> Voltar pro login
         </button>
-      </p>
-      <p className="text-center text-xs text-zinc-500 -mt-2">
-        Sem Telegram vinculado? Fale com o administrador pra redefinir.
       </p>
     </form>
   );

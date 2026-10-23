@@ -1,19 +1,35 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Logo } from "@/components/brand/Logo";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
+
+type View = "login" | "register" | "forgot" | "reset";
 
 // Mesma estrutura nas duas telas: marca, título, campos, botão e troca de
 // tela. No celular o form fica direto no fundo, sem card; no desktop o card
 // emoldura o form no centro e a troca de tela fica embaixo dele.
 const AuthPage = () => {
-  // "Criar conta" da landing chega com ?cadastro e já abre no cadastro.
+  // "Criar conta" da landing chega com ?cadastro e já abre no cadastro;
+  // ?esqueci abre o "Esqueci a senha" (o "Pedir outro link" do link vencido).
   const [params] = useSearchParams();
-  const [view, setView] = useState<"login" | "register" | "forgot">(() => (params.has("cadastro") ? "register" : "login"));
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const isReset = pathname === "/redefinir-senha";
+  // O link do e-mail chega em /redefinir-senha?token=…: o token sai da barra de
+  // endereço logo na entrada (histórico, tela compartilhada) e fica só aqui.
+  const [resetToken] = useState(() => (isReset ? params.get("token") : null));
+  const [view, setView] = useState<View>(() =>
+    isReset ? "reset" : params.has("cadastro") ? "register" : params.has("esqueci") ? "forgot" : "login",
+  );
   const [forgotEmail, setForgotEmail] = useState("");
   const signup = view === "register";
+
+  useEffect(() => {
+    if (isReset && params.has("token")) navigate("/redefinir-senha", { replace: true });
+  }, [isReset, params, navigate]);
 
   return (
     <div className="relative isolate min-h-dvh flex flex-col px-6 lg:items-center lg:justify-center lg:gap-6 lg:p-6">
@@ -40,12 +56,18 @@ const AuthPage = () => {
           />
         ) : view === "forgot" ? (
           <ForgotPasswordForm initialEmail={forgotEmail} onBack={() => setView("login")} />
+        ) : view === "reset" ? (
+          <ResetPasswordForm
+            token={resetToken}
+            onDone={() => navigate("/login", { replace: true })}
+            onRequestNew={() => navigate("/login?esqueci", { replace: true })}
+          />
         ) : (
           <RegisterForm />
         )}
       </div>
 
-      {view !== "forgot" && (
+      {(view === "login" || view === "register") && (
         <p className="mt-auto lg:mt-0 pt-5 pb-9 lg:p-0 flex justify-center gap-1.5 text-sm lg:text-[13.5px] text-zinc-400">
           {signup ? "Já tem conta?" : "Ainda não tem conta?"}
           <button
