@@ -8,9 +8,9 @@ import { clearToken, getToken, saveToken } from '@/lib/auth-session';
  */
 const http = axios.create({ baseURL: import.meta.env.VITE_API_URL });
 
-// Modo mock (VITE_MOCK=true): sem API, com sessão de mentira. O import é
+// Modo mock (`npm run dev:mock`, que é `vite --mode mock`): sem API, com sessão de mentira. O import é
 // dinâmico pra o mock não entrar no bundle de produção.
-if (import.meta.env.VITE_MOCK === 'true') {
+if (import.meta.env.MODE === 'mock') {
   // JWT sem assinatura, com `exp` lá na frente: só o getToken() lê.
   if (!getToken()) saveToken(`e30.${btoa(JSON.stringify({ exp: 4102444800 }))}.mock`);
   http.defaults.adapter = async (config) => (await import('@/mocks/adapter')).mockAdapter(config);

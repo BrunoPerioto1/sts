@@ -1,4 +1,4 @@
-// Modo mock (VITE_MOCK=true): o axios responde daqui, sem API. Feito pra ver o
+// Modo mock (`npm run dev:mock`): o axios responde daqui, sem API. Feito pra ver o
 // desenho novo da Conferência; as outras telas recebem resposta vazia.
 //
 // Plano: ?plano=gratis na URL mostra o convite do Pro; ?plano=pro volta.

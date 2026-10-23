@@ -2,8 +2,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
-  /** "true": o axios responde com dados de exemplo (src/mocks), sem API. */
-  readonly VITE_MOCK?: string;
 }
 
 interface ImportMeta {
