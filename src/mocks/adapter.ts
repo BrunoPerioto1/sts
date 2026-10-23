@@ -95,6 +95,9 @@ function responder(metodo: string, caminho: string, corpo: { betIds?: number[] }
     case "get settlement/suggestions": return vazia() ? [] : suggestions;
     case "get settlement/review": return vazia() ? [] : review;
     case "get settlement/queue": return fila();
+    // Conta nova, como a API devolve: tudo zerado.
+    case "get house/metrics":
+      return { totalBalance: 0, totalDeposit: 0, totalWithdrawal: 0, consolidatedProfit: 0, negativeHouses: 0, negativeAmount: 0, totalHousesUsed: 0 };
     case "post settlement/compute": return { analyzed: 0, suggested: 0, undecided: 0, hasMore: false };
     case "post settlement/confirm": tira(corpo?.betIds ?? []); return { confirmed: corpo?.betIds?.length ?? 0 };
     case "post settlement/dismiss": tira(corpo?.betIds ?? []); return { dismissed: corpo?.betIds?.length ?? 0 };

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { CalendarBlank, Key, Sparkle, Trash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,14 @@ export function PerfilDesktopView({ me, summary }: { me: MeResponse; summary: Pr
     setAccount({ name: me.fullName ?? "", email: me.email, currentPassword: "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
+
+  // /profile#bankroll-title (checklist do dashboard, link de celular aberto
+  // no desktop): rola até a seção. O navegador não acha sozinho porque a
+  // página monta depois do /users/me.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: "start" });
+  }, [hash]);
 
   const emailChanged = account.email !== me.email;
   const accountDirty = account.name !== (me.fullName ?? "") || emailChanged;

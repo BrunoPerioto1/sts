@@ -38,6 +38,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { ConferenciaUpsell } from '@/components/conferir/ConferenciaUpsell';
 import { ADMIN_ROLE_ID } from '@/lib/admin-health';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { LegalDoc } from './pages/LegalPage';
 
 // staleTime alto de proposito: os dados do dashboard sao por usuario e mudam
@@ -99,8 +100,10 @@ const App = () => (
           <Route path="/profile" element={<RequireAuth><PerfilPage /></RequireAuth>} />
           <Route path="/profile/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
           <Route path="/profile/password" element={<RequireAuth><PasswordPage /></RequireAuth>} />
-          <Route path="/profile/telegram" element={<RequireAuth><TelegramPage /></RequireAuth>} />
-          <Route path="/profile/preferences" element={<RequireAuth><PreferencesPage /></RequireAuth>} />
+          {/* Telas de celular. No desktop tudo mora em /profile, então o link
+              (checklist do dashboard, bot) cai direto na seção certa. */}
+          <Route path="/profile/telegram" element={<RequireAuth><MobileOnly desktop="/profile#integrations-title"><TelegramPage /></MobileOnly></RequireAuth>} />
+          <Route path="/profile/preferences" element={<RequireAuth><MobileOnly desktop="/profile#bankroll-title"><PreferencesPage /></MobileOnly></RequireAuth>} />
           <Route path="/profile/dashboard" element={<RequireAuth><DashboardPreferencesPage /></RequireAuth>} />
           <Route path="/bets" element={<RequireAuth><BetsRoute /></RequireAuth>} />
           <Route path="/settlement" element={<RequireAuth><RequirePro feature="settlement" title="Conferência"><ConferirPage /></RequirePro></RequireAuth>} />
@@ -201,6 +204,13 @@ function RequirePro({ feature, title, children }: { feature: ProFeature; title: 
       </MainLayout>
     );
   }
+  return <>{children}</>;
+}
+
+/** Tela só de celular: no desktop vai pra seção equivalente de Configurações. */
+function MobileOnly({ desktop, children }: { desktop: string; children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+  if (!isMobile) return <Navigate to={desktop} replace />;
   return <>{children}</>;
 }
 
